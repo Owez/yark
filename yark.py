@@ -425,3 +425,4 @@ if __name__ == "__main__":
         channel = Channel.load(args[1])
         channel.metadata()
         # TODO: download
+        channel.report.print()
