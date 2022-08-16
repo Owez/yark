@@ -6,6 +6,7 @@ import youtube_dl
 from termcolor import cprint
 import requests
 import hashlib
+import sys
 
 
 class Channel:
@@ -41,7 +42,7 @@ class Channel:
         decoded = Channel._from_dict(encoded, path)
         return decoded
 
-    def _metadata(self):
+    def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
@@ -384,3 +385,43 @@ def _magnitude(count: int = None) -> str:
 def _yt_date(input: str) -> datetime:
     """Decodes date from YouTube like `20180915` for example"""
     return datetime.strptime(input, "%Y%m%d")
+
+
+# Command-line interface
+if __name__ == "__main__":
+    # Help message
+    HELP = "yark [options]\n\n  YouTube archiving made simple\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez"
+
+    # Get arguments
+    args = sys.argv[1:]
+
+    # No arguments
+    if len(args) == 0:
+        print(HELP + "\n\nException: No arguments provided", file=sys.stderr)
+
+        sys.exit(1)
+
+    # Help
+    elif args[0] in ["help", "--help", "-h"]:
+        print(HELP)
+        sys.exit(0)
+
+    # Create new
+    elif args[0] == "new":
+        # Bad arguments
+        if len(args) < 3:
+            raise Exception("Please provide an archive name and the channel id")
+
+        # Create channel
+        Channel.new(args[1], args[2])
+
+    # Refresh
+    elif args[0] == "refresh":
+        # Bad arguments
+        if len(args) < 2:
+            raise Exception("Please provide the archive name")
+
+        # Refresh channel
+        channel = Channel.load(args[1])
+        channel.metadata()
+        # TODO: download
