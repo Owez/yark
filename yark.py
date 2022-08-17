@@ -1,7 +1,8 @@
 from datetime import datetime
+from fnmatch import fnmatch
 import json
+import os
 from pathlib import Path
-from uuid import uuid4
 import youtube_dl
 from termcolor import cprint
 import requests
@@ -81,6 +82,22 @@ class Channel:
         # Commit new data
         self._commit()
 
+    def download(self):
+        """Downloads all videos which haven't already been downloaded"""
+        print("Downloading videos..")
+        for id in self.videos.keys():
+            # Get video
+            video = self.videos[id]
+
+            # Skip if already downloaded
+            ldir = os.listdir(self.path / "videos")
+            if video.downloaded(ldir):
+                continue
+
+            # Download
+            print(f"  Downloading {id}..")
+            # TODO
+
     def _commit(self):
         """Commits (saves) archive to path"""
         # Directories
@@ -156,6 +173,16 @@ class Video:
             "like count", entry["like_count"] if "like_count" in entry else None
         )
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
+
+    def downloaded(self, ldir: list) -> bool:
+        """Checks if this video has been downloaded"""
+        # Try to find id in videos
+        for file in ldir:
+            if fnmatch(file, f"{self.id}*"):
+                return True
+
+        # No matches
+        return False
 
     @staticmethod
     def _from_dict(id: str, encoded: dict, channel: Channel):
@@ -426,5 +453,5 @@ if __name__ == "__main__":
         # Refresh channel
         channel = Channel.load(args[1])
         channel.metadata()
-        # TODO: download
+        channel.download()
         channel.reporter.print()
