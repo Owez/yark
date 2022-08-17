@@ -1,8 +1,8 @@
 # yark
 
-YouTube archiving made simple
+YouTube archiving made simple.
 
-Yark lets you continuously archive all videos and metadata of a channel. You can also view your archive as a seemless offline website 😎
+Yark lets you continuously archive all videos and metadata of a channel. You can also view your archive as a seemless offline website 🦾
 
 ## Installation
 
@@ -30,7 +30,7 @@ Here's an example of my channel being archived by yark:
 
 <p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
 
-If there was anything being updated/deleted on further refreshes, the report list would be colour-coded blue/red to indicate what happened!
+If there was anything being updated/deleted on further refreshes, the report list would be colour-coded blue/red to indicate what happened 👀
 
 Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
 
