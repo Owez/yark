@@ -2,6 +2,8 @@
 
 YouTube archiving made simple
 
+Yark lets you continuously archive all videos and metadata of a channel. You can also view your archive as a seemless offline website 😎
+
 ## Installation
 
 To install yark, simply download it off of PyPI:
@@ -10,7 +12,7 @@ To install yark, simply download it off of PyPI:
 $ pip3 install yark
 ```
 
-## Usage
+## Creating an Archive
 
 Once you've installed yark, think of a name for your archive and copy the targets channel id:
 
@@ -24,14 +26,14 @@ Now that you've created the archive, you can tell yark to download all videos an
 $ yark refresh owez
 ```
 
-Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
-
-## Demo
-
-Here's my sparse YouTube channel being newly archived by yark:
+Here's an example of my channel being archived by yark:
 
 <p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
 
-If there was anything being updated/deleted on further refreshes, the report list would be colourcoded either blue or red to indicate what happened!
+If there was anything being updated/deleted on further refreshes, the report list would be colour-coded blue/red to indicate what happened!
 
-Also, check the `examples/` directory for how to use yark in scripts if needed. This feature is new and yark is really intended to be used via the command-line so you might find a few issues.
+Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
+
+## Viewing an Archive
+
+TODO
