@@ -51,7 +51,7 @@
 <div id="videos">
     {% for id in channel.videos %}
     {% set video = channel.videos[id] %}
-    <a href="/{{ name }}/{{ id }}" class="video">
+    <a href="/channel/{{ name }}/{{ id }}" class="video">
         <img src="/archive/{{ video.thumbnail.current().path }}" alt="" srcset="">
         <div class="info">
             <p class="title">{{ video.title.current() }}</p>

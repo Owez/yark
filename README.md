@@ -9,6 +9,7 @@ YouTube archiving made simple.
   - [Installation](#installation)
   - [Managing your Archive](#managing-your-archive)
   - [Viewing your Archive](#viewing-your-archive)
+  - [Details](#details)
 
 Yark lets you continuously archive all videos and metadata of a channel. You can also view your archive as a seemless offline website 🦾
 
@@ -41,8 +42,6 @@ Here's what my channel looked like after following the steps (if anything was up
 
 <!-- TODO: new demo, this one doesn't include video downloading. maybe include blue/red -->
 
-Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
-
 ## Viewing your Archive
 
 Viewing you archive is very simple, just type `view` and optionally the archive name:
@@ -54,3 +53,12 @@ $ yark view owez
 This will pop up an offline website in your browser letting you access all videos 🚀
 
 <p><img src="examples/channels.png" alt="Demonstration" title="Demonstration" width="600" /></p>
+
+## Details
+
+Here are some things to keep in mind when using yark; the good and the bad:
+
+- Don't create a new archive again if you just want to update it, yark accumulates all new metadata for you via timestamps
+- Feel free to suggest new features via the issues tab on this repository
+- Scheduling isn't a feature yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar
+- Scheduling once a day is recommended because getting metadata takes ages!

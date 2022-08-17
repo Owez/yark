@@ -17,6 +17,7 @@ from flask import (
     url_for,
     send_from_directory,
 )
+import flask
 import threading
 import webbrowser
 import logging
@@ -469,8 +470,23 @@ def viewer() -> Flask:
     def channel(name):
         """Channel information"""
         try:
-            channel = Channel.load(name)
+            channel = flask.g.get("channel")
+            if channel is None:
+                flask.g.channel = Channel.load(name)
+                channel = flask.g.get("channel")
             return render_template("channel.html", channel=channel, name=name)
+        except:
+            return redirect(url_for("open", error="Couldn't open channel's archive"))
+
+    @app.route("/channel/<name>/<id>")
+    def video(name, id):
+        """Detailed video information and viewer"""
+        try:
+            channel = flask.g.get("channel")
+            if channel is None:
+                flask.g.channel = Channel.load(name)
+                channel = flask.g.get("channel")
+            return render_template("video.html", video=channel.videos[id])
         except:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
 
