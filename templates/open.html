@@ -2,20 +2,11 @@
 
 {% block styling %}
 <style>
-    .open {
+    form {
         width: 100vw;
-        height: 60vh;
         display: flex;
-        justify-content: center;
-    }
-
-    .open>div {
-        margin-top: 10vh;
-    }
-
-    .open>div>h1 {
-        font-size: 2.75rem;
-        text-align: center;
+        align-items: center;
+        flex-direction: column;
     }
 
     input[type=text] {
@@ -25,12 +16,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="open">
-    <div>
-        <h1>Open Channel</h1>
-        <form action="/" method="post">
-            <input type="text" name="channel" placeholder="e.g. pewdiepie">
-        </form>
-    </div>
-</div>
+<h1 class="hero">open channel</h1>
+<form action="/" method="post">
+    <input type="text" name="channel" placeholder="e.g. pewdiepie">
+</form>
 {% endblock %}

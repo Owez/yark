@@ -1,5 +1,66 @@
 {% extends 'base.html' %}
 
+{% block styling %}
+<style>
+    #videos {
+        width: 80vw;
+        margin-left: 10vw;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .video {
+        display: flex;
+        flex-direction: column;
+        margin: 0.75rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .video>img {
+        width: 300px;
+    }
+
+    .info {
+        display: flex;
+        justify-content: space-between;
+        width: 300px;
+    }
+
+    .info>p {
+        margin-top: 0.5rem;
+    }
+
+    .title {
+        max-width: 225px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .uploaded {
+        font-size: 0.7rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-TODO
+<h1 class="hero">{{ name }}'s videos</h1>
+{% if channel.videos %}
+<div id="videos">
+    {% for id in channel.videos %}
+    {% set video = channel.videos[id] %}
+    <a href="/{{ name }}/{{ id }}" class="video">
+        <img src="/archive/{{ video.thumbnail.current().path }}" alt="" srcset="">
+        <div class="info">
+            <p class="title">{{ video.title.current() }}</p>
+            <p class="uploaded">{{ video.uploaded.strftime("%d/%m/%Y") }}</p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p style="text-align: center;">No videos found!</p>
+{% endif %}
 {% endblock %}

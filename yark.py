@@ -9,7 +9,14 @@ from termcolor import cprint
 import requests
 import hashlib
 import sys
-from flask import Flask, render_template, request, redirect, url_for
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    send_from_directory,
+)
 import threading
 import webbrowser
 import logging
@@ -458,14 +465,19 @@ def viewer() -> Flask:
             error = request.args["error"] if "error" in request.args else None
             return render_template("open.html", title="open channel", error=error)
 
-    @app.route("/<name>")
+    @app.route("/channel/<name>")
     def channel(name):
         """Channel information"""
         try:
             channel = Channel.load(name)
-            return render_template("channel.html", channel=channel)
+            return render_template("channel.html", channel=channel, name=name)
         except:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
+
+    @app.route("/archive/<path:target>")
+    def archive(target):
+        """Serves archive files"""
+        return send_from_directory("", target)
 
     return app
 
@@ -526,7 +538,7 @@ if __name__ == "__main__":
             # Get name
             channel = args[1]
             print(f"Starting viewer for {channel}..")
-            webbrowser.open(f"http://127.0.0.1:7667/{channel}")
+            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}")
 
         # Start on channel finder
         else:
