@@ -152,7 +152,9 @@ class Video:
         self.title.update("title", entry["title"])
         self.description.update("description", entry["description"])
         self.views.update("view count", entry["view_count"])
-        self.likes.update("like count", entry["like_count"])
+        self.likes.update(
+            "like count", entry["like_count"] if "like_count" in entry else None
+        )
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
 
     @staticmethod
