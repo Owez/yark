@@ -1,3 +1,4 @@
+from crypt import methods
 from datetime import datetime
 from fnmatch import fnmatch
 import json
@@ -8,6 +9,14 @@ from termcolor import cprint
 import requests
 import hashlib
 import sys
+from flask import Flask, render_template, request, redirect, url_for
+import threading
+import webbrowser
+import logging
+
+#
+# ARCHIVER
+#
 
 
 class Channel:
@@ -421,10 +430,53 @@ def _yt_date(input: str) -> datetime:
     return datetime.strptime(input, "%Y%m%d")
 
 
-# Command-line interface
+#
+# VIEWER
+#
+
+
+def viewer() -> Flask:
+    """Generates viewer flask app, launch by just using the typical `app.run()`"""
+    # Make flask app
+    app = Flask(__name__)
+
+    # Only log errors
+    log = logging.getLogger("werkzeug")
+    log.setLevel(logging.ERROR)
+
+    # Routing
+    @app.route("/", methods=["POST", "GET"])
+    def open():
+        """Open channel for non-selected channel"""
+        # Redirect to requested channel
+        if request.method == "POST":
+            name = request.form["channel"]
+            return redirect(url_for("channel", name=name))
+
+        # Show open channel page
+        elif request.method == "GET":
+            error = request.args["error"] if "error" in request.args else None
+            return render_template("open.html", title="open channel", error=error)
+
+    @app.route("/<name>")
+    def channel(name):
+        """Channel information"""
+        try:
+            channel = Channel.load(name)
+            return render_template("channel.html", channel=channel)
+        except:
+            return redirect(url_for("open", error="Couldn't open channel's archive"))
+
+    return app
+
+
+#
+# CLI
+#
+
 if __name__ == "__main__":
     # Help message
-    HELP = "yark [options]\n\n  YouTube archiving made simple\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez"
+    HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     # Get arguments
     args = sys.argv[1:]
@@ -460,3 +512,23 @@ if __name__ == "__main__":
         channel.metadata()
         channel.download()
         channel.reporter.print()
+
+    # View
+    elif args[0] == "view":
+        # Get and start app
+        app = viewer()
+        threading.Thread(
+            target=lambda: app.run(host="127.0.0.1", port=7667, debug=False)
+        ).start()
+
+        # Start on channel name
+        if len(args) > 1:
+            # Get name
+            channel = args[1]
+            print(f"Starting viewer for {channel}..")
+            webbrowser.open(f"http://127.0.0.1:7667/{channel}")
+
+        # Start on channel finder
+        else:
+            print("Starting viewer..")
+            webbrowser.open(f"http://127.0.0.1:7667/")

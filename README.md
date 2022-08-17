@@ -1,3 +1,6 @@
+<!-- TODO: logo -->
+<!-- TODO: add when logos done: <h1 align="center">yark</h1> -->
+
 # yark
 
 YouTube archiving made simple.
@@ -36,7 +39,7 @@ Here's what my channel looked like after following the steps (if anything was up
 
 <p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
 
-<!-- TODO: new demo, this one doesn't include video downloading -->
+<!-- TODO: new demo, this one doesn't include video downloading. maybe include blue/red -->
 
 Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
 

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block styling %}
+<style>
+    .open {
+        width: 100vw;
+        height: 60vh;
+        display: flex;
+        justify-content: center;
+    }
+
+    .open>div {
+        margin-top: 10vh;
+    }
+
+    .open>div>h1 {
+        font-size: 2.75rem;
+        text-align: center;
+    }
+
+    input[type=text] {
+        width: calc(15rem + 20vw);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="open">
+    <div>
+        <h1>Open Channel</h1>
+        <form action="/" method="post">
+            <input type="text" name="channel" placeholder="e.g. pewdiepie">
+        </form>
+    </div>
+</div>
+{% endblock %}
