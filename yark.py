@@ -84,19 +84,24 @@ class Channel:
 
     def download(self):
         """Downloads all videos which haven't already been downloaded"""
+        # Get all videos in directory
         print("Downloading videos..")
+        ldir = os.listdir(self.path / "videos")
+
+        # Go through known videos
         for id in self.videos.keys():
             # Get video
             video = self.videos[id]
 
             # Skip if already downloaded
-            ldir = os.listdir(self.path / "videos")
             if video.downloaded(ldir):
                 continue
 
             # Download
             print(f"  Downloading {id}..")
-            # TODO
+            ydl_opt = {"outtmpl": f"{self.path}/videos/%(id)s.%(ext)s", "quiet": True}
+            ydl = youtube_dl.YoutubeDL(ydl_opt)
+            ydl.download([f"https://www.youtube.com/watch?v={id}"])
 
     def _commit(self):
         """Commits (saves) archive to path"""

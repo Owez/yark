@@ -30,7 +30,7 @@ Right now scheduling isn't a feature so to run the archiver every now and then p
 
 Here's my sparse YouTube channel being newly archived by yark:
 
-![Green means add, blue means update](examples/reportadd.png)
+<p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
 
 If there was anything being updated/deleted on further refreshes, the report list would be colourcoded either blue or red to indicate what happened!
 
