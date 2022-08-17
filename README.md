@@ -14,6 +14,8 @@ $ pip3 install yark
 
 ## Creating an Archive
 
+<p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
+
 Once you've installed yark, think of a name for your archive and copy the targets channel id:
 
 ```shell
@@ -25,12 +27,6 @@ Now that you've created the archive, you can tell yark to download all videos an
 ```shell
 $ yark refresh owez
 ```
-
-Here's an example of my channel being archived by yark:
-
-<p><img src="examples/reportadd.png" alt="Demonstration" title="Demonstration" width="400" /></p>
-
-If there was anything being updated/deleted on further refreshes, the report list would be colour-coded blue/red to indicate what happened 👀
 
 Right now scheduling isn't a feature so to run the archiver every now and then please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar. Once a day is recommended because getting metadata takes ages!
 
