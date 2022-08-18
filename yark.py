@@ -483,8 +483,9 @@ def viewer() -> Flask:
         """Channel information"""
         try:
             channel = Channel.load(name)
+            ldir = os.listdir(channel.path / "videos")
             return render_template(
-                "channel.html", title=name, channel=channel, name=name
+                "channel.html", title=name, channel=channel, name=name, ldir=ldir
             )
         except ArchiveNotFoundException:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
