@@ -2,9 +2,7 @@
 
 {% block styling %}
 <style>
-    #videos {
-        width: 80vw;
-        margin-left: 10vw;
+    #content {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
@@ -48,7 +46,7 @@
 {% block content %}
 <h1 class="hero">{{ name }}'s videos</h1>
 {% if channel.videos %}
-<div id="videos">
+<div id="content">
     {% for id in channel.videos %}
     {% set video = channel.videos[id] %}
     <a href="/channel/{{ name }}/{{ id }}" class="video">

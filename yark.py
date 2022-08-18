@@ -23,6 +23,18 @@ import webbrowser
 import logging
 
 #
+# EXCEPTIONS
+#
+
+
+class ArchiveNotFoundException(Exception):
+    """Archive couldn't be found, the name was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+#
 # ARCHIVER
 #
 
@@ -51,7 +63,7 @@ class Channel:
         path = Path(path)
         print(f"Loading {path.name} channel..")
         if not path.exists():
-            raise Exception("Archive doesn't exist")
+            raise ArchiveNotFoundException("Archive doesn't exist")
 
         # Load config
         encoded = json.load(open(path / "yark.json", "r"))
@@ -470,25 +482,27 @@ def viewer() -> Flask:
     def channel(name):
         """Channel information"""
         try:
-            channel = flask.g.get("channel")
-            if channel is None:
-                flask.g.channel = Channel.load(name)
-                channel = flask.g.get("channel")
-            return render_template("channel.html", channel=channel, name=name)
-        except:
+            channel = Channel.load(name)
+            return render_template(
+                "channel.html", title=name, channel=channel, name=name
+            )
+        except ArchiveNotFoundException:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
+        except Exception as e:
+            return redirect(url_for("open", error=f"Internal server error:\n{e}"))
 
     @app.route("/channel/<name>/<id>")
     def video(name, id):
         """Detailed video information and viewer"""
         try:
-            channel = flask.g.get("channel")
-            if channel is None:
-                flask.g.channel = Channel.load(name)
-                channel = flask.g.get("channel")
-            return render_template("video.html", video=channel.videos[id])
-        except:
+            channel = Channel.load(name)
+            video = channel.videos[id]
+            title = f"{name} – {video.title.current().lower()}"
+            return render_template("video.html", title=title, video=video)
+        except ArchiveNotFoundException:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
+        except Exception as e:
+            return redirect(url_for("open", error=f"Internal server error:\n{e}"))
 
     @app.route("/archive/<path:target>")
     def archive(target):

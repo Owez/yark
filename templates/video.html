@@ -1,5 +1,67 @@
 {% extends 'base.html' %}
 
+{% block styling %}
+<style>
+    video {
+        margin-top: 10vh;
+    }
+
+    .info {
+        color: #7f7f7f;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .info>p {
+        margin-top: 0;
+    }
+
+    h1 {
+        margin-bottom: 0.75rem;
+    }
+
+    video,
+    .info {
+        width: 60vw;
+    }
+
+    @media screen and (max-width: 850px) {
+
+        video,
+        .info {
+            width: 80vw;
+        }
+    }
+
+    .download {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .spacer {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-TODO
+<div id="content">
+    <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" autoplay controls></video>
+    <h1>{{ video.title.current() }}</h1>
+    <div class="info">
+        {% set views = video.views.current() %}
+        <p>
+            {{ views }} view{% if views != 1 %}s{% endif %}
+            <span class="spacer">•</span>
+            {{ video.uploaded.strftime("%d/%m/%Y") }}
+        </p>
+        <p>
+            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>📋</a>
+            <span class="spacer">•</span>
+            👍 {{ video.likes.current() }}
+        </p>
+    </div>
+    <p>{{ video.description.current() }}</p>
+</div>
 {% endblock %}
