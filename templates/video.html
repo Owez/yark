@@ -21,6 +21,8 @@
     }
 
     video,
+    h1,
+    .description,
     .info {
         width: 60vw;
     }
@@ -28,6 +30,8 @@
     @media screen and (max-width: 850px) {
 
         video,
+        h1,
+        .description,
         .info {
             width: 80vw;
         }
@@ -62,6 +66,11 @@
             👍 {{ video.likes.current() }}
         </p>
     </div>
-    <p>{{ video.description.current() }}</p>
+    {% set description = video.description.current().split("\n") %}
+    <p class="description">
+        {% for line in description %}
+        {{ line }}<br /><br />
+        {% endfor %}
+    </p>
 </div>
 {% endblock %}
