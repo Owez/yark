@@ -1,4 +1,3 @@
-from crypt import methods
 from datetime import datetime
 from fnmatch import fnmatch
 import json

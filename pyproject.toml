@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "yark"
+version = "0.1.0"
+description = "YouTube archiving made simple."
+authors = ["Owen Griffiths <root@ogriffiths.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/owez/yark"
+classifiers = [
+    "Topic :: System :: Archiving",
+    "Topic :: System :: Archiving :: Backup",
+    "Topic :: Multimedia :: Video"
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+youtube_dl = "^2021.12.17"
+Flask = "^2.2.2"
+termcolor = "^1.1.0"
+requests = "^2.28.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
