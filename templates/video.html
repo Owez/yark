@@ -2,6 +2,10 @@
 
 {% block styling %}
 <style>
+    body {
+        margin-bottom: 3rem;
+    }
+
     video {
         margin-top: 10vh;
     }
@@ -20,9 +24,17 @@
         margin-bottom: 0.75rem;
     }
 
+    canvas {
+        width: 50vw;
+    }
+
+    #description {
+        font-size: 0.9rem;
+    }
+
     video,
     h1,
-    .description,
+    #description,
     .info {
         width: 60vw;
     }
@@ -31,7 +43,8 @@
 
         video,
         h1,
-        .description,
+        canvas,
+        #description,
         .info {
             width: 80vw;
         }
@@ -51,7 +64,9 @@
 
 {% block content %}
 <div id="content">
+    <!-- Video -->
     <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" autoplay controls></video>
+    <!-- Information -->
     <h1>{{ video.title.current() }}</h1>
     <div class="info">
         {% set views = video.views.current() %}
@@ -63,14 +78,82 @@
         <p>
             <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>📋</a>
             <span class="spacer">•</span>
-            👍 {{ video.likes.current() }}
+            {% set likes = video.likes.current() %}
+            👍 {{ likes }}
         </p>
     </div>
+    <!-- Description -->
     {% set description = video.description.current().split("\n") %}
-    <p class="description">
+    {% if description|count != 1 and description[0] != "" %}
+    <button onclick="toggleDescription(this)">Hide description</button>
+    <script>
+        function toggleDescription(caller) {
+            let desc = document.getElementById("description");
+            if (desc.style.display === "none") {
+                caller.innerText = "Hide description";
+                desc.style.display = "block";
+            } else {
+                caller.innerText = "Show description";
+                desc.style.display = "none";
+            }
+        }
+    </script>
+    <p id="description">
         {% for line in description %}
-        {{ line }}<br /><br />
+        {{ line }}<br />
         {% endfor %}
     </p>
+    {% endif %}
+    <!-- Graphs -->
+    {% set mto_views = video.views.inner|count != 1 %}
+    {% set mto_likes = video.likes.inner|count != 1 %}
+    {% if mto_views or mto_likes %}
+    {% if mto_views %}
+    <h2>Views over time</h2>
+    <canvas id="chart_views"></canvas>
+    {% endif %}
+    {% if mto_likes %}
+    <h2>Likes over time</h2>
+    <canvas id="chart_likes"></canvas>
+    {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        function chart(type, id, data) {
+            // Generate config
+            const points = {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: "# of " + type,
+                    data: Object.values(data),
+                    fill: false,
+                    borderColor: "rgb(75, 192, 192)",
+                    tension: 0.1
+                }]
+            };
+
+            // Get context
+            const ctx = document.getElementById(id).getContext("2d");
+
+            // Create chart
+            return new Chart(ctx, {
+                type: "line",
+                data: points,
+                options: { responsive: false }
+            })
+        }
+
+        // Get data
+        let views_data = {{ views_data| safe }};
+        let likes_data = {{ likes_data| safe }};
+
+        // Create charts
+        if (Object.keys(views_data).length != 1) {
+            chart("Likes", "chart_views", views_data);
+        }
+        if (Object.keys(likes_data).length != 1) {
+            chart("Views", "chart_likes", likes_data);
+        }
+    </script>
+    {% endif %}
 </div>
 {% endblock %}

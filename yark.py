@@ -499,7 +499,15 @@ def viewer() -> Flask:
             channel = Channel.load(name)
             video = channel.videos[id]
             title = f"{name} – {video.title.current().lower()}"
-            return render_template("video.html", title=title, video=video)
+            views_data = json.dumps(video.views._to_dict())
+            likes_data = json.dumps(video.likes._to_dict())
+            return render_template(
+                "video.html",
+                title=title,
+                video=video,
+                views_data=views_data,
+                likes_data=likes_data,
+            )
         except ArchiveNotFoundException:
             return redirect(url_for("open", error="Couldn't open channel's archive"))
         except Exception as e:

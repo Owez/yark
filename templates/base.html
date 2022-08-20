@@ -45,7 +45,8 @@
             margin-right: 3rem;
         }
 
-        input[type=text] {
+        input[type=text],button {
+            background-color: white;
             padding: 0.5rem;
             border-radius: 0.5rem;
             border: 1px solid rgba(0, 0, 0, 0.12);
@@ -87,11 +88,14 @@
     <div id="error">{{ error }}</div>
     {% endif %}
     <script>
-        setTimeout(
-            function () {
-                document.getElementById("error").remove()
-            }, 4000
-        )
+        let err = document.getElementById("error")
+        if (err) {
+            setTimeout(
+                function () {
+                    err.remove()
+                }, 4000
+            )
+        }
     </script>
 </body>
 
