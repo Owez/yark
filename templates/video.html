@@ -28,8 +28,18 @@
         width: 50vw;
     }
 
-    #description {
+    #description,
+    .metadata {
         font-size: 0.9rem;
+        line-height: 1.25rem;
+        color: #595959;
+        margin-left: 1rem;
+    }
+
+    .metadata {
+        display: none;
+        margin-top: -0.65rem;
+        margin-bottom: 0.65rem;
     }
 
     video,
@@ -60,13 +70,8 @@
         margin-right: 0.5rem;
     }
 
-    .metadata {
-        display: none;
-        color: #595959;
-        margin-left: 1rem;
-        line-height: 0.65rem;
-        margin-bottom: 0.65rem;
-        /* TODO: fix line height */
+    ul {
+        line-height: 2.25rem;
     }
 </style>
 {% endblock %}
@@ -93,9 +98,10 @@
     </div>
     <!-- Description -->
     {% set description = video.description.current().split("\n") %}
-    {% if description|count != 1 and description[0] != "" %}
-    <button onclick="toggleButton('description', 'description', this)">Hide description</button>
-    <p id="description" style="display: block;">
+    {% set no_description = description|count == 1 and description[0] == "" %}
+    {% if not no_description %}
+    <button onclick="toggleButton('description', 'description', this)">Show description</button>
+    <p id="description" style="display: none;">
         {% for line in description %}
         {{ line }}<br />
         {% endfor %}
@@ -112,14 +118,22 @@
         {% if mto_title %}
         {% for timestamp in video.title.inner %}
         <li>
-            Title changed from
+            {% if loop.index == video.title.inner|count %}
+            Current title has been in place since {{ timestamp.strftime("%d/%m/%Y") }}
+            {% else %}
+            {% if loop.index == 1 %}
+            Title was originally
+            {% else %}
+            Title changed to
+            {% endif %}
             <button onclick="toggleButton('history_title' + {{ loop.index }}, 'title', this)">
                 Show title
             </button>
-            at {{ timestamp }}
+            on {{ timestamp.strftime("%d/%m/%Y") }}
             <span id="history_title{{ loop.index }}" class="metadata">
                 <br />{{ video.title.inner[timestamp] }}
             </span>
+            {% endif %}
         </li>
         {% endfor %}
         {% else %}
@@ -128,17 +142,25 @@
         {% if mto_description %}
         {% for timestamp in video.description.inner %}
         <li>
-            Description changed from
+            {% if loop.index == video.description.inner|count %}
+            Current description has been in place since {{ timestamp.strftime("%d/%m/%Y") }}
+            {% else %}
+            {% if loop.index == 1 %}
+            Description was originally
+            {% else %}
+            Description changed to
+            {% endif %}
             <button onclick="toggleButton('history_description' + {{ loop.index }}, 'description', this)">
                 Show description
             </button>
-            at {{ timestamp }}
+            on {{ timestamp.strftime("%d/%m/%Y") }}
             <span id="history_description{{ loop.index }}" class="metadata">
                 <br />
                 {% for line in video.description.inner[timestamp].split("\n") %}
                 {{ line }}<br />
                 {% endfor %}
             </span>
+            {% endif %}
         </li>
         {% endfor %}
         {% else %}
