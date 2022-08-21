@@ -59,6 +59,15 @@
         margin-left: 0.5rem;
         margin-right: 0.5rem;
     }
+
+    .metadata {
+        display: none;
+        color: #595959;
+        margin-left: 1rem;
+        line-height: 0.65rem;
+        margin-bottom: 0.65rem;
+        /* TODO: fix line height */
+    }
 </style>
 {% endblock %}
 
@@ -85,25 +94,58 @@
     <!-- Description -->
     {% set description = video.description.current().split("\n") %}
     {% if description|count != 1 and description[0] != "" %}
-    <button onclick="toggleDescription(this)">Hide description</button>
-    <script>
-        function toggleDescription(caller) {
-            let desc = document.getElementById("description");
-            if (desc.style.display === "none") {
-                caller.innerText = "Hide description";
-                desc.style.display = "block";
-            } else {
-                caller.innerText = "Show description";
-                desc.style.display = "none";
-            }
-        }
-    </script>
+    <button onclick="toggleDescription('description', 'description', this)">Hide description</button>
     <p id="description">
         {% for line in description %}
         {{ line }}<br />
         {% endfor %}
     </p>
     {% endif %}
+    <!-- History -->
+    <h2>History</h2>
+    {% set mto_title = video.title.inner|count != 1 %}
+    {% set mto_description = video.description.inner|count != 1 %}
+    <ul>
+        {% if not mto_title and not mto_description %}
+        <li>No title or description changes on record</li>
+        {% else %}
+        {% if mto_title %}
+        {% for timestamp in video.title.inner %}
+        <li>
+            Title changed from
+            <button onclick="toggleButton('history_title' + {{ loop.index }}, 'title', this)">
+                Show title
+            </button>
+            at {{ timestamp }}
+            <span id="history_title{{ loop.index }}" class="metadata">
+                <br />{{ video.title.inner[timestamp] }}
+            </span>
+        </li>
+        {% endfor %}
+        {% else %}
+        <li>No title changes on record</li>
+        {% endif %}
+        {% if mto_description %}
+        {% for timestamp in video.description.inner %}
+        <li>
+            Description changed from
+            <button onclick="toggleButton('history_description' + {{ loop.index }}, 'description', this)">
+                Show description
+            </button>
+            at {{ timestamp }}
+            <span id="history_description{{ loop.index }}" class="metadata">
+                <br />
+                {% for line in video.description.inner[timestamp].split("\n") %}
+                {{ line }}<br />
+                {% endfor %}
+            </span>
+        </li>
+        {% endfor %}
+        {% else %}
+        <li>No description changes on record</li>
+        {% endif %}
+        {% endif %}
+    </ul>
     <!-- Graphs -->
     {% set mto_views = video.views.inner|count != 1 %}
     {% set mto_likes = video.likes.inner|count != 1 %}
@@ -156,4 +198,20 @@
     </script>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // TODO: fixs
+    function toggleButton(id, name, caller) {
+        let desc = document.getElementById(id);
+        if (desc.style.display === "none") {
+            caller.innerText = "Hide " + name;
+            desc.style.display = "block";
+        } else {
+            caller.innerText = "Show " + name;
+            desc.style.display = "none";
+        }
+    }
+</script>
 {% endblock %}
