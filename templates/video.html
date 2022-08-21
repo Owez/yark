@@ -94,8 +94,8 @@
     <!-- Description -->
     {% set description = video.description.current().split("\n") %}
     {% if description|count != 1 and description[0] != "" %}
-    <button onclick="toggleDescription('description', 'description', this)">Hide description</button>
-    <p id="description">
+    <button onclick="toggleButton('description', 'description', this)">Hide description</button>
+    <p id="description" style="display: block;">
         {% for line in description %}
         {{ line }}<br />
         {% endfor %}
@@ -204,13 +204,13 @@
 <script>
     // TODO: fixs
     function toggleButton(id, name, caller) {
-        let desc = document.getElementById(id);
-        if (desc.style.display === "none") {
+        let el = document.getElementById(id);
+        if (el.style.display === "none" || el.style.display === "") {
             caller.innerText = "Hide " + name;
-            desc.style.display = "block";
+            el.style.display = "block";
         } else {
             caller.innerText = "Show " + name;
-            desc.style.display = "none";
+            el.style.display = "none";
         }
     }
 </script>
