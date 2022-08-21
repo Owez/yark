@@ -465,17 +465,17 @@ def viewer() -> Flask:
 
     # Routing
     @app.route("/", methods=["POST", "GET"])
-    def open():
+    def index():
         """Open channel for non-selected channel"""
         # Redirect to requested channel
         if request.method == "POST":
             name = request.form["channel"]
             return redirect(url_for("channel", name=name))
 
-        # Show open channel page
+        # Show page
         elif request.method == "GET":
             error = request.args["error"] if "error" in request.args else None
-            return render_template("open.html", title="open channel", error=error)
+            return render_template("index.html", error=error)
 
     @app.route("/channel/<name>")
     def channel(name):
@@ -487,9 +487,9 @@ def viewer() -> Flask:
                 "channel.html", title=name, channel=channel, name=name, ldir=ldir
             )
         except ArchiveNotFoundException:
-            return redirect(url_for("open", error="Couldn't open channel's archive"))
+            return redirect(url_for("index", error="Couldn't open channel's archive"))
         except Exception as e:
-            return redirect(url_for("open", error=f"Internal server error:\n{e}"))
+            return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
     @app.route("/channel/<name>/<id>")
     def video(name, id):
@@ -508,9 +508,9 @@ def viewer() -> Flask:
                 likes_data=likes_data,
             )
         except ArchiveNotFoundException:
-            return redirect(url_for("open", error="Couldn't open channel's archive"))
+            return redirect(url_for("index", error="Couldn't open channel's archive"))
         except Exception as e:
-            return redirect(url_for("open", error=f"Internal server error:\n{e}"))
+            return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
     @app.route("/archive/<path:target>")
     def archive(target):
