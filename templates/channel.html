@@ -62,14 +62,19 @@
     {% for id in channel.videos %}
     {% set video = channel.videos[id] %}
     <a href="/channel/{{ name }}/{{ id }}" class="video">
+        <!-- Thumbnail -->
         <div class="thumbnail">
             <img src="/archive/{{ video.thumbnail.current().path }}" {% if not video.downloaded(ldir) %}class="frost" {%
                 endif %} />
         </div>
+        <!-- Information -->
         <div class="info">
+            <!-- Title -->
             <p class="title">{{ video.title.current() }}</p>
             <p class="uploaded">
+                <!-- Updated -->
                 {% if video.updated() %}🌀 {% endif %}
+                <!-- Uploaded -->
                 {{ video.uploaded.strftime("%d/%m/%Y") }}
             </p>
         </div>

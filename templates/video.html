@@ -85,16 +85,21 @@
     <div class="info">
         {% set views = video.views.current() %}
         <p>
+            <!-- View count -->
             {{ views }} view{% if views != 1 %}s{% endif %}
+            <!-- Uploaded -->
             <span class="spacer">•</span>
             {{ video.uploaded.strftime("%d/%m/%Y") }}
+            <!-- Updated -->
             {% if video.updated() %}
             <span class="spacer">•</span>
             🌀
             {% endif %}
         </p>
         <p>
+            <!-- Download link -->
             <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>🔗</a>
+            <!-- Like count -->
             <span class="spacer">•</span>
             {% set likes = video.likes.current() %}
             👍 {{ likes }}
