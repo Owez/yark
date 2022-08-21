@@ -38,7 +38,7 @@ $ yark refresh owez
 
 Here's what my channel looked like after following the steps (if anything was updated/deleted it would be blue/red to indicate):
 
-<p><img src="examples/reportadd.png" alt="Demo" title="Demo" width="500" /></p>
+<p><img src="examples/images/reportadd.png" alt="Report Demo" title="Report Demo" width="500" /></p>
 
 <!-- TODO: new demo, this one doesn't include video downloading. maybe include blue/red -->
 
@@ -52,7 +52,7 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/channels.png" alt="Channel Demo" title="Channel Demo" width="600" /></p>
+<p><img src="examples/images/channels.png" alt="Channel Demo" title="Channel Demo" width="600" /></p>
 <!-- TODO: <p><img src="examples/video.png" alt="Channel Demo" title="Channel Demo" width="600" /></p> -->
 <!-- NOTE: do this with a video without a desc so you can see the statistics a tiny bit -->
 
