@@ -111,7 +111,10 @@
     <h2>History</h2>
     {% set mto_title = video.title.inner|count != 1 %}
     {% set mto_description = video.description.inner|count != 1 %}
+    {% set mto_views = video.views.inner|count != 1 %}
+    {% set mto_likes = video.likes.inner|count != 1 %}
     <ul>
+        <!-- Titles -->
         {% if not mto_title and not mto_description %}
         <li>No title or description changes on record</li>
         {% else %}
@@ -139,6 +142,7 @@
         {% else %}
         <li>No title changes on record</li>
         {% endif %}
+        <!-- Descriptions -->
         {% if mto_description %}
         {% for timestamp in video.description.inner %}
         <li>
@@ -167,10 +171,16 @@
         <li>No description changes on record</li>
         {% endif %}
         {% endif %}
+        <!-- Likes/view summary -->
+        {% if not mto_views and not mto_likes %}
+        <li>No view or like changes on record</li>
+        {% elif not mto_views %}
+        <li>No view changes on record</li>
+        {% elif not mto_likes %}
+        <li>No like changes on record</li>
+        {% endif %}
     </ul>
     <!-- Graphs -->
-    {% set mto_views = video.views.inner|count != 1 %}
-    {% set mto_likes = video.likes.inner|count != 1 %}
     {% if mto_views or mto_likes %}
     {% if mto_views %}
     <h2>Views over time</h2>
