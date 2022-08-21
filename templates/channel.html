@@ -68,7 +68,10 @@
         </div>
         <div class="info">
             <p class="title">{{ video.title.current() }}</p>
-            <p class="uploaded">{{ video.uploaded.strftime("%d/%m/%Y") }}</p>
+            <p class="uploaded">
+                {% if video.updated() %}🌀 {% endif %}
+                {{ video.uploaded.strftime("%d/%m/%Y") }}
+            </p>
         </div>
     </a>
     {% endfor %}

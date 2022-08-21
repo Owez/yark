@@ -88,9 +88,13 @@
             {{ views }} view{% if views != 1 %}s{% endif %}
             <span class="spacer">•</span>
             {{ video.uploaded.strftime("%d/%m/%Y") }}
+            {% if video.updated() %}
+            <span class="spacer">•</span>
+            🌀
+            {% endif %}
         </p>
         <p>
-            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>📋</a>
+            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>🔗</a>
             <span class="spacer">•</span>
             {% set likes = video.likes.current() %}
             👍 {{ likes }}
@@ -234,7 +238,6 @@
 
 {% block scripts %}
 <script>
-    // TODO: fixs
     function toggleButton(id, name, caller) {
         let el = document.getElementById(id);
         if (el.style.display === "none" || el.style.display === "") {

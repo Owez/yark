@@ -217,6 +217,10 @@ class Video:
         # No matches
         return False
 
+    def updated(self) -> bool:
+        """Checks if this video's title or description have been updated"""
+        return len(self.title.inner) > 1 or len(self.description.inner) > 1
+
     @staticmethod
     def _from_dict(id: str, encoded: dict, channel: Channel):
         """Converts id and encoded dictionary to video for loading a channel"""
