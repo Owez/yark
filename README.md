@@ -52,9 +52,8 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/images/channels.png" alt="Channel Demo" title="Channel Demo" width="600" /></p>
-<!-- TODO: <p><img src="examples/video.png" alt="Channel Demo" title="Channel Demo" width="600" /></p> -->
-<!-- NOTE: do this with a video without a desc so you can see the statistics a tiny bit -->
+<p><img src="examples/images/channel.png" alt="Channel Demo" title="Channel Demo" width="600" /></p>
+<p><img src="examples/images/video.png" alt="Video Demo" title="Video Demo" width="600" /></p>
 
 ## Details
 

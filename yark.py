@@ -3,7 +3,7 @@ from fnmatch import fnmatch
 import json
 import os
 from pathlib import Path
-import youtube_dl
+from yt_dlp import YoutubeDL
 from termcolor import cprint
 import requests
 import hashlib
@@ -79,15 +79,14 @@ class Channel:
             "outtmpl": "%(id)s%(ext)s",
             "quiet": True,
         }
-        ydl = youtube_dl.YoutubeDL(settings)
         custom = len(self.id) != 24  # TODO: better custom id detection
         url = (
             "https://www.youtube.com/" + ("channel/" if not custom else "c/") + self.id
         )
 
         # Get response and snip it
-        res = ydl.extract_info(url, download=False)
-        res = res["entries"][0]["entries"]
+        with YoutubeDL(settings) as ydl:
+            res = ydl.extract_info(url, download=False)["entries"]
 
         # # NOTE: remove for production
         # demo = Path("demo/")
@@ -116,20 +115,16 @@ class Channel:
         print("Downloading videos..")
         ldir = os.listdir(self.path / "videos")
 
-        # Go through known videos
-        for id in self.videos.keys():
-            # Get video
-            video = self.videos[id]
+        # Curate
+        not_downloaded = []
+        for id in self.videos:
+            if not self.videos[id].downloaded(ldir):
+                not_downloaded.append(f"https://www.youtube.com/watch?v={id}")
 
-            # Skip if already downloaded
-            if video.downloaded(ldir):
-                continue
-
-            # Download
-            print(f"  Downloading {id}..")
-            ydl_opt = {"outtmpl": f"{self.path}/videos/%(id)s.%(ext)s", "quiet": True}
-            ydl = youtube_dl.YoutubeDL(ydl_opt)
-            ydl.download([f"https://www.youtube.com/watch?v={id}"])
+        # Download
+        settings = {"outtmpl": f"{self.path}/videos/%(id)s.%(ext)s"}
+        with YoutubeDL(settings) as ydl:
+            ydl.download(not_downloaded)
 
     def _commit(self):
         """Commits (saves) archive to path"""
