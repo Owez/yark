@@ -200,11 +200,13 @@
     <canvas id="chart_likes"></canvas>
     {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@next/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script>
         function chart(type, id, data) {
             // Generate config
             const points = {
-                labels: Object.keys(data),
+                labels: Object.keys(data).map(date => new Date(date)),
                 datasets: [{
                     label: "# of " + type,
                     data: Object.values(data),
@@ -221,7 +223,20 @@
             return new Chart(ctx, {
                 type: "line",
                 data: points,
-                options: { responsive: false }
+                options: {
+                    responsive: false, // TODO: responsive but still the right width
+                    scales: {
+                        x: {
+                            type: "time",
+                            time: {
+                                displayFormats: {
+                                    quarter: "MMM D (hA)"
+                                }
+                            }
+                        },
+
+                    }
+                }
             })
         }
 
