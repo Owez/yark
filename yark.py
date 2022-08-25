@@ -20,6 +20,7 @@ import flask
 import threading
 import webbrowser
 import logging
+import multiprocessing
 
 #
 # EXCEPTIONS
@@ -122,7 +123,12 @@ class Channel:
                 not_downloaded.append(f"https://www.youtube.com/watch?v={id}")
 
         # Download
-        settings = {"outtmpl": f"{self.path}/videos/%(id)s.%(ext)s"}
+        settings = {
+            "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
+            "format": "mp4/best/hasvid",
+            "logger": VideoLogger(),
+            "progress_hooks": [VideoLogger.finished],
+        }
         with YoutubeDL(settings) as ydl:
             ydl.download(not_downloaded)
 
@@ -171,6 +177,25 @@ class Channel:
 
     def __repr__(self) -> str:
         return self.path.name
+
+
+class VideoLogger:
+    @staticmethod
+    def finished(d):
+        if d["status"] == "downloading":
+            id = d["info_dict"]["id"]  # TODO: download percentage
+
+    def debug(self, msg):
+        pass
+
+    def info(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        print(msg)
 
 
 class Video:
