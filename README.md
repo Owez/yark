@@ -38,9 +38,7 @@ $ yark refresh owez
 
 Here's what my channel looked like after following the steps (if anything was updated/deleted it would be blue/red to indicate):
 
-<p><img src="examples/images/reportadd.png" alt="Report Demo" title="Report Demo" width="500" /></p>
-
-<!-- TODO: new demo, this one doesn't include video downloading. maybe include blue/red -->
+<p><img src="examples/images/report.png" alt="Report Demo" title="Report Demo" width="600" /></p>
 
 ## Viewing your Archive
 
