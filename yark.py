@@ -196,11 +196,11 @@ class VideoLogger:
         # Downloading percent
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
-            print(Style.DIM, f"  • Downloading {id}, at {percent}..", end="\r")
+            print(Style.DIM, f" • Downloading {id}, at {percent}..", end="\r")
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM, f"  • Downloaded {id}              ", end="\r")
+            print(Style.DIM, f" • Downloaded {id}              ", end="\r")
             print(Style.RESET_ALL)
 
     def debug(self, msg):
