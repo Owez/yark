@@ -106,12 +106,19 @@ class Channel:
         # Add videos
         print("Parsing metadata..")
         for entry in res:
-            # Update or add new
-            if entry["id"] in self.videos:
-                self.videos[entry["id"]].update(entry)
-            else:
+            # Updated marker
+            updated = False
+
+            # Update video if it exists
+            for video in self.videos:
+                if video.id == entry["id"]:
+                    video.update(entry)
+                    updated = True
+
+            # Add new video if not
+            if not updated:
                 video = Video.new(entry, self)
-                self.videos[entry["id"]] = video
+                self.videos.append(video)
                 self.reporter.added.append(video)
 
         # Commit new data
@@ -125,9 +132,9 @@ class Channel:
 
         # Curate
         not_downloaded = []
-        for id in self.videos:
-            if not self.videos[id].downloaded(ldir):
-                not_downloaded.append(f"https://www.youtube.com/watch?v={id}")
+        for video in self.videos:
+            if not video.downloaded(ldir):
+                not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
 
         # Download
         settings = {
@@ -155,32 +162,23 @@ class Channel:
     @staticmethod
     def _from_dict(encoded: dict, path: Path):
         """Decodes archive which is being loaded back up"""
-        # Basics
         channel = Channel()
         channel.path = path
         channel.version = encoded["version"]
         channel.id = encoded["id"]
         channel.reporter = Reporter(channel)
-
-        # Videos
-        channel.videos = {}
-        for id in encoded["videos"]:
-            channel.videos[id] = Video._from_dict(id, encoded["videos"][id], channel)
-
-        # Return
+        channel.videos = [
+            Video._from_dict(video, channel) for video in encoded["videos"]
+        ]
         return channel
 
     def _to_dict(self) -> dict:
         """Converts channel data to a dictionary to commit"""
-        # Basics
-        encoded = {"version": self.version, "id": self.id, "videos": {}}
-
-        # Videos
-        for id in self.videos:
-            encoded["videos"][id] = self.videos[id]._to_dict()
-
-        # Return
-        return encoded
+        return {
+            "version": self.version,
+            "id": self.id,
+            "videos": [video._to_dict() for video in self.videos],
+        }
 
     def __repr__(self) -> str:
         return self.path.name
@@ -264,11 +262,11 @@ class Video:
         return len(self.title.inner) > 1 or len(self.description.inner) > 1
 
     @staticmethod
-    def _from_dict(id: str, encoded: dict, channel: Channel):
+    def _from_dict(encoded: dict, channel: Channel):
         """Converts id and encoded dictionary to video for loading a channel"""
         video = Video()
         video.channel = channel
-        video.id = id
+        video.id = encoded["id"]
         video.title = Element._from_dict(encoded["title"], video)
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
@@ -282,6 +280,7 @@ class Video:
     def _to_dict(self) -> dict:
         """Converts video information to dictionary for committing, doesn't include id"""
         return {
+            "id": self.id,
             "title": self.title._to_dict(),
             "description": self.description._to_dict(),
             "views": self.views._to_dict(),
