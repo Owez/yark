@@ -59,9 +59,8 @@
 <h1 class="hero">{{ name }}'s videos</h1>
 {% if channel.videos %}
 <div id="content">
-    {% for id in channel.videos %}
-    {% set video = channel.videos[id] %}
-    <a href="/channel/{{ name }}/{{ id }}" class="video">
+    {% for video in channel.videos %}
+    <a href="/channel/{{ name }}/{{ video.id }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
             <img src="/archive/{{ video.thumbnail.current().path }}" {% if not video.downloaded(ldir) %}class="frost" {%

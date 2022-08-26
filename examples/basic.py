@@ -10,5 +10,5 @@ channel = Channel.load("demo").metadata()
 print(channel.videos)
 
 # Get a cool video I made and print it's description
-video = channel.videos["annp92OPZgQ"]
+video = channel.search("annp92OPZgQ")
 print(video.description.current())

@@ -41,6 +41,13 @@ class ArchiveNotFoundException(Exception):
         super().__init__(*args)
 
 
+class VideoNotFoundException(Exception):
+    """Video couldn't be found, the id was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 #
 # ARCHIVER
 #
@@ -148,6 +155,16 @@ class Channel:
         }
         with YoutubeDL(settings) as ydl:
             ydl.download(not_downloaded)
+
+    def search(self, id: str):
+        """Searches channel for a video with the corresponding `id` and returns"""
+        # Search
+        for video in self.videos:
+            if video.id == id:
+                return video
+
+        # Raise exception if it's not found
+        raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
     def _commit(self):
         """Commits (saves) archive to path"""
@@ -547,7 +564,7 @@ def viewer() -> Flask:
         """Detailed video information and viewer"""
         try:
             channel = Channel.load(name)
-            video = channel.videos[id]
+            video = channel.search(id)
             title = f"{name} – {video.title.current().lower()}"
             views_data = json.dumps(video.views._to_dict())
             likes_data = json.dumps(video.likes._to_dict())
@@ -560,6 +577,8 @@ def viewer() -> Flask:
             )
         except ArchiveNotFoundException:
             return redirect(url_for("index", error="Couldn't open channel's archive"))
+        except VideoNotFoundException:
+            return redirect(url_for("index", error="Couldn't find video in archive"))
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 

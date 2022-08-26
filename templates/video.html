@@ -60,7 +60,7 @@
         }
     }
 
-    .download {
+    .link {
         text-decoration: none;
         color: inherit;
     }
@@ -97,12 +97,17 @@
             {% endif %}
         </p>
         <p>
+            <!-- Youtube link -->
+            <a href="https://www.youtube.com/watch?v={{ video.id }}" class="link">🔗</a>
             <!-- Download link -->
-            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="download" download>🔗</a>
-            <!-- Like count -->
             <span class="spacer">•</span>
+            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="link" download>💾</a>
+            <!-- Like count -->
             {% set likes = video.likes.current() %}
+            {% if likes or likes == 0 %}
+            <span class="spacer">•</span>
             👍 {{ likes }}
+            {% endif %}
         </p>
     </div>
     <!-- Description -->
