@@ -4,7 +4,8 @@ import json
 import os
 from pathlib import Path
 from yt_dlp import YoutubeDL
-from termcolor import cprint
+import colorama
+from colorama import Style, Fore
 import requests
 import hashlib
 import sys
@@ -21,6 +22,12 @@ import threading
 import webbrowser
 import logging
 import multiprocessing
+
+#
+# COLORAMA
+#
+
+colorama.init()
 
 #
 # EXCEPTIONS
@@ -78,7 +85,7 @@ class Channel:
         print("Downloading metadata..")
         settings = {
             "outtmpl": "%(id)s%(ext)s",
-            "quiet": True,
+            "logger": VideoLogger(),
         }
         custom = len(self.id) != 24  # TODO: better custom id detection
         url = (
@@ -113,7 +120,7 @@ class Channel:
     def download(self):
         """Downloads all videos which haven't already been downloaded"""
         # Get all videos in directory
-        print("Downloading videos..")
+        print("Downloading new videos..")
         ldir = os.listdir(self.path / "videos")
 
         # Curate
@@ -127,7 +134,7 @@ class Channel:
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             "format": "mp4/best/hasvid",
             "logger": VideoLogger(),
-            "progress_hooks": [VideoLogger.finished],
+            "progress_hooks": [VideoLogger.downloading],
         }
         with YoutubeDL(settings) as ydl:
             ydl.download(not_downloaded)
@@ -181,20 +188,35 @@ class Channel:
 
 class VideoLogger:
     @staticmethod
-    def finished(d):
+    def downloading(d):
+        """Progress hook for video downloading"""
+        # Get video's id
+        id = d["info_dict"]["id"]
+
+        # Downloading percent
         if d["status"] == "downloading":
-            id = d["info_dict"]["id"]  # TODO: download percentage
+            percent = d["_percent_str"].strip()
+            print(Style.DIM, f"  • Downloading {id}, at {percent}..", end="\r")
+
+        # Finished a video's download
+        elif d["status"] == "finished":
+            print(Style.DIM, f"  • Downloaded {id}              ", end="\r")
+            print(Style.RESET_ALL)
 
     def debug(self, msg):
+        """Debug log messages, ignored"""
         pass
 
     def info(self, msg):
+        """Info log messages ignored"""
         pass
 
     def warning(self, msg):
+        """Warning log messages ignored"""
         pass
 
     def error(self, msg):
+        """Error log messages"""
         print(msg)
 
 
@@ -418,27 +440,27 @@ class Reporter:
 
         # Added
         for video in self.added:
-            cprint(f"  • {video}", "green")
+            print(Fore.GREEN + f"  • {video}")
 
         # Deleted
         for video in self.deleted:
-            cprint(f"  • {video}", "red")
+            print(Fore.RED + f"  • {video}")
 
         # Updated
         for type, element in self.updated:
-            colour = "cyan" if type in ["title", "description"] else "blue"
+            colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
             video = f"  • {element.video}".ljust(80)
             type = f"🗿{type.capitalize()}"
 
-            cprint(video + type, colour)
+            print(colour + video + type)
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
-            cprint(f"  • Nothing was added or deleted", "grey")
+            print(Style.DIM, f"  • Nothing was added or deleted")
 
         # Timestamp
         date = datetime.utcnow().isoformat()
-        print(f"Yark – {date}")
+        print(Style.RESET_ALL + f"Yark – {date}")
 
     def add_updated(self, type: str, element: Element):
         """Tells reporter that an element has been updated"""
