@@ -121,6 +121,9 @@ class Channel:
                 self.videos.append(video)
                 self.reporter.added.append(video)
 
+        # Sort videos by newest
+        self.videos.sort(reverse=True)
+
         # Commit new data
         self._commit()
 
@@ -312,6 +315,9 @@ class Video:
 
         # Return
         return f"{title}  🔭{views} 👍{likes} 📅{uploaded}  📺{width}x{height}"
+
+    def __lt__(self, other) -> bool:
+        return self.uploaded < other.uploaded
 
 
 class Element:
