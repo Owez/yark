@@ -82,6 +82,29 @@
             margin-left: 10vw;
             width: 80vw;
         }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: rgb(21, 20, 22);
+                color: rgb(238, 238, 238);
+            }
+
+            nav {
+                border-bottom: none;
+            }
+
+            input[type=text],
+            button {
+                background-color: transparent;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+            }
+
+            input[type=text],
+            button,
+            #nav-right>a {
+                color: rgb(181, 181, 181);
+            }
+        }
     </style>
     {% block styling %}{% endblock %}
     <!-- Navbar -->

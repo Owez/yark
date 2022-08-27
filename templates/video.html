@@ -7,7 +7,7 @@
     }
 
     video {
-        margin-top: 10vh;
+        margin-top: 8vh;
     }
 
     .info {
@@ -35,6 +35,7 @@
         color: #595959;
         margin-left: 1rem;
     }
+
 
     .metadata {
         display: none;
@@ -72,6 +73,14 @@
 
     ul {
         line-height: 2.25rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+        #description,
+        .metadata {
+            color: rgb(181, 181, 181);
+        }
     }
 </style>
 {% endblock %}
