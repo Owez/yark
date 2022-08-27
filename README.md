@@ -15,7 +15,7 @@ Yark lets you continuously archive all videos and metadata of a channel. You can
 
 ## Installation
 
-To install yark, simply download it off of PyPI:
+To install yark, simply download Python 3.9+ and run the following:
 
 ```shell
 $ pip3 install yark
@@ -50,8 +50,9 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/images/channel.png" alt="Channel Demo" title="Channel Demo" width="600" /></p>
-<p><img src="examples/images/video.png" alt="Video Demo" title="Video Demo" width="600" /></p>
+<p><img src="examples/images/viewer.png" alt="Viewer Demo" title="Viewer Demo" /></p>
+
+On each video, a rich history report and tracking graphs for the whole history of your yark archive. Dark/light mode is chosen depending on your system. 👐
 
 ## Details
 
