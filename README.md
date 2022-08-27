@@ -52,7 +52,7 @@ This will pop up an offline website in your browser letting you watch all videos
 
 <p><img src="examples/images/viewer.png" alt="Viewer Demo" title="Viewer Demo" /></p>
 
-On each video, a rich history report and tracking graphs for the whole history of your yark archive. Dark/light mode is chosen depending on your system. 👐
+Rich history reports and tracking graphs are under each video. Dark/light mode is chosen depending on your system. 👐
 
 ## Details
 
