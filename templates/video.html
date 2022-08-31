@@ -59,6 +59,10 @@
         .info {
             width: 80vw;
         }
+
+        .note {
+            width: calc(80vw - 2rem);
+        }
     }
 
     .link {
@@ -75,10 +79,46 @@
         line-height: 2.25rem;
     }
 
+    .note {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 0.5rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        width: calc(60vw - 2rem);
+    }
+
+    .note>.title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .note>.id {
+        font-size: 0.75rem;
+        color: #7e7e7e;
+        margin-top: 0;
+    }
+
+    .note>.body {
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
     @media (prefers-color-scheme: dark) {
 
         #description,
         .metadata {
+            color: rgb(181, 181, 181);
+        }
+
+        /* copy of base.html stuff */
+        .note {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .note>.id {
             color: rgb(181, 181, 181);
         }
     }
@@ -269,6 +309,44 @@
         if (Object.keys(likes_data).length != 1) {
             chart("Likes", "chart_likes", likes_data);
         }
+    </script>
+    {% endif %}
+    <!-- Notes -->
+    <h2>Notes</h2>
+    {% for note in video.notes %}
+    <div class="note">
+        <p class="title" contenteditable="true">{{ note.title }}</p>
+        <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
+        <p class="body" contenteditable="true">{{ note.body }}</p>
+    </div>
+    {% endfor %}
+    {% if video.notes %}
+    <script>
+        // Listen for `focusout` event on note title
+        document.addEventListener("focusout", (event) => {
+            let el = event.srcElement
+            if (el.classList.contains("title") || el.classList.contains("body")) {
+                // Make payload for title
+                let id = el.parentElement.getElementsByClassName("id")[0].innerText
+                let payload = { id: id }
+                if (el.classList.contains("title")) {
+                    payload["title"] = el.innerText
+                } else {
+                    payload["body"] = el.innerText
+                }
+
+                // Send update
+                fetch("", {
+                    method: "PUT",
+                    body: JSON.stringify(
+                        payload
+                    ),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }).then(resp => console.log(resp))
+            }
+        })
     </script>
     {% endif %}
 </div>

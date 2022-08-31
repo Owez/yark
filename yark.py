@@ -49,6 +49,13 @@ class VideoNotFoundException(Exception):
         super().__init__(*args)
 
 
+class NoteNotFoundException(Exception):
+    """Note couldn't be found, the id was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 #
 # ARCHIVER
 #
@@ -282,6 +289,13 @@ class Video:
     def updated(self) -> bool:
         """Checks if this video's title or description have been updated"""
         return len(self.title.inner) > 1 or len(self.description.inner) > 1
+
+    def search(self, id: str):
+        """Searches video for note's id"""
+        for note in self.notes:
+            if note.id == id:
+                return note
+        raise NoteNotFoundException(f"Couldn't find note {id}")
 
     @staticmethod
     def _from_dict(encoded: dict, channel: Channel):
@@ -608,22 +622,51 @@ def viewer() -> Flask:
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
-    @app.route("/channel/<name>/<id>")
+    @app.route("/channel/<name>/<id>", methods=["GET", "PUT"])
     def video(name, id):
         """Detailed video information and viewer"""
         try:
+            # Get information
             channel = Channel.load(name)
             video = channel.search(id)
-            title = f"{name} – {video.title.current().lower()}"
-            views_data = json.dumps(video.views._to_dict())
-            likes_data = json.dumps(video.likes._to_dict())
-            return render_template(
-                "video.html",
-                title=title,
-                video=video,
-                views_data=views_data,
-                likes_data=likes_data,
-            )
+
+            # Return video webpage
+            if request.method == "GET":
+                title = f"{name} – {video.title.current().lower()}"
+                views_data = json.dumps(video.views._to_dict())
+                likes_data = json.dumps(video.likes._to_dict())
+                return render_template(
+                    "video.html",
+                    title=title,
+                    video=video,
+                    views_data=views_data,
+                    likes_data=likes_data,
+                )
+
+            # Add new note
+            elif request.method == "PUT":
+                # Parse json
+                update = request.get_json()
+                if not "id" in update or (
+                    not "title" in update and not "body" in update
+                ):
+                    return "Invalid update schema", 400
+
+                # Find note
+                try:
+                    note = video.search(update["id"])
+                except NoteNotFoundException:
+                    return "Note not found", 404
+
+                # Update and save
+                if "title" in update:
+                    note.title = update["title"]
+                if "body" in update:
+                    note.body = update["body"]
+                video.channel._commit()
+
+                # Return
+                return "Updated", 200
         except ArchiveNotFoundException:
             return redirect(url_for("index", error="Couldn't open channel's archive"))
         except VideoNotFoundException:
