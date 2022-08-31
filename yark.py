@@ -3,6 +3,7 @@ from fnmatch import fnmatch
 import json
 import os
 from pathlib import Path
+from uuid import uuid4
 from yt_dlp import YoutubeDL
 import colorama
 from colorama import Style, Fore
@@ -245,6 +246,9 @@ class Video:
         video = Video()
         video.channel = channel
         video.id = entry["id"]
+        video.uploaded = _yt_date(entry["upload_date"])
+        video.width = entry["width"]
+        video.height = entry["height"]
         video.title = Element.new(video, entry["title"])
         video.description = Element.new(video, entry["description"])
         video.views = Element.new(video, entry["view_count"])
@@ -252,9 +256,7 @@ class Video:
             video, entry["like_count"] if "like_count" in entry else None
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
-        video.uploaded = _yt_date(entry["upload_date"])
-        video.width = entry["width"]
-        video.height = entry["height"]
+        video.notes = []
         return video
 
     def update(self, entry: dict):
@@ -287,28 +289,30 @@ class Video:
         video = Video()
         video.channel = channel
         video.id = encoded["id"]
+        video.uploaded = datetime.fromisoformat(encoded["uploaded"])
+        video.width = encoded["width"]
+        video.height = encoded["height"]
         video.title = Element._from_dict(encoded["title"], video)
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
         video.likes = Element._from_dict(encoded["likes"], video)
         video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
-        video.uploaded = datetime.fromisoformat(encoded["uploaded"])
-        video.width = encoded["width"]
-        video.height = encoded["height"]
+        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
         return video
 
     def _to_dict(self) -> dict:
         """Converts video information to dictionary for committing, doesn't include id"""
         return {
             "id": self.id,
+            "uploaded": self.uploaded.isoformat(),
+            "width": self.width,
+            "height": self.height,
             "title": self.title._to_dict(),
             "description": self.description._to_dict(),
             "views": self.views._to_dict(),
             "likes": self.likes._to_dict(),
             "thumbnail": self.thumbnail._to_dict(),
-            "uploaded": self.uploaded.isoformat(),
-            "width": self.width,
-            "height": self.height,
+            "notes": [note._to_dict() for note in self.notes],
         }
 
     def __repr__(self) -> str:
@@ -328,7 +332,7 @@ class Video:
         height = self.height if self.height is not None else "?"
 
         # Upload date
-        uploaded = self.uploaded.strftime("%d, %b %Y")
+        uploaded = self.uploaded.strftime("%d %b %Y")
 
         # Return
         return f"{title}  🔭{views} 👍{likes} 📅{uploaded}  📺{width}x{height}"
@@ -346,7 +350,7 @@ class Element:
         element.inner = {datetime.utcnow(): data}
         return element
 
-    def update(self, type: str, data, report: bool = True):
+    def update(self, type: str, data):
         """Updates element if it needs to be and returns self"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
@@ -448,6 +452,46 @@ class Thumbnail:
         return self.id
 
 
+class Note:
+    """Allows yark users to add notes to videos"""
+
+    @staticmethod
+    def new(video: Video, title: str, body: str = None, timestamp: int = None):
+        """Creates a new note"""
+        note = Note()
+        note.video = video
+        note.id = str(uuid4())
+        note.title = title
+        note.body = body
+        note.timestamp = timestamp
+        return note
+
+    @staticmethod
+    def _from_dict(video: Video, element: dict):
+        """Loads existing note attached to a video dict"""
+        note = Note()
+        note.video = video
+        note.id = element["id"]
+        note.title = element["title"]
+        note.body = element["body"]
+        note.timestamp = element["timestamp"]
+        return note
+
+    def _to_dict(self) -> dict:
+        """Converts note to dictionary representation"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "body": self.body,
+            "timestamp": self.timestamp,
+        }
+
+
+#
+# REPORTING
+#
+
+
 class Reporter:
     def __init__(self, channel: Channel) -> None:
         self.channel = channel
@@ -494,6 +538,9 @@ class Reporter:
         self.deleted = []
         self.updated = []
 
+#
+# UTILS
+#
 
 def _magnitude(count: int = None) -> str:
     """Displays an integer as a sort of ordinal order of magnitude"""
