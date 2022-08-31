@@ -48,11 +48,11 @@ Viewing you archive is very simple, just type `view` and optionally the archive 
 $ yark view owez
 ```
 
-This will pop up an offline website in your browser letting you watch all videos in light or dark mode 🚀
+This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer.png" alt="Viewer Demo" title="Viewer Demo" /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/channel.png" alt="Channel Demo" title="Channel Demo" /></p>
 
-Under each video is a rich video history report filled with graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
+Under each video is a rich history report filled with graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
 
 <p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/history.png" alt="History Demo" title="History Demo" /></p>
 
