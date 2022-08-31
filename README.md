@@ -38,7 +38,7 @@ $ yark refresh owez
 
 Here's what my channel looked like after following the steps (if anything was updated/deleted it would be blue/red to indicate):
 
-<p><img src="examples/images/report.png" alt="Report Demo" title="Report Demo" width="600" /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/report.png" alt="Report Demo" title="Report Demo" width="600" /></p>
 
 ## Viewing your Archive
 
@@ -50,7 +50,7 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/images/viewer.png" alt="Viewer Demo" title="Viewer Demo" /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer.png" alt="Viewer Demo" title="Viewer Demo" /></p>
 
 Rich history reports and tracking graphs are available under each video. Dark/light mode is chosen depending on your system's theme. 👐
 

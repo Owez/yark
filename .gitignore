@@ -1,3 +1,4 @@
 .vscode
-demo
+demo/
 **/.DS*
+dist/

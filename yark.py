@@ -538,9 +538,11 @@ class Reporter:
         self.deleted = []
         self.updated = []
 
+
 #
 # UTILS
 #
+
 
 def _magnitude(count: int = None) -> str:
     """Displays an integer as a sort of ordinal order of magnitude"""
@@ -641,7 +643,9 @@ def viewer() -> Flask:
 # CLI
 #
 
-if __name__ == "__main__":
+
+def main():
+    """Command-line-interface launcher"""
     # Help message
     HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
@@ -699,3 +703,7 @@ if __name__ == "__main__":
         else:
             print("Starting viewer..")
             webbrowser.open(f"http://127.0.0.1:7667/")
+
+
+if __name__ == "__main__":
+    main()
