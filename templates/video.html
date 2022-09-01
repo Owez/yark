@@ -313,6 +313,7 @@
     </script>
     {% endif %}
     <!-- Notes -->
+    {% if video.notes %}
     <h2>Notes</h2>
     {% for note in video.notes %}
     <div class="note">
@@ -321,7 +322,6 @@
         <p class="body" contenteditable="true">{{ note.body }}</p>
     </div>
     {% endfor %}
-    {% if video.notes %}
     <script>
         // Listen for `focusout` event on note title
         document.addEventListener("focusout", (event) => {

@@ -18,11 +18,9 @@ from flask import (
     url_for,
     send_from_directory,
 )
-import flask
 import threading
 import webbrowser
 import logging
-import multiprocessing
 
 #
 # COLORAMA
@@ -51,6 +49,13 @@ class VideoNotFoundException(Exception):
 
 class NoteNotFoundException(Exception):
     """Note couldn't be found, the id was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+class TimestampException(Exception):
+    """Invalid timestamp inputted for note"""
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
@@ -580,6 +585,39 @@ def _yt_date(input: str) -> datetime:
     return datetime.strptime(input, "%Y%m%d")
 
 
+def _timestamp(input: str) -> int:
+    """Parses timestamp into seconds or raises `TimestampException`"""
+    # Check existence
+    input = input.strip()
+    if input == "":
+        raise TimestampException("No input provided")
+
+    # Split colons
+    splitted = input.split(":")
+    splitted.reverse()
+    if len(splitted) > 3:
+        raise TimestampException("Days and onwards aren't supported")
+
+    # Parse
+    secs = 0
+    try:
+        # Seconds
+        secs += int(splitted[0])
+
+        # Minutes
+        if len(splitted) > 1:
+            secs += int(splitted[1]) * 60
+
+        # Hours
+        if len(splitted) > 2:
+            secs += int(splitted[2]) * 60 * 60
+    except:
+        raise TimestampException("Only numbers are allowed in timestamps")
+
+    # Return
+    return secs
+
+
 #
 # VIEWER
 #
@@ -652,9 +690,7 @@ def viewer() -> Flask:
 
                 # Create note
                 body = new["body"] if "body" in new else None
-                timestamp = (
-                    int(new["timestamp"]) if "timestamp" in new else None
-                )  # TODO: proper timestamp parsing
+                timestamp = _timestamp(new["timestamp"]) if "timestamp" in new else None
                 note = Note.new(video, new["title"], body, timestamp)
 
                 # Save new note
@@ -692,6 +728,8 @@ def viewer() -> Flask:
             return redirect(url_for("index", error="Couldn't open channel's archive"))
         except VideoNotFoundException:
             return redirect(url_for("index", error="Couldn't find video in archive"))
+        except TimestampException:
+            return "Invalid timestamp", 400
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
