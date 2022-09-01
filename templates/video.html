@@ -65,11 +65,6 @@
         }
     }
 
-    .link {
-        text-decoration: none;
-        color: inherit;
-    }
-
     .spacer {
         margin-left: 0.5rem;
         margin-right: 0.5rem;
@@ -88,13 +83,6 @@
         margin-bottom: 1rem;
     }
 
-    .note>.title {
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin-top: 0.75rem;
-        margin-bottom: 0;
-    }
-
     .note>.id {
         font-size: 0.75rem;
         color: #7e7e7e;
@@ -105,6 +93,25 @@
         margin-bottom: 0.75rem;
         font-size: 0.9rem;
     }
+
+    .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .top>.title {
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-top: 0.75rem;
+        margin-bottom: 0;
+    }
+
+    .top>.timestamp {
+        color: #4bc0c0;
+    }
+
+
 
     @media (prefers-color-scheme: dark) {
 
@@ -129,7 +136,7 @@
 {% block content %}
 <div id="content">
     <!-- Video -->
-    <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" autoplay controls></video>
+    <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" id="player" autoplay controls></video>
     <!-- Information -->
     <h1>{{ video.title.current() }}</h1>
     <div class="info">
@@ -148,10 +155,10 @@
         </p>
         <p>
             <!-- Youtube link -->
-            <a href="https://www.youtube.com/watch?v={{ video.id }}" class="link">🔗</a>
+            <a href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
             <!-- Download link -->
             <span class="spacer">•</span>
-            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" class="link" download>💾</a>
+            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" download>💾</a>
             <!-- Like count -->
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}
@@ -317,23 +324,45 @@
     <h2>Notes</h2>
     {% for note in video.notes %}
     <div class="note">
-        <p class="title" contenteditable="true">{{ note.title }}</p>
+        <!-- Top information -->
+        <div class="top">
+            <!-- Title -->
+            <p class="title" contenteditable="true">{{ note.title }}</p>
+            <!-- Timestamp -->
+            {% if note.timestamp %}<a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})"
+                class="timestamp">{{
+                note.timestamp|timestamp }}</a>{% endif %}
+        </div>
+        <!-- Identifier -->
         <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-        <p class="body" contenteditable="true">{{ note.body }}</p>
+        <!-- Optional message -->
+        <p class="body" contenteditable="true">{% if note.body %}{{ note.body }}{% else %}{% endif %}</p>
     </div>
     {% endfor %}
     <script>
+        // Puts the video player element to the provided timestamp
+        function toTimestamp(timestamp) {
+            let player = document.getElementById("player")
+            player.currentTime = Math.abs(timestamp - 1)
+            player.play()
+        }
+
         // Listen for `focusout` event on note title
         document.addEventListener("focusout", (event) => {
             let el = event.srcElement
             if (el.classList.contains("title") || el.classList.contains("body")) {
                 // Make payload for title
-                let id = el.parentElement.getElementsByClassName("id")[0].innerText
-                let payload = { id: id }
+                let payload = {}
                 if (el.classList.contains("title")) {
+                    payload["id"] = el.parentElement.parentElement.getElementsByClassName("id")[0].innerText
                     payload["title"] = el.innerText
                 } else {
-                    payload["body"] = el.innerText
+                    payload["id"] = el.parentElement.getElementsByClassName("id")[0].innerText
+                    if (el.innerText == "") {
+                        payload["body"] = null
+                    } else {
+                        payload["body"] = el.innerText
+                    }
                 }
 
                 // Send update
@@ -345,7 +374,7 @@
                     headers: {
                         "Content-Type": "application/json"
                     }
-                }).then(resp => console.log(resp))
+                })
             }
         })
     </script>

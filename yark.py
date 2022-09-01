@@ -3,6 +3,7 @@ from fnmatch import fnmatch
 import json
 import os
 from pathlib import Path
+from time import time
 from uuid import uuid4
 from yt_dlp import YoutubeDL
 import colorama
@@ -585,7 +586,7 @@ def _yt_date(input: str) -> datetime:
     return datetime.strptime(input, "%Y%m%d")
 
 
-def _timestamp(input: str) -> int:
+def _parse_timestamp(input: str) -> int:
     """Parses timestamp into seconds or raises `TimestampException`"""
     # Check existence
     input = input.strip()
@@ -616,6 +617,38 @@ def _timestamp(input: str) -> int:
 
     # Return
     return secs
+
+
+def _fmt_timestamp(timestamp: int) -> str:
+    """Formats previously parsed timestamp"""
+    # Collector
+    parts = []
+
+    # Hours
+    if timestamp >= 60 * 60:
+        # Get hours float then append truncated
+        hours = timestamp / (60 * 60)
+        parts.append(str(int(hours)).rjust(2, "0"))
+
+        # Remove truncated hours from timestamp
+        timestamp = int((hours - int(hours)) * 60 * 60)
+
+    # Minutes
+    if timestamp >= 60:
+        # Get minutes float then append truncated
+        minutes = timestamp / 60
+        parts.append(str(int(minutes)).rjust(2, "0"))
+
+        # Remove truncated minutes from timestamp
+        timestamp = int((minutes - int(minutes)) * 60)
+
+    # Seconds
+    if len(parts) == 0:
+        parts.append("00")
+    parts.append(str(timestamp).rjust(2, "0"))
+
+    # Return
+    return ":".join(parts)
 
 
 #
@@ -737,6 +770,11 @@ def viewer() -> Flask:
     def archive(target):
         """Serves archive files"""
         return send_from_directory("", target)
+
+    @app.template_filter("timestamp")
+    def _jinja2_filter_timestamp(timestamp, fmt=None):
+        """Formatter hook for timestamps"""
+        return _fmt_timestamp(timestamp)
 
     return app
 
