@@ -476,14 +476,14 @@ class Note:
     """Allows yark users to add notes to videos"""
 
     @staticmethod
-    def new(video: Video, title: str, body: str = None, timestamp: int = None):
+    def new(video: Video, timestamp: int, title: str, body: str = None):
         """Creates a new note"""
         note = Note()
         note.video = video
         note.id = str(uuid4())
+        note.timestamp = timestamp
         note.title = title
         note.body = body
-        note.timestamp = timestamp
         return note
 
     @staticmethod
@@ -492,18 +492,18 @@ class Note:
         note = Note()
         note.video = video
         note.id = element["id"]
+        note.timestamp = element["timestamp"]
         note.title = element["title"]
         note.body = element["body"]
-        note.timestamp = element["timestamp"]
         return note
 
     def _to_dict(self) -> dict:
         """Converts note to dictionary representation"""
         return {
             "id": self.id,
+            "timestamp": self.timestamp,
             "title": self.title,
             "body": self.body,
-            "timestamp": self.timestamp,
         }
 
 
@@ -722,9 +722,10 @@ def viewer() -> Flask:
                     return "Invalid schema", 400
 
                 # Create note
+                timestamp = _parse_timestamp(new["timestamp"])
+                title = new["title"]
                 body = new["body"] if "body" in new else None
-                timestamp = _parse_timestamp(new["timestamp"]) if "timestamp" in new else None
-                note = Note.new(video, new["title"], body, timestamp)
+                note = Note.new(video, timestamp, title, body)
 
                 # Save new note
                 video.notes.append(note)

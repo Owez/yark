@@ -371,7 +371,11 @@
                 headers: {
                     "Content-Type": "application/json"
                 }
-            }).then(rep => console.log(rep))
+            }).then(resp => resp.json().then(json => {
+                // Reload at created id
+                window.location.href += "#" + json["id"]
+                window.location.reload()
+            }))
         }
     </script>
     <!-- Notes -->
