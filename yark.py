@@ -723,7 +723,7 @@ def viewer() -> Flask:
 
                 # Create note
                 body = new["body"] if "body" in new else None
-                timestamp = _timestamp(new["timestamp"]) if "timestamp" in new else None
+                timestamp = _parse_timestamp(new["timestamp"]) if "timestamp" in new else None
                 note = Note.new(video, new["title"], body, timestamp)
 
                 # Save new note
