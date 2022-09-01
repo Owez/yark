@@ -622,7 +622,7 @@ def viewer() -> Flask:
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
-    @app.route("/channel/<name>/<id>", methods=["GET", "PUT"])
+    @app.route("/channel/<name>/<id>", methods=["GET", "PUT", "PATCH"])
     def video(name, id):
         """Detailed video information and viewer"""
         try:
@@ -646,11 +646,32 @@ def viewer() -> Flask:
             # Add new note
             elif request.method == "PUT":
                 # Parse json
+                new = request.get_json()
+                if not "title" in new:
+                    return "Invalid schema", 400
+
+                # Create note
+                body = new["body"] if "body" in new else None
+                timestamp = (
+                    int(new["timestamp"]) if "timestamp" in new else None
+                )  # TODO: proper timestamp parsing
+                note = Note.new(video, new["title"], body, timestamp)
+
+                # Save new note
+                video.notes.append(note)
+                video.channel._commit()
+
+                # Return
+                return note._to_dict(), 200
+
+            # Update existing note
+            elif request.method == "PATCH":
+                # Parse json
                 update = request.get_json()
                 if not "id" in update or (
                     not "title" in update and not "body" in update
                 ):
-                    return "Invalid update schema", 400
+                    return "Invalid schema", 400
 
                 # Find note
                 try:

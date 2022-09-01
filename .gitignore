@@ -2,3 +2,4 @@
 demo/
 **/.DS*
 dist/
+__pycache__/
