@@ -3,9 +3,9 @@ from fnmatch import fnmatch
 import json
 import os
 from pathlib import Path
-from time import time
+import time
 from uuid import uuid4
-from yt_dlp import YoutubeDL
+from yt_dlp import YoutubeDL, DownloadError
 import colorama
 from colorama import Style, Fore
 import requests
@@ -103,7 +103,6 @@ class Channel:
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
-        print("Downloading metadata..")
         settings = {
             "outtmpl": "%(id)s%(ext)s",
             "logger": VideoLogger(),
@@ -115,7 +114,36 @@ class Channel:
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
-            res = ydl.extract_info(url, download=False)["entries"]
+            res = None
+            for _ in range(3):
+                try:
+                    print("Downloading metadata..")
+                    res = ydl.extract_info(url, download=False)["entries"]
+                    break
+                except DownloadError as e:
+                    msg = "Error whilst downloading, retrying in a few seconds.."
+                    if (
+                        "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+                        in e.msg
+                    ):
+                        msg = "Couldn't connect to YouTube, retrying in a few seconds.."
+                    elif "500" in e.msg:
+                        msg = "Downloading failed because YouTube servers had a fault, retrying in a few seconds.."
+
+                    print(
+                        Fore.YELLOW + msg + Fore.RESET,
+                        file=sys.stderr,
+                    )
+                    time.sleep(5)
+
+            if res is None:
+                print(
+                    Fore.RED
+                    + "Sorry, failed to download metadata. Please file a bug report if you think this is a problem with yark!"
+                    + Fore.RESET,
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
         # # NOTE: remove for production
         # demo = Path("demo/")
