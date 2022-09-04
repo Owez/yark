@@ -1,3 +1,4 @@
+from curses import ERR
 from datetime import datetime
 from fnmatch import fnmatch
 import json
@@ -120,30 +121,12 @@ class Channel:
                     print("Downloading metadata..")
                     res = ydl.extract_info(url, download=False)["entries"]
                     break
-                except DownloadError as e:
-                    msg = "Error whilst downloading, retrying in a few seconds.."
-                    if (
-                        "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
-                        in e.msg
-                    ):
-                        msg = "Couldn't connect to YouTube, retrying in a few seconds.."
-                    elif "500" in e.msg:
-                        msg = "Downloading failed because YouTube servers had a fault, retrying in a few seconds.."
-
-                    print(
-                        Fore.YELLOW + msg + Fore.RESET,
-                        file=sys.stderr,
-                    )
+                except DownloadError as exception:
+                    _dl_error(exception)
                     time.sleep(5)
 
             if res is None:
-                print(
-                    Fore.RED
-                    + "Sorry, failed to download metadata. Please file a bug report if you think this is a problem with yark!"
-                    + Fore.RESET,
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+                _dl_fail("metadata")
 
         # # NOTE: remove for production
         # demo = Path("demo/")
@@ -196,6 +179,7 @@ class Channel:
             "progress_hooks": [VideoLogger.downloading],
         }
         with YoutubeDL(settings) as ydl:
+            # TODO: retry
             ydl.download(not_downloaded)
 
     def search(self, id: str):
@@ -677,6 +661,43 @@ def _fmt_timestamp(timestamp: int) -> str:
 
     # Return
     return ":".join(parts)
+
+
+def _dl_error(exception: DownloadError):
+    """Prints errors to stdout depending on what kind of download error occurred"""
+    # Default message
+    msg = f"Unknown error whilst downloading\n{exception}"
+
+    # Types of errors
+    ERRORS = [
+        "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+        "500",
+    ]
+
+    # Server connection
+    if ERRORS[0] in exception.msg:
+        msg = "Issue connecting with YouTube's servers"
+
+    # Server fault
+    elif ERRORS[1] in exception.msg:
+        msg = "Fault with YouTube's servers"
+
+    # Print error
+    print(
+        Fore.YELLOW + msg + ", retrying in a few seconds.." + Fore.RESET,
+        file=sys.stderr,
+    )
+
+
+def _dl_fail(name: str):
+    """Failure and exit messages for when something critical happened whilst downloading"""
+    print(
+        Fore.RED
+        + f"Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
+        + Fore.RESET,
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 #
