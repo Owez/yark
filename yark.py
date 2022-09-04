@@ -157,17 +157,8 @@ class Channel:
 
     def download(self):
         """Downloads all videos which haven't already been downloaded"""
-        # Get all videos in directory
-        print("Downloading new videos..")
-        ldir = os.listdir(self.path / "videos")
-
-        # Curate
-        not_downloaded = []
-        for video in self.videos:
-            if not video.downloaded(ldir):
-                not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
-
         # Download
+        print("Downloading new videos..")
         settings = {
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             "format": "mp4/best/hasvid",
@@ -175,8 +166,15 @@ class Channel:
             "progress_hooks": [VideoLogger.downloading],
         }
         with YoutubeDL(settings) as ydl:
-            # TODO: retry downloads; #17 <https://github.com/Owez/yark/issues/17>
-            ydl.download(not_downloaded)
+            for i in range(3):
+                try:
+                    not_downloaded = self._curate()
+                    ydl.download(
+                        not_downloaded
+                    )  # TODO: overwrite .parts to finish #17 <https://github.com/Owez/yark/issues/17>
+                except Exception as exception:
+                    print()  # counter the carriage return
+                    _dl_error("videos", exception, i != 2)
 
     def search(self, id: str):
         """Searches channel for a video with the corresponding `id` and returns"""
@@ -187,6 +185,20 @@ class Channel:
 
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
+
+    def _curate(self) -> list:
+        """Curate videos which aren't downloaded and return their urls"""
+        # Get all videos in directory
+        ldir = os.listdir(self.path / "videos")
+
+        # Curate
+        not_downloaded = []
+        for video in self.videos:
+            if not video.downloaded(ldir):
+                not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
+
+        # Return
+        return not_downloaded
 
     def _commit(self):
         """Commits (saves) archive to path"""
@@ -236,12 +248,17 @@ class VideoLogger:
         # Downloading percent
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
-            print(Style.DIM, f" • Downloading {id}, at {percent}..", end="\r")
+            print(
+                Style.DIM,
+                f" • Downloading {id}, at {percent}.." + Style.NORMAL,
+                end="\r",
+            )
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM, f" • Downloaded {id}              ", end="\r")
-            print(Style.RESET_ALL)
+            print(
+                Style.DIM, f" • Downloaded {id}              " + Style.NORMAL, end="\r"
+            )
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -668,6 +685,7 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     ERRORS = [
         "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
         "500",
+        "Got error: The read operation timed out",
     ]
 
     # Download errors
@@ -677,8 +695,12 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
             msg = "Issue connecting with YouTube's servers"
 
         # Server fault
-        if ERRORS[1] in exception.msg:
+        elif ERRORS[1] in exception.msg:
             msg = "Fault with YouTube's servers"
+
+        # Timeout
+        elif ERRORS[2] in exception.msg:
+            msg = "Timed out trying to download video"
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
