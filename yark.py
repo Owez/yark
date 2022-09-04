@@ -104,6 +104,7 @@ class Channel:
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
+        print("Downloading metadata..")
         settings = {
             "outtmpl": "%(id)s%(ext)s",
             "logger": VideoLogger(),
@@ -118,7 +119,6 @@ class Channel:
             res = None
             for i in range(3):
                 try:
-                    print("Downloading metadata..")
                     res = ydl.extract_info(url, download=False)["entries"]
                     break
                 except Exception as exception:
@@ -683,17 +683,18 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
     print(
-        Fore.YELLOW + msg + suffix + Fore.RESET,
+        Fore.YELLOW + "  • " + msg + suffix + Fore.RESET,
         file=sys.stderr,
     )
 
     # Wait if retrying, exit if failed
     if retrying:
         time.sleep(5)
+        print(f"  • Retrying {name} download..")
     else:
         print(
             Fore.RED
-            + f"Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
+            + f"  • Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
             + Fore.RESET,
             file=sys.stderr,
         )
