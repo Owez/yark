@@ -171,24 +171,22 @@ class Channel:
         print("Downloading new videos..")
         settings = {
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
-            "format": "mp4/best/hasvid",
+            "format": "best/mp4/hasvid",
             "logger": VideoLogger(),
             "progress_hooks": [VideoLogger.downloading],
         }
         with YoutubeDL(settings) as ydl:
-            for i in range(3):
+            for i in range(5):
                 try:
                     not_downloaded = self._curate()
-                    ydl.download(
-                        not_downloaded
-                    )  # TODO: overwrite .parts to finish #17 <https://github.com/Owez/yark/issues/17>
+                    ydl.download(not_downloaded)  # TODO: overwrite .parts
                 except Exception as exception:
                     # Get around carriage return
                     if i == 0:
                         print()
 
                     # Report error
-                    _dl_error("videos", exception, i != 2)
+                    _dl_error("videos", exception, i != 4)
 
     def search(self, id: str):
         """Searches channel for a video with the corresponding `id` and returns"""
@@ -722,7 +720,7 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
     print(
-        Fore.YELLOW + "  • " + msg + suffix + Fore.RESET,
+        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
         file=sys.stderr,
     )
 
