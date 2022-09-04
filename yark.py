@@ -122,7 +122,17 @@ class Channel:
                     res = ydl.extract_info(url, download=False)["entries"]
                     break
                 except Exception as exception:
-                    _dl_error("metadata", exception, i != 2)
+                    # Report error
+                    retrying = i != 2
+                    _dl_error("metadata", exception, retrying)
+
+                    # Print retrying message
+                    if retrying:
+                        print(
+                            Style.DIM
+                            + f"  • Retrying metadata download.."
+                            + Style.RESET_ALL
+                        )
 
         # # NOTE: remove for production
         # demo = Path("demo/")
@@ -173,7 +183,11 @@ class Channel:
                         not_downloaded
                     )  # TODO: overwrite .parts to finish #17 <https://github.com/Owez/yark/issues/17>
                 except Exception as exception:
-                    print()  # counter the carriage return
+                    # Get around carriage return
+                    if i == 0:
+                        print()
+
+                    # Report error
                     _dl_error("videos", exception, i != 2)
 
     def search(self, id: str):
@@ -256,9 +270,7 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(
-                Style.DIM, f" • Downloaded {id}              " + Style.NORMAL, end="\r"
-            )
+            print(Style.DIM, f" • Downloaded {id}              " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -686,6 +698,7 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
         "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
         "500",
         "Got error: The read operation timed out",
+        "No such file or directory",
     ]
 
     # Download errors
@@ -702,6 +715,10 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
         elif ERRORS[2] in exception.msg:
             msg = "Timed out trying to download video"
 
+        # Video deleted whilst downloading
+        elif ERRORS[3] in exception.msg:
+            msg = "Video deleted whilst downloading"
+
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
     print(
@@ -712,7 +729,6 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     # Wait if retrying, exit if failed
     if retrying:
         time.sleep(5)
-        print(f"  • Retrying {name} download..")
     else:
         print(
             Fore.RED
