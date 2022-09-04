@@ -116,17 +116,13 @@ class Channel:
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
             res = None
-            for _ in range(3):
+            for i in range(3):
                 try:
                     print("Downloading metadata..")
                     res = ydl.extract_info(url, download=False)["entries"]
                     break
-                except DownloadError as exception:
-                    _dl_error(exception)
-                    time.sleep(5)
-
-            if res is None:
-                _dl_fail("metadata")
+                except Exception as exception:
+                    _dl_error("metadata", exception, i != 2)
 
         # # NOTE: remove for production
         # demo = Path("demo/")
@@ -179,7 +175,7 @@ class Channel:
             "progress_hooks": [VideoLogger.downloading],
         }
         with YoutubeDL(settings) as ydl:
-            # TODO: retry
+            # TODO: retry downloads; #17 <https://github.com/Owez/yark/issues/17>
             ydl.download(not_downloaded)
 
     def search(self, id: str):
@@ -261,7 +257,7 @@ class VideoLogger:
 
     def error(self, msg):
         """Error log messages"""
-        print(msg)
+        pass
 
 
 class Video:
@@ -663,10 +659,10 @@ def _fmt_timestamp(timestamp: int) -> str:
     return ":".join(parts)
 
 
-def _dl_error(exception: DownloadError):
+def _dl_error(name: str, exception: DownloadError, retrying: bool):
     """Prints errors to stdout depending on what kind of download error occurred"""
     # Default message
-    msg = f"Unknown error whilst downloading\n{exception}"
+    msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"
 
     # Types of errors
     ERRORS = [
@@ -674,30 +670,34 @@ def _dl_error(exception: DownloadError):
         "500",
     ]
 
-    # Server connection
-    if ERRORS[0] in exception.msg:
-        msg = "Issue connecting with YouTube's servers"
+    # Download errors
+    if type(exception) == DownloadError:
+        # Server connection
+        if ERRORS[0] in exception.msg:
+            msg = "Issue connecting with YouTube's servers"
 
-    # Server fault
-    elif ERRORS[1] in exception.msg:
-        msg = "Fault with YouTube's servers"
+        # Server fault
+        if ERRORS[1] in exception.msg:
+            msg = "Fault with YouTube's servers"
 
     # Print error
+    suffix = ", retrying in a few seconds.." if retrying else ""
     print(
-        Fore.YELLOW + msg + ", retrying in a few seconds.." + Fore.RESET,
+        Fore.YELLOW + msg + suffix + Fore.RESET,
         file=sys.stderr,
     )
 
-
-def _dl_fail(name: str):
-    """Failure and exit messages for when something critical happened whilst downloading"""
-    print(
-        Fore.RED
-        + f"Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
-        + Fore.RESET,
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    # Wait if retrying, exit if failed
+    if retrying:
+        time.sleep(5)
+    else:
+        print(
+            Fore.RED
+            + f"Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
+            + Fore.RESET,
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 #
