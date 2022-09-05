@@ -18,7 +18,7 @@ Yark lets you continuously archive all videos and metadata of a channel. You can
 To install yark, simply download Python 3.9+ and run the following:
 
 ```shell
-$ pip3 install yark
+$ COMING SOON - expected mid september!
 ```
 
 ## Managing your Archive
