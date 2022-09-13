@@ -18,7 +18,7 @@ Yark lets you continuously archive all videos and metadata of a channel. You can
 To install yark, simply download Python 3.9+ and run the following:
 
 ```shell
-$ COMING SOON - expected mid september!
+$ pip3 install yark
 ```
 
 ## Managing your Archive
@@ -62,5 +62,4 @@ Here are some things to keep in mind when using yark; the good and the bad:
 
 - Don't create a new archive again if you just want to update it, yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
-- Scheduling isn't a feature yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar
-- Scheduling once a day is recommended because getting metadata takes ages!
+- Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!

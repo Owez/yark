@@ -321,7 +321,7 @@ class Video:
         """Checks if this video has been downloaded"""
         # Try to find id in videos
         for file in ldir:
-            if fnmatch(file, f"{self.id}*"):
+            if fnmatch(file, f"{self.id}.mp4"):
                 return True
 
         # No matches
@@ -930,6 +930,13 @@ def main():
         else:
             print("Starting viewer..")
             webbrowser.open(f"http://127.0.0.1:7667/")
+
+    # Unknown
+    else:
+        print(
+            f"{HELP}\n\nError: unknown command '{args[0]}' provided!", file=sys.stderr
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
