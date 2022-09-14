@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yark"
-version = "0.1.0"
+version = "0.1.5"
 description = "YouTube archiving made simple."
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 license = "MIT"
@@ -10,6 +10,9 @@ classifiers = [
     "Topic :: System :: Archiving",
     "Topic :: System :: Archiving :: Backup",
     "Topic :: Multimedia :: Video"
+]
+include = [
+    { path = "templates/*" }
 ]
 
 [tool.poetry.dependencies]
