@@ -1,4 +1,3 @@
-from curses import ERR
 from datetime import datetime
 from fnmatch import fnmatch
 import json
@@ -856,7 +855,7 @@ def viewer() -> Flask:
     @app.route("/archive/<path:target>")
     def archive(target):
         """Serves archive files"""
-        return send_from_directory("", target)
+        return send_from_directory(os.getcwd(), target)
 
     @app.template_filter("timestamp")
     def _jinja2_filter_timestamp(timestamp, fmt=None):
