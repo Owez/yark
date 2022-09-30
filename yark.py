@@ -1,5 +1,4 @@
 from datetime import datetime
-from ensurepip import version
 from fnmatch import fnmatch
 import json
 import os
