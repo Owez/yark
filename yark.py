@@ -736,6 +736,15 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
         sys.exit(1)
 
 
+def _archive_not_found():
+    """Errors out the user if the archive doesn't exist"""
+    print(
+        "Archive doesn't exist, please make sure you typed it's name correctly!",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
 #
 # VIEWER
 #
@@ -905,29 +914,40 @@ def main():
             raise Exception("Please provide the archive name")
 
         # Refresh channel
-        channel = Channel.load(args[1])
-        channel.metadata()
-        channel.download()
-        channel.reporter.print()
+        try:
+            channel = Channel.load(args[1])
+            channel.metadata()
+            channel.download()
+            channel.reporter.print()
+        except ArchiveNotFoundException:
+            _archive_not_found()
 
     # View
     elif args[0] == "view":
-        # Get and start app
-        app = viewer()
-        threading.Thread(
-            target=lambda: app.run(host="127.0.0.1", port=7667, debug=False)
-        ).start()
+
+        def launch():
+            """Launches viewer"""
+            app = viewer()
+            threading.Thread(target=lambda: app.run(port=7667))
 
         # Start on channel name
         if len(args) > 1:
             # Get name
             channel = args[1]
+
+            # Jank archive check
+            if not Path(channel).exists():
+                _archive_not_found()
+
+            # Launch and start browser
             print(f"Starting viewer for {channel}..")
+            launch()
             webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}")
 
         # Start on channel finder
         else:
             print("Starting viewer..")
+            launch()
             webbrowser.open(f"http://127.0.0.1:7667/")
 
     # Unknown
