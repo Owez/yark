@@ -1,4 +1,5 @@
 from datetime import datetime
+from ensurepip import version
 from fnmatch import fnmatch
 import json
 import os
@@ -22,6 +23,8 @@ from flask import (
 import threading
 import webbrowser
 import logging
+import urllib3
+from importlib.metadata import version
 
 #
 # COLORAMA
@@ -765,6 +768,34 @@ def _archive_not_found():
     sys.exit(1)
 
 
+def _pypi_version():
+    """Checks if there's a new version of yark and tells the user if it's significant"""
+    # Get package data from PyPI
+    http = urllib3.PoolManager()
+    req = http.request("GET", "https://pypi.org/pypi/yark/json")
+    data = json.loads(req.data.decode("utf-8"))
+
+    def decode_version(version: str) -> tuple:
+        """Decodes stringified versioning into a tuple"""
+        return tuple([int(v) for v in version.split(".")[:2]])
+
+    # Generate versions
+    our_major, our_minor = decode_version(version("yark"))
+    their_major, their_minor = decode_version(data["info"]["version"])
+
+    # Compare versions
+    if their_major > our_major:
+        print(
+            Fore.YELLOW
+            + f"There's a major update for yark ready to download! Run `pip3 install --upgrade yark`"
+            + Fore.RESET
+        )
+    elif their_minor > our_minor:
+        print(
+            f"There's a small update for yark ready to download! Run `pip3 install --upgrade yark`"
+        )
+
+
 #
 # VIEWER
 #
@@ -904,6 +935,9 @@ def main():
     # Help message
     HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
+    # Version announcements
+    _pypi_version()
+
     # Get arguments
     args = sys.argv[1:]
 
@@ -948,7 +982,7 @@ def main():
         def launch():
             """Launches viewer"""
             app = viewer()
-            threading.Thread(target=lambda: app.run(port=7667))
+            threading.Thread(target=lambda: app.run(port=7667)).run()
 
         # Start on channel name
         if len(args) > 1:
@@ -961,14 +995,14 @@ def main():
 
             # Launch and start browser
             print(f"Starting viewer for {channel}..")
-            launch()
             webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}")
+            launch()
 
         # Start on channel finder
         else:
             print("Starting viewer..")
-            launch()
             webbrowser.open(f"http://127.0.0.1:7667/")
+            launch()
 
     # Unknown
     else:
