@@ -71,6 +71,9 @@ class Channel:
     @staticmethod
     def new(path: Path, id: str):
         """Creates a new channel"""
+        # Get id if in url
+        id = id.rsplit("/", 1)[-1]
+
         # Details
         print("Creating new channel..")
         channel = Channel()
@@ -125,11 +128,18 @@ class Channel:
                     retrying = i != 2
                     _dl_error("metadata", exception, retrying)
 
+                    # Try alternative route
+                    alt = "youtube.com/c/" in url
+                    if alt:
+                        url = "https://youtube.com/user/" + self
+
                     # Print retrying message
                     if retrying:
                         print(
                             Style.DIM
-                            + f"  • Retrying metadata download.."
+                            + f"  • Retrying metadata download"
+                            + (" with alternative route" if alt else "")
+                            + ".."
                             + Style.RESET_ALL
                         )
 
@@ -696,6 +706,8 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
         "500",
         "Got error: The read operation timed out",
         "No such file or directory",
+        "HTTP Erorr 404: Not Found",
+        "<urlopen error timed out>",
     ]
 
     # Download errors
@@ -715,6 +727,14 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
         # Video deleted whilst downloading
         elif ERRORS[3] in exception.msg:
             msg = "Video deleted whilst downloading"
+
+        # Channel not found, might need to retry with alternative route
+        elif ERRORS[4] in exception.msg:
+            msg = "Couldn't find channel by it's id"
+
+        # Random timeout; not sure if its user-end or youtube-end
+        elif ERRORS[5] in exception.msg:
+            msg = "Timed out trying to reach YouTube"
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
