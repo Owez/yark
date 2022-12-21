@@ -113,7 +113,7 @@ class Channel:
                 (1, 2, "Replace channel id with url")
             ]
             guide_fmt = Style.NORMAL + f"Here's an upgrade guide:\n" + "\n".join([f"• Version {old} to {new}: {msg}" for old,new,msg in UPGRADE_GUIDE])
-            _msg_err(f"Error: Incompatible archive; we expect {ARCHIVE_COMPAT} but got {decoded.version}\n" + guide_fmt, False)
+            _msg_err(f"Error: Incompatible archive; we expect {ARCHIVE_COMPAT} but got {decoded.version}\n" + guide_fmt)
             sys.exit(1)
 
         # Return
@@ -177,7 +177,7 @@ class Channel:
         # Commit new data
         self._commit()
 
-    def download(self):
+    def download(self, maximum: int = None):
         """Downloads all videos which haven't already been downloaded"""
         # Download
         settings = {
@@ -190,17 +190,19 @@ class Channel:
             for i in range(5):
                 try:
                     # Curate list of non-downloaded videos
-                    not_downloaded = self._curate()
+                    not_downloaded = self._curate(maximum)
 
                     # Print curated if this is the first time
                     if i == 0:
-                        if len(not_downloaded) == 1:
-                            print("Downloading a new video..")
-                        elif len(not_downloaded) > 1:
-                            print(f"Downloading {len(not_downloaded)} new videos..")
+                        msg_start = "Downloading a new video" if len(not_downloaded) == 1 else f"Downloading {min(len(not_downloaded), maximum)} new videos"
+                        msg_end = f" (of max {maximum}).." if maximum is not None else ".."
+                        print(msg_start + msg_end)
 
                     # Download from curated list
                     ydl.download(not_downloaded)  # TODO: overwrite .parts
+
+                    # Stop if we've got them all
+                    break
                 except Exception as exception:
                     # Get around carriage return
                     if i == 0:
@@ -219,7 +221,7 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self) -> list:
+    def _curate(self, maximum: int = None) -> list:
         """Curate videos which aren't downloaded and return their urls"""
         # Get all videos in directory
         ldir = os.listdir(self.path / "videos")
@@ -227,7 +229,12 @@ class Channel:
         # Curate
         not_downloaded = []
         for video in self.videos:
-            if not video.downloaded(ldir):
+            # Stop if we've reached our maximum
+            if maximum is not None and len(not_downloaded) == maximum:
+                break
+
+            # Add if not downloaded
+            elif not video.downloaded(ldir):
                 not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
 
         # Return
@@ -759,14 +766,14 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     if retrying:
         time.sleep(5)
     else:
-        _msg_err("  • Sorry, failed to download {name}")
+        _msg_err("  • Sorry, failed to download {name}", True)
         sys.exit(1)
 
 
 def _archive_not_found():
     """Errors out the user if the archive doesn't exist"""
     _msg_err(
-        "Archive doesn't exist, please make sure you typed it's name correctly!", False
+        "Archive doesn't exist, please make sure you typed it's name correctly!"
     )
     sys.exit(1)
 
@@ -798,7 +805,7 @@ def _pypi_version():
             f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
-def _msg_err(msg: str, report_msg: bool = True):
+def _msg_err(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = msg if not report_msg else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
     print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
@@ -940,7 +947,7 @@ def viewer() -> Flask:
 def main():
     """Command-line-interface launcher"""
     # Help message
-    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]  Creates new archive with name and channel url\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]        Creates new archive with name and channel url\n  refresh [name] [max?]   Refreshes archive metadata/thumbnails/videos with optional max\n  view [name?]            Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     # Get arguments
     args = sys.argv[1:]
@@ -948,14 +955,14 @@ def main():
     # No arguments
     if len(args) == 0:
         print(HELP, file=sys.stderr)
-        _msg_err(f"\nError: No arguments provided", False)
+        _msg_err(f"\nError: No arguments provided")
         sys.exit(1)
 
     # Version announcements before going further
     try:
         _pypi_version()
     except Exception as err:
-        _msg_err(f"Error: Failed to check for new Yark version, info:\n" + Style.NORMAL + str(err) + Style.BRIGHT)
+        _msg_err(f"Error: Failed to check for new Yark version, info:\n" + Style.NORMAL + str(err) + Style.BRIGHT, True)
 
     # Help
     if args[0] in ["help", "--help", "-h"]:
@@ -966,7 +973,7 @@ def main():
     elif args[0] == "new":
         # Bad arguments
         if len(args) < 3:
-            _msg_err("Please provide an archive name and the channel id", False)
+            _msg_err("Please provide an archive name and the channel url")
             sys.exit(1)
 
         # Create channel
@@ -976,14 +983,23 @@ def main():
     elif args[0] == "refresh":
         # Bad arguments
         if len(args) < 2:
-            _msg_err("Please provide the archive name", False)
+            _msg_err("Please provide the archive name")
             sys.exit(1)
+
+        # Get max count
+        maximum = None
+        if len(args) >= 3:
+            try:
+                maximum = int(args[2])
+            except:
+                _msg_err("Couldn't parse maximum videos to get, please enter a number")
+                sys.exit(1)
 
         # Refresh channel
         try:
             channel = Channel.load(args[1])
             channel.metadata()
-            channel.download()
+            channel.download(maximum)
             channel.reporter.print()
         except ArchiveNotFoundException:
             _archive_not_found()
@@ -1019,7 +1035,7 @@ def main():
     # Unknown
     else:
         print(HELP, file=sys.stderr)
-        _msg_err(f"\nError: unknown command '{args[0]}' provided!")
+        _msg_err(f"\nError: unknown command '{args[0]}' provided!", True)
         sys.exit(1)
 
 
