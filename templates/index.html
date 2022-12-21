@@ -12,6 +12,20 @@
     input[type=text] {
         width: calc(15rem + 20vw);
     }
+
+    .visited {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-left: 20vw;
+        margin-right: 20vw;
+        gap: 7px;
+    }
+
+    .visited > a {
+        color: rgb(106, 191, 219);
+    }
 </style>
 {% endblock %}
 
@@ -20,4 +34,12 @@
 <form action="/" method="post">
     <input type="text" name="channel" placeholder="e.g. pewdiepie">
 </form>
+{% if visited %}
+<div class="visited">
+    <p>Recent Archives: </p>
+    {% for id in visited %}
+    <a href="/channel/{{ id }}">{{ id }}</a>
+    {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

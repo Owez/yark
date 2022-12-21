@@ -835,8 +835,11 @@ def viewer() -> Flask:
 
         # Show page
         elif request.method == "GET":
+            visited = request.cookies.get("visited")
+            if visited is not None:
+                visited = json.loads(visited)
             error = request.args["error"] if "error" in request.args else None
-            return render_template("index.html", error=error)
+            return render_template("index.html", error=error, visited=visited)
 
     @app.route("/channel/<name>")
     def channel(name):
