@@ -134,8 +134,6 @@ class Channel:
             for i in range(3):
                 try:
                     res = ydl.extract_info(self.url, download=False)
-                    with open("s2/dump.json", "w+") as file:
-                        json.dump(res, file)
                     break
                 except Exception as exception:
                     # Report error
@@ -413,7 +411,7 @@ class Video:
         uploaded = self.uploaded.strftime("%d %b %Y")
 
         # Return
-        return f"{title}  🔭{views} 👍{likes} 📅{uploaded}  📺{width}x{height}"
+        return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
 
     def __lt__(self, other) -> bool:
         return self.uploaded < other.uploaded
@@ -586,7 +584,7 @@ class Reporter:
         for type, element in self.updated:
             colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
             video = f"  • {element.video}".ljust(80)
-            type = f"🗿{type.capitalize()}"
+            type = f"🔥{type.capitalize()}"
 
             print(colour + video + type)
 
