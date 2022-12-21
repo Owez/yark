@@ -63,6 +63,12 @@ class TimestampException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
+#
+# CONSTANTS
+#
+
+"""Version of yark archives which this script is capable of properly parsing"""
+ARCHIVE_COMPAT = 2
 
 #
 # ARCHIVER
@@ -71,17 +77,14 @@ class TimestampException(Exception):
 
 class Channel:
     @staticmethod
-    def new(path: Path, id: str):
+    def new(path: Path, url: str):
         """Creates a new channel"""
-        # Get id if in url
-        id = id.rsplit("/", 1)[-1]
-
         # Details
         print("Creating new channel..")
         channel = Channel()
         channel.path = Path(path)
-        channel.version = 1
-        channel.id = id
+        channel.version = ARCHIVE_COMPAT
+        channel.url = url
         channel.videos = {}
         channel.reporter = Reporter(channel)
 
@@ -101,8 +104,19 @@ class Channel:
         # Load config
         encoded = json.load(open(path / "yark.json", "r"))
 
-        # Decode and return
+        # Decode
         decoded = Channel._from_dict(encoded, path)
+
+        # Check version and exit if wrong
+        if decoded.version != ARCHIVE_COMPAT:
+            UPGRADE_GUIDE = [
+                (1, 2, "Replace channel id with url")
+            ]
+            guide_fmt = Style.NORMAL + f"Here's an upgrade guide:\n" + "\n".join([f"• Version {old} to {new}: {msg}" for old,new,msg in UPGRADE_GUIDE])
+            _msg_err(f"Error: Incompatible archive; we expect {ARCHIVE_COMPAT} but got {decoded.version}\n" + guide_fmt, False)
+            sys.exit(1)
+
+        # Return
         return decoded
 
     def metadata(self):
@@ -113,48 +127,32 @@ class Channel:
             "outtmpl": "%(id)s%(ext)s",
             "logger": VideoLogger(),
         }
-        custom = len(self.id) != 24  # TODO: better custom id detection
-        url = (
-            "https://www.youtube.com/" + ("channel/" if not custom else "c/") + self.id
-        )
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
             res = None
             for i in range(3):
                 try:
-                    res = ydl.extract_info(url, download=False)["entries"]
+                    res = ydl.extract_info(self.url, download=False)
+                    with open("s2/dump.json", "w+") as file:
+                        json.dump(res, file)
                     break
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
                     _dl_error("metadata", exception, retrying)
 
-                    # Try alternative route
-                    alt = "youtube.com/c/" in url
-                    if alt:
-                        url = "https://youtube.com/user/" + self
-
                     # Print retrying message
                     if retrying:
                         print(
                             Style.DIM
-                            + f"  • Retrying metadata download"
-                            + (" with alternative route" if alt else "")
-                            + ".."
+                            + f"  • Retrying metadata download.."
                             + Style.RESET_ALL
                         )
 
-        # # NOTE: remove for production
-        # demo = Path("demo/")
-        # if not demo.exists():
-        #     demo.mkdir()
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
-
         # Add videos
         print("Parsing metadata..")
-        for entry in res:
+        for entry in res["entries"][0]["entries"]:
             # Updated marker
             updated = False
 
@@ -242,7 +240,7 @@ class Channel:
         channel = Channel()
         channel.path = path
         channel.version = encoded["version"]
-        channel.id = encoded["id"]
+        channel.url = encoded["url"]
         channel.reporter = Reporter(channel)
         channel.videos = [
             Video._from_dict(video, channel) for video in encoded["videos"]
@@ -253,7 +251,7 @@ class Channel:
         """Converts channel data to a dictionary to commit"""
         return {
             "version": self.version,
-            "id": self.id,
+            "url": self.url,
             "videos": [video._to_dict() for video in self.videos],
         }
 
@@ -749,20 +747,14 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
     if retrying:
         time.sleep(5)
     else:
-        print(
-            Fore.RED
-            + f"  • Sorry, failed to download {name}. Please file a bug report if you think this is a problem with yark!"
-            + Fore.RESET,
-            file=sys.stderr,
-        )
+        _msg_err("  • Sorry, failed to download {name}")
         sys.exit(1)
 
 
 def _archive_not_found():
     """Errors out the user if the archive doesn't exist"""
-    print(
-        "Archive doesn't exist, please make sure you typed it's name correctly!",
-        file=sys.stderr,
+    _msg_err(
+        "Archive doesn't exist, please make sure you typed it's name correctly!"
     )
     sys.exit(1)
 
@@ -794,6 +786,10 @@ def _pypi_version():
             f"There's a small update for yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
+def _msg_err(msg: str, report_msg: bool = True):
+    """Provides a red-coloured error message to the user in the STDERR pipe"""
+    msg = msg if not report_msg else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+    print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
 
 #
 # VIEWER
@@ -932,22 +928,25 @@ def viewer() -> Flask:
 def main():
     """Command-line-interface launcher"""
     # Help message
-    HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [id]   Creates new archive with name and channel id\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
-
-    # Version announcements
-    _pypi_version()
+    HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]   Creates new archive with name and channel url\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     # Get arguments
     args = sys.argv[1:]
 
     # No arguments
     if len(args) == 0:
-        print(HELP + "\n\nException: No arguments provided", file=sys.stderr)
-
+        print(HELP, file=sys.stderr)
+        _msg_err(f"\nError: No arguments provided")
         sys.exit(1)
 
+    # Version announcements before going further
+    try:
+        _pypi_version()
+    except Exception as err:
+        _msg_err(f"Error: Failed to check for new Yark version, info:\n" + Style.NORMAL + str(err) + Style.BRIGHT)
+
     # Help
-    elif args[0] in ["help", "--help", "-h"]:
+    if args[0] in ["help", "--help", "-h"]:
         print(HELP)
         sys.exit(0)
 
@@ -1005,9 +1004,8 @@ def main():
 
     # Unknown
     else:
-        print(
-            f"{HELP}\n\nError: unknown command '{args[0]}' provided!", file=sys.stderr
-        )
+        print(HELP, file=sys.stderr)
+        _msg_err(f"\nError: unknown command '{args[0]}' provided!")
         sys.exit(1)
 
 

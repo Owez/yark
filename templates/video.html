@@ -337,12 +337,27 @@
     <div class="note">
         <div class="top">
             <p class="title createnote-input" contenteditable="true" data-placeholder="Title here.."></p>
-            <p class="timestamp" contenteditable="true">00:00</p>
+            <p id="timestamp-new" class="timestamp" contenteditable="true">00:00</p>
         </div>
         <p class="body createnote-input" contenteditable="true" data-placeholder="Optional message here.."></p>
         <button class="createnote-button" onclick="createNote(this.parentElement)">Add new note</button>
     </div>
     <script>
+        // Constantly updates timestamp to video pos
+        function updateTimestamp() {
+            function formatTime(timestamp) {
+                const minutes = Math.floor(timestamp / 60).toString().padStart(2, "0")
+                const seconds = Math.max((Math.round(timestamp % 60 - 1.5)), 0).toString().padStart(2, "0")
+                return `${minutes}:${seconds}`
+            }
+
+            let video= document.getElementById("player");
+            let timestamp = document.getElementById("timestamp-new")
+            video.addEventListener("timeupdate", function() {
+                timestamp.innerText = formatTime(video.currentTime)
+            });
+        }
+
         // Creates note by fetching to the api
         function createNote(el) {
             // Get top class
@@ -378,6 +393,9 @@
                 window.location.reload()
             }))
         }
+        
+        // Immediately start updating the timestamp
+        updateTimestamp()
     </script>
     <!-- Notes -->
     {% if video.notes %}

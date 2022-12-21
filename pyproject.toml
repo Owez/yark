@@ -19,8 +19,8 @@ include = [
 python = "^3.9"
 Flask = "^2.2.2"
 requests = "^2.28.1"
-yt-dlp = "^2022.8.19"
 colorama = "^0.4.5"
+yt-dlp = "^2022.11.11"
 
 [tool.poetry.dev-dependencies]
 
