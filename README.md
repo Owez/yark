@@ -1,11 +1,11 @@
 <!-- TODO: logo; #2 <https://github.com/Owez/yark/issues/2> -->
 <!-- TODO: add when logos done; #2 <https://github.com/Owez/yark/issues/2>: <h1 align="center">yark</h1> -->
 
-# yark
+# Yark
 
 YouTube archiving made simple.
 
-- [yark](#yark)
+- [Yark](#yark)
   - [Installation](#installation)
   - [Managing your Archive](#managing-your-archive)
   - [Viewing your Archive](#viewing-your-archive)
@@ -15,7 +15,9 @@ Yark lets you continuously archive all videos and metadata of a channel. You can
 
 ## Installation
 
-To install yark, simply download Python 3.9+ and run the following:
+Currently, it's reccomended to clone this repository and run [`poetry install`](https://python-poetry.org/docs/) then `poetry run yark.py [options]` to run yark; this is because there's a temporary issue getting the archive viewer working inside of pip modules.
+
+To install Yark, simply download Python 3.9+ and run the following:
 
 ```shell
 $ pip3 install yark
@@ -24,13 +26,13 @@ $ pip3 install yark
 ## Managing your Archive
 
 
-Once you've installed yark, think of a name for your archive and copy the target's channel id:
+Once you've installed Yark, think of a name for your archive and copy the target's channel id:
 
 ```shell
 $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA
 ```
 
-Now that you've created the archive, you can tell yark to download all videos and metadata:
+Now that you've created the archive, you can tell Yark to download all videos and metadata:
 
 ```shell
 $ yark refresh owez
@@ -58,8 +60,8 @@ Under each video is a rich history report filled with graphs, as well as a notin
 
 ## Details
 
-Here are some things to keep in mind when using yark; the good and the bad:
+Here are some things to keep in mind when using Yark; the good and the bad:
 
-- Don't create a new archive again if you just want to update it, yark accumulates all new metadata for you via timestamps
+- Don't create a new archive again if you just want to update it, Yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
 - Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!

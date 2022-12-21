@@ -67,7 +67,7 @@ class TimestampException(Exception):
 # CONSTANTS
 #
 
-"""Version of yark archives which this script is capable of properly parsing"""
+"""Version of Yark archives which this script is capable of properly parsing"""
 ARCHIVE_COMPAT = 2
 
 #
@@ -150,9 +150,14 @@ class Channel:
                             + Style.RESET_ALL
                         )
 
+        # Normalize because sometimes theres a top-level playlist for videos and past livestreams
+        normalized = res["entries"]
+        if len(normalized) != 0 and "entries" in normalized[0]:
+            normalized = res["entries"][0]["entries"]
+
         # Add videos
         print("Parsing metadata..")
-        for entry in res["entries"][0]["entries"]:
+        for entry in normalized:
             # Updated marker
             updated = False
 
@@ -177,7 +182,6 @@ class Channel:
     def download(self):
         """Downloads all videos which haven't already been downloaded"""
         # Download
-        print("Downloading new videos..")
         settings = {
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             "format": "best/mp4/hasvid",
@@ -187,7 +191,17 @@ class Channel:
         with YoutubeDL(settings) as ydl:
             for i in range(5):
                 try:
+                    # Curate list of non-downloaded videos
                     not_downloaded = self._curate()
+
+                    # Print curated if this is the first time
+                    if i == 0:
+                        if len(not_downloaded) == 1:
+                            print("Downloading a new video..")
+                        elif len(not_downloaded) > 1:
+                            print(f"Downloading {len(not_downloaded)} new videos..")
+
+                    # Download from curated list
                     ydl.download(not_downloaded)  # TODO: overwrite .parts
                 except Exception as exception:
                     # Get around carriage return
@@ -517,7 +531,7 @@ class Thumbnail:
 
 
 class Note:
-    """Allows yark users to add notes to videos"""
+    """Allows Yark users to add notes to videos"""
 
     @staticmethod
     def new(video: Video, timestamp: int, title: str, body: str = None):
@@ -568,14 +582,6 @@ class Reporter:
         # Initial message
         print(f"Report for {self.channel} channel:")
 
-        # Added
-        for video in self.added:
-            print(Fore.GREEN + f"  • {video}")
-
-        # Deleted
-        for video in self.deleted:
-            print(Fore.RED + f"  • {video}")
-
         # Updated
         for type, element in self.updated:
             colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
@@ -583,6 +589,14 @@ class Reporter:
             type = f"🗿{type.capitalize()}"
 
             print(colour + video + type)
+
+        # Added
+        for video in self.added:
+            print(Fore.GREEN + f"  • {video}")
+
+        # Deleted
+        for video in self.deleted:
+            print(Fore.RED + f"  • {video}")
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
@@ -754,13 +768,13 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
 def _archive_not_found():
     """Errors out the user if the archive doesn't exist"""
     _msg_err(
-        "Archive doesn't exist, please make sure you typed it's name correctly!"
+        "Archive doesn't exist, please make sure you typed it's name correctly!", False
     )
     sys.exit(1)
 
 
 def _pypi_version():
-    """Checks if there's a new version of yark and tells the user if it's significant"""
+    """Checks if there's a new version of Yark and tells the user if it's significant"""
     # Get package data from PyPI
     http = urllib3.PoolManager()
     req = http.request("GET", "https://pypi.org/pypi/yark/json")
@@ -778,12 +792,12 @@ def _pypi_version():
     if their_major > our_major:
         print(
             Fore.YELLOW
-            + f"There's a major update for yark ready to download! Run `pip3 install --upgrade yark`"
+            + f"There's a major update for Yark ready to download! Run `pip3 install --upgrade yark`"
             + Fore.RESET
         )
     elif their_minor > our_minor:
         print(
-            f"There's a small update for yark ready to download! Run `pip3 install --upgrade yark`"
+            f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
 def _msg_err(msg: str, report_msg: bool = True):
@@ -928,7 +942,7 @@ def viewer() -> Flask:
 def main():
     """Command-line-interface launcher"""
     # Help message
-    HELP = "yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]   Creates new archive with name and channel url\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches viewer website for channel\n\nExample:\n  $ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]  Creates new archive with name and channel url\n  refresh [name]    Refreshes archive metadata, thumbnails, and videos\n  view [name?]      Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     # Get arguments
     args = sys.argv[1:]
@@ -936,7 +950,7 @@ def main():
     # No arguments
     if len(args) == 0:
         print(HELP, file=sys.stderr)
-        _msg_err(f"\nError: No arguments provided")
+        _msg_err(f"\nError: No arguments provided", False)
         sys.exit(1)
 
     # Version announcements before going further
@@ -954,7 +968,8 @@ def main():
     elif args[0] == "new":
         # Bad arguments
         if len(args) < 3:
-            raise Exception("Please provide an archive name and the channel id")
+            _msg_err("Please provide an archive name and the channel id", False)
+            sys.exit(1)
 
         # Create channel
         Channel.new(args[1], args[2])
@@ -963,7 +978,8 @@ def main():
     elif args[0] == "refresh":
         # Bad arguments
         if len(args) < 2:
-            raise Exception("Please provide the archive name")
+            _msg_err("Please provide the archive name", False)
+            sys.exit(1)
 
         # Refresh channel
         try:
