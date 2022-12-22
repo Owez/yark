@@ -161,7 +161,7 @@ class Channel:
         videos = []
         livestreams = []
         shorts = []
-        if len(res["entries"]) == 0:
+        if "entries" not in res["entries"][0]:
             # Videos only
             videos = res["entries"]
         else:
