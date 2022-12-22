@@ -59,7 +59,7 @@
 {% if channel.videos %}
 <div id="content">
     {% for video in channel.videos %}
-    <a href="/channel/{{ name }}/{{ video.id }}" class="video">
+    <a href="/channel/{{ name }}/videos/{{ video.id }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
             <img src="/archive/{{ video.thumbnail.current().path }}" {% if not video.downloaded(ldir) %}class="frost" {%
@@ -108,7 +108,7 @@
     }
 
     const visitedCookie = getCookie("visited")
-    const id = window.location.href.split("/").slice(-1)[0]
+    const id = document.getElementsByClassName("hero")[0].innerHTML.split("'s")[0]
     if (visitedCookie == null) {
         setCookie("visited", JSON.stringify([id]))
     } else {

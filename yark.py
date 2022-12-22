@@ -85,7 +85,9 @@ class Channel:
         channel.path = Path(path)
         channel.version = ARCHIVE_COMPAT
         channel.url = url
-        channel.videos = {}
+        channel.videos = []
+        channel.livestreams = []
+        channel.shorts = []
         channel.reporter = Reporter(channel)
 
         # Commit and return
@@ -110,7 +112,7 @@ class Channel:
         # Check version and exit if wrong
         if decoded.version != ARCHIVE_COMPAT:
             UPGRADE_GUIDE = [
-                (1, 2, "Replace channel id with url")
+                (1, 2, "Replace channel id with url & add empty shorts/livestream lists like how video works")
             ]
             guide_fmt = Style.NORMAL + f"Here's an upgrade guide:\n" + "\n".join([f"• Version {old} to {new}: {msg}" for old,new,msg in UPGRADE_GUIDE])
             _msg_err(f"Error: Incompatible archive; we expect {ARCHIVE_COMPAT} but got {decoded.version}\n" + guide_fmt)
@@ -128,53 +130,54 @@ class Channel:
             "logger": VideoLogger(),
         }
 
-        # Get response and snip it
-        with YoutubeDL(settings) as ydl:
-            res = None
-            for i in range(3):
-                try:
-                    res = ydl.extract_info(self.url, download=False)
-                    break
-                except Exception as exception:
-                    # Report error
-                    retrying = i != 2
-                    _dl_error("metadata", exception, retrying)
+        # # Get response and snip it
+        # res = None
+        # with YoutubeDL(settings) as ydl:
+        #     for i in range(3):
+        #         try:
+        #             res = ydl.extract_info(self.url, download=False)
+        #             break
+        #         except Exception as exception:
+        #             # Report error
+        #             retrying = i != 2
+        #             _dl_error("metadata", exception, retrying)
 
-                    # Print retrying message
-                    if retrying:
-                        print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )
+        #             # Print retrying message
+        #             if retrying:
+        #                 print(
+        #                     Style.DIM
+        #                     + f"  • Retrying metadata download.."
+        #                     + Style.RESET_ALL
+        #                 )
 
-        # Normalize because sometimes theres a top-level playlist for videos and past livestreams
-        normalized = res["entries"]
-        if len(normalized) != 0 and "entries" in normalized[0]:
-            normalized = res["entries"][0]["entries"]
+        res = json.load(open("dump.json", "r"))
 
-        # Add videos
-        print("Parsing metadata..")
-        for entry in normalized:
-            # Updated marker
-            updated = False
+        # Normalize into types of videos
+        videos = []
+        livestreams = []
+        shorts = []
+        if len(res["entries"]) == 0:
+            # Videos only
+            videos = res["entries"]
+        else:
+            # Videos and at least one other (livestream/shorts)
+            for entry in res["entries"]:
+                kind = entry["title"].split(" - ")[-1].lower()
+                if kind == "videos":
+                    videos = entry["entries"]
+                elif kind == "live":
+                    livestreams = entry["entries"]
+                elif kind == "shorts":
+                    shorts = entry["entries"]
+                else:
+                    _msg_err(f"Unknown video kind '{kind}' found", True)
 
-            # Update video if it exists
-            for video in self.videos:
-                if video.id == entry["id"]:
-                    video.update(entry)
-                    updated = True
+        # Parse metadata
+        self._parse_metadata("video", videos, self.videos)
+        self._parse_metadata("livestreams", livestreams, self.livestreams)
+        self._parse_metadata("shorts", shorts, self.shorts)
 
-            # Add new video if not
-            if not updated:
-                video = Video.new(entry, self)
-                self.videos.append(video)
-                self.reporter.added.append(video)
-
-        # Sort videos by newest
-        self.videos.sort(reverse=True)
-
-        # Commit new data
+        # Commit data
         self._commit()
 
     def download(self, maximum: int = None):
@@ -253,6 +256,28 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
+    def _parse_metadata(self, kind:str, input: list, bucket: list):
+        """Parses metadata for a category of video into it's bucket"""
+        print(f"Parsing {kind} metadata..")
+        for entry in input:
+            # Updated marker
+            updated = False
+
+            # Update video if it exists
+            for video in bucket:
+                if video.id == entry["id"]:
+                    video.update(entry)
+                    updated = True
+
+            # Add new video if not
+            if not updated:
+                video = Video.new(entry, self)
+                bucket.append(video)
+                self.reporter.added.append(video)
+
+        # Sort videos by newest
+        bucket.sort(reverse=True)
+
     @staticmethod
     def _from_dict(encoded: dict, path: Path):
         """Decodes archive which is being loaded back up"""
@@ -264,6 +289,12 @@ class Channel:
         channel.videos = [
             Video._from_dict(video, channel) for video in encoded["videos"]
         ]
+        channel.livestreams = [
+            Video._from_dict(video, channel) for video in encoded["livestreams"]
+        ]
+        channel.shorts = [
+            Video._from_dict(video, channel) for video in encoded["shorts"]
+        ]
         return channel
 
     def _to_dict(self) -> dict:
@@ -272,6 +303,8 @@ class Channel:
             "version": self.version,
             "url": self.url,
             "videos": [video._to_dict() for video in self.videos],
+            "livestreams": [video._to_dict() for video in self.livestreams],
+            "shorts": [video._to_dict() for video in self.shorts],
         }
 
     def __repr__(self) -> str:
@@ -842,8 +875,16 @@ def viewer() -> Flask:
             return render_template("index.html", error=error, visited=visited)
 
     @app.route("/channel/<name>")
-    def channel(name):
+    def channel_empty(name):
+        """Empty channel url, just redirect to videos by default"""
+        return redirect(url_for("channel", name=name, kind="videos"))
+
+    @app.route("/channel/<name>/<kind>")
+    def channel(name, kind):
         """Channel information"""
+        if kind not in ["videos", "livestreams", "shorts"]:
+            return redirect(url_for("index", error="Video kind not recognised")) 
+
         try:
             channel = Channel.load(name)
             ldir = os.listdir(channel.path / "videos")
@@ -855,9 +896,12 @@ def viewer() -> Flask:
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
-    @app.route("/channel/<name>/<id>", methods=["GET", "PUT", "PATCH"])
-    def video(name, id):
+    @app.route("/channel/<name>/<kind>/<id>", methods=["GET", "PUT", "PATCH"])
+    def video(name, kind, id):
         """Detailed video information and viewer"""
+        if kind not in ["videos", "livestreams", "shorts"]:
+            return redirect(url_for("channel", name=name, error="Video kind not recognised")) 
+
         try:
             # Get information
             channel = Channel.load(name)
@@ -1026,7 +1070,7 @@ def main():
 
             # Launch and start browser
             print(f"Starting viewer for {channel}..")
-            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}")
+            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}/videos")
             launch()
 
         # Start on channel finder
