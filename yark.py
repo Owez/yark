@@ -632,7 +632,7 @@ class Reporter:
         for type, element in self.updated:
             colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
             video = f"  • {element.video}".ljust(80)
-            type = f"🔥{type.capitalize()}"
+            type = f" │ 🔥{type.capitalize()}"
 
             print(colour + video + type)
 
