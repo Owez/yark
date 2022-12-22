@@ -202,7 +202,10 @@ class Channel:
 
                     # Print curated if this is the first time
                     if i == 0:
-                        msg_start = "Downloading a new video" if len(not_downloaded) == 1 else f"Downloading {min(len(not_downloaded), maximum)} new videos"
+                        msg_start = "Downloading a new video"
+                        if len(not_downloaded) != 1:
+                            num = min(len(not_downloaded), maximum) if maximum is not None else len(not_downloaded)
+                            msg_start = f"Downloading {num} new videos"
                         msg_end = f" (of max {maximum}).." if maximum is not None else ".."
                         print(msg_start + msg_end)
 
