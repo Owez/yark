@@ -130,27 +130,32 @@ class Channel:
             "logger": VideoLogger(),
         }
 
-        # # Get response and snip it
-        # res = None
-        # with YoutubeDL(settings) as ydl:
-        #     for i in range(3):
-        #         try:
-        #             res = ydl.extract_info(self.url, download=False)
-        #             break
-        #         except Exception as exception:
-        #             # Report error
-        #             retrying = i != 2
-        #             _dl_error("metadata", exception, retrying)
+        # Get response and snip it
+        res = None
+        with YoutubeDL(settings) as ydl:
+            for i in range(3):
+                try:
+                    res = ydl.extract_info(self.url, download=False)
+                    break
+                except Exception as exception:
+                    # Report error
+                    retrying = i != 2
+                    _dl_error("metadata", exception, retrying)
 
-        #             # Print retrying message
-        #             if retrying:
-        #                 print(
-        #                     Style.DIM
-        #                     + f"  • Retrying metadata download.."
-        #                     + Style.RESET_ALL
-        #                 )
+                    # Print retrying message
+                    if retrying:
+                        print(
+                            Style.DIM
+                            + f"  • Retrying metadata download.."
+                            + Style.RESET_ALL
+                        )
 
-        res = json.load(open("dump.json", "r"))
+        # Uncomment for saving big dumps for testing
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
+
+        # Uncomment for loading big dumps for testing
+        # res = json.load(open("demo/dump.json", "r"))
 
         # Normalize into types of videos
         videos = []
