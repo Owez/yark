@@ -298,6 +298,9 @@ class Channel:
 
     def _commit(self):
         """Commits (saves) archive to path"""
+        # Save backup
+        self._backup()
+
         # Directories
         print(f"Committing {self} to file..")
         paths = [self.path, self.path / "thumbnails", self.path / "videos"]
@@ -348,6 +351,17 @@ class Channel:
             print("Cleaning out previous temporary files..")
             for filename in deletion_bucket:
                 os.remove(f"{video_path}/{filename}")
+
+    def _backup(self):
+        """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
+        # Open original archive to copy
+        with open(self.path / "yark.json", "r") as file_archive:
+            # Add comment information to backup file
+            save = f"// Backup of a Yark archive, dated {datetime.utcnow().isoformat()}\n// Remove these comments and rename to 'yark.json' to restore\n{file_archive.read()}"
+
+            # Save new information into a new backup
+            with open(self.path / "yark.bak", "w+") as file_backup:
+                file_backup.write(save)
 
     @staticmethod
     def _from_dict(encoded: dict, path: Path):
