@@ -29,7 +29,7 @@ $ pip3 install yark
 Once you've installed Yark, think of a name for your archive and copy the target's channel id:
 
 ```shell
-$ yark new owez UCSMdm6bUYIBN0KfS2CVuEPA
+$ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
 ```
 
 Now that you've created the archive, you can tell Yark to download all videos and metadata:

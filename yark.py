@@ -63,6 +63,7 @@ class TimestampException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
+
 #
 # CONSTANTS
 #
@@ -112,10 +113,27 @@ class Channel:
         # Check version and exit if wrong
         if decoded.version != ARCHIVE_COMPAT:
             UPGRADE_GUIDE = [
-                (1, 2, "Replace channel id with url & add empty shorts/livestream lists like how video works")
+                (
+                    1,
+                    2,
+                    "Replace id with url & add empty 'shorts' + 'livestreams' lists like how 'videos' works",
+                )
             ]
-            guide_fmt = Style.NORMAL + f"Here's an upgrade guide:\n" + "\n".join([f"• Version {old} to {new}: {msg}" for old,new,msg in UPGRADE_GUIDE])
-            _msg_err(f"Error: Incompatible archive; we expect {ARCHIVE_COMPAT} but got {decoded.version}\n" + guide_fmt)
+            guide_fmt = (
+                Style.NORMAL
+                + f"Here's an upgrade guide:\n"
+                + "\n".join(
+                    [
+                        f"• Version {old} to {new}: {msg}"
+                        for old, new, msg in UPGRADE_GUIDE
+                    ]
+                )
+                + "\nMake sure to update the archive version once you've made your changes"
+            )
+            _msg_err(
+                f"Error: Incompatible archive; we need v{ARCHIVE_COMPAT} but the archive is v{decoded.version}\n"
+                + guide_fmt
+            )
             sys.exit(1)
 
         # Return
@@ -187,26 +205,43 @@ class Channel:
 
     def download(self, maximum: int = None):
         """Downloads all videos which haven't already been downloaded"""
-        # Download
+        # Clean out old part files
+        self._clean_parts()
+
+        # Create settings for the downloader
         settings = {
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             "format": "best/mp4/hasvid",
             "logger": VideoLogger(),
             "progress_hooks": [VideoLogger.downloading],
         }
+
+        # Attach to the downloader
         with YoutubeDL(settings) as ydl:
+            # Retry downloading 5 times in total for all videos
             for i in range(5):
+                # Try to curate a list and download videos on it
                 try:
                     # Curate list of non-downloaded videos
                     not_downloaded = self._curate(maximum)
+
+                    # Stop if there's nothing to download
+                    if len(not_downloaded) == 0:
+                        break
 
                     # Print curated if this is the first time
                     if i == 0:
                         msg_start = "Downloading a new video"
                         if len(not_downloaded) != 1:
-                            num = min(len(not_downloaded), maximum) if maximum is not None else len(not_downloaded)
+                            num = (
+                                min(len(not_downloaded), maximum)
+                                if maximum is not None
+                                else len(not_downloaded)
+                            )
                             msg_start = f"Downloading {num} new videos"
-                        msg_end = f" (of max {maximum}).." if maximum is not None else ".."
+                        msg_end = (
+                            f" (of max {maximum}).." if maximum is not None else ".."
+                        )
                         print(msg_start + msg_end)
 
                     # Download from curated list
@@ -214,6 +249,8 @@ class Channel:
 
                     # Stop if we've got them all
                     break
+
+                # Report error and retry/stop
                 except Exception as exception:
                     # Get around carriage return
                     if i == 0:
@@ -234,19 +271,27 @@ class Channel:
 
     def _curate(self, maximum: int = None) -> list:
         """Curate videos which aren't downloaded and return their urls"""
+
+        def curate_list(videos: list):
+            """Curates the videos inside of the provided `videos` list"""
+            for video in videos:
+                # Stop if we've reached our maximum
+                if maximum is not None and len(not_downloaded) == maximum:
+                    break
+
+                # Add if not downloaded
+                elif not video.downloaded(ldir):
+                    # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
+                    not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
+
         # Get all videos in directory
         ldir = os.listdir(self.path / "videos")
 
         # Curate
         not_downloaded = []
-        for video in self.videos:
-            # Stop if we've reached our maximum
-            if maximum is not None and len(not_downloaded) == maximum:
-                break
-
-            # Add if not downloaded
-            elif not video.downloaded(ldir):
-                not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
+        curate_list(self.videos)
+        curate_list(self.livestreams)
+        curate_list(self.shorts)
 
         # Return
         return not_downloaded
@@ -264,7 +309,7 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind:str, input: list, bucket: list):
+    def _parse_metadata(self, kind: str, input: list, bucket: list):
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
@@ -285,6 +330,24 @@ class Channel:
 
         # Sort videos by newest
         bucket.sort(reverse=True)
+
+    def _clean_parts(self):
+        """Cleans old temporary `.part` files which where stopped during download if present"""
+        # Get the path and make a bucket for found files
+        video_path = f"{self.path}/videos"
+        deletion_bucket = []
+
+        # Scan through and find part files
+        for file in os.listdir(video_path):
+            filename = os.fsdecode(file)
+            if filename.endswith(".part"):
+                deletion_bucket.append(filename)
+
+        # Print and delete if there are part files present
+        if len(deletion_bucket) != 0:
+            print("Cleaning out previous temporary files..")
+            for filename in deletion_bucket:
+                os.remove(f"{video_path}/{filename}")
 
     @staticmethod
     def _from_dict(encoded: dict, path: Path):
@@ -631,7 +694,7 @@ class Reporter:
         # Updated
         for type, element in self.updated:
             colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
-            video = f"  • {element.video}".ljust(80)
+            video = f"  • {element.video}".ljust(82)
             type = f" │ 🔥{type.capitalize()}"
 
             print(colour + video + type)
@@ -813,9 +876,7 @@ def _dl_error(name: str, exception: DownloadError, retrying: bool):
 
 def _archive_not_found():
     """Errors out the user if the archive doesn't exist"""
-    _msg_err(
-        "Archive doesn't exist, please make sure you typed it's name correctly!"
-    )
+    _msg_err("Archive doesn't exist, please make sure you typed it's name correctly!")
     sys.exit(1)
 
 
@@ -846,10 +907,16 @@ def _pypi_version():
             f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
+
 def _msg_err(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
-    msg = msg if not report_msg else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+    msg = (
+        msg
+        if not report_msg
+        else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+    )
     print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
+
 
 #
 # VIEWER
@@ -891,7 +958,7 @@ def viewer() -> Flask:
     def channel(name, kind):
         """Channel information"""
         if kind not in ["videos", "livestreams", "shorts"]:
-            return redirect(url_for("index", error="Video kind not recognised")) 
+            return redirect(url_for("index", error="Video kind not recognised"))
 
         try:
             channel = Channel.load(name)
@@ -908,7 +975,9 @@ def viewer() -> Flask:
     def video(name, kind, id):
         """Detailed video information and viewer"""
         if kind not in ["videos", "livestreams", "shorts"]:
-            return redirect(url_for("channel", name=name, error="Video kind not recognised")) 
+            return redirect(
+                url_for("channel", name=name, error="Video kind not recognised")
+            )
 
         try:
             # Get information
@@ -1002,7 +1071,7 @@ def viewer() -> Flask:
 def main():
     """Command-line-interface launcher"""
     # Help message
-    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]        Creates new archive with name and channel url\n  refresh [name] [max?]   Refreshes archive metadata/thumbnails/videos with optional max\n  view [name?]            Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]        Creates new archive with name and channel url\n  refresh [name] [max?]   Refreshes/downloads archive with optional max download\n  view [name?]            Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     # Get arguments
     args = sys.argv[1:]
@@ -1017,7 +1086,13 @@ def main():
     try:
         _pypi_version()
     except Exception as err:
-        _msg_err(f"Error: Failed to check for new Yark version, info:\n" + Style.NORMAL + str(err) + Style.BRIGHT, True)
+        _msg_err(
+            f"Error: Failed to check for new Yark version, info:\n"
+            + Style.NORMAL
+            + str(err)
+            + Style.BRIGHT,
+            True,
+        )
 
     # Help
     if args[0] in ["help", "--help", "-h"]:
