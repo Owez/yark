@@ -68,8 +68,8 @@ class TimestampException(Exception):
 # CONSTANTS
 #
 
-"""Version of Yark archives which this script is capable of properly parsing"""
 ARCHIVE_COMPAT = 2
+"""Version of Yark archives which this script is capable of properly parsing"""
 
 #
 # ARCHIVER
@@ -272,26 +272,37 @@ class Channel:
     def _curate(self, maximum: int = None) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list):
-            """Curates the videos inside of the provided `videos` list"""
-            for video in videos:
-                # Stop if we've reached our maximum
-                if maximum is not None and len(not_downloaded) == maximum:
-                    break
+        def curate_list(videos: list, maximum: int):
+            """Curates the videos inside of the provided `videos` list to it's local maximum"""
+            # Cut available videos to maximum if present for deterministic getting
+            if maximum is not None:
+                # Fix the maximum to the length so we don't try to get more than there is
+                fixed_maximum = min(max(len(videos) - 1, 0), maximum)
 
-                # Add if not downloaded
-                elif not video.downloaded(ldir):
+                # Set the available videos to this fixed maximum
+                new_videos = []
+                for ind in range(fixed_maximum):
+                    new_videos.append(videos[ind])
+                videos = new_videos
+            
+            # Find undownloaded videos in available list
+            not_downloaded = []
+            for video in videos:
+                if not video.downloaded(ldir):
                     # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
                     not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
+            
+            # Return
+            return not_downloaded
 
         # Get all videos in directory
         ldir = os.listdir(self.path / "videos")
 
         # Curate
         not_downloaded = []
-        curate_list(self.videos)
-        curate_list(self.livestreams)
-        curate_list(self.shorts)
+        not_downloaded.extend(curate_list(self.videos, maximum))
+        not_downloaded.extend(curate_list(self.livestreams,maximum))
+        not_downloaded.extend(curate_list(self.shorts,maximum))
 
         # Return
         return not_downloaded
@@ -354,6 +365,13 @@ class Channel:
 
     def _backup(self):
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
+        # Get current archive path
+        ARCHIVE_PATH = self.path / "yark.json"
+
+        # Skip backing up if the archive doesn't exist
+        if not ARCHIVE_PATH.exists():
+            return
+
         # Open original archive to copy
         with open(self.path / "yark.json", "r") as file_archive:
             # Add comment information to backup file
