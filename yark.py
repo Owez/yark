@@ -1032,7 +1032,7 @@ def viewer() -> Flask:
 
             # Return video webpage
             if request.method == "GET":
-                title = f"{name} – {video.title.current().lower()}"
+                title = f"{video.title.current()} · {name}"
                 views_data = json.dumps(video.views._to_dict())
                 likes_data = json.dumps(video.likes._to_dict())
                 return render_template(

@@ -77,7 +77,7 @@
 
     .note,
     video {
-        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.17);
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
     }
 
     .note {
@@ -88,6 +88,7 @@
         padding-bottom: 1.25rem;
         width: calc(60vw - 2rem);
         margin-bottom: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.17);
     }
 
     .note>.id {
@@ -130,6 +131,13 @@
     }
 
     @media (prefers-color-scheme: dark) {
+        .note, video {
+            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.225);
+        }
+
+        .note {
+            border: unset;
+        }
 
         #description,
         .metadata {
