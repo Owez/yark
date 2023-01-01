@@ -115,9 +115,9 @@ class VideoLogger:
 
 class Maximums:
     def __init__(self) -> None:
-        self.videos: int | None = None
-        self.livestreams: int | None = None
-        self.shorts: int | None = None
+        self.videos: int = None
+        self.livestreams: int = None
+        self.shorts: int = None
 
     def submit(self):
         """Sets other categories to 0 if one maximum is defined"""
@@ -323,7 +323,7 @@ class Channel:
     def _curate(self, maximums: Maximums) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int | None):
+        def curate_list(videos: list, maximum: int):
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -689,7 +689,7 @@ class Note:
     """Allows Yark users to add notes to videos"""
 
     @staticmethod
-    def new(video: Video, timestamp: int, title: str, body: str | None = None):
+    def new(video: Video, timestamp: int, title: str, body: str = None):
         """Creates a new note"""
         note = Note()
         note.video = video
@@ -777,7 +777,7 @@ class Reporter:
 #
 
 
-def _magnitude(count: int | None = None) -> str:
+def _magnitude(count: int = None) -> str:
     """Displays an integer as a sort of ordinal order of magnitude"""
     if count is None:
         return "?"
@@ -1017,7 +1017,9 @@ def viewer() -> Flask:
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
-    @app.route("/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
+    @app.route(
+        "/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"]
+    )
     def video(name, kind, id):
         """Detailed video information and viewer"""
         if kind not in ["videos", "livestreams", "shorts"]:

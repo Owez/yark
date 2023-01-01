@@ -102,6 +102,16 @@
         margin-bottom: 0;
     }
 
+    .note>.body>span {
+        margin-right: 5px;
+    }
+
+    .note>.body>button {
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 0.75rem;
+    }
+
     .top {
         display: flex;
         justify-content: space-between;
@@ -131,12 +141,8 @@
     }
 
     @media (prefers-color-scheme: dark) {
-        .note, video {
-            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.225);
-        }
-
         .note {
-            border: unset;
+            background-color: rgba(255, 255, 255, 0.0325);
         }
 
         #description,
@@ -256,11 +262,10 @@
                 headers: {
                     "Content-Type": "application/json"
                 }
-            }).then(resp => resp.json().then(json => {
-                // Reload at created id
-                window.location.href += "#" + json["id"]
+            }).then(() => {
+                // Reload to see new note
                 window.location.reload()
-            }))
+            })
         }
 
         // Immediately start updating the timestamp
@@ -422,8 +427,13 @@
         </div>
         <!-- Identifier -->
         <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-        <!-- Optional body content -->
-        <p class="body" contenteditable="true">{% if note.body %}{{ note.body }} {% endif %}<button onclick="deleteNote(this.parentElement.parentElement)">Delete</button></p>
+        <!-- Body content -->
+        <p class="body" contenteditable="true">
+            <!-- Optional user-defined body -->
+            {% if note.body %}<span>{{ note.body }}</span>{% endif %}
+            <!-- Delete button -->
+            <button onclick="deleteNote(this.parentElement.parentElement)">Delete</button>
+        </p>
     </div>
     {% endfor %}
     <script>
