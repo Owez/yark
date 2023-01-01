@@ -1,4 +1,4 @@
-from yark import Channel
+from yark import Channel, Maximums
 
 # Create a new channel and refresh only it's metadata
 Channel.new("demo", "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA").metadata()
@@ -12,3 +12,10 @@ print(channel.videos)
 # Get a cool video I made and print it's description
 video = channel.search("annp92OPZgQ")
 print(video.description.current())
+
+# Download the 5 most recent videos and 10 most recent shorts
+maximums = Maximums()
+maximums.videos = 5
+maximums.shorts = 10
+maximums.submit()
+channel.download(maximums)

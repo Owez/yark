@@ -1223,7 +1223,7 @@ def main():
         try:
             channel = Channel.load(args[1])
             channel.metadata()
-            channel.download(maximum)
+            channel.download(maximums)
             channel.reporter.print()
         except ArchiveNotFoundException:
             _archive_not_found()
