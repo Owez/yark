@@ -76,6 +76,63 @@ ARCHIVE_COMPAT = 2
 #
 
 
+class VideoLogger:
+    @staticmethod
+    def downloading(d):
+        """Progress hook for video downloading"""
+        # Get video's id
+        id = d["info_dict"]["id"]
+
+        # Downloading percent
+        if d["status"] == "downloading":
+            percent = d["_percent_str"].strip()
+            print(
+                Style.DIM,
+                f" • Downloading {id}, at {percent}.." + Style.NORMAL,
+                end="\r",
+            )
+
+        # Finished a video's download
+        elif d["status"] == "finished":
+            print(Style.DIM, f" • Downloaded {id}              " + Style.NORMAL)
+
+    def debug(self, msg):
+        """Debug log messages, ignored"""
+        pass
+
+    def info(self, msg):
+        """Info log messages ignored"""
+        pass
+
+    def warning(self, msg):
+        """Warning log messages ignored"""
+        pass
+
+    def error(self, msg):
+        """Error log messages"""
+        pass
+
+
+class Maximums:
+    def __init__(self) -> None:
+        self.videos: int | None = None
+        self.livestreams: int | None = None
+        self.shorts: int | None = None
+
+    def submit(self):
+        """Sets other categories to 0 if one maximum is defined"""
+        no_maximums = (
+            self.videos is None and self.livestreams is None and self.shorts is None
+        )
+        if not no_maximums:
+            if self.videos is None:
+                self.videos = 0
+            if self.livestreams is None:
+                self.livestreams = 0
+            if self.shorts is None:
+                self.shorts = 0
+
+
 class Channel:
     @staticmethod
     def new(path: Path, url: str):
@@ -203,7 +260,7 @@ class Channel:
         # Commit data
         self._commit()
 
-    def download(self, maximum: int = None):
+    def download(self, maximums: Maximums):
         """Downloads all videos which haven't already been downloaded"""
         # Clean out old part files
         self._clean_parts()
@@ -223,7 +280,7 @@ class Channel:
                 # Try to curate a list and download videos on it
                 try:
                     # Curate list of non-downloaded videos
-                    not_downloaded = self._curate(maximum)
+                    not_downloaded = self._curate(maximums)
 
                     # Stop if there's nothing to download
                     if len(not_downloaded) == 0:
@@ -231,18 +288,12 @@ class Channel:
 
                     # Print curated if this is the first time
                     if i == 0:
-                        msg_start = "Downloading a new video"
-                        if len(not_downloaded) != 1:
-                            num = (
-                                min(len(not_downloaded), maximum)
-                                if maximum is not None
-                                else len(not_downloaded)
-                            )
-                            msg_start = f"Downloading {num} new videos"
-                        msg_end = (
-                            f" (of max {maximum}).." if maximum is not None else ".."
+                        fmt_num = (
+                            "a new video"
+                            if len(not_downloaded) == 1
+                            else f"{len(not_downloaded)} new videos"
                         )
-                        print(msg_start + msg_end)
+                        print(f"Downloading {fmt_num}..")
 
                     # Download from curated list
                     ydl.download(not_downloaded)  # TODO: overwrite .parts
@@ -269,10 +320,10 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, maximum: int = None) -> list:
+    def _curate(self, maximums: Maximums) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int):
+        def curate_list(videos: list, maximum: int | None):
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -284,14 +335,14 @@ class Channel:
                 for ind in range(fixed_maximum):
                     new_videos.append(videos[ind])
                 videos = new_videos
-            
+
             # Find undownloaded videos in available list
             not_downloaded = []
             for video in videos:
                 if not video.downloaded(ldir):
                     # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
                     not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
-            
+
             # Return
             return not_downloaded
 
@@ -300,9 +351,9 @@ class Channel:
 
         # Curate
         not_downloaded = []
-        not_downloaded.extend(curate_list(self.videos, maximum))
-        not_downloaded.extend(curate_list(self.livestreams,maximum))
-        not_downloaded.extend(curate_list(self.shorts,maximum))
+        not_downloaded.extend(curate_list(self.videos, maximums.videos))
+        not_downloaded.extend(curate_list(self.livestreams, maximums.livestreams))
+        not_downloaded.extend(curate_list(self.shorts, maximums.shorts))
 
         # Return
         return not_downloaded
@@ -412,43 +463,6 @@ class Channel:
 
     def __repr__(self) -> str:
         return self.path.name
-
-
-class VideoLogger:
-    @staticmethod
-    def downloading(d):
-        """Progress hook for video downloading"""
-        # Get video's id
-        id = d["info_dict"]["id"]
-
-        # Downloading percent
-        if d["status"] == "downloading":
-            percent = d["_percent_str"].strip()
-            print(
-                Style.DIM,
-                f" • Downloading {id}, at {percent}.." + Style.NORMAL,
-                end="\r",
-            )
-
-        # Finished a video's download
-        elif d["status"] == "finished":
-            print(Style.DIM, f" • Downloaded {id}              " + Style.NORMAL)
-
-    def debug(self, msg):
-        """Debug log messages, ignored"""
-        pass
-
-    def info(self, msg):
-        """Info log messages ignored"""
-        pass
-
-    def warning(self, msg):
-        """Warning log messages ignored"""
-        pass
-
-    def error(self, msg):
-        """Error log messages"""
-        pass
 
 
 class Video:
@@ -675,7 +689,7 @@ class Note:
     """Allows Yark users to add notes to videos"""
 
     @staticmethod
-    def new(video: Video, timestamp: int, title: str, body: str = None):
+    def new(video: Video, timestamp: int, title: str, body: str | None = None):
         """Creates a new note"""
         note = Note()
         note.video = video
@@ -763,7 +777,7 @@ class Reporter:
 #
 
 
-def _magnitude(count: int = None) -> str:
+def _magnitude(count: int | None = None) -> str:
     """Displays an integer as a sort of ordinal order of magnitude"""
     if count is None:
         return "?"
@@ -1103,7 +1117,13 @@ def viewer() -> Flask:
 def main():
     """Command-line-interface launcher"""
     # Help message
-    HELP = "Yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]        Creates new archive with name and channel url\n  refresh [name] [max?]   Refreshes/downloads archive with optional max download\n  view [name?]            Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]            Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]                Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+
+    def no_help():
+        """Prints out help message and exits, displaying a 'no additional help' message"""
+        print(HELP)
+        print("\nThere's no additional help for this command")
+        sys.exit(0)
 
     # Get arguments
     args = sys.argv[1:]
@@ -1133,6 +1153,10 @@ def main():
 
     # Create new
     elif args[0] == "new":
+        # More help
+        if len(args) == 2 and args[1] == "--help":
+            no_help()
+
         # Bad arguments
         if len(args) < 3:
             _msg_err("Please provide an archive name and the channel url")
@@ -1143,19 +1167,57 @@ def main():
 
     # Refresh
     elif args[0] == "refresh":
+        # More help
+        if len(args) == 2 and args[1] == "--help":
+            print(
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25"
+            )
+            sys.exit(0)
+
         # Bad arguments
         if len(args) < 2:
             _msg_err("Please provide the archive name")
             sys.exit(1)
 
-        # Get max count
-        maximum = None
-        if len(args) >= 3:
-            try:
-                maximum = int(args[2])
-            except:
-                _msg_err("Couldn't parse maximum videos to get, please enter a number")
-                sys.exit(1)
+        # Get maximums
+        maximums = Maximums()
+        if len(args) > 2:
+
+            def parse_int(maximum: str) -> int:
+                """Tries to parse a maximum integer input"""
+                try:
+                    return int(maximum)
+                except:
+                    print(HELP, file=sys.stderr)
+                    _msg_err(
+                        f"\nError: The value '{maximum}' isn't a valid maximum number"
+                    )
+                    sys.exit(1)
+
+            # Set each maximum if provided
+            for maximum in args[2:]:
+                # Video maximum
+                if maximum.startswith("--videos="):
+                    maximums.videos = parse_int(maximum.split("=")[1])
+
+                # Livestream maximum
+                elif maximum.startswith("--livestreams="):
+                    maximums.livestreams = parse_int(maximum.split("=")[1])
+
+                # Shorts maximum
+                elif maximum.startswith("--shorts="):
+                    maximums.shorts = parse_int(maximum.split("=")[1])
+
+                # Unknown argument (maximum)
+                else:
+                    print(HELP, file=sys.stderr)
+                    _msg_err(
+                        f"\nError: Unknown argument '{maximum}' provided for archive refresh"
+                    )
+                    sys.exit(1)
+
+        # Submit maximums
+        maximums.submit()
 
         # Refresh channel
         try:
@@ -1173,6 +1235,10 @@ def main():
             """Launches viewer"""
             app = viewer()
             threading.Thread(target=lambda: app.run(port=7667)).run()
+
+        # More help
+        if len(args) == 2 and args[1] == "--help":
+            no_help()
 
         # Start on channel name
         if len(args) > 1:
@@ -1197,7 +1263,7 @@ def main():
     # Unknown
     else:
         print(HELP, file=sys.stderr)
-        _msg_err(f"\nError: unknown command '{args[0]}' provided!", True)
+        _msg_err(f"\nError: Unknown command '{args[0]}' provided!", True)
         sys.exit(1)
 
 
