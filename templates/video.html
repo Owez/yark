@@ -75,11 +75,17 @@
         line-height: 2.25rem;
     }
 
+    .note,
+    video {
+        box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.17);
+    }
+
     .note {
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        border-radius: 0.5rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        border-radius: 7.5px;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+        padding-top: 1.25rem;
+        padding-bottom: 1.25rem;
         width: calc(60vw - 2rem);
         margin-bottom: 1rem;
     }
@@ -91,8 +97,8 @@
     }
 
     .note>.body {
-        margin-bottom: 0.75rem;
         font-size: 0.9rem;
+        margin-bottom: 0;
     }
 
     .top {
@@ -104,7 +110,7 @@
     .top>.title {
         font-weight: bold;
         font-size: 1.2rem;
-        margin-top: 0.75rem;
+        margin-top: 0;
         margin-bottom: 0;
         min-width: 50vw;
     }
@@ -114,12 +120,13 @@
     }
 
     .createnote-button {
-        margin-top: 0.25rem;
-        margin-bottom: 1rem;
+        margin-top: 1rem;
     }
 
     .top>.timestamp {
         color: #098fb4;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -127,12 +134,6 @@
         #description,
         .metadata {
             color: rgb(181, 181, 181);
-        }
-
-        /* copy of base.html stuff */
-        .note {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .note>.id {
@@ -191,6 +192,72 @@
         {% endfor %}
     </p>
     {% endif %}
+    <!-- Create Note -->
+    <h2>Create Note</h2>
+    <div class="note">
+        <div class="top">
+            <p class="title createnote-input" contenteditable="true" data-placeholder="Title here.."></p>
+            <p id="timestamp-new" class="timestamp" contenteditable="true">00:00</p>
+        </div>
+        <p class="body createnote-input" contenteditable="true" data-placeholder="Optional message here.."></p>
+        <button class="createnote-button" onclick="createNote(this.parentElement)">Add new note</button>
+    </div>
+    <script>
+        // Constantly updates timestamp to video pos
+        function updateTimestamp() {
+            function formatTime(timestamp) {
+                const minutes = Math.floor(timestamp / 60).toString().padStart(2, "0")
+                const seconds = Math.max((Math.round(timestamp % 60 - 1.5)), 0).toString().padStart(2, "0")
+                return `${minutes}:${seconds}`
+            }
+
+            let video = document.getElementById("player");
+            let timestamp = document.getElementById("timestamp-new")
+            video.addEventListener("timeupdate", function () {
+                timestamp.innerText = formatTime(video.currentTime)
+            });
+        }
+
+        // Creates note by fetching to the api
+        function createNote(el) {
+            // Get top class
+            const top = el.getElementsByClassName("top")[0]
+
+            // Get title
+            const title = top.getElementsByClassName("title")[0].innerText
+            if (title == "") {
+                addError("You must give the note a title before adding it")
+                return
+            }
+
+            // Get timestamp
+            const timestamp = top.getElementsByClassName("timestamp")[0].innerText
+
+            // Get body and clean
+            let body = el.getElementsByClassName("body")[0].innerText
+            if (body == "") {
+                body = null
+            }
+
+            // Send request
+            fetch("", {
+                method: "POST",
+                body: JSON.stringify({
+                    title: title, body: body, timestamp: timestamp
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(resp => resp.json().then(json => {
+                // Reload at created id
+                window.location.href += "#" + json["id"]
+                window.location.reload()
+            }))
+        }
+
+        // Immediately start updating the timestamp
+        updateTimestamp()
+    </script>
     <!-- History -->
     <h2>History</h2>
     {% set mto_title = video.title.inner|count != 1 %}
@@ -332,74 +399,9 @@
         }
     </script>
     {% endif %}
-    <!-- Create Note -->
-    <h2>Create Note</h2>
-    <div class="note">
-        <div class="top">
-            <p class="title createnote-input" contenteditable="true" data-placeholder="Title here.."></p>
-            <p id="timestamp-new" class="timestamp" contenteditable="true">00:00</p>
-        </div>
-        <p class="body createnote-input" contenteditable="true" data-placeholder="Optional message here.."></p>
-        <button class="createnote-button" onclick="createNote(this.parentElement)">Add new note</button>
-    </div>
-    <script>
-        // Constantly updates timestamp to video pos
-        function updateTimestamp() {
-            function formatTime(timestamp) {
-                const minutes = Math.floor(timestamp / 60).toString().padStart(2, "0")
-                const seconds = Math.max((Math.round(timestamp % 60 - 1.5)), 0).toString().padStart(2, "0")
-                return `${minutes}:${seconds}`
-            }
-
-            let video= document.getElementById("player");
-            let timestamp = document.getElementById("timestamp-new")
-            video.addEventListener("timeupdate", function() {
-                timestamp.innerText = formatTime(video.currentTime)
-            });
-        }
-
-        // Creates note by fetching to the api
-        function createNote(el) {
-            // Get top class
-            let top = el.getElementsByClassName("top")[0]
-
-            // Get title
-            let title = top.getElementsByClassName("title")[0].innerText
-            if (title == "") {
-                addError("No title provided for element")
-            }
-
-            // Get timestamp
-            let timestamp = top.getElementsByClassName("timestamp")[0].innerText
-
-            // Get body and clean
-            let body = el.getElementsByClassName("body")[0].innerText
-            if (body == "") {
-                body = null
-            }
-
-            // Send request
-            fetch("", {
-                method: "PUT",
-                body: JSON.stringify({
-                    title: title, body: body, timestamp: timestamp
-                }),
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            }).then(resp => resp.json().then(json => {
-                // Reload at created id
-                window.location.href += "#" + json["id"]
-                window.location.reload()
-            }))
-        }
-        
-        // Immediately start updating the timestamp
-        updateTimestamp()
-    </script>
     <!-- Notes -->
     {% if video.notes %}
-    <h2>Notes</h2>
+    <h2 id="notes-title">Notes</h2>
     {% for note in video.notes %}
     <div class="note">
         <!-- Top information -->
@@ -412,8 +414,8 @@
         </div>
         <!-- Identifier -->
         <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-        <!-- Optional message -->
-        <p class="body" contenteditable="true">{% if note.body %}{{ note.body }}{% else %}{% endif %}</p>
+        <!-- Optional body content -->
+        <p class="body" contenteditable="true">{% if note.body %}{{ note.body }} {% endif %}<button onclick="deleteNote(this.parentElement.parentElement)">Delete</button></p>
     </div>
     {% endfor %}
     <script>
@@ -424,7 +426,33 @@
             player.play()
         }
 
-        // Listen for `focusout` event on note title
+        // Deletes note using it's identifier
+        function deleteNote(el) {
+            // Get identifier
+            const id = el.getElementsByClassName("id")[0].innerText
+
+            // Send request
+            fetch("", {
+                method: "DELETE",
+                body: JSON.stringify({
+                    id
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+
+            // Delete note from DOM
+            el.remove()
+
+            // Delete the note heading from DOM if there aren't any notes
+            if (document.getElementsByClassName("note").length == 1) {
+                const notesHeader = document.getElementById("notes-title")
+                notesHeader.remove()
+            }
+        }
+
+        // Listen for `focusout` event on note title or body
         document.addEventListener("focusout", (event) => {
             let el = event.srcElement
             if ((el.classList.contains("title") || el.classList.contains("body")) && !el.classList.contains("createnote-input")) {

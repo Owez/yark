@@ -1017,7 +1017,7 @@ def viewer() -> Flask:
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
-    @app.route("/channel/<name>/<kind>/<id>", methods=["GET", "PUT", "PATCH"])
+    @app.route("/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
     def video(name, kind, id):
         """Detailed video information and viewer"""
         if kind not in ["videos", "livestreams", "shorts"]:
@@ -1044,7 +1044,7 @@ def viewer() -> Flask:
                 )
 
             # Add new note
-            elif request.method == "PUT":
+            elif request.method == "POST":
                 # Parse json
                 new = request.get_json()
                 if not "title" in new:
@@ -1087,12 +1087,38 @@ def viewer() -> Flask:
 
                 # Return
                 return "Updated", 200
+
+            # Delete existing note
+            elif request.method == "DELETE":
+                # Parse json
+                delete = request.get_json()
+                if not "id" in delete:
+                    return "Invalid schema", 400
+
+                # Filter out note with id and save
+                filtered_notes = []
+                for note in video.notes:
+                    if note.id != delete["id"]:
+                        filtered_notes.append(note)
+                video.notes = filtered_notes
+                video.channel._commit()
+
+                # Return
+                return "Deleted", 200
+
+        # Archive not found
         except ArchiveNotFoundException:
             return redirect(url_for("index", error="Couldn't open channel's archive"))
+
+        # Video not found
         except VideoNotFoundException:
             return redirect(url_for("index", error="Couldn't find video in archive"))
+
+        # Timestamp for note was invalid
         except TimestampException:
             return "Invalid timestamp", 400
+
+        # Unknown error
         except Exception as e:
             return redirect(url_for("index", error=f"Internal server error:\n{e}"))
 
