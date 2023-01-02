@@ -162,7 +162,7 @@ class Channel:
         channel.reporter = Reporter(channel)
 
         # Commit and return
-        channel._commit()
+        channel.commit()
         return channel
 
     @staticmethod
