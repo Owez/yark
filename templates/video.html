@@ -166,32 +166,33 @@
     <!-- Video -->
     <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" id="player" autoplay controls></video>
     <!-- Information -->
-    <h1>{{ video.title.current() }}</h1>
+    <h1 title="Title of the video">{{ video.title.current() }}</h1>
     <div class="info">
         {% set views = video.views.current() %}
         <p>
             <!-- View count -->
-            {{ views }} view{% if views != 1 %}s{% endif %}
+            <span title="View count of the video">{{ views }} view{% if views != 1 %}s{% endif %}</span>
             <!-- Uploaded -->
             <span class="spacer">•</span>
-            {{ video.uploaded.strftime("%d/%m/%Y") }}
+            <span title="Upload time of the video">{{ video.uploaded.strftime("%d/%m/%Y") }}</span>
             <!-- Updated -->
             {% if video.updated() %}
             <span class="spacer">•</span>
-            🌀
+            <span title="There's been a major change to this video">🌀</span>
             {% endif %}
         </p>
         <p>
             <!-- Youtube link -->
-            <a href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
+            <a title="Open the video on YouTube" href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
             <!-- Download link -->
             <span class="spacer">•</span>
-            <a href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" download>💾</a>
+            <a title="Save the video to downloads" href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4"
+                download>💾</a>
             <!-- Like count -->
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}
             <span class="spacer">•</span>
-            👍 {{ likes }}
+            <span title="Like count of the video">👍 {{ likes }}</span>
             {% endif %}
         </p>
     </div>
@@ -199,7 +200,8 @@
     {% set description = video.description.current().split("\n") %}
     {% set no_description = description|count == 1 and description[0] == "" %}
     {% if not no_description %}
-    <button onclick="toggleButton('description', 'description', this)">Show description</button>
+    <button title="Show the current description of this video"
+        onclick="toggleButton('description', 'description', this)">Show description</button>
     <p id="description" style="display: none;">
         {% for line in description %}
         {{ line }}<br />
@@ -210,10 +212,13 @@
     <h2>Create Note</h2>
     <div class="note">
         <div class="top">
-            <p class="title createnote-input" contenteditable="true" data-placeholder="Title here.."></p>
-            <p id="timestamp-new" class="timestamp" contenteditable="true">00:00</p>
+            <p title="Title of the note" class="title createnote-input" contenteditable="true"
+                data-placeholder="Title here.."></p>
+            <p title="Timestamp to set the note to" id="timestamp-new" class="timestamp" contenteditable="true">00:00
+            </p>
         </div>
-        <p class="body createnote-input" contenteditable="true" data-placeholder="Optional message here.."></p>
+        <p title="Optional further information for the note" class="body createnote-input" contenteditable="true"
+            data-placeholder="Optional message here.."></p>
         <button class="createnote-button" onclick="createNote(this.parentElement)">Add new note</button>
     </div>
     <script>
