@@ -975,7 +975,7 @@ def _parse_timestamp(input: str) -> int:
 
 
 def _fmt_timestamp(timestamp: int) -> str:
-    """Formats previously parsed timestamp"""
+    """Formats previously parsed human timestamp for notes, e.g. `02:25`"""
     # Collector
     parts = []
 
@@ -1127,7 +1127,7 @@ def viewer() -> Flask:
         # Redirect to requested channel
         if request.method == "POST":
             name = request.form["channel"]
-            return redirect(url_for("channel", name=name))
+            return redirect(url_for("channel", name=name, kind="videos"))
 
         # Show page
         elif request.method == "GET":
