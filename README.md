@@ -15,8 +15,6 @@ Yark lets you continuously archive all videos and metadata of a channel. You can
 
 ## Installation
 
-Currently, it's reccomended to clone this repository and run [`poetry install`](https://python-poetry.org/docs/) then `poetry run yark.py [options]` to run yark; this is because there's a temporary issue getting the archive viewer working inside of pip modules.
-
 To install Yark, simply download Python 3.9+ and run the following:
 
 ```shell

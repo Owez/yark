@@ -1280,7 +1280,7 @@ def viewer() -> Flask:
 #
 
 
-def main():
+def run():
     """Command-line-interface launcher"""
     # Help message
     HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]            Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]                Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
@@ -1435,4 +1435,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run()
