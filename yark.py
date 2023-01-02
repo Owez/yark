@@ -68,8 +68,21 @@ class TimestampException(Exception):
 # CONSTANTS
 #
 
-ARCHIVE_COMPAT = 2
-"""Version of Yark archives which this script is capable of properly parsing"""
+ARCHIVE_COMPAT = 3
+"""
+Version of Yark archives which this script is capable of properly parsing
+
+- Version 1 was the initial format and had all the basic information you can see in the viewer now
+- Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
+- Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
+
+Some of these breaking versions are large changes and some are relatively small.
+We don't check if a value exists or not in the archive format out of precedent
+and we don't have optionally-present values, meaning that any new tags are a
+breaking change to the format. The only downside to this is that the migrator
+gets a line or two of extra code every breaking change. This is much better than
+having way more complexity in the archiver decoding system itself.
+"""
 
 #
 # ARCHIVER
@@ -157,44 +170,23 @@ class Channel:
         """Loads existing channel from path"""
         # Check existence
         path = Path(path)
-        print(f"Loading {path.name} channel..")
+        channel_name = path.name
+        print(f"Loading {channel_name} channel..")
         if not path.exists():
             raise ArchiveNotFoundException("Archive doesn't exist")
 
         # Load config
         encoded = json.load(open(path / "yark.json", "r"))
 
-        # Decode
-        decoded = Channel._from_dict(encoded, path)
-
-        # Check version and exit if wrong
-        if decoded.version != ARCHIVE_COMPAT:
-            UPGRADE_GUIDE = [
-                (
-                    1,
-                    2,
-                    "Replace id with url & add empty 'shorts' + 'livestreams' lists like how 'videos' works",
-                )
-            ]
-            guide_fmt = (
-                Style.NORMAL
-                + f"Here's an upgrade guide:\n"
-                + "\n".join(
-                    [
-                        f"• Version {old} to {new}: {msg}"
-                        for old, new, msg in UPGRADE_GUIDE
-                    ]
-                )
-                + "\nMake sure to update the archive version once you've made your changes"
+        # Check version before fully decoding and exit if wrong
+        archive_version = encoded["version"]
+        if archive_version != ARCHIVE_COMPAT:
+            encoded = _migrate_archive(
+                archive_version, ARCHIVE_COMPAT, encoded, channel_name
             )
-            _msg_err(
-                f"Error: Incompatible archive; we need v{ARCHIVE_COMPAT} but the archive is v{decoded.version}\n"
-                + guide_fmt
-            )
-            sys.exit(1)
 
-        # Return
-        return decoded
+        # Decode and return
+        return Channel._from_dict(encoded, path)
 
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
@@ -254,11 +246,13 @@ class Channel:
 
         # Parse metadata
         self._parse_metadata("video", videos, self.videos)
-        self._parse_metadata("livestreams", livestreams, self.livestreams)
+        self._parse_metadata("livestream", livestreams, self.livestreams)
         self._parse_metadata("shorts", shorts, self.shorts)
 
-        # Commit data
-        self._commit()
+        # Go through each and report deleted
+        self._report_deleted(self.videos)
+        self._report_deleted(self.livestreams)
+        self._report_deleted(self.shorts)
 
     def download(self, maximums: Maximums):
         """Downloads all videos which haven't already been downloaded"""
@@ -295,8 +289,51 @@ class Channel:
                         )
                         print(f"Downloading {fmt_num}..")
 
-                    # Download from curated list
-                    ydl.download(not_downloaded)  # TODO: overwrite .parts
+                    # Continuously try to download after private/deleted videos are found
+                    # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
+                    while True:
+                        # Download from curated list then exit the optimistic loop
+                        try:
+                            urls = [video.url() for video in not_downloaded]
+                            ydl.download(urls)
+                            break
+
+                        # Special handling for private/deleted videos which are archived, if not we raise again
+                        except Exception as exception:
+                            # Video is privated or deleted
+                            if (
+                                "Private video" in exception.msg
+                                or "This video has been removed by the uploader"
+                                in exception.msg
+                            ):
+                                # Get list of downloaded videos
+                                ldir = os.listdir(self.path / "videos")
+
+                                # Find fist undownloaded video which will be the privated one
+                                for ind, video in enumerate(not_downloaded):
+                                    if not video.downloaded(ldir):
+                                        # Tell the user we're skipping over it
+                                        print(
+                                            Style.DIM,
+                                            f" • Skipping {video.id} (deleted)"
+                                            + Style.NORMAL,
+                                        )
+
+                                        # If this is a new occurrence then set it & report
+                                        # This will only happen if its deleted after getting metadata, like in a dry run
+                                        if video.deleted.current() == False:
+                                            self.reporter.deleted.append(video)
+                                            video.deleted.update(None, True)
+
+                                        # Set curated videos to skip over this one
+                                        not_downloaded = not_downloaded[ind + 1 :]
+
+                                        # Break and start downloading again
+                                        break
+
+                            # Nevermind, normal exception
+                            else:
+                                raise exception
 
                     # Stop if we've got them all
                     break
@@ -323,7 +360,7 @@ class Channel:
     def _curate(self, maximums: Maximums) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int):
+        def curate_list(videos: list, maximum: int) -> list:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -340,8 +377,7 @@ class Channel:
             not_downloaded = []
             for video in videos:
                 if not video.downloaded(ldir):
-                    # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
-                    not_downloaded.append(f"https://www.youtube.com/watch?v={video.id}")
+                    not_downloaded.append(video)
 
             # Return
             return not_downloaded
@@ -358,8 +394,8 @@ class Channel:
         # Return
         return not_downloaded
 
-    def _commit(self):
-        """Commits (saves) archive to path"""
+    def commit(self):
+        """Commits (saves) archive to path; do this once you've finished all of your transactions"""
         # Save backup
         self._backup()
 
@@ -378,7 +414,7 @@ class Channel:
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
-            # Updated marker
+            # Updated intra-loop marker
             updated = False
 
             # Update video if it exists
@@ -386,6 +422,7 @@ class Channel:
                 if video.id == entry["id"]:
                     video.update(entry)
                     updated = True
+                    break
 
             # Add new video if not
             if not updated:
@@ -395,6 +432,13 @@ class Channel:
 
         # Sort videos by newest
         bucket.sort(reverse=True)
+
+    def _report_deleted(self, videos: list):
+        """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
+        for video in videos:
+            if video.deleted.current() == False and not video.known_not_deleted:
+                self.reporter.deleted.append(video)
+                video.deleted.update(None, True)
 
     def _clean_parts(self):
         """Cleans old temporary `.part` files which where stopped during download if present"""
@@ -469,6 +513,7 @@ class Video:
     @staticmethod
     def new(entry: dict, channel: Channel):
         """Create new video from metadata entry"""
+        # Normal
         video = Video()
         video.channel = channel
         video.id = entry["id"]
@@ -482,11 +527,18 @@ class Video:
             video, entry["like_count"] if "like_count" in entry else None
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
+        video.deleted = Element.new(video, False)
         video.notes = []
+
+        # Runtime-only
+        video.known_not_deleted = True
+
+        # Return
         return video
 
     def update(self, entry: dict):
         """Updates video using new schema, adding a new timestamp to any changes"""
+        # Normal
         self.title.update("title", entry["title"])
         self.description.update("description", entry["description"])
         self.views.update("view count", entry["view_count"])
@@ -494,6 +546,10 @@ class Video:
             "like count", entry["like_count"] if "like_count" in entry else None
         )
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
+        self.deleted.update("undeleted", False)
+
+        # Runtime-only
+        self.known_not_deleted = True
 
     def downloaded(self, ldir: list) -> bool:
         """Checks if this video has been downloaded"""
@@ -506,8 +562,12 @@ class Video:
         return False
 
     def updated(self) -> bool:
-        """Checks if this video's title or description have been updated"""
-        return len(self.title.inner) > 1 or len(self.description.inner) > 1
+        """Checks if this video's title or description or deleted status have been ever updated"""
+        return (
+            len(self.title.inner) > 1
+            or len(self.description.inner) > 1
+            or len(self.deleted.inner) > 1
+        )
 
     def search(self, id: str):
         """Searches video for note's id"""
@@ -516,9 +576,15 @@ class Video:
                 return note
         raise NoteNotFoundException(f"Couldn't find note {id}")
 
+    def url(self) -> str:
+        """Returns the YouTube watch url of the current video"""
+        # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
+        return f"https://www.youtube.com/watch?v={self.id}"
+
     @staticmethod
     def _from_dict(encoded: dict, channel: Channel):
         """Converts id and encoded dictionary to video for loading a channel"""
+        # Normal
         video = Video()
         video.channel = channel
         video.id = encoded["id"]
@@ -531,6 +597,12 @@ class Video:
         video.likes = Element._from_dict(encoded["likes"], video)
         video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
         video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+        video.deleted = Element._from_dict(encoded["deleted"], video)
+
+        # Runtime-only
+        video.known_not_deleted = False
+
+        # Return
         return video
 
     def _to_dict(self) -> dict:
@@ -545,6 +617,7 @@ class Video:
             "views": self.views._to_dict(),
             "likes": self.likes._to_dict(),
             "thumbnail": self.thumbnail._to_dict(),
+            "deleted": self.deleted._to_dict(),
             "notes": [note._to_dict() for note in self.notes],
         }
 
@@ -577,14 +650,14 @@ class Video:
 class Element:
     @staticmethod
     def new(video: Video, data):
-        """Creates new element attached to a video"""
+        """Creates new element attached to a video with some initial data"""
         element = Element()
         element.video = video
         element.inner = {datetime.utcnow(): data}
         return element
 
-    def update(self, type: str, data):
-        """Updates element if it needs to be and returns self"""
+    def update(self, kind: str, data):
+        """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
         current = self.current()
@@ -592,8 +665,9 @@ class Element:
             # Update
             self.inner[datetime.utcnow()] = data
 
-            # Report
-            self.video.channel.reporter.add_updated(type, self)
+            # Report if wanted
+            if kind is not None:
+                self.video.channel.reporter.add_updated(kind, self)
 
         # Return self
         return self
@@ -739,7 +813,11 @@ class Reporter:
 
         # Updated
         for type, element in self.updated:
-            colour = Fore.CYAN if type in ["title", "description"] else Fore.BLUE
+            colour = (
+                Fore.CYAN
+                if type in ["title", "description", "undeleted"]
+                else Fore.BLUE
+            )
             video = f"  • {element.video}".ljust(82)
             type = f" │ 🔥{type.capitalize()}"
 
@@ -761,9 +839,9 @@ class Reporter:
         date = datetime.utcnow().isoformat()
         print(Style.RESET_ALL + f"Yark – {date}")
 
-    def add_updated(self, type: str, element: Element):
+    def add_updated(self, kind: str, element: Element):
         """Tells reporter that an element has been updated"""
-        self.updated.append((type, element))
+        self.updated.append((kind, element))
 
     def reset(self):
         """Resets reporting values for new run"""
@@ -775,6 +853,66 @@ class Reporter:
 #
 # UTILS
 #
+
+
+def _migrate_archive(
+    current_version: int, expected_version: int, encoded: dict, channel_name: str
+) -> dict:
+    """Automatically migrates an archive from one version to another by bootstrapping"""
+
+    def migrate_step(cur: int, encoded: dict) -> dict:
+        """Step in recursion to migrate from one to another, contains migration logic"""
+        # Stop because we've reached the desired version
+        if cur == expected_version:
+            return encoded
+
+        # From version 1 to version 2
+        elif cur == 1:
+            # Channel id to url
+            encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
+            del encoded["id"]
+            print(
+                Fore.YELLOW
+                + "Please make sure "
+                + encoded["url"]
+                + " is the correct url"
+                + Fore.RESET
+            )
+
+            # Empty livestreams/shorts lists
+            encoded["livestreams"] = []
+            encoded["shorts"] = []
+
+        # From version 2 to version 3
+        elif cur == 2:
+            # Add deleted status to every video/livestream/short
+            # NOTE: none is fine for new elements, just a slight bodge
+            for video in encoded["videos"]:
+                video["deleted"] = Element.new(None, False)._to_dict()
+            for video in encoded["livestreams"]:
+                video["deleted"] = Element.new(None, False)._to_dict()
+            for video in encoded["shorts"]:
+                video["deleted"] = Element.new(None, False)._to_dict()
+
+        # Unknown version
+        else:
+            _msg_err(f"Unknown archive version v{cur} found during migration", True)
+            sys.exit(1)
+
+        # Increment version and run again until version has been reached
+        cur += 1
+        encoded["version"] = cur
+        return migrate_step(cur, encoded)
+
+    # Inform user of the backup process
+    print(
+        Fore.YELLOW
+        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
+        + Fore.RESET
+    )
+
+    # Start recursion step
+    return migrate_step(current_version, encoded)
 
 
 def _magnitude(count: int = None) -> str:
@@ -1060,7 +1198,7 @@ def viewer() -> Flask:
 
                 # Save new note
                 video.notes.append(note)
-                video.channel._commit()
+                video.channel.commit()
 
                 # Return
                 return note._to_dict(), 200
@@ -1085,7 +1223,7 @@ def viewer() -> Flask:
                     note.title = update["title"]
                 if "body" in update:
                     note.body = update["body"]
-                video.channel._commit()
+                video.channel.commit()
 
                 # Return
                 return "Updated", 200
@@ -1103,7 +1241,7 @@ def viewer() -> Flask:
                     if note.id != delete["id"]:
                         filtered_notes.append(note)
                 video.notes = filtered_notes
-                video.channel._commit()
+                video.channel.commit()
 
                 # Return
                 return "Deleted", 200
@@ -1252,6 +1390,7 @@ def main():
             channel = Channel.load(args[1])
             channel.metadata()
             channel.download(maximums)
+            channel.commit()
             channel.reporter.print()
         except ArchiveNotFoundException:
             _archive_not_found()
