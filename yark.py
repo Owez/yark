@@ -126,24 +126,28 @@ class VideoLogger:
         pass
 
 
-class Maximums:
+class DownloadConfig:
     def __init__(self) -> None:
-        self.videos: int = None
-        self.livestreams: int = None
-        self.shorts: int = None
+        self.max_videos: int = None
+        self.max_livestreams: int = None
+        self.max_shorts: int = None
+        self.skip_download: bool = False
+        self.skip_metadata: bool = False
 
     def submit(self):
-        """Sets other categories to 0 if one maximum is defined"""
+        """Submits configuration, this has the effect of normalising maximums to 0 properly"""
         no_maximums = (
-            self.videos is None and self.livestreams is None and self.shorts is None
+            self.max_videos is None
+            and self.max_livestreams is None
+            and self.max_shorts is None
         )
         if not no_maximums:
-            if self.videos is None:
-                self.videos = 0
-            if self.livestreams is None:
-                self.livestreams = 0
-            if self.shorts is None:
-                self.shorts = 0
+            if self.max_videos is None:
+                self.max_videos = 0
+            if self.max_livestreams is None:
+                self.max_livestreams = 0
+            if self.max_shorts is None:
+                self.max_shorts = 0
 
 
 class Channel:
@@ -254,7 +258,7 @@ class Channel:
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, maximums: Maximums):
+    def download(self, config: DownloadConfig):
         """Downloads all videos which haven't already been downloaded"""
         # Clean out old part files
         self._clean_parts()
@@ -274,7 +278,7 @@ class Channel:
                 # Try to curate a list and download videos on it
                 try:
                     # Curate list of non-downloaded videos
-                    not_downloaded = self._curate(maximums)
+                    not_downloaded = self._curate(config)
 
                     # Stop if there's nothing to download
                     if len(not_downloaded) == 0:
@@ -357,7 +361,7 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, maximums: Maximums) -> list:
+    def _curate(self, config: DownloadConfig) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
         def curate_list(videos: list, maximum: int) -> list:
@@ -387,9 +391,9 @@ class Channel:
 
         # Curate
         not_downloaded = []
-        not_downloaded.extend(curate_list(self.videos, maximums.videos))
-        not_downloaded.extend(curate_list(self.livestreams, maximums.livestreams))
-        not_downloaded.extend(curate_list(self.shorts, maximums.shorts))
+        not_downloaded.extend(curate_list(self.videos, config.max_videos))
+        not_downloaded.extend(curate_list(self.livestreams, config.max_livestreams))
+        not_downloaded.extend(curate_list(self.shorts, config.max_shorts))
 
         # Return
         return not_downloaded
@@ -1336,7 +1340,7 @@ def run():
         # More help
         if len(args) == 2 and args[1] == "--help":
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -1345,12 +1349,13 @@ def run():
             _msg_err("Please provide the archive name")
             sys.exit(1)
 
-        # Get maximums
-        maximums = Maximums()
+        # Figure out configuration
+        config = DownloadConfig()
         if len(args) > 2:
 
-            def parse_int(maximum: str) -> int:
+            def parse_maximum_int(config_arg: str) -> int:
                 """Tries to parse a maximum integer input"""
+                maximum = config_arg.split("=")[1]
                 try:
                     return int(maximum)
                 except:
@@ -1360,36 +1365,50 @@ def run():
                     )
                     sys.exit(1)
 
-            # Set each maximum if provided
-            for maximum in args[2:]:
+            # Go through each configuration argument
+            for config_arg in args[2:]:
                 # Video maximum
-                if maximum.startswith("--videos="):
-                    maximums.videos = parse_int(maximum.split("=")[1])
+                if config_arg.startswith("--videos="):
+                    config.max_videos = parse_maximum_int(config_arg)
 
                 # Livestream maximum
-                elif maximum.startswith("--livestreams="):
-                    maximums.livestreams = parse_int(maximum.split("=")[1])
+                elif config_arg.startswith("--livestreams="):
+                    config.max_livestreams = parse_maximum_int(config_arg)
 
                 # Shorts maximum
-                elif maximum.startswith("--shorts="):
-                    maximums.shorts = parse_int(maximum.split("=")[1])
+                elif config_arg.startswith("--shorts="):
+                    config.max_shorts = parse_maximum_int(config_arg)
 
-                # Unknown argument (maximum)
+                # No metadata
+                elif config_arg == "--skip-metadata":
+                    config.skip_metadata = True
+
+                # No downloading; functionally equivalent to all maximums being 0 but it skips entirely
+                elif config_arg == "--skip-download":
+                    config.skip_download = True
+
+                # Unknown argument
                 else:
                     print(HELP, file=sys.stderr)
                     _msg_err(
-                        f"\nError: Unknown argument '{maximum}' provided for archive refresh"
+                        f"\nError: Unknown configuration '{config_arg}' provided for archive refresh"
                     )
                     sys.exit(1)
 
-        # Submit maximums
-        maximums.submit()
+        # Submit config settings
+        config.submit()
 
-        # Refresh channel
+        # Refresh channel using config context
         try:
             channel = Channel.load(args[1])
-            channel.metadata()
-            channel.download(maximums)
+            if config.skip_metadata:
+                print("Skipping metadata download..")
+            else:
+                channel.metadata()
+            if config.skip_download:
+                print("Skipping videos/livestreams/shorts download..")
+            else:
+                channel.download(config)
             channel.commit()
             channel.reporter.print()
         except ArchiveNotFoundException:
