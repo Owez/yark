@@ -100,14 +100,13 @@ class VideoLogger:
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
             print(
-                Style.DIM,
-                f" • Downloading {id}, at {percent}.." + Style.NORMAL,
+                Style.DIM + f"  • Downloading {id}, at {percent}.." + Style.NORMAL,
                 end="\r",
             )
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM, f" • Downloaded {id}              " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}              " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -318,8 +317,8 @@ class Channel:
                                     if not video.downloaded(ldir):
                                         # Tell the user we're skipping over it
                                         print(
-                                            Style.DIM,
-                                            f" • Skipping {video.id} (deleted)"
+                                            Style.DIM
+                                            + f"  • Skipping {video.id} (deleted)"
                                             + Style.NORMAL,
                                         )
 
@@ -510,7 +509,7 @@ class Channel:
         }
 
     def __repr__(self) -> str:
-        return self.path.name
+        return f"{self.path.name} channel"
 
 
 class Video:
@@ -813,7 +812,7 @@ class Reporter:
     def print(self):
         """Prints coloured report to STDOUT"""
         # Initial message
-        print(f"Report for {self.channel} channel:")
+        print(f"Report for {self.channel}:")
 
         # Updated
         for type, element in self.updated:
@@ -837,11 +836,10 @@ class Reporter:
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
-            print(Style.DIM, f"  • Nothing was added or deleted")
+            print(Style.DIM + f"  • Nothing was added or deleted")
 
-        # Timestamp
-        date = datetime.utcnow().isoformat()
-        print(Style.RESET_ALL + f"Yark – {date}")
+        # Watermark
+        print(self._watermark())
 
     def add_updated(self, kind: str, element: Element):
         """Tells reporter that an element has been updated"""
@@ -852,6 +850,63 @@ class Reporter:
         self.added = []
         self.deleted = []
         self.updated = []
+
+    def interesting_changes(self):
+        """Reports on the most interesting changes for the channel linked to this reporter"""
+
+        def fmt_video(video: Video) -> str:
+            """Returns formatted string for an individual video or returns an empty string"""
+            return ""
+
+        def fmt_category(kind: str, videos: list) -> str:
+            """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
+            # Add interesting videos to buffer
+            HEADING = f"Interesting {kind}:\n"
+            buf = HEADING
+            for video in self.channel.videos:
+                buf += fmt_video(video)
+
+            # Return nothing if buffer is just the heading
+            if buf == HEADING:
+                return None
+
+            pass  # TODO
+
+        # Tell users whats happening
+        print(f"Finding interesting changes in {self.channel}..")
+
+        # Get reports on the three categories
+        categories = [
+            ("videos", fmt_category("videos", self.channel.videos)),
+            ("livestreams", fmt_category("livestreams", self.channel.livestreams)),
+            ("shorts", fmt_category("shorts", self.channel.shorts)),
+        ]
+
+        # Combine those with nothing of note and print out interesting
+        not_of_note = []
+        for name, buf in categories:
+            if buf is None:
+                not_of_note.append(name)
+            else:
+                print(buf)
+
+        # Print out those with nothing of note at the end
+        if len(not_of_note) != 0:
+            not_of_note = "/".join(not_of_note)
+            print(
+                f"Interesting {not_of_note}:\n"
+                + Style.DIM
+                + "  • Nothing worth noting"
+                + Style.NORMAL
+            )
+
+        # Watermark
+        print(self._watermark())
+
+    def _watermark(self) -> str:
+        """Returns a new watermark with a Yark timestamp"""
+        date = datetime.utcnow().isoformat()
+        return Style.RESET_ALL + f"Yark – {date}"
 
 
 #
@@ -1287,7 +1342,7 @@ def viewer() -> Flask:
 def run():
     """Command-line-interface launcher"""
     # Help message
-    HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]            Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]                Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     def no_help():
         """Prints out help message and exits, displaying a 'no additional help' message"""
@@ -1445,6 +1500,16 @@ def run():
             print("Starting viewer..")
             webbrowser.open(f"http://127.0.0.1:7667/")
             launch()
+
+    # Report
+    elif args[0] == "report":
+        # Bad arguments
+        if len(args) < 2:
+            _msg_err("Please provide the archive name")
+            sys.exit(1)
+
+        channel = Channel.load(args[1])
+        channel.reporter.interesting_changes()
 
     # Unknown
     else:
