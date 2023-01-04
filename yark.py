@@ -24,6 +24,7 @@ import webbrowser
 import logging
 import urllib3
 from importlib.metadata import version
+from itertools import islice
 
 #
 # COLORAMA
@@ -509,7 +510,7 @@ class Channel:
         }
 
     def __repr__(self) -> str:
-        return f"{self.path.name} channel"
+        return self.path.name
 
 
 class Video:
@@ -520,7 +521,7 @@ class Video:
         video = Video()
         video.channel = channel
         video.id = entry["id"]
-        video.uploaded = _yt_date(entry["upload_date"])
+        video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
         video.title = Element.new(video, entry["title"])
@@ -678,6 +679,10 @@ class Element:
     def current(self):
         """Returns most recent element"""
         return self.inner[list(self.inner.keys())[-1]]
+
+    def changed(self) -> bool:
+        """Checks if the value has ever been modified from it's original state"""
+        return len(self.inner) > 1
 
     @staticmethod
     def _from_dict(encoded: dict, video: Video):
@@ -854,23 +859,105 @@ class Reporter:
     def interesting_changes(self):
         """Reports on the most interesting changes for the channel linked to this reporter"""
 
-        def fmt_video(video: Video) -> str:
+        def fmt_video(kind: str, video: Video) -> str:
             """Returns formatted string for an individual video or returns an empty string"""
-            return ""
+            # Create a bucket to combine results into and make a notability marker
+            bucket = []
+            notable = False
+
+            # Add titles to bucket if it's changed
+            if video.title.changed():
+                notable = True
+                bucket.extend(
+                    [(date, v, "title") for date, v in video.title.inner.items()]
+                )
+
+            # Add descriptions to bucket if it's changed
+            if video.description.changed():
+                notable = True
+                bucket.extend(
+                    [
+                        (date, v, "description")
+                        for date, v in video.description.inner.items()
+                    ]
+                )
+
+            # Add deleted times to bucket if it's changed and skip over first element saying it was added
+            if video.deleted.changed():
+                notable = True
+                skipped_first = islice(video.deleted.inner.items(), 1, None)
+                bucket.extend([(date, v, "deleted") for date, v in skipped_first])
+
+            # Stop processing if nothing of note is in video
+            if not notable:
+                return ""
+
+            # If not, create a buffer for change information with a custom video repr
+            buf = f"  • {video.title.current()} — http://127.0.0.1:7667/channel/{video.channel}/videos/{video.id}\n"
+
+            # Sort bucket by the dates; iso format can be sorted
+            sorted(bucket, key=lambda x: x[0])
+
+            # Add each bucket element as a new bulletpoint to buf depending on context
+            first_title = True
+            first_description = True
+            first_deletion = True
+            for date, value, kind in bucket:
+
+                def gen_bullet(msg: str, colour: Fore, first: bool = False) -> str:
+                    """Generates a nice bulletpoint to use depending on the data known"""
+                    buf = colour + "    • "
+                    prefix = "The" if first else "Then, the"
+                    buf += f"{date}: {prefix} {msg}" + Fore.RESET + "\n"
+                    return buf
+
+                def standard_change(first: bool) -> str:
+                    """Standard change formula which adds to buffer, just need to pipe in the `first` boolean unique to each"""
+                    if first:
+                        first = False
+                        return gen_bullet(
+                            f"{kind} was originally '{value}'", Fore.GREEN, True
+                        )
+                    return gen_bullet(f"{kind} changed to '{value}'", Fore.CYAN)
+
+                # Title changes
+                if kind == "title":
+                    buf += standard_change(first_title)
+                    first_title = False
+
+                # Description changes
+                elif kind == "description":
+                    buf += standard_change(first_description)
+                    first_description = False
+
+                # Deletion status changes; we skip over initial addition in the bucket extend
+                elif kind == "deleted":
+                    # Re-added
+                    if not value:
+                        buf += gen_bullet("video was re-added", Fore.GREEN, False)
+
+                    # Deleted first time
+                    elif first_deletion:
+                        first_deletion = False
+                        buf += gen_bullet("video was deleted", Fore.RED, True)
+
+                    # Deleted again
+                    else:
+                        buf += gen_bullet("video was deleted again", Fore.RED, False)
+
+            # Return
+            return buf
 
         def fmt_category(kind: str, videos: list) -> str:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
             # Add interesting videos to buffer
             HEADING = f"Interesting {kind}:\n"
             buf = HEADING
-            for video in self.channel.videos:
-                buf += fmt_video(video)
+            for video in videos:
+                buf += fmt_video(kind, video)
 
-            # Return nothing if buffer is just the heading
-            if buf == HEADING:
-                return None
-
-            pass  # TODO
+            # Return depending on if the buf is just the heading
+            return None if buf == HEADING else buf[:-1]
 
         # Tell users whats happening
         print(f"Finding interesting changes in {self.channel}..")
@@ -991,12 +1078,12 @@ def _magnitude(count: int = None) -> str:
         return value + "b"
 
 
-def _yt_date(input: str) -> datetime:
+def _decode_date_yt(input: str) -> datetime:
     """Decodes date from YouTube like `20180915` for example"""
     return datetime.strptime(input, "%Y%m%d")
 
 
-def _parse_timestamp(input: str) -> int:
+def _decode_timestamp(input: str) -> int:
     """Parses timestamp into seconds or raises `TimestampException`"""
     # Check existence
     input = input.strip()
@@ -1029,7 +1116,7 @@ def _parse_timestamp(input: str) -> int:
     return secs
 
 
-def _fmt_timestamp(timestamp: int) -> str:
+def _encode_timestamp(timestamp: int) -> str:
     """Formats previously parsed human timestamp for notes, e.g. `02:25`"""
     # Collector
     parts = []
@@ -1250,7 +1337,7 @@ def viewer() -> Flask:
                     return "Invalid schema", 400
 
                 # Create note
-                timestamp = _parse_timestamp(new["timestamp"])
+                timestamp = _decode_timestamp(new["timestamp"])
                 title = new["title"]
                 body = new["body"] if "body" in new else None
                 note = Note.new(video, timestamp, title, body)
@@ -1329,7 +1416,7 @@ def viewer() -> Flask:
     @app.template_filter("timestamp")
     def _jinja2_filter_timestamp(timestamp, fmt=None):
         """Formatter hook for timestamps"""
-        return _fmt_timestamp(timestamp)
+        return _encode_timestamp(timestamp)
 
     return app
 
