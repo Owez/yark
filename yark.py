@@ -896,7 +896,7 @@ class Reporter:
             buf = f"  • {video.title.current()} — http://127.0.0.1:7667/channel/{video.channel}/videos/{video.id}\n"
 
             # Sort bucket by the dates; iso format can be sorted
-            sorted(bucket, key=lambda x: x[0])
+            bucket.sort(key=lambda x : x[0])
 
             # Add each bucket element as a new bulletpoint to buf depending on context
             first_title = True
