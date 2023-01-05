@@ -1,5 +1,8 @@
+"""Exceptions and error functions"""
+
 from colorama import Style, Fore
 import sys
+
 
 class ArchiveNotFoundException(Exception):
     """Archive couldn't be found, the name was probably incorrect"""
@@ -27,7 +30,8 @@ class TimestampException(Exception):
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
-        
+
+
 def _err_msg(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (

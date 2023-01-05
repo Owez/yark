@@ -1,8 +1,13 @@
+"""Channel reporting system allowing detailed logging of useful information"""
+
 from colorama import Fore, Style
 import datetime
+from .video import Video, Element
+from .utils import _truncate_text
+
 
 class Reporter:
-    def __init__(self, channel: Channel) -> None:
+    def __init__(self, channel) -> None:
         self.channel = channel
         self.added = []
         self.deleted = []
@@ -134,7 +139,8 @@ class Reporter:
         # Watermark
         print(_watermark())
 
+
 def _watermark() -> str:
     """Returns a new watermark with a Yark timestamp"""
-    date = datetime.utcnow().isoformat()
+    date = datetime.datetime.utcnow().isoformat()
     return Style.RESET_ALL + f"Yark – {date}"

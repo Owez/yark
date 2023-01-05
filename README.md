@@ -7,7 +7,7 @@ YouTube archiving made simple.
 
 [Installation](#installation) · [Managing your Archive](#managing-your-archive) · [Viewing your Archive](#viewing-your-archive)
 
-Yark lets you continuously archive all videos and metadata for YouTube channels. You can also view your archive as a seemless offline website ✨
+Yark lets you continuously archive all videos and metadata for YouTube channels. You can also view your archive as a seamless offline website ✨
 
 ## Installation
 
@@ -18,7 +18,6 @@ $ pip3 install yark
 ```
 
 ## Managing your Archive
-
 
 Once you've installed Yark, think of a name for your archive and copy the target's url:
 

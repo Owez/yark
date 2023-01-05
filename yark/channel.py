@@ -1,3 +1,5 @@
+"""Channel and overall archive management with downloader"""
+
 from datetime import datetime
 import json
 import os
@@ -6,6 +8,9 @@ import time
 from yt_dlp import YoutubeDL, DownloadError
 from colorama import Style, Fore
 import sys
+from .reporter import Reporter
+from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
+from .video import Video, Element
 
 
 ARCHIVE_COMPAT = 3

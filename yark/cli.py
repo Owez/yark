@@ -1,35 +1,22 @@
-from datetime import datetime
-from fnmatch import fnmatch
+"""Homegrown cli for managing archives"""
+
 import json
-import os
 from pathlib import Path
-import time
-from uuid import uuid4
-from yt_dlp import YoutubeDL, DownloadError
-import colorama
 from colorama import Style, Fore
-import requests
-import hashlib
 import sys
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    send_from_directory,
-)
 import threading
 import webbrowser
-import logging
 import urllib3
 from importlib.metadata import version
-from itertools import islice
+from .errors import _err_msg, ArchiveNotFoundException
+from .channel import Channel, DownloadConfig
+from .viewer import viewer
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 """User-facing help message provided from the cli"""
 
-def _launch():
+
+def _cli():
     """Command-line-interface launcher"""
 
     # Get arguments
@@ -199,6 +186,7 @@ def _launch():
         _err_msg(f"\nError: Unknown command '{args[0]}' provided!", True)
         sys.exit(1)
 
+
 def _pypi_version():
     """Checks if there's a new version of Yark and tells the user if it's significant"""
     # Get package data from PyPI
@@ -226,10 +214,12 @@ def _pypi_version():
             f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
+
 def _err_archive_not_found():
     """Errors out the user if the archive doesn't exist"""
     _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
     sys.exit(1)
+
 
 def _err_no_help():
     """Prints out help message and exits, displaying a 'no additional help' message"""

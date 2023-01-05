@@ -1,14 +1,18 @@
+"""Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
+
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
 from uuid import uuid4
 import requests
 import hashlib
+from .errors import NoteNotFoundException
+from .utils import _truncate_text
 
 
 class Video:
     @staticmethod
-    def new(entry: dict, channel: Channel):
+    def new(entry: dict, channel):
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -79,7 +83,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel: Channel):
+    def _from_dict(encoded: dict, channel):
         """Converts id and encoded dictionary to video for loading a channel"""
         # Normal
         video = Video()
