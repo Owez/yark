@@ -627,11 +627,7 @@ class Video:
 
     def __repr__(self) -> str:
         # Title
-        truncate = 31
-        title = self.title.current()
-        if len(title) > truncate:
-            title = title[: truncate - 2] + ".."
-        title = title.ljust(truncate)
+        title = _truncate_text(self.title.current())
 
         # Views and likes
         views = _magnitude(self.views.current()).ljust(6)
@@ -642,7 +638,7 @@ class Video:
         height = self.height if self.height is not None else "?"
 
         # Upload date
-        uploaded = self.uploaded.strftime("%d %b %Y")
+        uploaded = _encode_date_human(self.uploaded)
 
         # Return
         return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
@@ -860,93 +856,48 @@ class Reporter:
         """Reports on the most interesting changes for the channel linked to this reporter"""
 
         def fmt_video(kind: str, video: Video) -> str:
-            """Returns formatted string for an individual video or returns an empty string"""
-            # Create a bucket to combine results into and make a notability marker
-            bucket = []
-            notable = False
-
-            # Add titles to bucket if it's changed
-            if video.title.changed():
-                notable = True
-                bucket.extend(
-                    [(date, v, "title") for date, v in video.title.inner.items()]
-                )
-
-            # Add descriptions to bucket if it's changed
-            if video.description.changed():
-                notable = True
-                bucket.extend(
-                    [
-                        (date, v, "description")
-                        for date, v in video.description.inner.items()
-                    ]
-                )
-
-            # Add deleted times to bucket if it's changed and skip over first element saying it was added
-            if video.deleted.changed():
-                notable = True
-                skipped_first = islice(video.deleted.inner.items(), 1, None)
-                bucket.extend([(date, v, "deleted") for date, v in skipped_first])
-
-            # Stop processing if nothing of note is in video
-            if not notable:
+            """Formats a video if it's interesting, otherwise returns an empty string"""
+            # Skip formatting because it's got nothing of note
+            if (
+                not video.title.changed()
+                and not video.description.changed()
+                and not video.deleted.changed()
+            ):
                 return ""
 
-            # If not, create a buffer for change information with a custom video repr
-            buf = f"  • {video.title.current()} — http://127.0.0.1:7667/channel/{video.channel}/videos/{video.id}\n"
+            # Lambdas for easy buffer addition for next block
+            buf = []
+            maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
+            add_buf = lambda name, change, colour: buf.append(
+                colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
+            )
 
-            # Sort bucket by the dates; iso format can be sorted
-            bucket.sort(key=lambda x : x[0])
+            # Figure out how many changes have happened in each category and format them together
+            change_deleted = sum(
+                1 for value in video.deleted.inner.values() if value == True
+            )
+            if change_deleted != 0:
+                add_buf("deleted", change_deleted, Fore.RED)
+            change_description = len(video.description.inner) - 1
+            if change_description != 0:
+                add_buf("description", change_description, Fore.CYAN)
+            change_title = len(video.title.inner) - 1
+            if change_title != 0:
+                add_buf("title", change_title, Fore.CYAN)
 
-            # Add each bucket element as a new bulletpoint to buf depending on context
-            first_title = True
-            first_description = True
-            first_deletion = True
-            for date, value, kind in bucket:
+            # Combine the detected changes together and capitalize
+            changes = ", ".join(buf) + Fore.RESET
 
-                def gen_bullet(msg: str, colour: Fore, first: bool = False) -> str:
-                    """Generates a nice bulletpoint to use depending on the data known"""
-                    buf = colour + "    • "
-                    prefix = "The" if first else "Then, the"
-                    buf += f"{date}: {prefix} {msg}" + Fore.RESET + "\n"
-                    return buf
-
-                def standard_change(first: bool) -> str:
-                    """Standard change formula which adds to buffer, just need to pipe in the `first` boolean unique to each"""
-                    if first:
-                        first = False
-                        return gen_bullet(
-                            f"{kind} was originally '{value}'", Fore.GREEN, True
-                        )
-                    return gen_bullet(f"{kind} changed to '{value}'", Fore.CYAN)
-
-                # Title changes
-                if kind == "title":
-                    buf += standard_change(first_title)
-                    first_title = False
-
-                # Description changes
-                elif kind == "description":
-                    buf += standard_change(first_description)
-                    first_description = False
-
-                # Deletion status changes; we skip over initial addition in the bucket extend
-                elif kind == "deleted":
-                    # Re-added
-                    if not value:
-                        buf += gen_bullet("video was re-added", Fore.GREEN, False)
-
-                    # Deleted first time
-                    elif first_deletion:
-                        first_deletion = False
-                        buf += gen_bullet("video was deleted", Fore.RED, True)
-
-                    # Deleted again
-                    else:
-                        buf += gen_bullet("video was deleted again", Fore.RED, False)
-
-            # Return
-            return buf
+            # Truncate title, get viewer link, and format all together with viewer link
+            title = _truncate_text(video.title.current(), 53).strip()
+            url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
+            return (
+                f"  • {title}\n    {changes}\n    "
+                + Style.DIM
+                + url
+                + Style.RESET_ALL
+                + "\n"
+            )
 
         def fmt_category(kind: str, videos: list) -> str:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
@@ -980,12 +931,7 @@ class Reporter:
         # Print out those with nothing of note at the end
         if len(not_of_note) != 0:
             not_of_note = "/".join(not_of_note)
-            print(
-                f"Interesting {not_of_note}:\n"
-                + Style.DIM
-                + "  • Nothing worth noting"
-                + Style.NORMAL
-            )
+            print(f"No interesting {not_of_note} found")
 
         # Watermark
         print(self._watermark())
@@ -1081,6 +1027,11 @@ def _magnitude(count: int = None) -> str:
 def _decode_date_yt(input: str) -> datetime:
     """Decodes date from YouTube like `20180915` for example"""
     return datetime.strptime(input, "%Y%m%d")
+
+
+def _encode_date_human(input: datetime) -> str:
+    """Encodes an `input` date into a standardized human-readable format"""
+    return input.strftime("%d %b %Y")
 
 
 def _decode_timestamp(input: str) -> int:
@@ -1246,6 +1197,13 @@ def _msg_err(msg: str, report_msg: bool = False):
         else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
     )
     print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
+
+
+def _truncate_text(text: str, to: int = 31) -> str:
+    """Truncates inputted `text` to ~32 length, adding ellipsis at the end if overflowing"""
+    if len(text) > to:
+        text = text[: to - 2].strip() + ".."
+    return text.ljust(to)
 
 
 #
