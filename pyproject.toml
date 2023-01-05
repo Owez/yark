@@ -9,11 +9,9 @@ repository = "https://github.com/owez/yark"
 classifiers = [
     "Topic :: System :: Archiving",
     "Topic :: System :: Archiving :: Backup",
-    "Topic :: Multimedia :: Video"
+    "Topic :: Multimedia :: Video",
 ]
-include = [
-    { path = "templates/*" }
-]
+include = [{ path = "templates/*" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -23,7 +21,7 @@ colorama = "^0.4.5"
 yt-dlp = "^2022.11.11"
 
 [tool.poetry.scripts]
-yark = "yark:run"
+yark = "yark.cli:_cli"
 
 [tool.poetry.dev-dependencies]
 
