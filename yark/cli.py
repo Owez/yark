@@ -129,12 +129,11 @@ def _cli():
                 print("Skipping metadata download..")
             else:
                 channel.metadata()
-                channel.commit()
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
             else:
                 channel.download(config)
-                channel.commit()
+            channel.commit()
             channel.reporter.print()
         except ArchiveNotFoundException:
             _err_archive_not_found()
