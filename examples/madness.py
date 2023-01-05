@@ -1,16 +1,16 @@
-from yark import Channel, Maximums
+from yark import Channel, DownloadConfig
 
-# Create a new channel and refresh only it's metadata
-Channel.new(
+# Create a new channel
+channel = Channel.new(
     "demo", "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-).metadata()
+)
 
-# Load the channel back up and do the same
-channel = Channel.load("demo")
+# Refresh only metadata and commit to file
 channel.metadata()
-
-# Save the metadata to file
 channel.commit()
+
+# Load the channel back up from file for the fun of it
+channel = Channel.load("demo")
 
 # Print all the video id's of the channel
 print(", ".join([video.id for video in channel.videos]))
@@ -20,8 +20,8 @@ video = channel.search("annp92OPZgQ")
 print(video.description.current())
 
 # Download the 5 most recent videos and 10 most recent shorts
-maximums = Maximums()
-maximums.videos = 5
-maximums.shorts = 10
-maximums.submit()
-channel.download(maximums)
+config = DownloadConfig()
+config.max_videos = 5
+config.max_shorts = 10
+config.submit()
+channel.download(config)

@@ -7,7 +7,7 @@ YouTube archiving made simple.
 
 [Installation](#installation) · [Managing your Archive](#managing-your-archive) · [Viewing your Archive](#viewing-your-archive)
 
-Yark lets you continuously archive all videos and metadata for YouTube channels. You can also view your archive as a seemless offline website ✨
+Yark lets you continuously archive all videos and metadata for YouTube channels. You can also view your archive as a seamless offline website ✨
 
 ## Installation
 
@@ -18,7 +18,6 @@ $ pip3 install yark
 ```
 
 ## Managing your Archive
-
 
 Once you've installed Yark, think of a name for your archive and copy the target's url:
 
@@ -61,3 +60,17 @@ Here are some things to keep in mind when using Yark; the good and the bad:
 - Don't create a new archive again if you just want to update it, Yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
 - Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!
+
+## Archive Format
+
+The archive format itself is simple and consists of a directory-based structure with a core metadata file and all thumbnail/video data in their own directories as typical files:
+
+- `[name]/` – Your self-contained archive
+  - `yark.json` – Archive file with all metadata
+  - `yark.bak` – Backup archive file to protect against data damage
+  - `videos/` – Directory containing all known videos
+    - `[id].mp4` – Files containing video data for YouTube videos
+  - `thumbnails/` – Directory containing all known thumbnails
+    - `[hash].png` – Files containing thumbnails with it's BLAKE2 hash
+
+It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.
