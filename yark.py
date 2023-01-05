@@ -24,6 +24,7 @@ import webbrowser
 import logging
 import urllib3
 from importlib.metadata import version
+from itertools import islice
 
 #
 # COLORAMA
@@ -100,14 +101,13 @@ class VideoLogger:
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
             print(
-                Style.DIM,
-                f" • Downloading {id}, at {percent}.." + Style.NORMAL,
+                Style.DIM + f"  • Downloading {id}, at {percent}.." + Style.NORMAL,
                 end="\r",
             )
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM, f" • Downloaded {id}              " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}              " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -318,8 +318,8 @@ class Channel:
                                     if not video.downloaded(ldir):
                                         # Tell the user we're skipping over it
                                         print(
-                                            Style.DIM,
-                                            f" • Skipping {video.id} (deleted)"
+                                            Style.DIM
+                                            + f"  • Skipping {video.id} (deleted)"
                                             + Style.NORMAL,
                                         )
 
@@ -521,7 +521,7 @@ class Video:
         video = Video()
         video.channel = channel
         video.id = entry["id"]
-        video.uploaded = _yt_date(entry["upload_date"])
+        video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
         video.title = Element.new(video, entry["title"])
@@ -627,11 +627,7 @@ class Video:
 
     def __repr__(self) -> str:
         # Title
-        truncate = 31
-        title = self.title.current()
-        if len(title) > truncate:
-            title = title[: truncate - 2] + ".."
-        title = title.ljust(truncate)
+        title = _truncate_text(self.title.current())
 
         # Views and likes
         views = _magnitude(self.views.current()).ljust(6)
@@ -642,7 +638,7 @@ class Video:
         height = self.height if self.height is not None else "?"
 
         # Upload date
-        uploaded = self.uploaded.strftime("%d %b %Y")
+        uploaded = _encode_date_human(self.uploaded)
 
         # Return
         return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
@@ -679,6 +675,10 @@ class Element:
     def current(self):
         """Returns most recent element"""
         return self.inner[list(self.inner.keys())[-1]]
+
+    def changed(self) -> bool:
+        """Checks if the value has ever been modified from it's original state"""
+        return len(self.inner) > 1
 
     @staticmethod
     def _from_dict(encoded: dict, video: Video):
@@ -813,7 +813,7 @@ class Reporter:
     def print(self):
         """Prints coloured report to STDOUT"""
         # Initial message
-        print(f"Report for {self.channel} channel:")
+        print(f"Report for {self.channel}:")
 
         # Updated
         for type, element in self.updated:
@@ -837,11 +837,10 @@ class Reporter:
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
-            print(Style.DIM, f"  • Nothing was added or deleted")
+            print(Style.DIM + f"  • Nothing was added or deleted")
 
-        # Timestamp
-        date = datetime.utcnow().isoformat()
-        print(Style.RESET_ALL + f"Yark – {date}")
+        # Watermark
+        print(self._watermark())
 
     def add_updated(self, kind: str, element: Element):
         """Tells reporter that an element has been updated"""
@@ -852,6 +851,95 @@ class Reporter:
         self.added = []
         self.deleted = []
         self.updated = []
+
+    def interesting_changes(self):
+        """Reports on the most interesting changes for the channel linked to this reporter"""
+
+        def fmt_video(kind: str, video: Video) -> str:
+            """Formats a video if it's interesting, otherwise returns an empty string"""
+            # Skip formatting because it's got nothing of note
+            if (
+                not video.title.changed()
+                and not video.description.changed()
+                and not video.deleted.changed()
+            ):
+                return ""
+
+            # Lambdas for easy buffer addition for next block
+            buf = []
+            maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
+            add_buf = lambda name, change, colour: buf.append(
+                colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
+            )
+
+            # Figure out how many changes have happened in each category and format them together
+            change_deleted = sum(
+                1 for value in video.deleted.inner.values() if value == True
+            )
+            if change_deleted != 0:
+                add_buf("deleted", change_deleted, Fore.RED)
+            change_description = len(video.description.inner) - 1
+            if change_description != 0:
+                add_buf("description", change_description, Fore.CYAN)
+            change_title = len(video.title.inner) - 1
+            if change_title != 0:
+                add_buf("title", change_title, Fore.CYAN)
+
+            # Combine the detected changes together and capitalize
+            changes = ", ".join(buf) + Fore.RESET
+
+            # Truncate title, get viewer link, and format all together with viewer link
+            title = _truncate_text(video.title.current(), 51).strip()
+            url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
+            return (
+                f"  • {title}\n    {changes}\n    "
+                + Style.DIM
+                + url
+                + Style.RESET_ALL
+                + "\n"
+            )
+
+        def fmt_category(kind: str, videos: list) -> str:
+            """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
+            # Add interesting videos to buffer
+            HEADING = f"Interesting {kind}:\n"
+            buf = HEADING
+            for video in videos:
+                buf += fmt_video(kind, video)
+
+            # Return depending on if the buf is just the heading
+            return None if buf == HEADING else buf[:-1]
+
+        # Tell users whats happening
+        print(f"Finding interesting changes in {self.channel}..")
+
+        # Get reports on the three categories
+        categories = [
+            ("videos", fmt_category("videos", self.channel.videos)),
+            ("livestreams", fmt_category("livestreams", self.channel.livestreams)),
+            ("shorts", fmt_category("shorts", self.channel.shorts)),
+        ]
+
+        # Combine those with nothing of note and print out interesting
+        not_of_note = []
+        for name, buf in categories:
+            if buf is None:
+                not_of_note.append(name)
+            else:
+                print(buf)
+
+        # Print out those with nothing of note at the end
+        if len(not_of_note) != 0:
+            not_of_note = "/".join(not_of_note)
+            print(f"No interesting {not_of_note} found")
+
+        # Watermark
+        print(self._watermark())
+
+    def _watermark(self) -> str:
+        """Returns a new watermark with a Yark timestamp"""
+        date = datetime.utcnow().isoformat()
+        return Style.RESET_ALL + f"Yark – {date}"
 
 
 #
@@ -936,12 +1024,17 @@ def _magnitude(count: int = None) -> str:
         return value + "b"
 
 
-def _yt_date(input: str) -> datetime:
+def _decode_date_yt(input: str) -> datetime:
     """Decodes date from YouTube like `20180915` for example"""
     return datetime.strptime(input, "%Y%m%d")
 
 
-def _parse_timestamp(input: str) -> int:
+def _encode_date_human(input: datetime) -> str:
+    """Encodes an `input` date into a standardized human-readable format"""
+    return input.strftime("%d %b %Y")
+
+
+def _decode_timestamp(input: str) -> int:
     """Parses timestamp into seconds or raises `TimestampException`"""
     # Check existence
     input = input.strip()
@@ -974,7 +1067,7 @@ def _parse_timestamp(input: str) -> int:
     return secs
 
 
-def _fmt_timestamp(timestamp: int) -> str:
+def _encode_timestamp(timestamp: int) -> str:
     """Formats previously parsed human timestamp for notes, e.g. `02:25`"""
     # Collector
     parts = []
@@ -1106,6 +1199,13 @@ def _msg_err(msg: str, report_msg: bool = False):
     print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
 
 
+def _truncate_text(text: str, to: int = 31) -> str:
+    """Truncates inputted `text` to ~32 length, adding ellipsis at the end if overflowing"""
+    if len(text) > to:
+        text = text[: to - 2].strip() + ".."
+    return text.ljust(to)
+
+
 #
 # VIEWER
 #
@@ -1195,7 +1295,7 @@ def viewer() -> Flask:
                     return "Invalid schema", 400
 
                 # Create note
-                timestamp = _parse_timestamp(new["timestamp"])
+                timestamp = _decode_timestamp(new["timestamp"])
                 title = new["title"]
                 body = new["body"] if "body" in new else None
                 note = Note.new(video, timestamp, title, body)
@@ -1274,7 +1374,7 @@ def viewer() -> Flask:
     @app.template_filter("timestamp")
     def _jinja2_filter_timestamp(timestamp, fmt=None):
         """Formatter hook for timestamps"""
-        return _fmt_timestamp(timestamp)
+        return _encode_timestamp(timestamp)
 
     return app
 
@@ -1287,7 +1387,7 @@ def viewer() -> Flask:
 def run():
     """Command-line-interface launcher"""
     # Help message
-    HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]            Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]                Launches offiline archive viewer website\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+    HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 
     def no_help():
         """Prints out help message and exits, displaying a 'no additional help' message"""
@@ -1445,6 +1545,16 @@ def run():
             print("Starting viewer..")
             webbrowser.open(f"http://127.0.0.1:7667/")
             launch()
+
+    # Report
+    elif args[0] == "report":
+        # Bad arguments
+        if len(args) < 2:
+            _msg_err("Please provide the archive name")
+            sys.exit(1)
+
+        channel = Channel.load(args[1])
+        channel.reporter.interesting_changes()
 
     # Unknown
     else:
