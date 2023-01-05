@@ -46,8 +46,8 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/images/videos_dark.png" alt="History Demo (Light Mode)" title="History Demo (Dark Mode)" style="border-radius:7.5px;" height=275 /></p>
-<p><img src="examples/images/videos_light.png" alt="History Demo (Light Mode)" title="History Demo (Light Mode)" style="border-radius:7.5px;" height=275 /></p>
+<p><img src="examples/images/viewer_light.png" alt="Viewer (Light)" title="Viewer (Light)" style="border-radius:4px;" width=600 /></p>
+<p><img src="examples/images/viewer_dark.png" alt="Viewer (Dark)" title="Viewer (Dark)" style="border-radius:4px;" width=600 /></p>
 
 Also, under each video is a rich history report filled with timelines and graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
 
