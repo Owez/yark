@@ -5,13 +5,9 @@
 
 YouTube archiving made simple.
 
-- [Yark](#yark)
-  - [Installation](#installation)
-  - [Managing your Archive](#managing-your-archive)
-  - [Viewing your Archive](#viewing-your-archive)
-  - [Details](#details)
+[Installation](#installation) · [Managing your Archive](#managing-your-archive) · [Viewing your Archive](#viewing-your-archive)
 
-Yark lets you continuously archive all videos and metadata of a channel. You can also view your archive as a seemless offline website 🦾
+Yark lets you continuously archive all videos and metadata for YouTube channels. You can also view your archive as a seemless offline website ✨
 
 ## Installation
 
@@ -24,25 +20,25 @@ $ pip3 install yark
 ## Managing your Archive
 
 
-Once you've installed Yark, think of a name for your archive and copy the target's channel id:
+Once you've installed Yark, think of a name for your archive and copy the target's url:
 
 ```shell
 $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
 ```
 
-Now that you've created the archive, you can tell Yark to download all videos and metadata:
+Now that you've created the archive, you can tell Yark to download all videos and metadata using the refresh command:
 
 ```shell
 $ yark refresh owez
 ```
 
-Here's what my channel looked like after following the steps (if anything was updated/deleted it would be blue/red to indicate):
+Once everything has been downloaded, Yark will automatically give you a status report of what's changed since the last refresh:
 
-<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/report.png" alt="Report Demo" title="Report Demo" width="600" /></p>
+<p><img src="examples/image/../images/cli_dark.png" alt="Report Demo" title="Report Demo" width="600" /></p>
 
 ## Viewing your Archive
 
-Viewing you archive is very simple, just type `view` and optionally the archive name:
+Viewing you archive is easy, just type `view` with your archives name:
 
 ```shell
 $ yark view owez
@@ -50,11 +46,13 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/channel.png" alt="Channel Demo" title="Channel Demo" /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer_light.png" alt="Viewer Demo" title="Viewer Demo" width=650 /></p>
 
-Under each video is a rich history report filled with graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
+Under each video is a rich history report filled with timelines and graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
 
-<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/history.png" alt="History Demo" title="History Demo" /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer_stats_light.png" alt="Viewer Demo – Stats" title="Viewer Demo – Stats" width=650 /></p>
+
+Light and dark modes are both available and automatically apply based on the system's theme.
 
 ## Details
 
