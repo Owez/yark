@@ -46,10 +46,13 @@ $ yark view owez
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
 
-<p><img src="examples/images/viewer_light.png" alt="Viewer (Light)" title="Viewer (Light)" style="border-radius:4px;" width=600 /></p>
-<p><img src="examples/images/viewer_dark.png" alt="Viewer (Dark)" title="Viewer (Dark)" style="border-radius:4px;" width=600 /></p>
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer_light.png" alt="Viewer Demo" title="Viewer Demo" style="border-radius:5px;" width=600 /></p>
 
-Also, under each video is a rich history report filled with timelines and graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
+Under each video is a rich history report filled with timelines and graphs, as well as a noting feature which lets you add timestamped and permalinked comments 👐
+
+<p><img src="https://raw.githubusercontent.com/Owez/yark/master/examples/images/viewer_stats_light.png" alt="Viewer Demo – Stats" title="Viewer Demo – Stats" style="border-radius:5px;" width=600 /></p>
+
+Light and dark modes are both available and automatically apply based on the system's theme.
 
 ## Details
 
