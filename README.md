@@ -61,3 +61,17 @@ Here are some things to keep in mind when using Yark; the good and the bad:
 - Don't create a new archive again if you just want to update it, Yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
 - Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!
+
+## Archive Format
+
+The archive format itself is simple and consists of a directory-based structure with a core metadata file and all thumbnail/video data in their own directories as typical files:
+
+- `[name]/` – Your self-contained archive
+  - `yark.json` – Archive file with all metadata
+  - `yark.bak` – Backup archive file to protect against data damage
+  - `videos/` – Directory containing all known videos
+    - `[id].mp4` – Files containing video data for YouTube videos
+  - `thumbnails/` – Directory containing all known thumbnails
+    - `[hash].png` – Files containing thumbnails with it's BLAKE2 hash
+
+It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.
