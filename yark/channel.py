@@ -40,6 +40,7 @@ class DownloadConfig:
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
+        # Adjust remaining maximums if one is given
         no_maximums = (
             self.max_videos is None
             and self.max_livestreams is None
@@ -52,6 +53,15 @@ class DownloadConfig:
                 self.max_livestreams = 0
             if self.max_shorts is None:
                 self.max_shorts = 0
+
+        # If all are 0 as its equivalent to skipping download
+        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
+            print(
+                Fore.YELLOW
+                + "Using the skip downloads option is recommended over setting maximums to 0"
+                + Fore.RESET
+            )
+            self.skip_download = True
 
 
 class VideoLogger:
@@ -137,8 +147,10 @@ class Channel:
         # Construct downloader
         print("Downloading metadata..")
         settings = {
-            "outtmpl": "%(id)s%(ext)s",
+            # Centralized logging system; makes output fully quiet
             "logger": VideoLogger(),
+            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
+            "ignore_no_formats_error": True,
         }
 
         # Get response and snip it
@@ -205,9 +217,14 @@ class Channel:
 
         # Create settings for the downloader
         settings = {
+            # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
+            # Ask for this format
+            # NOTE: being replaced soon
             "format": "best/mp4/hasvid",
+            # Centralized logger hook for ignoring all stdout
             "logger": VideoLogger(),
+            # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
         }
 
@@ -358,6 +375,10 @@ class Channel:
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
+            # Skip video if there's no formats available; happens with upcoming videos/livestreams
+            if "formats" not in entry or len(entry["formats"]) == 0:
+                continue
+
             # Updated intra-loop marker
             updated = False
 
