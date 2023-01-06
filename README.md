@@ -19,16 +19,16 @@ $ pip3 install yark
 
 ## Managing your Archive
 
-Once you've installed Yark, think of a name for your archive and copy the target's url:
+Once you've installed Yark, think of a name for your archive (e.g., "foobar") and copy the target's url:
 
 ```shell
-$ yark new my-archive https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
+$ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
 ```
 
 Now that you've created the archive, you can tell Yark to download all videos and metadata using the refresh command:
 
 ```shell
-$ yark refresh my-archive
+$ yark refresh foobar
 ```
 
 Once everything has been downloaded, Yark will automatically give you a status report of what's changed since the last refresh:
@@ -40,7 +40,7 @@ Once everything has been downloaded, Yark will automatically give you a status r
 Viewing you archive is easy, just type `view` with your archives name:
 
 ```shell
-$ yark view my-archive
+$ yark view foobar
 ```
 
 This will pop up an offline website in your browser letting you watch all videos 🚀
