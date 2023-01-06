@@ -71,6 +71,6 @@ The archive format itself is simple and consists of a directory-based structure 
   - `videos/` – Directory containing all known videos
     - `[id].mp4` – Files containing video data for YouTube videos
   - `thumbnails/` – Directory containing all known thumbnails
-    - `[hash].png` – Files containing thumbnails with it's BLAKE2 hash
+    - `[hash].png` – Files containing thumbnails with its BLAKE2 hash
 
 It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.
