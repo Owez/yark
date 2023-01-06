@@ -136,10 +136,7 @@ class Channel:
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
-        settings = {
-            "outtmpl": "%(id)s%(ext)s",
-            "logger": VideoLogger(),
-        }
+        settings = {"logger": VideoLogger(), "getcomments": True}
 
         # Get response and snip it
         res = None
@@ -162,8 +159,8 @@ class Channel:
                         )
 
         # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
+        with open("demo/dump.json", "w+") as file:
+            json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
         # res = json.load(open("demo/dump.json", "r"))
