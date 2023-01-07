@@ -1,5 +1,6 @@
 """Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
 
+from __future__ import annotations
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
@@ -8,11 +9,28 @@ import requests
 import hashlib
 from .errors import NoteNotFoundException
 from .utils import _truncate_text
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from .channel import Channel
 
 
 class Video:
+    channel: "Channel"
+    id: str
+    uploaded: datetime
+    width: int
+    height: int
+    title: "Element"
+    description: "Element"
+    views: "Element"
+    likes: "Element"
+    thumbnail: "Element"
+    deleted: "Element"
+    notes: list["Note"]
+
     @staticmethod
-    def new(entry: dict, channel):
+    def new(entry: dict[str, Any], channel) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -36,6 +54,11 @@ class Video:
 
         # Return
         return video
+
+    @staticmethod
+    def _new_empty() -> Video:
+        fake_entry = {"hi": True}  # TODO: finish
+        return Video.new(fake_entry, Channel._new_empty())
 
     def update(self, entry: dict):
         """Updates video using new schema, adding a new timestamp to any changes"""
@@ -83,7 +106,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel):
+    def _from_dict(encoded: dict, channel) -> Video:
         """Converts id and encoded dictionary to video for loading a channel"""
         # Normal
         video = Video()
@@ -154,7 +177,7 @@ def _encode_date_human(input: datetime) -> str:
     return input.strftime("%d %b %Y")
 
 
-def _magnitude(count: int = None) -> str:
+def _magnitude(count: Optional[int] = None) -> str:
     """Displays an integer as a sort of ordinal order of magnitude"""
     if count is None:
         return "?"
@@ -172,6 +195,9 @@ def _magnitude(count: int = None) -> str:
 
 
 class Element:
+    video: Video
+    inner: dict[datetime, Any]
+
     @staticmethod
     def new(video: Video, data):
         """Creates new element attached to a video with some initial data"""
@@ -205,7 +231,7 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(encoded: dict, video: Video):
+    def _from_dict(encoded: dict, video: Video) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
         element = Element()
@@ -237,6 +263,10 @@ class Element:
 
 
 class Thumbnail:
+    video: Video
+    id: str
+    path: Path
+
     @staticmethod
     def new(url: str, video: Video):
         """Pulls a new thumbnail from YouTube and saves"""
@@ -277,10 +307,10 @@ class Thumbnail:
     @staticmethod
     def _from_element(element: dict, video: Video) -> Element:
         """Converts element of thumbnails to properly formed thumbnails"""
-        element = Element._from_dict(element, video)
-        for date in element.inner:
-            element.inner[date] = Thumbnail.load(element.inner[date], video)
-        return element
+        decoded = Element._from_dict(element, video)
+        for date in decoded.inner:
+            decoded.inner[date] = Thumbnail.load(decoded.inner[date], video)
+        return decoded
 
     def _to_element(self) -> str:
         """Converts thumbnail instance to value used for element identification"""
@@ -290,8 +320,14 @@ class Thumbnail:
 class Note:
     """Allows Yark users to add notes to videos"""
 
+    video: Video
+    id: str
+    timestamp: int
+    title: str
+    body: Optional[str]
+
     @staticmethod
-    def new(video: Video, timestamp: int, title: str, body: str = None):
+    def new(video: Video, timestamp: int, title: str, body: Optional[str] = None):
         """Creates a new note"""
         note = Note()
         note.video = video
@@ -302,7 +338,7 @@ class Note:
         return note
 
     @staticmethod
-    def _from_dict(video: Video, element: dict):
+    def _from_dict(video: Video, element: dict) -> Note:
         """Loads existing note attached to a video dict"""
         note = Note()
         note.video = video

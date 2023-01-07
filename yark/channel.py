@@ -1,17 +1,17 @@
 """Channel and overall archive management with downloader"""
 
+from __future__ import annotations
 from datetime import datetime
 import json
 import os
 from pathlib import Path
 import time
-from yt_dlp import YoutubeDL, DownloadError
+from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
-
 
 ARCHIVE_COMPAT = 3
 """
@@ -29,12 +29,14 @@ gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
 
+from typing import Optional
+
 
 class DownloadConfig:
     def __init__(self) -> None:
-        self.max_videos: int = None
-        self.max_livestreams: int = None
-        self.max_shorts: int = None
+        self.max_videos: Optional[int] = None
+        self.max_livestreams: Optional[int] = None
+        self.max_shorts: Optional[int] = None
         self.skip_download: bool = False
         self.skip_metadata: bool = False
 
@@ -101,8 +103,16 @@ class VideoLogger:
 
 
 class Channel:
+    path: Path
+    version: int
+    url: str
+    videos: list[Video]
+    livestreams: list[Video]
+    shorts: list[Video]
+    reporter: Reporter
+
     @staticmethod
-    def new(path: Path, url: str):
+    def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
         # Details
         print("Creating new channel..")
@@ -120,7 +130,13 @@ class Channel:
         return channel
 
     @staticmethod
-    def load(path: Path):
+    def _new_empty() -> Channel:
+        return Channel.new(
+            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+        )
+
+    @staticmethod
+    def load(path: Path) -> Channel:
         """Loads existing channel from path"""
         # Check existence
         path = Path(path)
@@ -260,7 +276,7 @@ class Channel:
                             break
 
                         # Special handling for private/deleted videos which are archived, if not we raise again
-                        except Exception as exception:
+                        except DownloadError as exception:
                             # Video is privated or deleted
                             if (
                                 "Private video" in exception.msg
@@ -321,7 +337,7 @@ class Channel:
     def _curate(self, config: DownloadConfig) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int) -> list:
+        def curate_list(videos: list[Video], maximum: Optional[int]) -> list:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -442,7 +458,7 @@ class Channel:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path):
+    def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
         channel = Channel()
         channel.path = path
@@ -507,11 +523,11 @@ def _migrate_archive(
             # Add deleted status to every video/livestream/short
             # NOTE: none is fine for new elements, just a slight bodge
             for video in encoded["videos"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["livestreams"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["shorts"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
 
         # Unknown version
         else:
