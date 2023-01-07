@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 import time
-from yt_dlp import YoutubeDL, DownloadError
+from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
