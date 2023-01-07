@@ -29,12 +29,13 @@ gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
 
+from typing import Optional
 
 class DownloadConfig:
     def __init__(self) -> None:
-        self.max_videos: int = None
-        self.max_livestreams: int = None
-        self.max_shorts: int = None
+        self.max_videos: Optional[int]  = None
+        self.max_livestreams: Optional[int]  = None
+        self.max_shorts: Optional[int]  = None
         self.skip_download: bool = False
         self.skip_metadata: bool = False
 
@@ -101,6 +102,14 @@ class VideoLogger:
 
 
 class Channel:
+    path: Path
+    version: int
+    url: str
+    videos: list[Video]
+    livestreams: list[Video]
+    shorts: list[Video]
+    reporter: Reporter
+
     @staticmethod
     def new(path: Path, url: str):
         """Creates a new channel"""
@@ -260,7 +269,7 @@ class Channel:
                             break
 
                         # Special handling for private/deleted videos which are archived, if not we raise again
-                        except Exception as exception:
+                        except DownloadError as exception:
                             # Video is privated or deleted
                             if (
                                 "Private video" in exception.msg
@@ -321,7 +330,7 @@ class Channel:
     def _curate(self, config: DownloadConfig) -> list:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int) -> list:
+        def curate_list(videos: list[Video], maximum: Optional[int]) -> list:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -507,11 +516,11 @@ def _migrate_archive(
             # Add deleted status to every video/livestream/short
             # NOTE: none is fine for new elements, just a slight bodge
             for video in encoded["videos"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["livestreams"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["shorts"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
 
         # Unknown version
         else:
