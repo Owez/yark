@@ -1,5 +1,6 @@
 """Channel and overall archive management with downloader"""
 
+from __future__ import annotations
 from datetime import datetime
 import json
 import os
@@ -11,7 +12,6 @@ import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
-
 
 ARCHIVE_COMPAT = 3
 """
@@ -31,11 +31,12 @@ having way more complexity in the archiver decoding system itself.
 
 from typing import Optional
 
+
 class DownloadConfig:
     def __init__(self) -> None:
-        self.max_videos: Optional[int]  = None
-        self.max_livestreams: Optional[int]  = None
-        self.max_shorts: Optional[int]  = None
+        self.max_videos: Optional[int] = None
+        self.max_livestreams: Optional[int] = None
+        self.max_shorts: Optional[int] = None
         self.skip_download: bool = False
         self.skip_metadata: bool = False
 
@@ -111,7 +112,7 @@ class Channel:
     reporter: Reporter
 
     @staticmethod
-    def new(path: Path, url: str):
+    def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
         # Details
         print("Creating new channel..")
@@ -129,7 +130,13 @@ class Channel:
         return channel
 
     @staticmethod
-    def load(path: Path):
+    def _new_empty() -> Channel:
+        return Channel.new(
+            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+        )
+
+    @staticmethod
+    def load(path: Path) -> Channel:
         """Loads existing channel from path"""
         # Check existence
         path = Path(path)
@@ -451,7 +458,7 @@ class Channel:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path):
+    def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
         channel = Channel()
         channel.path = path

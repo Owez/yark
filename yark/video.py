@@ -1,5 +1,6 @@
 """Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
 
+from __future__ import annotations
 from datetime import datetime
 from fnmatch import fnmatch
 from pathlib import Path
@@ -29,7 +30,7 @@ class Video:
     notes: list["Note"]
 
     @staticmethod
-    def new(entry: dict, channel):
+    def new(entry: dict[str, Any], channel) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -55,8 +56,8 @@ class Video:
         return video
 
     @staticmethod
-    def _new_empty():
-        fake_entry = {}
+    def _new_empty() -> Video:
+        fake_entry = {"hi": True}  # TODO: finish
         return Video.new(fake_entry, Channel._new_empty())
 
     def update(self, entry: dict):
@@ -105,7 +106,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel):
+    def _from_dict(encoded: dict, channel) -> Video:
         """Converts id and encoded dictionary to video for loading a channel"""
         # Normal
         video = Video()
@@ -230,7 +231,7 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(encoded: dict, video: Video):
+    def _from_dict(encoded: dict, video: Video) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
         element = Element()
@@ -323,10 +324,10 @@ class Note:
     id: str
     timestamp: int
     title: str
-    body: Optional[str] 
+    body: Optional[str]
 
     @staticmethod
-    def new(video: Video, timestamp: int, title: str, body: Optional[str]  = None):
+    def new(video: Video, timestamp: int, title: str, body: Optional[str] = None):
         """Creates a new note"""
         note = Note()
         note.video = video
@@ -337,7 +338,7 @@ class Note:
         return note
 
     @staticmethod
-    def _from_dict(video: Video, element: dict):
+    def _from_dict(video: Video, element: dict) -> Note:
         """Loads existing note attached to a video dict"""
         note = Note()
         note.video = video
