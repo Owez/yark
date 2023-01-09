@@ -28,7 +28,7 @@ class Video:
     thumbnail: "Element"
     deleted: "Element"
     notes: list["Note"]
-    comments: list["Comment"]
+    comments: Comments
 
     @staticmethod
     def new(entry: dict[str, Any], channel) -> Video:
@@ -48,7 +48,7 @@ class Video:
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
         video.deleted = Element.new(video, False)
-        video.comments = []
+        video.comments = Comments(video)
         video.notes = []
 
         # Runtime-only
@@ -73,6 +73,7 @@ class Video:
         )
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
         self.deleted.update("undeleted", False)
+        self.comments.update(entry["comments"])
 
         # Runtime-only
         self.known_not_deleted = True
@@ -125,9 +126,7 @@ class Video:
         video.likes = Element._from_dict(encoded["likes"], video)
         video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
         video.deleted = Element._from_dict(encoded["deleted"], video)
-        video.comments = [
-            Comment._from_dict(video, None, comment) for comment in encoded["comments"]
-        ]
+        video.comments = Comments(video).load_archive(encoded["comments"])
         video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
 
         # Runtime-only
@@ -149,7 +148,7 @@ class Video:
             "likes": self.likes._to_dict(),
             "thumbnail": self.thumbnail._to_dict(),
             "deleted": self.deleted._to_dict(),
-            "comments": [comment._to_dict() for comment in self.comments],
+            "comments": self.comments.save_archive(),
             "notes": [note._to_dict() for note in self.notes],
         }
 
@@ -349,6 +348,10 @@ class CommentAuthor:
             raise Exception(f"Couldn't find comment author '{id}' expected")
         return found
 
+    def update(self, name: str):
+        """Updates values if of author if newer"""
+        self.name.update(None, name)
+
     @staticmethod
     def _from_dict_head(channel: Channel, id: str, element: dict) -> CommentAuthor:
         """Decodes from the dictionary with a head `id`, e.g. `"head": { body }`"""
@@ -363,44 +366,97 @@ class CommentAuthor:
         return {"id": self.id, "name": self.name._to_dict()}
 
 
+class Comments:
+    video: Video
+    inner: dict[str, Comment]
+
+    def __init__(self, video: Video) -> None:
+        self.video = video
+        self.inner = {}
+
+    def load_archive(self, comments: dict[str, dict]):
+        """Loads comments from Yark archive"""
+        for id in comments.keys():
+            self.inner[id] = Comment._from_dict_head(self.video, None, id, comments[id])
+
+    def save_archive(self) -> dict[str, dict]:
+        """Saves each comment as a dictionary inside of comments"""
+        payload = {}
+        for id in self.inner:
+            payload[id] = self.inner[id]._to_dict_head()
+        return payload
+
+    def update(self, comments: list[dict]):
+        """Updates comments according to metadata"""
+        # Go through comments found
+        for comment_metadata in comments:
+            # Decode the identifier; can be used to check parent
+            parent_id, id = _decode_comment_id(comment_metadata["id"])
+            pass  # TODO
+
+
+def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
+    """Decodes a comment id into it's top-level or parent and self"""
+    if "." in id:
+        got = id.split(".")
+        return got[0], got[1]
+    return None, id
+
+
 class Comment:
     video: Video
     parent: Optional[Comment]
     id: str
     body: Element
     author: CommentAuthor
-    children: list[Comment]
+    children: dict[str, Comment]
     favorited: Element
     created: datetime
 
     @staticmethod
-    def _from_dict(video: Video, parent: Optional[Comment], element: dict) -> Comment:
-        """Loads existing comment and it's children attached to a video dict"""
+    def _from_dict_head(
+        video: Video, parent: Optional[Comment], id: str, element: dict
+    ) -> Comment:
+        """Loads existing comment and it's children attached to a video dict in a head + body format"""
+        # Basic
         comment = Comment()
         comment.video = video
         comment.parent = parent
-        comment.id = element["id"]
+        comment.id = id
         comment.body = Element._from_dict(element["body"], comment)
         comment.author = CommentAuthor._from_channel(
             video.channel, element["author_id"]
         )
-        comment.children = [
-            Comment._from_dict(video, comment, child) for child in element["children"]
-        ]
         comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.created = datetime.fromisoformat(element["created"])
+
+        # Get children using head & body method
+        for id in element["children"].keys():
+            comment.children[id] = Comment._from_dict_head(
+                video, comment, id, element["children"][id]
+            )
+
+        # Return
         return comment
 
-    def _to_dict(self) -> dict:
-        """Converts comment and it's children to dictionary representation"""
-        return {
-            "id": self.id,
+    def _to_dict_head(self) -> dict:
+        """Converts comment and it's children to dictionary representation in a head + body format"""
+        # Get children using head & body method
+        children = {}
+        for id in self.children.keys():
+            children[id] = self.children[id]._to_dict_head()
+
+        # Basics
+        payload = {
             "body": self.body._to_dict(),
             "author_id": self.author.id,
-            "children": [comment._to_dict() for comment in self.children],
+            "children": children,
             "favorited": self.favorited._to_dict(),
             "created": self.created.isoformat(),
         }
+
+        # Return
+        return payload
 
 
 class Note:

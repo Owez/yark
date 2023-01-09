@@ -397,7 +397,7 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind: str, input: list, bucket: list):
+    def _parse_metadata(self, kind: str, input: list[dict], bucket: list[Video]):
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
