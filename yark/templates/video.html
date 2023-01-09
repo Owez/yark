@@ -164,7 +164,8 @@
 {% block content %}
 <div id="content">
     <!-- Video -->
-    <video src="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4" id="player" autoplay controls></video>
+    <video src="{{ url_for('routes.archive_video', name=name, file=video.id + '.mp4') }}" id="player" autoplay
+        controls></video>
     <!-- Information -->
     <h1 title="Title of the video">{{ video.title.current() }}</h1>
     <div class="info">
@@ -186,8 +187,8 @@
             <a title="Open the video on YouTube" href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
             <!-- Download link -->
             <span class="spacer">•</span>
-            <a title="Save the video to downloads" href="/archive/{{ video.channel.path }}/videos/{{ video.id }}.mp4"
-                download>💾</a>
+            <a title="Save the video to downloads"
+                href="{{ url_for('routes.archive_video', name=name, file=video.id + '.mp4') }}" download>💾</a>
             <!-- Like count -->
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}

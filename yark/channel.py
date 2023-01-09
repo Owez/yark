@@ -290,12 +290,9 @@ class Channel:
                                 or "This video has been removed by the uploader"
                                 in exception.msg
                             ):
-                                # Get list of downloaded videos
-                                ldir = os.listdir(self.path / "videos")
-
                                 # Skip video from curated and get it as a return
                                 not_downloaded, video = _skip_video(
-                                    not_downloaded, ldir, "deleted"
+                                    not_downloaded, "deleted"
                                 )
 
                                 # If this is a new occurrence then set it & report
@@ -308,13 +305,9 @@ class Channel:
                             # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
                             # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
                             elif " bytes, expected " in exception.msg:
-                                # Get list of downloaded videos
-                                ldir = os.listdir(self.path / "videos")
-
                                 # Skip video from curated
                                 not_downloaded, _ = _skip_video(
                                     not_downloaded,
-                                    ldir,
                                     "no format found; please download ffmpeg!",
                                     True,
                                 )
@@ -322,6 +315,16 @@ class Channel:
                             # Nevermind, normal exception
                             else:
                                 raise exception
+
+                    # Set the extension of each video depending on what's been downloaded
+                    not_parts = [
+                        file
+                        for file in Path(self.path / "videos").iterdir()
+                        if file.suffix != ".part"
+                    ]
+                    for file in not_parts:
+                        video = self.search(file.stem)
+                        video.ext = file.suffix
 
                     # Stop if we've got them all
                     break
@@ -364,14 +367,11 @@ class Channel:
             # Find undownloaded videos in available list
             not_downloaded = []
             for video in videos:
-                if not video.downloaded(ldir):
+                if not video.downloaded():
                     not_downloaded.append(video)
 
             # Return
             return not_downloaded
-
-        # Get all videos in directory
-        ldir = os.listdir(self.path / "videos")
 
         # Curate
         not_downloaded = []
@@ -503,14 +503,13 @@ class Channel:
 
 def _skip_video(
     videos: list[Video],
-    ldir: list[str],
     reason: str,
     warning: bool = False,
 ) -> tuple[list[Video], Video]:
     """Skips first undownloaded video in `videos`, make sure there's at least one to skip otherwise an exception will be thrown"""
     # Find fist undownloaded video
     for ind, video in enumerate(videos):
-        if not video.downloaded(ldir):
+        if not video.downloaded():
             # Tell the user we're skipping over it
             if warning:
                 print(

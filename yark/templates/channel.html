@@ -71,11 +71,11 @@
 {% if channel.videos %}
 <div id="content">
     {% for video in channel.videos %}
-    <a href="/channel/{{ name }}/videos/{{ video.id }}" class="video">
+    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
-            <img src="/archive/{{ video.thumbnail.current().path }}" {% if not video.downloaded(ldir) %}class="frost" {%
-                endif %} />
+            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}" {% if not
+                video.downloaded() %}class="frost" {% endif %} />
         </div>
         <!-- Information -->
         <div class="info">

@@ -21,6 +21,7 @@ class Video:
     uploaded: datetime
     width: int
     height: int
+    ext: str
     title: "Element"
     description: "Element"
     views: "Element"
@@ -39,6 +40,7 @@ class Video:
         video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
+        video.ext = None
         video.title = Element.new(video, entry["title"])
         video.description = Element.new(video, entry["description"])
         video.views = Element.new(video, entry["view_count"])
@@ -75,14 +77,12 @@ class Video:
         # Runtime-only
         self.known_not_deleted = True
 
-    def downloaded(self, ldir: list) -> bool:
+    def downloaded(self) -> bool:
         """Checks if this video has been downloaded"""
-        # Try to find id in videos
-        for file in ldir:
-            if fnmatch(file, f"{self.id}.mp4"):
+        videos = self.channel.path / "videos"
+        for file in videos.iterdir():
+            if file.stem == self.id and file.suffix != ".part":
                 return True
-
-        # No matches
         return False
 
     def updated(self) -> bool:
@@ -115,6 +115,7 @@ class Video:
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
+        # video.ext = encoded["ext"] # TODO: uncomment for 0.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
         video.title = Element._from_dict(encoded["title"], video)
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
@@ -136,6 +137,7 @@ class Video:
             "uploaded": self.uploaded.isoformat(),
             "width": self.width,
             "height": self.height,
+            # "ext": self.ext, # TODO: uncomment for 0.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
             "title": self.title._to_dict(),
             "description": self.description._to_dict(),
             "views": self.views._to_dict(),
