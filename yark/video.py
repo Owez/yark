@@ -206,7 +206,7 @@ class Element:
     inner: dict[datetime, Any]
 
     @staticmethod
-    def new(parent: Video | Comment | Channel, data):
+    def new(parent: Video | Comment | Channel | CommentAuthor, data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
         element.parent = parent
@@ -222,7 +222,7 @@ class Element:
             # Update
             self.inner[datetime.utcnow()] = data
 
-            # Report if wanted and we have a parent channel
+            # Report if wanted
             if kind is not None:
                 channel = (
                     self.parent.channel
