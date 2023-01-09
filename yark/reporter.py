@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 
 class Reporter:
     channel: "Channel"
-    added: list[tuple[str, Element]]
-    deleted: list[tuple[str, Element]]
+    added: list[Video]
+    deleted: list[Video]
     updated: list[tuple[str, Element]]
 
     def __init__(self, channel) -> None:
@@ -28,16 +28,16 @@ class Reporter:
         print(f"Report for {self.channel}:")
 
         # Updated
-        for type, element in self.updated:
+        for kind, element in self.updated:
             colour = (
                 Fore.CYAN
-                if type in ["title", "description", "undeleted"]
+                if kind in ["title", "description", "undeleted"]
                 else Fore.BLUE
             )
             video = f"  • {element.video}".ljust(82)
-            type = f" │ 🔥{type.capitalize()}"
+            kind = f" │ 🔥{type.capitalize()}"
 
-            print(colour + video + type)
+            print(colour + video + kind)
 
         # Added
         for video in self.added:

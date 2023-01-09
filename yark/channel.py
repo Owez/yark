@@ -338,10 +338,10 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, config: DownloadConfig) -> list:
+    def _curate(self, config: DownloadConfig) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list[Video], maximum: Optional[int]) -> list:
+        def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -515,6 +515,11 @@ def _skip_video(
 
             # Return the corrected list and the video found
             return videos, video
+
+    # Shouldn't happen, see docs
+    raise Exception(
+        "We expected to skip a video and return it but nothing to skip was found"
+    )
 
 
 def _migrate_archive(
