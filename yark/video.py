@@ -343,13 +343,11 @@ class CommentAuthor:
     id: str
     name: Element
 
+    # TODO: replace two below with a like "get: new or update"
     @staticmethod
     def _from_channel(channel: Channel, id: str) -> CommentAuthor:
         """Gets the comment author from the channel based on it's identifier or raises an exception"""
-        found = channel.comment_authors[id]
-        if found is None:
-            raise Exception(f"Couldn't find comment author '{id}' expected")
-        return found
+        return channel.comment_authors[id]
 
     def update(self, name: str):
         """Updates values if of author if newer"""
