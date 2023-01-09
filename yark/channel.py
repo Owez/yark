@@ -11,7 +11,7 @@ from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
-from .video import Video, Element
+from .video import Video, Element, CommentAuthor
 
 ARCHIVE_COMPAT = 4
 """
@@ -122,6 +122,7 @@ class Channel:
     videos: list[Video]
     livestreams: list[Video]
     shorts: list[Video]
+    comment_authors: dict[str, Optional[CommentAuthor]]
     reporter: Reporter
 
     @staticmethod
@@ -136,6 +137,7 @@ class Channel:
         channel.videos = []
         channel.livestreams = []
         channel.shorts = []
+        channel.comment_authors = {}
         channel.reporter = Reporter(channel)
 
         # Commit and return
@@ -467,6 +469,7 @@ class Channel:
     @staticmethod
     def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
+        # Basics
         channel = Channel()
         channel.path = path
         channel.version = encoded["version"]
@@ -481,17 +484,36 @@ class Channel:
         channel.shorts = [
             Video._from_dict(video, channel) for video in encoded["shorts"]
         ]
+        channel.comment_authors = {}
+
+        # Decode head & body style comment authors
+        for id in encoded["comment_authors"].keys():
+            channel.comment_authors[id] = CommentAuthor._from_dict_head(
+                channel, id, encoded["comment_authors"]["id"]
+            )
+
+        # Return
         return channel
 
     def _to_dict(self) -> dict:
         """Converts channel data to a dictionary to commit"""
-        return {
+        # Encode comment authors
+        comment_authors = {}
+        for id in self.comment_authors.keys():
+            comment_authors[id] = CommentAuthor._from_channel(self, id)._to_dict_head()
+
+        # Basics
+        payload = {
             "version": self.version,
             "url": self.url,
             "videos": [video._to_dict() for video in self.videos],
             "livestreams": [video._to_dict() for video in self.livestreams],
             "shorts": [video._to_dict() for video in self.shorts],
+            "comment_authors": comment_authors,
         }
+
+        # Return
+        return payload
 
     def __repr__(self) -> str:
         return self.path.name

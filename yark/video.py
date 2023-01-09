@@ -203,7 +203,7 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 
 class Element:
-    parent: Video | Comment | Channel
+    parent: Video | Comment | Channel | CommentAuthor
     inner: dict[datetime, Any]
 
     @staticmethod
@@ -231,6 +231,8 @@ class Element:
                     else self.parent.video.channel
                     if isinstance(self.parent, Comment)
                     else self.parent
+                    if isinstance(self.parent, Channel)
+                    else self.parent.channel
                 )
                 channel.reporter.add_updated(kind, self)
 
@@ -246,7 +248,9 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(encoded: dict, parent: Video | Comment | Channel) -> Element:
+    def _from_dict(
+        encoded: dict, parent: Video | Comment | Channel | CommentAuthor
+    ) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
         element = Element()
@@ -333,12 +337,30 @@ class Thumbnail:
 
 
 class CommentAuthor:
+    channel: Channel
     id: str
     name: Element
 
     @staticmethod
     def _from_channel(channel: Channel, id: str) -> CommentAuthor:
-        pass  # TODO
+        """Gets the comment author from the channel based on it's identifier or raises an exception"""
+        found = channel.comment_authors[id]
+        if found is None:
+            raise Exception(f"Couldn't find comment author '{id}' expected")
+        return found
+
+    @staticmethod
+    def _from_dict_head(channel: Channel, id: str, element: dict) -> CommentAuthor:
+        """Decodes from the dictionary with a head `id`, e.g. `"head": { body }`"""
+        author = CommentAuthor()
+        author.channel = channel
+        author.id = id
+        author.name = Element._from_dict(element["name"], author)
+        return author
+
+    def _to_dict_head(self) -> dict:
+        """Encodes comment author to the body part of a head + body, e.g. `"head": { body }`"""
+        return {"id": self.id, "name": self.name._to_dict()}
 
 
 class Comment:
@@ -371,7 +393,8 @@ class Comment:
 
     def _to_dict(self) -> dict:
         """Converts comment and it's children to dictionary representation"""
-        return {"children": [child._to_dict() for child in self.children]}
+        pass  # TODO
+        # return {"children": [child._to_dict() for child in self.children]}
 
 
 class Note:
