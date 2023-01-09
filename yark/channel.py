@@ -316,16 +316,6 @@ class Channel:
                             else:
                                 raise exception
 
-                    # Set the extension of each video depending on what's been downloaded
-                    not_parts = [
-                        file
-                        for file in Path(self.path / "videos").iterdir()
-                        if file.suffix != ".part"
-                    ]
-                    for file in not_parts:
-                        video = self.search(file.stem)
-                        video.ext = file.suffix
-
                     # Stop if we've got them all
                     break
 
