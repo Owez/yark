@@ -11,7 +11,7 @@ Yark lets you continuously archive all videos and metadata for YouTube channels.
 
 ## Installation
 
-To install Yark, simply download Python 3.9+ and run the following:
+To install Yark, simply download [Python 3.9+](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/) (optional), then run the following:
 
 ```shell
 $ pip3 install yark
