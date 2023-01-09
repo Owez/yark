@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from datetime import datetime
-from fnmatch import fnmatch
 from pathlib import Path
 from uuid import uuid4
 import requests
@@ -48,7 +47,7 @@ class Video:
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
         video.deleted = Element.new(video, False)
-        video.comments = Comments(video)
+        video.comments = Comments()
         video.notes = []
 
         # Runtime-only
@@ -73,7 +72,8 @@ class Video:
         )
         self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
         self.deleted.update("undeleted", False)
-        self.comments.update(entry["comments"])
+        if entry["comments"] is not None:
+            self.comments.update(entry["comments"])
 
         # Runtime-only
         self.known_not_deleted = True
@@ -111,7 +111,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel) -> Video:
+    def _from_dict(encoded: dict, channel: Channel) -> Video:
         """Converts id and encoded dictionary to video for loading a channel"""
         # Normal
         video = Video()
@@ -126,8 +126,11 @@ class Video:
         video.likes = Element._from_dict(encoded["likes"], video)
         video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
         video.deleted = Element._from_dict(encoded["deleted"], video)
-        video.comments = Comments(video).load_archive(encoded["comments"])
+        video.comments = Comments(channel)
         video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+
+        # Load data
+        video.comments.load_archive(encoded["comments"])
 
         # Runtime-only
         video.known_not_deleted = False
@@ -367,11 +370,11 @@ class CommentAuthor:
 
 
 class Comments:
-    video: Video
+    channel: Channel
     inner: dict[str, Comment]
 
-    def __init__(self, video: Video) -> None:
-        self.video = video
+    def __init__(self, channel: Channel) -> None:
+        self.channel = channel
         self.inner = {}
 
     def load_archive(self, comments: dict[str, dict]):
@@ -388,11 +391,49 @@ class Comments:
 
     def update(self, comments: list[dict]):
         """Updates comments according to metadata"""
+        # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
+        adoption_queue: list[tuple[str, Comment]] = []
+
         # Go through comments found
-        for comment_metadata in comments:
-            # Decode the identifier; can be used to check parent
-            parent_id, id = _decode_comment_id(comment_metadata["id"])
-            pass  # TODO
+        for entry in comments:
+            # Decode the identifier and possible parent; can be used to check parent
+            parent_id, id = _decode_comment_id(entry["id"])
+
+            # Try to update comment if it's a child
+            if (
+                parent_id is not None
+                and parent_id in self.inner
+                and id in self.inner[parent_id].children
+            ):
+                comment = self.inner[parent_id].children[id]
+                comment.update(entry)
+
+            # Try to update comment if it's a parent
+            elif id in self.inner:
+                comment = self.inner[id]
+                comment.update(entry)
+
+            # Create a new comment
+            else:
+                # Encode into a full comment with no parent no matter what
+                created = datetime.fromtimestamp(entry["timestamp"])
+                comment = Comment.new(
+                    self.channel,
+                    None,
+                    id,
+                    entry["text"],
+                    entry["author_id"],
+                    entry["is_favorited"],
+                    created,
+                )
+
+                # Add to adoption queue if the comment is a child
+                if parent_id is not None:
+                    adoption_queue.append((parent_id, comment))
+
+        # Add the children to parents now we know they're all there
+        for parent_id, comment in adoption_queue:
+            self.inner[parent_id].children[comment.id] = comment
 
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
@@ -404,36 +445,53 @@ def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
 
 
 class Comment:
-    video: Video
+    channel: Channel
     parent: Optional[Comment]
     id: str
     body: Element
     author: CommentAuthor
-    children: dict[str, Comment]
+    children: Comments
     favorited: Element
     created: datetime
 
     @staticmethod
+    def new(
+        channel: Channel,
+        parent: Optional[Comment],
+        id: str,
+        body: str,
+        author_id: str,
+        favorited: bool,
+        created: datetime,
+    ) -> Comment:
+        """Creates a new comment with simplified information inputs"""
+        comment = Comment()
+        comment.parent = parent
+        comment.id = id
+        comment.body = Element.new(comment, body)
+        comment.author = CommentAuthor._from_channel(channel, author_id)
+        comment.children = Comments()
+        comment.favorited = Element.new(comment, favorited)
+        comment.created = created
+
+    @staticmethod
     def _from_dict_head(
-        video: Video, parent: Optional[Comment], id: str, element: dict
+        channel: Channel, parent: Optional[Comment], id: str, element: dict
     ) -> Comment:
         """Loads existing comment and it's children attached to a video dict in a head + body format"""
         # Basic
         comment = Comment()
-        comment.video = video
         comment.parent = parent
         comment.id = id
         comment.body = Element._from_dict(element["body"], comment)
-        comment.author = CommentAuthor._from_channel(
-            video.channel, element["author_id"]
-        )
+        comment.author = CommentAuthor._from_channel(channel, element["author_id"])
         comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.created = datetime.fromisoformat(element["created"])
 
         # Get children using head & body method
         for id in element["children"].keys():
             comment.children[id] = Comment._from_dict_head(
-                video, comment, id, element["children"][id]
+                channel, comment, id, element["children"][id]
             )
 
         # Return

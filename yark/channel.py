@@ -597,11 +597,11 @@ def _migrate_archive(
 
             # Add blank comment section to each video
             for video in encoded["videos"]:
-                video["comments"] = []
+                video["comments"] = {}
             for video in encoded["livestreams"]:
-                video["comments"] = []
+                video["comments"] = {}
             for video in encoded["shorts"]:
-                video["comments"] = []
+                video["comments"] = {}
 
         # Unknown version
         else:
