@@ -366,11 +366,11 @@ class CommentAuthor:
 class Comment:
     video: Video
     parent: Optional[Comment]
-    children: list[Comment]
     id: str
     body: Element
-    favorited: Element
     author: CommentAuthor
+    children: list[Comment]
+    favorited: Element
     created: datetime
 
     @staticmethod
@@ -379,22 +379,28 @@ class Comment:
         comment = Comment()
         comment.video = video
         comment.parent = parent
-        comment.children = [
-            Comment._from_dict(video, comment, child) for child in element["children"]
-        ]
         comment.id = element["id"]
         comment.body = Element._from_dict(element["body"], comment)
-        comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.author = CommentAuthor._from_channel(
             video.channel, element["author_id"]
         )
+        comment.children = [
+            Comment._from_dict(video, comment, child) for child in element["children"]
+        ]
+        comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.created = datetime.fromisoformat(element["created"])
         return comment
 
     def _to_dict(self) -> dict:
         """Converts comment and it's children to dictionary representation"""
-        pass  # TODO
-        # return {"children": [child._to_dict() for child in self.children]}
+        return {
+            "id": self.id,
+            "body": self.body._to_dict(),
+            "author_id": self.author.id,
+            "children": [comment._to_dict() for comment in self.children],
+            "favorited": self.favorited._to_dict(),
+            "created": self.created.isoformat(),
+        }
 
 
 class Note:
