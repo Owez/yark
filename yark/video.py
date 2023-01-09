@@ -75,15 +75,17 @@ class Video:
         # Runtime-only
         self.known_not_deleted = True
 
-    def downloaded(self, ldir: list) -> bool:
-        """Checks if this video has been downloaded"""
-        # Try to find id in videos
-        for file in ldir:
-            if fnmatch(file, f"{self.id}.mp4"):
-                return True
+    def filename(self) -> Optional[str]:
+        """Returns the filename for the downloaded video, if any"""
+        videos = self.channel.path / "videos"
+        for file in videos.iterdir():
+            if file.stem == self.id and file.suffix != ".part":
+                return file.name
+        return None
 
-        # No matches
-        return False
+    def downloaded(self) -> bool:
+        """Checks if this video has been downloaded"""
+        return self.filename() is not None
 
     def updated(self) -> bool:
         """Checks if this video's title or description or deleted status have been ever updated"""

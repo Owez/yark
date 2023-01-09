@@ -11,7 +11,7 @@ Yark lets you continuously archive all videos and metadata for YouTube channels.
 
 ## Installation
 
-To install Yark, simply download Python 3.9+ and run the following:
+To install Yark, simply download [Python 3.9+](https://www.python.org/downloads/) and [FFmpeg](https://ffmpeg.org/) (optional), then run the following:
 
 ```shell
 $ pip3 install yark
@@ -69,7 +69,7 @@ The archive format itself is simple and consists of a directory-based structure 
   - `yark.json` – Archive file with all metadata
   - `yark.bak` – Backup archive file to protect against data damage
   - `videos/` – Directory containing all known videos
-    - `[id].mp4` – Files containing video data for YouTube videos
+    - `[id].*` – Files containing video data for YouTube videos
   - `thumbnails/` – Directory containing all known thumbnails
     - `[hash].png` – Files containing thumbnails with its BLAKE2 hash
 
