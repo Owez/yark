@@ -35,7 +35,7 @@ class Reporter:
                 else Fore.BLUE
             )
             video = f"  • {element.video}".ljust(82)
-            kind = f" │ 🔥{type.capitalize()}"
+            kind = f" │ 🔥{kind.capitalize()}"
 
             print(colour + video + kind)
 
