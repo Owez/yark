@@ -122,7 +122,7 @@ class Channel:
     videos: list[Video]
     livestreams: list[Video]
     shorts: list[Video]
-    comment_authors: dict[str, Optional[CommentAuthor]]
+    comment_authors: dict[str, CommentAuthor]
     reporter: Reporter
 
     @staticmethod
@@ -592,6 +592,9 @@ def _migrate_archive(
 
         # From version 3 to version 4
         elif cur == 3:
+            # Add empty comment author store
+            encoded["comment_authors"] = {}
+
             # Add blank comment section to each video
             for video in encoded["videos"]:
                 video["comments"] = []
