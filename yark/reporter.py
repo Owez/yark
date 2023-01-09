@@ -4,9 +4,18 @@ from colorama import Fore, Style
 import datetime
 from .video import Video, Element
 from .utils import _truncate_text
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from .channel import Channel
 
 
 class Reporter:
+    channel: "Channel"
+    added: list[Video]
+    deleted: list[Video]
+    updated: list[tuple[str, Element]]
+
     def __init__(self, channel) -> None:
         self.channel = channel
         self.added = []
@@ -19,16 +28,16 @@ class Reporter:
         print(f"Report for {self.channel}:")
 
         # Updated
-        for type, element in self.updated:
+        for kind, element in self.updated:
             colour = (
                 Fore.CYAN
-                if type in ["title", "description", "undeleted"]
+                if kind in ["title", "description", "undeleted"]
                 else Fore.BLUE
             )
             video = f"  • {element.video}".ljust(82)
-            type = f" │ 🔥{type.capitalize()}"
+            kind = f" │ 🔥{kind.capitalize()}"
 
-            print(colour + video + type)
+            print(colour + video + kind)
 
         # Added
         for video in self.added:
@@ -69,7 +78,7 @@ class Reporter:
                 return ""
 
             # Lambdas for easy buffer addition for next block
-            buf = []
+            buf: list[str] = []
             maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
             add_buf = lambda name, change, colour: buf.append(
                 colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
@@ -102,7 +111,7 @@ class Reporter:
                 + "\n"
             )
 
-        def fmt_category(kind: str, videos: list) -> str:
+        def fmt_category(kind: str, videos: list) -> Optional[str]:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
             # Add interesting videos to buffer
             HEADING = f"Interesting {kind}:\n"

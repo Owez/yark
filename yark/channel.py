@@ -1,17 +1,17 @@
 """Channel and overall archive management with downloader"""
 
+from __future__ import annotations
 from datetime import datetime
 import json
 import os
 from pathlib import Path
 import time
-from yt_dlp import YoutubeDL, DownloadError
+from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
-
 
 ARCHIVE_COMPAT = 3
 """
@@ -29,17 +29,28 @@ gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
 
+from typing import Optional
+
 
 class DownloadConfig:
+    max_videos: Optional[int]
+    max_livestreams: Optional[int]
+    max_shorts: Optional[int]
+    skip_download: bool
+    skip_metadata: bool
+    format: Optional[str]
+
     def __init__(self) -> None:
-        self.max_videos: int = None
-        self.max_livestreams: int = None
-        self.max_shorts: int = None
-        self.skip_download: bool = False
-        self.skip_metadata: bool = False
+        self.max_videos = None
+        self.max_livestreams = None
+        self.max_shorts = None
+        self.skip_download = False
+        self.skip_metadata = False
+        self.format = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
+        # Adjust remaining maximums if one is given
         no_maximums = (
             self.max_videos is None
             and self.max_livestreams is None
@@ -52,6 +63,15 @@ class DownloadConfig:
                 self.max_livestreams = 0
             if self.max_shorts is None:
                 self.max_shorts = 0
+
+        # If all are 0 as its equivalent to skipping download
+        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
+            print(
+                Fore.YELLOW
+                + "Using the skip downloads option is recommended over setting maximums to 0"
+                + Fore.RESET
+            )
+            self.skip_download = True
 
 
 class VideoLogger:
@@ -71,7 +91,7 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}              " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}                               " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -91,8 +111,16 @@ class VideoLogger:
 
 
 class Channel:
+    path: Path
+    version: int
+    url: str
+    videos: list[Video]
+    livestreams: list[Video]
+    shorts: list[Video]
+    reporter: Reporter
+
     @staticmethod
-    def new(path: Path, url: str):
+    def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
         # Details
         print("Creating new channel..")
@@ -110,7 +138,13 @@ class Channel:
         return channel
 
     @staticmethod
-    def load(path: Path):
+    def _new_empty() -> Channel:
+        return Channel.new(
+            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+        )
+
+    @staticmethod
+    def load(path: Path) -> Channel:
         """Loads existing channel from path"""
         # Check existence
         path = Path(path)
@@ -136,7 +170,14 @@ class Channel:
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
-        settings = {"logger": VideoLogger(), "getcomments": True}
+        settings = {
+            # Centralized logging system; makes output fully quiet
+            "logger": VideoLogger(),
+            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
+            "ignore_no_formats_error": True,
+            # Fetch comments from videos
+            "getcomments": True
+        }
 
         # Get response and snip it
         res = None
@@ -202,11 +243,15 @@ class Channel:
 
         # Create settings for the downloader
         settings = {
+            # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
-            "format": "best/mp4/hasvid",
+            # Centralized logger hook for ignoring all stdout
             "logger": VideoLogger(),
+            # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
         }
+        if config.format is not None:
+            settings["format"] = config.format
 
         # Attach to the downloader
         with YoutubeDL(settings) as ydl:
@@ -240,37 +285,34 @@ class Channel:
                             break
 
                         # Special handling for private/deleted videos which are archived, if not we raise again
-                        except Exception as exception:
+                        except DownloadError as exception:
                             # Video is privated or deleted
                             if (
                                 "Private video" in exception.msg
                                 or "This video has been removed by the uploader"
                                 in exception.msg
                             ):
-                                # Get list of downloaded videos
-                                ldir = os.listdir(self.path / "videos")
+                                # Skip video from curated and get it as a return
+                                not_downloaded, video = _skip_video(
+                                    not_downloaded, "deleted"
+                                )
 
-                                # Find fist undownloaded video which will be the privated one
-                                for ind, video in enumerate(not_downloaded):
-                                    if not video.downloaded(ldir):
-                                        # Tell the user we're skipping over it
-                                        print(
-                                            Style.DIM
-                                            + f"  • Skipping {video.id} (deleted)"
-                                            + Style.NORMAL,
-                                        )
+                                # If this is a new occurrence then set it & report
+                                # This will only happen if its deleted after getting metadata, like in a dry run
+                                if video.deleted.current() == False:
+                                    self.reporter.deleted.append(video)
+                                    video.deleted.update(None, True)
 
-                                        # If this is a new occurrence then set it & report
-                                        # This will only happen if its deleted after getting metadata, like in a dry run
-                                        if video.deleted.current() == False:
-                                            self.reporter.deleted.append(video)
-                                            video.deleted.update(None, True)
-
-                                        # Set curated videos to skip over this one
-                                        not_downloaded = not_downloaded[ind + 1 :]
-
-                                        # Break and start downloading again
-                                        break
+                            # User hasn't got ffmpeg installed and youtube hasn't got format 22
+                            # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
+                            # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
+                            elif " bytes, expected " in exception.msg:
+                                # Skip video from curated
+                                not_downloaded, _ = _skip_video(
+                                    not_downloaded,
+                                    "no format found; please download ffmpeg!",
+                                    True,
+                                )
 
                             # Nevermind, normal exception
                             else:
@@ -298,10 +340,10 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, config: DownloadConfig) -> list:
+    def _curate(self, config: DownloadConfig) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list, maximum: int) -> list:
+        def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
@@ -317,14 +359,11 @@ class Channel:
             # Find undownloaded videos in available list
             not_downloaded = []
             for video in videos:
-                if not video.downloaded(ldir):
+                if not video.downloaded():
                     not_downloaded.append(video)
 
             # Return
             return not_downloaded
-
-        # Get all videos in directory
-        ldir = os.listdir(self.path / "videos")
 
         # Curate
         not_downloaded = []
@@ -355,6 +394,10 @@ class Channel:
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
+            # Skip video if there's no formats available; happens with upcoming videos/livestreams
+            if "formats" not in entry or len(entry["formats"]) == 0:
+                continue
+
             # Updated intra-loop marker
             updated = False
 
@@ -383,21 +426,20 @@ class Channel:
 
     def _clean_parts(self):
         """Cleans old temporary `.part` files which where stopped during download if present"""
-        # Get the path and make a bucket for found files
-        video_path = f"{self.path}/videos"
-        deletion_bucket = []
+        # Make a bucket for found files
+        deletion_bucket: list[Path] = []
 
         # Scan through and find part files
-        for file in os.listdir(video_path):
-            filename = os.fsdecode(file)
-            if filename.endswith(".part"):
-                deletion_bucket.append(filename)
+        videos = self.path / "videos"
+        for file in videos.iterdir():
+            if file.suffix == ".part" or file.suffix == ".ytdl":
+                deletion_bucket.append(file)
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
             print("Cleaning out previous temporary files..")
-            for filename in deletion_bucket:
-                os.remove(f"{video_path}/{filename}")
+            for file in deletion_bucket:
+                file.unlink()
 
     def _backup(self):
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
@@ -418,7 +460,7 @@ class Channel:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path):
+    def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
         channel = Channel()
         channel.path = path
@@ -448,6 +490,38 @@ class Channel:
 
     def __repr__(self) -> str:
         return self.path.name
+
+
+def _skip_video(
+    videos: list[Video],
+    reason: str,
+    warning: bool = False,
+) -> tuple[list[Video], Video]:
+    """Skips first undownloaded video in `videos`, make sure there's at least one to skip otherwise an exception will be thrown"""
+    # Find fist undownloaded video
+    for ind, video in enumerate(videos):
+        if not video.downloaded():
+            # Tell the user we're skipping over it
+            if warning:
+                print(
+                    Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
+                    file=sys.stderr,
+                )
+            else:
+                print(
+                    Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
+                )
+
+            # Set videos to skip over this one
+            videos = videos[ind + 1 :]
+
+            # Return the corrected list and the video found
+            return videos, video
+
+    # Shouldn't happen, see docs
+    raise Exception(
+        "We expected to skip a video and return it but nothing to skip was found"
+    )
 
 
 def _migrate_archive(
@@ -483,11 +557,11 @@ def _migrate_archive(
             # Add deleted status to every video/livestream/short
             # NOTE: none is fine for new elements, just a slight bodge
             for video in encoded["videos"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["livestreams"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["shorts"]:
-                video["deleted"] = Element.new(None, False)._to_dict()
+                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
 
         # Unknown version
         else:
@@ -521,7 +595,7 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
         "500",
         "Got error: The read operation timed out",
         "No such file or directory",
-        "HTTP Erorr 404: Not Found",
+        "HTTP Error 404: Not Found",
         "<urlopen error timed out>",
     ]
 

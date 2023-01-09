@@ -88,6 +88,7 @@ def video(name, kind, id):
             return render_template(
                 "video.html",
                 title=title,
+                name=name,
                 video=video,
                 views_data=views_data,
                 likes_data=likes_data,
@@ -173,10 +174,16 @@ def video(name, kind, id):
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/archive/<path:target>")
-def archive(target):
-    """Serves archive files"""
-    return send_from_directory(os.getcwd(), target)
+@routes.route("/archive/<name>/video/<file>")
+def archive_video(name, file):
+    """Serves video file using it's filename (id + ext)"""
+    return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
+
+
+@routes.route("/archive/<name>/thumbnail/<id>")
+def archive_thumbnail(name, id):
+    """Serves thumbnail file using it's id"""
+    return send_from_directory(os.getcwd(), f"{name}/thumbnails/{id}.webp")
 
 
 def viewer() -> Flask:

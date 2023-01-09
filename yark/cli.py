@@ -57,14 +57,15 @@ def _cli():
             sys.exit(1)
 
         # Create channel
-        Channel.new(args[1], args[2])
+        Channel.new(Path(args[1]), args[2])
 
     # Refresh
     elif args[0] == "refresh":
         # More help
         if len(args) == 2 and args[1] == "--help":
+            # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -77,9 +78,12 @@ def _cli():
         config = DownloadConfig()
         if len(args) > 2:
 
+            def parse_value(config_arg: str) -> str:
+                return config_arg.split("=")[1]
+
             def parse_maximum_int(config_arg: str) -> int:
                 """Tries to parse a maximum integer input"""
-                maximum = config_arg.split("=")[1]
+                maximum = parse_value(config_arg)
                 try:
                     return int(maximum)
                 except:
@@ -110,6 +114,10 @@ def _cli():
                 # No downloading; functionally equivalent to all maximums being 0 but it skips entirely
                 elif config_arg == "--skip-download":
                     config.skip_download = True
+
+                # Custom yt-dlp format
+                elif config_arg.startswith("--format="):
+                    config.format = parse_value(config_arg)
 
                 # Unknown argument
                 else:
@@ -177,7 +185,7 @@ def _cli():
             _err_msg("Please provide the archive name")
             sys.exit(1)
 
-        channel = Channel.load(args[1])
+        channel = Channel.load(Path(args[1]))
         channel.reporter.interesting_changes()
 
     # Unknown

@@ -1,8 +1,9 @@
 from yark import Channel, DownloadConfig
+from pathlib import Path
 
 # Create a new channel
 channel = Channel.new(
-    "demo", "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+    Path("demo"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
 )
 
 # Refresh only metadata and commit to file
@@ -10,7 +11,7 @@ channel.metadata()
 channel.commit()
 
 # Load the channel back up from file for the fun of it
-channel = Channel.load("demo")
+channel = Channel.load(Path("demo"))
 
 # Print all the video id's of the channel
 print(", ".join([video.id for video in channel.videos]))
