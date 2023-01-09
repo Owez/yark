@@ -33,12 +33,20 @@ from typing import Optional
 
 
 class DownloadConfig:
+    max_videos: Optional[int]
+    max_livestreams: Optional[int]
+    max_shorts: Optional[int]
+    skip_download: bool
+    skip_metadata: bool
+    format: Optional[str]
+
     def __init__(self) -> None:
-        self.max_videos: Optional[int] = None
-        self.max_livestreams: Optional[int] = None
-        self.max_shorts: Optional[int] = None
-        self.skip_download: bool = False
-        self.skip_metadata: bool = False
+        self.max_videos = None
+        self.max_livestreams = None
+        self.max_shorts = None
+        self.skip_download = False
+        self.skip_metadata = False
+        self.format = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
@@ -235,14 +243,13 @@ class Channel:
         settings = {
             # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
-            # Ask for this format
-            # NOTE: being replaced soon
-            "format": "best/mp4/hasvid",
             # Centralized logger hook for ignoring all stdout
             "logger": VideoLogger(),
             # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
         }
+        if config.format is not None:
+            settings["format"] = config.format
 
         # Attach to the downloader
         with YoutubeDL(settings) as ydl:
