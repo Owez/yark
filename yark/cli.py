@@ -57,7 +57,7 @@ def _cli():
             sys.exit(1)
 
         # Create channel
-        Channel.new(args[1], args[2])
+        Channel.new(Path(args[1]), args[2])
 
     # Refresh
     elif args[0] == "refresh":
@@ -185,7 +185,7 @@ def _cli():
             _err_msg("Please provide the archive name")
             sys.exit(1)
 
-        channel = Channel.load(args[1])
+        channel = Channel.load(Path(args[1]))
         channel.reporter.interesting_changes()
 
     # Unknown

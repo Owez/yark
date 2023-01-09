@@ -208,7 +208,7 @@ class Element:
         element.inner = {datetime.utcnow(): data}
         return element
 
-    def update(self, kind: str, data):
+    def update(self, kind: Optional[str], data):
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
