@@ -91,7 +91,7 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}              " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}                               " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
