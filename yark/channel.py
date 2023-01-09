@@ -424,21 +424,20 @@ class Channel:
 
     def _clean_parts(self):
         """Cleans old temporary `.part` files which where stopped during download if present"""
-        # Get the path and make a bucket for found files
-        video_path = f"{self.path}/videos"
-        deletion_bucket = []
+        # Make a bucket for found files
+        deletion_bucket: list[Path] = []
 
         # Scan through and find part files
-        for file in os.listdir(video_path):
-            filename = os.fsdecode(file)
-            if filename.endswith(".part"):
-                deletion_bucket.append(filename)
+        videos = self.path / "videos"
+        for file in videos.iterdir():
+            if file.suffix == ".part" or file.suffix == ".ytdl":
+                deletion_bucket.append(file)
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
             print("Cleaning out previous temporary files..")
-            for filename in deletion_bucket:
-                os.remove(f"{video_path}/{filename}")
+            for file in deletion_bucket:
+                file.unlink()
 
     def _backup(self):
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
