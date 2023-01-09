@@ -115,7 +115,7 @@ class Video:
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
-        # video.ext = encoded["ext"] # TODO: uncomment for 0.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
+        # video.ext = encoded["ext"] # TODO: uncomment for 1.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
         video.title = Element._from_dict(encoded["title"], video)
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
@@ -137,7 +137,7 @@ class Video:
             "uploaded": self.uploaded.isoformat(),
             "width": self.width,
             "height": self.height,
-            # "ext": self.ext, # TODO: uncomment for 0.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
+            # "ext": self.ext, # TODO: uncomment for 1.3, breaking change to help #55 <https://github.com/Owez/yark/issues/55> for archive format 4
             "title": self.title._to_dict(),
             "description": self.description._to_dict(),
             "views": self.views._to_dict(),
