@@ -19,7 +19,7 @@ Commonly-used
 - `NoteNotFoundException`
 - `TimestampException`
 
-Beware that Yark is primarily cli-focused and doesn't guarantee stability between versions if you're using it as a module!
+Beware that using Yark as a library is currently experimental and breaking changes here are not tracked!
 """
 
 from .channel import Channel, DownloadConfig
