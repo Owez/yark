@@ -11,6 +11,7 @@ Commonly-used
     - `DownloadConfig`
 - `Video`
     - `Element`
+    - `Element`
     - `Note`
     - `Thumbnail`
 - `viewer()`
@@ -23,7 +24,7 @@ Beware that using Yark as a library is currently experimental and breaking chang
 """
 
 from .channel import Channel, DownloadConfig
-from .video import Video, Element, Note, Thumbnail
+from .video import Video, Element, Element, Note, Thumbnail
 from .viewer import viewer
 from .errors import (
     ArchiveNotFoundException,

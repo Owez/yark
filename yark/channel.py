@@ -13,13 +13,14 @@ from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
 
-ARCHIVE_COMPAT = 3
+ARCHIVE_COMPAT = 4
 """
 Version of Yark archives which this script is capable of properly parsing
 
 - Version 1 was the initial format and had all the basic information you can see in the viewer now
 - Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
 - Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
+- Version 4 introduced comments # TODO: more for 1.3
 
 Some of these breaking versions are large changes and some are relatively small.
 We don't check if a value exists or not in the archive format out of precedent
@@ -91,7 +92,11 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}                               " + Style.NORMAL)
+            print(
+                Style.DIM
+                + f"  • Downloaded {id}                               "
+                + Style.NORMAL
+            )
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -176,7 +181,7 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Fetch comments from videos
-            "getcomments": True
+            "getcomments": True,
         }
 
         # Get response and snip it
@@ -562,6 +567,16 @@ def _migrate_archive(
                 video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["shorts"]:
                 video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
+
+        # From version 3 to version 4
+        elif cur == 3:
+            # Add blank comment section to each video
+            for video in encoded["videos"]:
+                video["comments"] = []
+            for video in encoded["livestreams"]:
+                video["comments"] = []
+            for video in encoded["shorts"]:
+                video["comments"] = []
 
         # Unknown version
         else:

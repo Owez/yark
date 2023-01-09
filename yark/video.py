@@ -28,6 +28,7 @@ class Video:
     thumbnail: "Element"
     deleted: "Element"
     notes: list["Note"]
+    comments: list["Comment"]
 
     @staticmethod
     def new(entry: dict[str, Any], channel) -> Video:
@@ -47,6 +48,7 @@ class Video:
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
         video.deleted = Element.new(video, False)
+        video.comments = []
         video.notes = []
 
         # Runtime-only
@@ -122,8 +124,11 @@ class Video:
         video.views = Element._from_dict(encoded["views"], video)
         video.likes = Element._from_dict(encoded["likes"], video)
         video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
-        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
         video.deleted = Element._from_dict(encoded["deleted"], video)
+        video.comments = [
+            Comment._from_dict(video, None, comment) for comment in encoded["comments"]
+        ]
+        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
 
         # Runtime-only
         video.known_not_deleted = False
@@ -144,6 +149,7 @@ class Video:
             "likes": self.likes._to_dict(),
             "thumbnail": self.thumbnail._to_dict(),
             "deleted": self.deleted._to_dict(),
+            "comments": [comment._to_dict() for comment in self.comments],
             "notes": [note._to_dict() for note in self.notes],
         }
 
@@ -197,14 +203,14 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 
 class Element:
-    video: Video
+    parent: Video | Comment | Channel
     inner: dict[datetime, Any]
 
     @staticmethod
-    def new(video: Video, data):
+    def new(parent: Video | Comment | Channel, data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
-        element.video = video
+        element.parent = parent
         element.inner = {datetime.utcnow(): data}
         return element
 
@@ -217,9 +223,16 @@ class Element:
             # Update
             self.inner[datetime.utcnow()] = data
 
-            # Report if wanted
+            # Report if wanted and we have a parent channel
             if kind is not None:
-                self.video.channel.reporter.add_updated(kind, self)
+                channel = (
+                    self.parent.channel
+                    if isinstance(self.parent, Video)
+                    else self.parent.video.channel
+                    if isinstance(self.parent, Comment)
+                    else self.parent
+                )
+                channel.reporter.add_updated(kind, self)
 
         # Return self
         return self
@@ -233,11 +246,11 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(encoded: dict, video: Video) -> Element:
+    def _from_dict(encoded: dict, parent: Video | Comment | Channel) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
         element = Element()
-        element.video = video
+        element.parent = parent
         element.inner = {}
 
         # Inner elements
@@ -319,9 +332,49 @@ class Thumbnail:
         return self.id
 
 
-class Note:
-    """Allows Yark users to add notes to videos"""
+class CommentAuthor:
+    id: str
+    name: Element
 
+    @staticmethod
+    def _from_channel(channel: Channel, id: str) -> CommentAuthor:
+        pass  # TODO
+
+
+class Comment:
+    video: Video
+    parent: Optional[Comment]
+    children: list[Comment]
+    id: str
+    body: Element
+    favorited: Element
+    author: CommentAuthor
+    created: datetime
+
+    @staticmethod
+    def _from_dict(video: Video, parent: Optional[Comment], element: dict) -> Comment:
+        """Loads existing comment and it's children attached to a video dict"""
+        comment = Comment()
+        comment.video = video
+        comment.parent = parent
+        comment.children = [
+            Comment._from_dict(video, comment, child) for child in element["children"]
+        ]
+        comment.id = element["id"]
+        comment.body = Element._from_dict(element["body"], comment)
+        comment.favorited = Element._from_dict(element["favorited"], comment)
+        comment.author = CommentAuthor._from_channel(
+            video.channel, element["author_id"]
+        )
+        comment.created = datetime.fromisoformat(element["created"])
+        return comment
+
+    def _to_dict(self) -> dict:
+        """Converts comment and it's children to dictionary representation"""
+        return {"children": [child._to_dict() for child in self.children]}
+
+
+class Note:
     video: Video
     id: str
     timestamp: int
