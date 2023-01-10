@@ -167,7 +167,7 @@ class Channel:
         archive_version = encoded["version"]
         if archive_version != ARCHIVE_COMPAT:
             encoded = _migrate_archive(
-                archive_version, ARCHIVE_COMPAT, encoded, channel_name
+                archive_version, ARCHIVE_COMPAT, encoded, path, channel_name
             )
 
         # Decode and return
@@ -388,7 +388,7 @@ class Channel:
 
         # Directories
         print(f"Committing {self} to file..")
-        paths = [self.path, self.path / "thumbnails", self.path / "author_icons", self.path / "videos"]
+        paths = [self.path, self.path / "images", self.path / "videos"]
         for path in paths:
             if not path.exists():
                 path.mkdir()
@@ -555,7 +555,11 @@ def _skip_video(
 
 
 def _migrate_archive(
-    current_version: int, expected_version: int, encoded: dict, channel_name: str
+    current_version: int,
+    expected_version: int,
+    encoded: dict,
+    path: Path,
+    channel_name: str,
 ) -> dict:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
@@ -605,6 +609,16 @@ def _migrate_archive(
                 video["comments"] = {}
             for video in encoded["shorts"]:
                 video["comments"] = {}
+
+            # Rename thumbnails directory to images
+            try:
+                thumbnails = path / "thumbnails"
+                thumbnails.rename(path / "images")
+            except:
+                _err_msg(
+                    f"Couldn't rename {channel_name}/thumbnails directory to {channel_name}/images, please manually rename to continue!"
+                )
+                sys.exit(1)
 
         # Unknown version
         else:

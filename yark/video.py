@@ -13,6 +13,12 @@ from typing import TYPE_CHECKING, Any, Optional
 if TYPE_CHECKING:
     from .channel import Channel
 
+IMAGE_THUMBNAIL = "webp"
+"""Image extension setting for all thumbnails"""
+
+IMAGE_AUTHOR_ICON = "jpg"
+"""Image extension setting for all author icons"""
+
 
 class Video:
     channel: "Channel"
@@ -45,7 +51,9 @@ class Video:
         video.likes = Element.new(
             video, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(video, Thumbnail.new(video, entry["thumbnail"]))
+        video.thumbnail = Element.new(
+            video, Image.new(video, entry["thumbnail"], IMAGE_THUMBNAIL)
+        )
         video.deleted = Element.new(video, False)
         video.comments = Comments(channel)
         video.notes = []
@@ -70,7 +78,9 @@ class Video:
         self.likes.update(
             "like count", entry["like_count"] if "like_count" in entry else None
         )
-        self.thumbnail.update("thumbnail", Thumbnail.new(self, entry["thumbnail"]))
+        self.thumbnail.update(
+            "thumbnail", Image.new(self, entry["thumbnail"], IMAGE_THUMBNAIL)
+        )
         self.deleted.update("undeleted", False)
         if entry["comments"] is not None:
             self.comments.update(entry["comments"])
@@ -124,7 +134,9 @@ class Video:
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
         video.likes = Element._from_dict(encoded["likes"], video)
-        video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
+        video.thumbnail = Image._from_element(
+            encoded["thumbnail"], video, IMAGE_THUMBNAIL
+        )
         video.deleted = Element._from_dict(encoded["deleted"], video)
         video.comments = Comments(channel)
         video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
@@ -281,87 +293,58 @@ class Element:
         return encoded
 
 
-class Thumbnail:
-    video: Video
+class Image: 
+    parent: Video | CommentAuthor
     id: str
     path: Path
+    ext: str
 
     @staticmethod
-    def new(video: Video, url: str) -> Thumbnail:
-        """Pulls a new thumbnail from YouTube and saves"""
+    def new(parent: Video | CommentAuthor, url: str, ext: str) -> Image:
+        """Pulls a new image from YouTube and saves"""
         # Basic details
-        thumbnail = Thumbnail()
-        thumbnail.video = video
+        image = Image()
+        image.parent = parent
+        image.ext = ext
 
         # Get image and id which is a hash
-        image, thumbnail.id = _image_and_hash(url)
+        downloaded_image, image.id = _image_and_hash(url)
 
         # Calculate path
-        thumbnail.path = thumbnail._path()
+        image.path = image._path()
 
         # Save to collection
-        with open(thumbnail.path, "wb+") as file:
-            file.write(image)
+        with open(image.path, "wb+") as file:
+            file.write(downloaded_image)
 
         # Return
-        return thumbnail
+        return image
 
     def _path(self) -> Path:
-        """Returns path to current thumbnail"""
-        return self.video.channel.path / "thumbnails" / f"{self.id}.webp"
+        """Returns path to current image"""
+        return self.parent.channel.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def load(id: str, video: Video):
-        """Loads existing thumbnail from saved path by id"""
-        thumbnail = Thumbnail()
-        thumbnail.id = id
-        thumbnail.video = video
-        thumbnail.path = thumbnail._path() / f"{thumbnail.id}.webp"
-        return thumbnail
+    def load(id: str, parent: Video | CommentAuthor, ext: str):
+        """Loads existing image from saved path by id"""
+        image = Image()
+        image.id = id
+        image.parent = parent
+        image.ext = ext
+        image.path = image._path() / f"{image.id}.{ext}"
+        return image
 
     @staticmethod
-    def _from_element(element: dict, video: Video) -> Element:
-        """Converts element of thumbnails to properly formed thumbnails"""
+    def _from_element(element: dict, video: Video, ext: str) -> Element:
+        """Converts element of images to properly formed images"""
         decoded = Element._from_dict(element, video)
         for date in decoded.inner:
-            decoded.inner[date] = Thumbnail.load(decoded.inner[date], video)
+            decoded.inner[date] = Image.load(decoded.inner[date], video, ext)
         return decoded
 
     def _to_element(self) -> str:
-        """Converts thumbnail instance to value used for element identification"""
+        """Converts images instance to value used for element identification"""
         return self.id
-
-
-class CommentAuthorIcon:
-    author: CommentAuthor
-    id: str
-    path: Path
-
-    @staticmethod
-    def new(author: CommentAuthor, url: str) -> CommentAuthorIcon:
-        """Creates a new author icon and saves it to path, returning it's details"""
-        # Basic details
-        author_icon = CommentAuthorIcon()
-        author_icon.author = author
-
-        # Get image and id which is a hash
-        image, author_icon.id = _image_and_hash(url)
-
-        # Calculate path
-        author_icon.path = author_icon._path()
-
-        # Save to collection
-        with open(author_icon.path, "wb+") as file:
-            file.write(image)
-
-        # Return
-        return author_icon
-
-    def _path(self) -> Path:
-        """Returns path to current icon"""
-        return self.author.channel.path / "author_icons" / f"{self.id}.jpg"
-
-    # TODO: to and from
 
 
 def _image_and_hash(url: str) -> tuple[bytes, str]:
@@ -391,13 +374,15 @@ class CommentAuthor:
             author.channel = channel
             author.id = id
             author.name = Element.new(author, name)
-            author.icon = Element.new(author, CommentAuthorIcon.new(author, icon_url))
+            author.icon = Element.new(
+                author, Image.new(author, icon_url, IMAGE_AUTHOR_ICON)
+            )
             channel.comment_authors[id] = author
 
         # Update existing
         else:
             author.name.update(None, name)
-            author.icon.update(None, CommentAuthorIcon.new(author, icon_url))
+            author.icon.update(None, Image.new(author, icon_url, IMAGE_AUTHOR_ICON))
 
         # Return
         return author

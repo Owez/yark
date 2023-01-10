@@ -12,7 +12,9 @@ Commonly-used
 - `Video`
     - `Element`
     - `Note`
-    - `Thumbnail`
+    - `Comment`
+    - `CommentAuthor`
+    - `Image`
 - `viewer()`
 - `ArchiveNotFoundException`
 - `VideoNotFoundException`
@@ -23,7 +25,14 @@ Beware that using Yark as a library is currently experimental and breaking chang
 """
 
 from .channel import Channel, DownloadConfig
-from .video import Video, Element, Note, Thumbnail
+from .video import (
+    Video,
+    Element,
+    Note,
+    Image,
+    Comment,
+    CommentAuthor,
+)
 from .viewer import viewer
 from .errors import (
     ArchiveNotFoundException,
