@@ -145,12 +145,6 @@ class Channel:
         return channel
 
     @staticmethod
-    def _new_empty() -> Channel:
-        return Channel.new(
-            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-        )
-
-    @staticmethod
     def load(path: Path) -> Channel:
         """Loads existing channel from path"""
         # Check existence

@@ -66,8 +66,8 @@ class Video:
 
     @staticmethod
     def _new_empty() -> Video:
-        fake_entry = {"hi": True}  # TODO: finish
-        return Video.new(fake_entry, Channel._new_empty())
+        """Returns a phantom video for use in places where videos are required but we don't have a video"""
+        return Video()
 
     def update(self, entry: dict):
         """Updates video using new metadata schema, adding a new timestamp to any changes"""

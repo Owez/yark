@@ -29,9 +29,9 @@ from .video import (
     Video,
     Element,
     Note,
-    Image,
     Comment,
     CommentAuthor,
+    Image,
 )
 from .viewer import viewer
 from .errors import (
