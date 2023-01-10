@@ -373,7 +373,7 @@ class CommentAuthor:
 
     def _to_dict_head(self) -> dict:
         """Encodes comment author to the body part of a head + body, e.g. `"head": { body }`"""
-        return {"id": self.id, "name": self.name._to_dict()}
+        return {"name": self.name._to_dict()}
 
 
 class Comments:
@@ -458,7 +458,7 @@ def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
     return None, id
 
 
-class Comment:
+class Comment:  # TODO: figure out if a comment has been deleted
     channel: Channel
     parent: Optional[Comment]
     id: str
