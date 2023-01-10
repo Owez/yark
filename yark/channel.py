@@ -469,8 +469,17 @@ class Channel:
     @staticmethod
     def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
-        # Basics
+        # Initiate channel
         channel = Channel()
+
+        # Decode head & body style comment authors; needed above video decoding for comments
+        channel.comment_authors = {}
+        for id in encoded["comment_authors"].keys():
+            channel.comment_authors[id] = CommentAuthor._from_dict_head(
+                channel, id, encoded["comment_authors"][id]
+            )
+
+        # Basics
         channel.path = path
         channel.version = encoded["version"]
         channel.url = encoded["url"]
@@ -486,12 +495,6 @@ class Channel:
         ]
         channel.comment_authors = {}
 
-        # Decode head & body style comment authors
-        for id in encoded["comment_authors"].keys():
-            channel.comment_authors[id] = CommentAuthor._from_dict_head(
-                channel, id, encoded["comment_authors"]["id"]
-            )
-
         # Return
         return channel
 
@@ -500,7 +503,7 @@ class Channel:
         # Encode comment authors
         comment_authors = {}
         for id in self.comment_authors.keys():
-            comment_authors[id] = CommentAuthor._from_channel(self, id)._to_dict_head()
+            comment_authors[id] = self.comment_authors[id]._to_dict_head()
 
         # Basics
         payload = {

@@ -30,7 +30,7 @@ class Video:
     comments: Comments
 
     @staticmethod
-    def new(entry: dict[str, Any], channel) -> Video:
+    def new(entry: dict[str, Any], channel: Channel) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -47,7 +47,7 @@ class Video:
         )
         video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
         video.deleted = Element.new(video, False)
-        video.comments = Comments()
+        video.comments = Comments(channel)
         video.notes = []
 
         # Runtime-only
@@ -62,7 +62,7 @@ class Video:
         return Video.new(fake_entry, Channel._new_empty())
 
     def update(self, entry: dict):
-        """Updates video using new schema, adding a new timestamp to any changes"""
+        """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update("title", entry["title"])
         self.description.update("description", entry["description"])
@@ -228,11 +228,7 @@ class Element:
             # Report if wanted
             if kind is not None:
                 channel = (
-                    self.parent.channel
-                    if isinstance(self.parent, Video)
-                    else self.parent.video.channel
-                    if isinstance(self.parent, Comment)
-                    else self.parent
+                    self.parent
                     if isinstance(self.parent, Channel)
                     else self.parent.channel
                 )
@@ -343,15 +339,26 @@ class CommentAuthor:
     id: str
     name: Element
 
-    # TODO: replace two below with a like "get: new or update"
     @staticmethod
-    def _from_channel(channel: Channel, id: str) -> CommentAuthor:
-        """Gets the comment author from the channel based on it's identifier or raises an exception"""
-        return channel.comment_authors[id]
+    def new_or_update(channel: Channel, id: str, name: str) -> CommentAuthor:
+        """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
+        # Get from channel
+        author = channel.comment_authors.get(id)
 
-    def update(self, name: str):
-        """Updates values if of author if newer"""
-        self.name.update(None, name)
+        # Create new
+        if author is None:
+            author = CommentAuthor()
+            author.channel = channel
+            author.id = id
+            author.name = Element.new(author, name)
+            channel.comment_authors[id] = author
+
+        # Update existing
+        else:
+            author.name.update(None, name)
+
+        # Return
+        return author
 
     @staticmethod
     def _from_dict_head(channel: Channel, id: str, element: dict) -> CommentAuthor:
@@ -376,9 +383,11 @@ class Comments:
         self.inner = {}
 
     def load_archive(self, comments: dict[str, dict]):
-        """Loads comments from Yark archive"""
+        """Loads comments from a comment level in a Yark archive"""
         for id in comments.keys():
-            self.inner[id] = Comment._from_dict_head(self.video, None, id, comments[id])
+            self.inner[id] = Comment._from_dict_head(
+                self.channel, None, id, comments[id]
+            )
 
     def save_archive(self) -> dict[str, dict]:
         """Saves each comment as a dictionary inside of comments"""
@@ -401,9 +410,9 @@ class Comments:
             if (
                 parent_id is not None
                 and parent_id in self.inner
-                and id in self.inner[parent_id].children
+                and id in self.inner[parent_id].children.inner
             ):
-                comment = self.inner[parent_id].children[id]
+                comment = self.inner[parent_id].children.inner[id]
                 comment.update(entry)
 
             # Try to update comment if it's a parent
@@ -421,17 +430,22 @@ class Comments:
                     id,
                     entry["text"],
                     entry["author_id"],
+                    entry["author"],
                     entry["is_favorited"],
                     created,
                 )
 
+                # Add comment to our comments
+                if parent_id is None:
+                    self.inner[id] = comment
+
                 # Add to adoption queue if the comment is a child
-                if parent_id is not None:
+                else:
                     adoption_queue.append((parent_id, comment))
 
-        # Add the children to parents now we know they're all there
+        # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
-            self.inner[parent_id].children[comment.id] = comment
+            self.inner[parent_id].children.inner[comment.id] = comment
 
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
@@ -446,19 +460,20 @@ class Comment:
     channel: Channel
     parent: Optional[Comment]
     id: str
-    body: Element
     author: CommentAuthor
-    children: Comments
+    body: Element
     favorited: Element
     created: datetime
+    children: Comments
 
     @staticmethod
     def new(
         channel: Channel,
         parent: Optional[Comment],
         id: str,
-        body: str,
         author_id: str,
+        author_name: str,
+        body: str,
         favorited: bool,
         created: datetime,
     ) -> Comment:
@@ -466,11 +481,16 @@ class Comment:
         comment = Comment()
         comment.parent = parent
         comment.id = id
+        comment.author = CommentAuthor.new_or_update(channel, author_id, author_name)
         comment.body = Element.new(comment, body)
-        comment.author = CommentAuthor._from_channel(channel, author_id)
-        comment.children = Comments()
         comment.favorited = Element.new(comment, favorited)
         comment.created = created
+        comment.children = Comments(channel)
+        return comment
+
+    def update(self, entry: dict[str, Any]):
+        """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
+        pass
 
     @staticmethod
     def _from_dict_head(
@@ -481,14 +501,15 @@ class Comment:
         comment = Comment()
         comment.parent = parent
         comment.id = id
+        comment.author = channel.comment_authors[element["author_id"]]
         comment.body = Element._from_dict(element["body"], comment)
-        comment.author = CommentAuthor._from_channel(channel, element["author_id"])
         comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.created = datetime.fromisoformat(element["created"])
 
         # Get children using head & body method
+        comment.children = Comments(channel)
         for id in element["children"].keys():
-            comment.children[id] = Comment._from_dict_head(
+            comment.children.inner[id] = Comment._from_dict_head(
                 channel, comment, id, element["children"][id]
             )
 
@@ -499,16 +520,16 @@ class Comment:
         """Converts comment and it's children to dictionary representation in a head + body format"""
         # Get children using head & body method
         children = {}
-        for id in self.children.keys():
-            children[id] = self.children[id]._to_dict_head()
+        for id in self.children.inner.keys():
+            children[id] = self.children.inner[id]._to_dict_head()
 
         # Basics
         payload = {
-            "body": self.body._to_dict(),
             "author_id": self.author.id,
-            "children": children,
+            "body": self.body._to_dict(),
             "favorited": self.favorited._to_dict(),
             "created": self.created.isoformat(),
+            "children": children,
         }
 
         # Return
