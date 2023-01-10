@@ -228,9 +228,11 @@ class Element:
             # Report if wanted
             if kind is not None:
                 channel = (
-                    self.parent
-                    if isinstance(self.parent, Channel)
-                    else self.parent.channel
+                    self.parent.channel
+                    if isinstance(self.parent, Video)
+                    or isinstance(self.parent, Comment)
+                    or isinstance(self.parent, CommentAuthor)
+                    else self.parent  # NOTE: this can be simplified but Channel would be a circular dep
                 )
                 channel.reporter.add_updated(kind, self)
 
@@ -479,6 +481,7 @@ class Comment:
     ) -> Comment:
         """Creates a new comment with simplified information inputs"""
         comment = Comment()
+        comment.channel = channel
         comment.parent = parent
         comment.id = id
         comment.author = CommentAuthor.new_or_update(channel, author_id, author_name)
@@ -490,7 +493,9 @@ class Comment:
 
     def update(self, entry: dict[str, Any]):
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
-        pass
+        self.author.new_or_update(self.channel, entry["author_id"], entry["author"])
+        self.body.update(None, entry["text"])
+        self.favorited.update(None, entry["is_favorited"])
 
     @staticmethod
     def _from_dict_head(
@@ -499,6 +504,7 @@ class Comment:
         """Loads existing comment and it's children attached to a video dict in a head + body format"""
         # Basic
         comment = Comment()
+        comment.channel = channel
         comment.parent = parent
         comment.id = id
         comment.author = channel.comment_authors[element["author_id"]]
