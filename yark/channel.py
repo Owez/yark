@@ -207,8 +207,8 @@ class Channel:
                         )
 
         # Uncomment for saving big dumps for testing
-        with open("demo/dump.json", "w+") as file:
-            json.dump(res, file)
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
         # res = json.load(open("demo/dump.json", "r"))
@@ -388,7 +388,7 @@ class Channel:
 
         # Directories
         print(f"Committing {self} to file..")
-        paths = [self.path, self.path / "thumbnails", self.path / "videos"]
+        paths = [self.path, self.path / "thumbnails", self.path / "author_icons", self.path / "videos"]
         for path in paths:
             if not path.exists():
                 path.mkdir()

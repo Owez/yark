@@ -45,7 +45,7 @@ class Video:
         video.likes = Element.new(
             video, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
+        video.thumbnail = Element.new(video, Thumbnail.new(video, entry["thumbnail"]))
         video.deleted = Element.new(video, False)
         video.comments = Comments(channel)
         video.notes = []
@@ -70,7 +70,7 @@ class Video:
         self.likes.update(
             "like count", entry["like_count"] if "like_count" in entry else None
         )
-        self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
+        self.thumbnail.update("thumbnail", Thumbnail.new(self, entry["thumbnail"]))
         self.deleted.update("undeleted", False)
         if entry["comments"] is not None:
             self.comments.update(entry["comments"])
@@ -287,21 +287,17 @@ class Thumbnail:
     path: Path
 
     @staticmethod
-    def new(url: str, video: Video):
+    def new(video: Video, url: str) -> Thumbnail:
         """Pulls a new thumbnail from YouTube and saves"""
-        # Details
+        # Basic details
         thumbnail = Thumbnail()
         thumbnail.video = video
 
-        # Get image and calculate it's hash
-        image = requests.get(url).content
-        thumbnail.id = hashlib.blake2b(
-            image, digest_size=20, usedforsecurity=False
-        ).hexdigest()
+        # Get image and id which is a hash
+        image, thumbnail.id = _image_and_hash(url)
 
-        # Calculate paths
-        thumbnails = thumbnail._path()
-        thumbnail.path = thumbnails / f"{thumbnail.id}.webp"
+        # Calculate path
+        thumbnail.path = thumbnail._path()
 
         # Save to collection
         with open(thumbnail.path, "wb+") as file:
@@ -309,6 +305,10 @@ class Thumbnail:
 
         # Return
         return thumbnail
+
+    def _path(self) -> Path:
+        """Returns path to current thumbnail"""
+        return self.video.channel.path / "thumbnails" / f"{self.id}.webp"
 
     @staticmethod
     def load(id: str, video: Video):
@@ -318,10 +318,6 @@ class Thumbnail:
         thumbnail.video = video
         thumbnail.path = thumbnail._path() / f"{thumbnail.id}.webp"
         return thumbnail
-
-    def _path(self) -> Path:
-        """Gets root path of thumbnail using video's channel path"""
-        return self.video.channel.path / "thumbnails"
 
     @staticmethod
     def _from_element(element: dict, video: Video) -> Element:
@@ -336,13 +332,55 @@ class Thumbnail:
         return self.id
 
 
+class CommentAuthorIcon:
+    author: CommentAuthor
+    id: str
+    path: Path
+
+    @staticmethod
+    def new(author: CommentAuthor, url: str) -> CommentAuthorIcon:
+        """Creates a new author icon and saves it to path, returning it's details"""
+        # Basic details
+        author_icon = CommentAuthorIcon()
+        author_icon.author = author
+
+        # Get image and id which is a hash
+        image, author_icon.id = _image_and_hash(url)
+
+        # Calculate path
+        author_icon.path = author_icon._path()
+
+        # Save to collection
+        with open(author_icon.path, "wb+") as file:
+            file.write(image)
+
+        # Return
+        return author_icon
+
+    def _path(self) -> Path:
+        """Returns path to current icon"""
+        return self.author.channel.path / "author_icons" / f"{self.id}.jpg"
+
+    # TODO: to and from
+
+
+def _image_and_hash(url: str) -> tuple[bytes, str]:
+    """Downloads an image and calculates it's BLAKE2 hash, returning both"""
+    image = requests.get(url).content
+    hash = hashlib.blake2b(image, digest_size=20, usedforsecurity=False).hexdigest()
+    return image, hash
+
+
 class CommentAuthor:
     channel: Channel
     id: str
     name: Element
+    icon: Element
 
     @staticmethod
-    def new_or_update(channel: Channel, id: str, name: str) -> CommentAuthor:
+    def new_or_update(
+        channel: Channel, id: str, name: str, icon_url: str
+    ) -> CommentAuthor:
         """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
         # Get from channel
         author = channel.comment_authors.get(id)
@@ -353,11 +391,13 @@ class CommentAuthor:
             author.channel = channel
             author.id = id
             author.name = Element.new(author, name)
+            author.icon = Element.new(author, CommentAuthorIcon.new(author, icon_url))
             channel.comment_authors[id] = author
 
         # Update existing
         else:
             author.name.update(None, name)
+            author.icon.update(None, CommentAuthorIcon.new(author, icon_url))
 
         # Return
         return author
@@ -430,9 +470,10 @@ class Comments:
                     self.channel,
                     None,
                     id,
-                    entry["text"],
                     entry["author_id"],
                     entry["author"],
+                    entry["author_thumbnail"],
+                    entry["text"],
                     entry["is_favorited"],
                     created,
                 )
@@ -475,6 +516,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
         id: str,
         author_id: str,
         author_name: str,
+        author_icon_url: str,
         body: str,
         favorited: bool,
         created: datetime,
@@ -484,7 +526,9 @@ class Comment:  # TODO: figure out if a comment has been deleted
         comment.channel = channel
         comment.parent = parent
         comment.id = id
-        comment.author = CommentAuthor.new_or_update(channel, author_id, author_name)
+        comment.author = CommentAuthor.new_or_update(
+            channel, author_id, author_name, author_icon_url
+        )
         comment.body = Element.new(comment, body)
         comment.favorited = Element.new(comment, favorited)
         comment.created = created
@@ -493,7 +537,9 @@ class Comment:  # TODO: figure out if a comment has been deleted
 
     def update(self, entry: dict[str, Any]):
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
-        self.author.new_or_update(self.channel, entry["author_id"], entry["author"])
+        self.author.new_or_update(
+            self.channel, entry["author_id"], entry["author"], entry["author_thumbnail"]
+        )
         self.body.update(None, entry["text"])
         self.favorited.update(None, entry["is_favorited"])
 
