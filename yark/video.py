@@ -450,8 +450,6 @@ class Comments:
             comments,
         )
 
-        print(len(known))
-
         # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
             self.inner[parent_id].children.inner[comment.id] = comment
