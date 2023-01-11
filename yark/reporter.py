@@ -34,7 +34,7 @@ class Reporter:
                 if kind in ["title", "description", "undeleted"]
                 else Fore.BLUE
             )
-            video = f"  • {element.parent}".ljust(82)
+            video = f"  • {element.video}".ljust(82)
             kind = f" │ 🔥{kind.capitalize()}"
 
             print(colour + video + kind)
