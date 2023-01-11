@@ -6,11 +6,11 @@ from colorama import Style, Fore
 import sys
 import threading
 import webbrowser
-import urllib3
 from importlib.metadata import version
 from .errors import _err_msg, ArchiveNotFoundException
 from .channel import Channel, DownloadConfig
 from .viewer import viewer
+import requests
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 """User-facing help message provided from the cli"""
@@ -198,9 +198,7 @@ def _cli():
 def _pypi_version():
     """Checks if there's a new version of Yark and tells the user if it's significant"""
     # Get package data from PyPI
-    http = urllib3.PoolManager()
-    req = http.request("GET", "https://pypi.org/pypi/yark/json")
-    data = json.loads(req.data.decode("utf-8"))
+    data = requests.get("https://pypi.org/pypi/yark/json").json()
 
     def decode_version(version: str) -> tuple:
         """Decodes stringified versioning into a tuple"""

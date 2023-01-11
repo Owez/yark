@@ -180,10 +180,10 @@ def archive_video(name, file):
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
-@routes.route("/archive/<name>/thumbnail/<id>")
-def archive_thumbnail(name, id):
-    """Serves thumbnail file using it's id"""
-    return send_from_directory(os.getcwd(), f"{name}/thumbnails/{id}.webp")
+@routes.route("/archive/<name>/image/<id>")
+def archive_image(name, id):
+    """Serves image file using it's id, e.g. thumbnails, author icons, etc."""
+    return send_from_directory(os.getcwd(), f"{name}/images/{id}.webp")
 
 
 def viewer() -> Flask:

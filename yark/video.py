@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from datetime import datetime
-from fnmatch import fnmatch
 from pathlib import Path
 from uuid import uuid4
 import requests
@@ -13,6 +12,12 @@ from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from .channel import Channel
+
+IMAGE_THUMBNAIL = "webp"
+"""Image extension setting for all thumbnails"""
+
+IMAGE_AUTHOR_ICON = "jpg"
+"""Image extension setting for all author icons"""
 
 
 class Video:
@@ -28,9 +33,10 @@ class Video:
     thumbnail: "Element"
     deleted: "Element"
     notes: list["Note"]
+    comments: Comments
 
     @staticmethod
-    def new(entry: dict[str, Any], channel) -> Video:
+    def new(entry: dict[str, Any], channel: Channel) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -45,9 +51,16 @@ class Video:
         video.likes = Element.new(
             video, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
+        video.thumbnail = Element.new(
+            video, Image.new(video, entry["thumbnail"], IMAGE_THUMBNAIL)
+        )
         video.deleted = Element.new(video, False)
+        video.comments = Comments(channel)
         video.notes = []
+
+        # Add comments if they're there
+        if entry["comments"] is not None:
+            video.comments.update(entry["comments"])
 
         # Runtime-only
         video.known_not_deleted = True
@@ -57,11 +70,11 @@ class Video:
 
     @staticmethod
     def _new_empty() -> Video:
-        fake_entry = {"hi": True}  # TODO: finish
-        return Video.new(fake_entry, Channel._new_empty())
+        """Returns a phantom video for use in places where videos are required but we don't have a video"""
+        return Video()
 
     def update(self, entry: dict):
-        """Updates video using new schema, adding a new timestamp to any changes"""
+        """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update("title", entry["title"])
         self.description.update("description", entry["description"])
@@ -69,8 +82,12 @@ class Video:
         self.likes.update(
             "like count", entry["like_count"] if "like_count" in entry else None
         )
-        self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
+        self.thumbnail.update(
+            "thumbnail", Image.new(self, entry["thumbnail"], IMAGE_THUMBNAIL)
+        )
         self.deleted.update("undeleted", False)
+        if entry["comments"] is not None:
+            self.comments.update(entry["comments"])
 
         # Runtime-only
         self.known_not_deleted = True
@@ -108,7 +125,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel) -> Video:
+    def _from_dict(encoded: dict, channel: Channel) -> Video:
         """Converts id and encoded dictionary to video for loading a channel"""
         # Normal
         video = Video()
@@ -121,9 +138,15 @@ class Video:
         video.description = Element._from_dict(encoded["description"], video)
         video.views = Element._from_dict(encoded["views"], video)
         video.likes = Element._from_dict(encoded["likes"], video)
-        video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
-        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+        video.thumbnail = Image._from_element(
+            encoded["thumbnail"], video, IMAGE_THUMBNAIL
+        )
         video.deleted = Element._from_dict(encoded["deleted"], video)
+        video.comments = Comments(channel)
+        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+
+        # Load data
+        video.comments.load_archive(encoded["comments"])
 
         # Runtime-only
         video.known_not_deleted = False
@@ -144,6 +167,7 @@ class Video:
             "likes": self.likes._to_dict(),
             "thumbnail": self.thumbnail._to_dict(),
             "deleted": self.deleted._to_dict(),
+            "comments": self.comments.save_archive(),
             "notes": [note._to_dict() for note in self.notes],
         }
 
@@ -197,14 +221,14 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 
 class Element:
-    video: Video
+    parent: Video | Comment | Channel | CommentAuthor
     inner: dict[datetime, Any]
 
     @staticmethod
-    def new(video: Video, data):
+    def new(parent: Video | Comment | Channel | CommentAuthor, data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
-        element.video = video
+        element.parent = parent
         element.inner = {datetime.utcnow(): data}
         return element
 
@@ -219,7 +243,14 @@ class Element:
 
             # Report if wanted
             if kind is not None:
-                self.video.channel.reporter.add_updated(kind, self)
+                channel = (
+                    self.parent.channel
+                    if isinstance(self.parent, Video)
+                    or isinstance(self.parent, Comment)
+                    or isinstance(self.parent, CommentAuthor)
+                    else self.parent  # NOTE: this can be simplified but Channel would be a circular dep
+                )
+                channel.reporter.add_updated(kind, self)
 
         # Return self
         return self
@@ -233,11 +264,13 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(encoded: dict, video: Video) -> Element:
+    def _from_dict(
+        encoded: dict, parent: Video | Comment | Channel | CommentAuthor
+    ) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
         element = Element()
-        element.video = video
+        element.parent = parent
         element.inner = {}
 
         # Inner elements
@@ -264,64 +297,305 @@ class Element:
         return encoded
 
 
-class Thumbnail:
-    video: Video
+class Image:
+    parent: Video | CommentAuthor
     id: str
     path: Path
+    ext: str
 
     @staticmethod
-    def new(url: str, video: Video):
-        """Pulls a new thumbnail from YouTube and saves"""
-        # Details
-        thumbnail = Thumbnail()
-        thumbnail.video = video
+    def new(parent: Video | CommentAuthor, url: str, ext: str) -> Image:
+        """Pulls a new image from YouTube and saves"""
+        # Basic details
+        image = Image()
+        image.parent = parent
+        image.ext = ext
 
-        # Get image and calculate it's hash
-        image = requests.get(url).content
-        thumbnail.id = hashlib.blake2b(
-            image, digest_size=20, usedforsecurity=False
-        ).hexdigest()
+        # Get image and id which is a hash
+        downloaded_image, image.id = _image_and_hash(url)
 
-        # Calculate paths
-        thumbnails = thumbnail._path()
-        thumbnail.path = thumbnails / f"{thumbnail.id}.webp"
+        # Calculate path
+        image.path = image._path()
 
         # Save to collection
-        with open(thumbnail.path, "wb+") as file:
-            file.write(image)
+        with open(image.path, "wb+") as file:
+            file.write(downloaded_image)
 
         # Return
-        return thumbnail
-
-    @staticmethod
-    def load(id: str, video: Video):
-        """Loads existing thumbnail from saved path by id"""
-        thumbnail = Thumbnail()
-        thumbnail.id = id
-        thumbnail.video = video
-        thumbnail.path = thumbnail._path() / f"{thumbnail.id}.webp"
-        return thumbnail
+        return image
 
     def _path(self) -> Path:
-        """Gets root path of thumbnail using video's channel path"""
-        return self.video.channel.path / "thumbnails"
+        """Returns path to current image"""
+        return self.parent.channel.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def _from_element(element: dict, video: Video) -> Element:
-        """Converts element of thumbnails to properly formed thumbnails"""
+    def load(id: str, parent: Video | CommentAuthor, ext: str):
+        """Loads existing image from saved path by id"""
+        image = Image()
+        image.id = id
+        image.parent = parent
+        image.ext = ext
+        image.path = image._path() / f"{image.id}.{ext}"
+        return image
+
+    @staticmethod
+    def _from_element(element: dict, video: Video, ext: str) -> Element:
+        """Converts element of images to properly formed images"""
         decoded = Element._from_dict(element, video)
         for date in decoded.inner:
-            decoded.inner[date] = Thumbnail.load(decoded.inner[date], video)
+            decoded.inner[date] = Image.load(decoded.inner[date], video, ext)
         return decoded
 
     def _to_element(self) -> str:
-        """Converts thumbnail instance to value used for element identification"""
+        """Converts images instance to value used for element identification"""
         return self.id
 
 
-class Note:
-    """Allows Yark users to add notes to videos"""
+def _image_and_hash(url: str) -> tuple[bytes, str]:
+    """Downloads an image and calculates it's BLAKE2 hash, returning both"""
+    image = requests.get(url).content
+    hash = hashlib.blake2b(image, digest_size=20, usedforsecurity=False).hexdigest()
+    return image, hash
 
+
+class CommentAuthor:
+    channel: Channel
+    id: str
+    name: Element
+    icon: Element
+
+    @staticmethod
+    def new_or_update(
+        channel: Channel, id: str, name: str, icon_url: str
+    ) -> CommentAuthor:
+        """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
+        # Get from channel
+        author = channel.comment_authors.get(id)
+
+        # Create new
+        if author is None:
+            author = CommentAuthor()
+            author.channel = channel
+            author.id = id
+            author.name = Element.new(author, name)
+            author.icon = Element.new(
+                author, Image.new(author, icon_url, IMAGE_AUTHOR_ICON)
+            )
+            channel.comment_authors[id] = author
+
+        # Update existing
+        else:
+            author.name.update(None, name)
+            author.icon.update(None, Image.new(author, icon_url, IMAGE_AUTHOR_ICON))
+
+        # Return
+        return author
+
+    @staticmethod
+    def _from_dict_head(channel: Channel, id: str, element: dict) -> CommentAuthor:
+        """Decodes from the dictionary with a head `id`, e.g. `"head": { body }`"""
+        author = CommentAuthor()
+        author.channel = channel
+        author.id = id
+        author.name = Element._from_dict(element["name"], author)
+        author.icon = Element._from_dict(element["icon"], author)
+        return author
+
+    def _to_dict_head(self) -> dict:
+        """Encodes comment author to the body part of a head + body, e.g. `"head": { body }`"""
+        return {"name": self.name._to_dict(), "icon": self.icon._to_dict()}
+
+
+class Comments:
+    channel: Channel
+    inner: dict[str, Comment]
+
+    def __init__(self, channel: Channel) -> None:
+        self.channel = channel
+        self.inner = {}
+
+    def load_archive(self, comments: dict[str, dict]):
+        """Loads comments from a comment level in a Yark archive"""
+        for id in comments.keys():
+            self.inner[id] = Comment._from_dict_head(
+                self.channel, None, id, comments[id]
+            )
+
+    def save_archive(self) -> dict[str, dict]:
+        """Saves each comment as a dictionary inside of comments"""
+        payload = {}
+        for id in self.inner:
+            payload[id] = self.inner[id]._to_dict_head()
+        return payload
+
+    def update(self, comments: list[dict]):
+        """Updates comments according to metadata"""
+        # All comments which have been found so we can see the difference to find deleted comments
+        known = []
+
+        # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
+        adoption_queue: list[tuple[str, Comment]] = []
+
+        # Go through comments found
+        for entry in comments:
+            # Decode the identifier and possible parent; can be used to check parent
+            parent_id, id = _decode_comment_id(entry["id"])
+
+            # Add to known comments to find difference later
+            known.append(id)
+
+            # Try to update comment if it's a child
+            if (
+                parent_id is not None
+                and parent_id in self.inner
+                and id in self.inner[parent_id].children.inner
+            ):
+                comment = self.inner[parent_id].children.inner[id]
+                comment.update(entry)
+
+            # Try to update comment if it's a parent
+            elif id in self.inner:
+                comment = self.inner[id]
+                comment.update(entry)
+
+            # Create a new comment
+            else:
+                # Encode into a full comment with no parent no matter what
+                created = datetime.fromtimestamp(entry["timestamp"])
+                comment = Comment.new(
+                    self.channel,
+                    None,
+                    id,
+                    entry["author_id"],
+                    entry["author"],
+                    entry["author_thumbnail"],
+                    entry["text"],
+                    entry["is_favorited"],
+                    created,
+                )
+
+                # Add comment to our comments
+                if parent_id is None:
+                    self.inner[id] = comment
+
+                # Add to adoption queue if the comment is a child
+                else:
+                    adoption_queue.append((parent_id, comment))
+
+        # Add all the children to parents now we know they're all there
+        for parent_id, comment in adoption_queue:
+            self.inner[parent_id].children.inner[comment.id] = comment
+
+        # Update those who have been deleted by finding the difference between recently got and archived
+        for id in self.inner.keys():
+            if id not in known:
+                comment = self.inner[id]
+                comment.deleted.update(None, True)
+
+
+def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
+    """Decodes a comment id into it's top-level or parent and self"""
+    if "." in id:
+        got = id.split(".")
+        return got[0], got[1]
+    return None, id
+
+
+class Comment:  # TODO: figure out if a comment has been deleted
+    channel: Channel
+    parent: Optional[Comment]
+    id: str
+    author: CommentAuthor
+    body: Element
+    favorited: Element
+    deleted: Element
+    created: datetime
+    children: Comments
+
+    @staticmethod
+    def new(
+        channel: Channel,
+        parent: Optional[Comment],
+        id: str,
+        author_id: str,
+        author_name: str,
+        author_icon_url: str,
+        body: str,
+        favorited: bool,
+        created: datetime,
+    ) -> Comment:
+        """Creates a new comment with simplified information inputs"""
+        comment = Comment()
+        comment.channel = channel
+        comment.parent = parent
+        comment.id = id
+        comment.author = CommentAuthor.new_or_update(
+            channel, author_id, author_name, author_icon_url
+        )
+        comment.body = Element.new(comment, body)
+        comment.favorited = Element.new(comment, favorited)
+        comment.deleted = Element.new(comment, False)
+        comment.created = created
+        comment.children = Comments(channel)
+        return comment
+
+    def update(self, entry: dict[str, Any]):
+        """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
+        self.author.new_or_update(
+            self.channel, entry["author_id"], entry["author"], entry["author_thumbnail"]
+        )
+        self.body.update(None, entry["text"])
+        self.favorited.update(None, entry["is_favorited"])
+        self.deleted.update(None, False)
+
+    @staticmethod
+    def _from_dict_head(
+        channel: Channel, parent: Optional[Comment], id: str, element: dict
+    ) -> Comment:
+        """Loads existing comment and it's children attached to a video dict in a head + body format"""
+        # Basic
+        comment = Comment()
+        comment.channel = channel
+        comment.parent = parent
+        comment.id = id
+        comment.author = channel.comment_authors[element["author_id"]]
+        comment.body = Element._from_dict(element["body"], comment)
+        comment.favorited = Element._from_dict(element["favorited"], comment)
+        comment.deleted = Element._from_dict(element["deleted"], comment)
+        comment.created = datetime.fromisoformat(element["created"])
+
+        # Get children using head & body method
+        comment.children = Comments(channel)
+        for id in element["children"].keys():
+            comment.children.inner[id] = Comment._from_dict_head(
+                channel, comment, id, element["children"][id]
+            )
+
+        # Return
+        return comment
+
+    def _to_dict_head(self) -> dict:
+        """Converts comment and it's children to dictionary representation in a head + body format"""
+        # Get children using head & body method
+        children = {}
+        for id in self.children.inner.keys():
+            children[id] = self.children.inner[id]._to_dict_head()
+
+        # Basics
+        payload = {
+            "author_id": self.author.id,
+            "body": self.body._to_dict(),
+            "favorited": self.favorited._to_dict(),
+            "deleted": self.deleted._to_dict(),
+            "created": self.created.isoformat(),
+            "children": children,
+        }
+
+        # Return
+        return payload
+
+
+class Note:
     video: Video
     id: str
     timestamp: int

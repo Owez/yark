@@ -11,15 +11,16 @@ from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
-from .video import Video, Element
+from .video import Video, Element, CommentAuthor
 
-ARCHIVE_COMPAT = 3
+ARCHIVE_COMPAT = 4
 """
 Version of Yark archives which this script is capable of properly parsing
 
 - Version 1 was the initial format and had all the basic information you can see in the viewer now
 - Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
 - Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
+- Version 4 introduced comments # TODO: more for 1.3
 
 Some of these breaking versions are large changes and some are relatively small.
 We don't check if a value exists or not in the archive format out of precedent
@@ -121,6 +122,7 @@ class Channel:
     videos: list[Video]
     livestreams: list[Video]
     shorts: list[Video]
+    comment_authors: dict[str, CommentAuthor]
     reporter: Reporter
 
     @staticmethod
@@ -135,17 +137,12 @@ class Channel:
         channel.videos = []
         channel.livestreams = []
         channel.shorts = []
+        channel.comment_authors = {}
         channel.reporter = Reporter(channel)
 
         # Commit and return
         channel.commit()
         return channel
-
-    @staticmethod
-    def _new_empty() -> Channel:
-        return Channel.new(
-            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-        )
 
     @staticmethod
     def load(path: Path) -> Channel:
@@ -164,7 +161,7 @@ class Channel:
         archive_version = encoded["version"]
         if archive_version != ARCHIVE_COMPAT:
             encoded = _migrate_archive(
-                archive_version, ARCHIVE_COMPAT, encoded, channel_name
+                archive_version, ARCHIVE_COMPAT, encoded, path, channel_name
             )
 
         # Decode and return
@@ -179,6 +176,8 @@ class Channel:
             "logger": VideoLogger(),
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
+            # Fetch comments from videos
+            "getcomments": True,
         }
 
         # Get response and snip it
@@ -383,7 +382,7 @@ class Channel:
 
         # Directories
         print(f"Committing {self} to file..")
-        paths = [self.path, self.path / "thumbnails", self.path / "videos"]
+        paths = [self.path, self.path / "images", self.path / "videos"]
         for path in paths:
             if not path.exists():
                 path.mkdir()
@@ -392,7 +391,7 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind: str, input: list, bucket: list):
+    def _parse_metadata(self, kind: str, input: list[dict], bucket: list[Video]):
         """Parses metadata for a category of video into it's bucket"""
         print(f"Parsing {kind} metadata..")
         for entry in input:
@@ -464,7 +463,17 @@ class Channel:
     @staticmethod
     def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
+        # Initiate channel
         channel = Channel()
+
+        # Decode head & body style comment authors; needed above video decoding for comments
+        channel.comment_authors = {}
+        for id in encoded["comment_authors"].keys():
+            channel.comment_authors[id] = CommentAuthor._from_dict_head(
+                channel, id, encoded["comment_authors"][id]
+            )
+
+        # Basics
         channel.path = path
         channel.version = encoded["version"]
         channel.url = encoded["url"]
@@ -478,17 +487,30 @@ class Channel:
         channel.shorts = [
             Video._from_dict(video, channel) for video in encoded["shorts"]
         ]
+        channel.comment_authors = {}
+
+        # Return
         return channel
 
     def _to_dict(self) -> dict:
         """Converts channel data to a dictionary to commit"""
-        return {
+        # Encode comment authors
+        comment_authors = {}
+        for id in self.comment_authors.keys():
+            comment_authors[id] = self.comment_authors[id]._to_dict_head()
+
+        # Basics
+        payload = {
             "version": self.version,
             "url": self.url,
             "videos": [video._to_dict() for video in self.videos],
             "livestreams": [video._to_dict() for video in self.livestreams],
             "shorts": [video._to_dict() for video in self.shorts],
+            "comment_authors": comment_authors,
         }
+
+        # Return
+        return payload
 
     def __repr__(self) -> str:
         return self.path.name
@@ -527,7 +549,11 @@ def _skip_video(
 
 
 def _migrate_archive(
-    current_version: int, expected_version: int, encoded: dict, channel_name: str
+    current_version: int,
+    expected_version: int,
+    encoded: dict,
+    path: Path,
+    channel_name: str,
 ) -> dict:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
@@ -564,6 +590,29 @@ def _migrate_archive(
                 video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
             for video in encoded["shorts"]:
                 video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
+
+        # From version 3 to version 4
+        elif cur == 3:
+            # Add empty comment author store
+            encoded["comment_authors"] = {}
+
+            # Add blank comment section to each video
+            for video in encoded["videos"]:
+                video["comments"] = {}
+            for video in encoded["livestreams"]:
+                video["comments"] = {}
+            for video in encoded["shorts"]:
+                video["comments"] = {}
+
+            # Rename thumbnails directory to images
+            try:
+                thumbnails = path / "thumbnails"
+                thumbnails.rename(path / "images")
+            except:
+                _err_msg(
+                    f"Couldn't rename {channel_name}/thumbnails directory to {channel_name}/images, please manually rename to continue!"
+                )
+                sys.exit(1)
 
         # Unknown version
         else:
