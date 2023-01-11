@@ -1,4 +1,4 @@
-"""Channel and overall archive management with downloader"""
+"""Archive management with metadata/video downloading core"""
 
 from __future__ import annotations
 from datetime import datetime
@@ -19,7 +19,7 @@ ARCHIVE_COMPAT = 4
 Version of Yark archives which this script is capable of properly parsing
 
 - Version 1 was the initial format and had all the basic information you can see in the viewer now
-- Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
+- Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a general url
 - Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
 - Version 4 introduced comments and moved `thumbnails/` to `images/` # TODO: more for 1.3
 
@@ -72,7 +72,7 @@ class VideoLogger:
         pass
 
 
-class Channel:
+class Archive:
     path: Path
     version: int
     url: str
@@ -83,31 +83,31 @@ class Channel:
     reporter: Reporter
 
     @staticmethod
-    def new(path: Path, url: str) -> Channel:
-        """Creates a new channel"""
+    def new(path: Path, url: str) -> Archive:
+        """Creates a new archive"""
         # Details
-        print("Creating new channel..")
-        channel = Channel()
-        channel.path = Path(path)
-        channel.version = ARCHIVE_COMPAT
-        channel.url = url
-        channel.videos = []
-        channel.livestreams = []
-        channel.shorts = []
-        channel.comment_authors = {}
-        channel.reporter = Reporter(channel)
+        print("Creating new archive..")
+        archive = Archive()
+        archive.path = Path(path)
+        archive.version = ARCHIVE_COMPAT
+        archive.url = url
+        archive.videos = []
+        archive.livestreams = []
+        archive.shorts = []
+        archive.comment_authors = {}
+        archive.reporter = Reporter(archive)
 
         # Commit and return
-        channel.commit()
-        return channel
+        archive.commit()
+        return archive
 
     @staticmethod
-    def load(path: Path) -> Channel:
-        """Loads existing channel from path"""
+    def load(path: Path) -> Archive:
+        """Loads existing archive from path"""
         # Check existence
         path = Path(path)
-        channel_name = path.name
-        print(f"Loading {channel_name} channel..")
+        archive_name = path.name
+        print(f"Loading {archive_name} archive..")
         if not path.exists():
             raise ArchiveNotFoundException("Archive doesn't exist")
 
@@ -118,14 +118,14 @@ class Channel:
         archive_version = encoded["version"]
         if archive_version != ARCHIVE_COMPAT:
             encoded = _migrate_archive(
-                archive_version, ARCHIVE_COMPAT, encoded, path, channel_name
+                archive_version, ARCHIVE_COMPAT, encoded, path, archive_name
             )
 
         # Decode and return
-        return Channel._from_dict(encoded, path)
+        return Archive._from_dict(encoded, path)
 
     def metadata(self, config: Config):
-        """Queries YouTube for all channel metadata to refresh known videos"""
+        """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
         settings = {
@@ -319,7 +319,7 @@ class Channel:
         return new_not_downloaded
 
     def search(self, id: str):
-        """Searches channel for a video with the corresponding `id` and returns"""
+        """Searches archive for a video with the corresponding `id` and returns"""
         # Search
         for video in self.videos:
             if video.id == id:
@@ -455,39 +455,39 @@ class Channel:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path) -> Channel:
+    def _from_dict(encoded: dict, path: Path) -> Archive:
         """Decodes archive which is being loaded back up"""
-        # Initiate channel
-        channel = Channel()
+        # Initiate archive
+        archive = Archive()
 
         # Decode head & body style comment authors; needed above video decoding for comments
-        channel.comment_authors = {}
+        archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
-            channel.comment_authors[id] = CommentAuthor._from_dict_head(
-                channel, id, encoded["comment_authors"][id]
+            archive.comment_authors[id] = CommentAuthor._from_dict_head(
+                archive, id, encoded["comment_authors"][id]
             )
 
         # Basics
-        channel.path = path
-        channel.version = encoded["version"]
-        channel.url = encoded["url"]
-        channel.reporter = Reporter(channel)
-        channel.videos = [
-            Video._from_dict(video, channel) for video in encoded["videos"]
+        archive.path = path
+        archive.version = encoded["version"]
+        archive.url = encoded["url"]
+        archive.reporter = Reporter(archive)
+        archive.videos = [
+            Video._from_dict(video, archive) for video in encoded["videos"]
         ]
-        channel.livestreams = [
-            Video._from_dict(video, channel) for video in encoded["livestreams"]
+        archive.livestreams = [
+            Video._from_dict(video, archive) for video in encoded["livestreams"]
         ]
-        channel.shorts = [
-            Video._from_dict(video, channel) for video in encoded["shorts"]
+        archive.shorts = [
+            Video._from_dict(video, archive) for video in encoded["shorts"]
         ]
-        channel.comment_authors = {}
+        archive.comment_authors = {}
 
         # Return
-        return channel
+        return archive
 
     def _to_dict(self) -> dict:
-        """Converts channel data to a dictionary to commit"""
+        """Converts archive data to a dictionary to commit"""
         # Encode comment authors
         comment_authors = {}
         for id in self.comment_authors.keys():
@@ -553,7 +553,7 @@ def _migrate_archive(
     expected_version: int,
     encoded: dict,
     path: Path,
-    channel_name: str,
+    archive_name: str,
 ) -> dict:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
@@ -565,7 +565,7 @@ def _migrate_archive(
 
         # From version 1 to version 2
         elif cur == 1:
-            # Channel id to url
+            # Target id to url
             encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
             del encoded["id"]
             print(
@@ -610,7 +610,7 @@ def _migrate_archive(
                 thumbnails.rename(path / "images")
             except:
                 _err_msg(
-                    f"Couldn't rename {channel_name}/thumbnails directory to {channel_name}/images, please manually rename to continue!"
+                    f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
                 )
                 sys.exit(1)
 
@@ -627,7 +627,7 @@ def _migrate_archive(
     # Inform user of the backup process
     print(
         Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
+        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
         + Fore.RESET
     )
 
@@ -668,9 +668,9 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
         elif ERRORS[3] in exception.msg:
             msg = "Video deleted whilst downloading"
 
-        # Channel not found, might need to retry with alternative route
+        # Target not found, might need to retry with alternative route
         elif ERRORS[4] in exception.msg:
-            msg = "Couldn't find channel by it's id"
+            msg = "Couldn't find target by it's id"
 
         # Random timeout; not sure if its user-end or youtube-end
         elif ERRORS[5] in exception.msg:

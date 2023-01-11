@@ -1,4 +1,4 @@
-"""Channel reporting system allowing detailed logging of useful information"""
+"""Archive reporting system allowing detailed logging of useful information"""
 
 from colorama import Fore, Style
 import datetime
@@ -7,17 +7,17 @@ from .utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from .channel import Channel
+    from .archive import Archive
 
 
 class Reporter:
-    channel: "Channel"
+    archive: "Archive"
     added: list[Video]
     deleted: list[Video]
     updated: list[tuple[str, Element]]
 
-    def __init__(self, channel) -> None:
-        self.channel = channel
+    def __init__(self, archive: "Archive") -> None:
+        self.archive = archive
         self.added = []
         self.deleted = []
         self.updated = []
@@ -25,7 +25,7 @@ class Reporter:
     def print(self):
         """Prints coloured report to STDOUT"""
         # Initial message
-        print(f"Report for {self.channel}:")
+        print(f"Report for {self.archive}:")
 
         # Updated
         for kind, element in self.updated:
@@ -65,7 +65,7 @@ class Reporter:
         self.updated = []
 
     def interesting_changes(self):
-        """Reports on the most interesting changes for the channel linked to this reporter"""
+        """Reports on the most interesting changes for the archive linked to this reporter"""
 
         def fmt_video(kind: str, video: Video) -> str:
             """Formats a video if it's interesting, otherwise returns an empty string"""
@@ -102,7 +102,7 @@ class Reporter:
 
             # Truncate title, get viewer link, and format all together with viewer link
             title = _truncate_text(video.title.current(), 51).strip()
-            url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
+            url = f"http://127.0.0.1:7667/archive/{video.archive}/{kind}/{video.id}"
             return (
                 f"  • {title}\n    {changes}\n    "
                 + Style.DIM
@@ -123,13 +123,13 @@ class Reporter:
             return None if buf == HEADING else buf[:-1]
 
         # Tell users whats happening
-        print(f"Finding interesting changes in {self.channel}..")
+        print(f"Finding interesting changes in {self.archive}..")
 
         # Get reports on the three categories
         categories = [
-            ("videos", fmt_category("videos", self.channel.videos)),
-            ("livestreams", fmt_category("livestreams", self.channel.livestreams)),
-            ("shorts", fmt_category("shorts", self.channel.shorts)),
+            ("videos", fmt_category("videos", self.archive.videos)),
+            ("livestreams", fmt_category("livestreams", self.archive.livestreams)),
+            ("shorts", fmt_category("shorts", self.archive.shorts)),
         ]
 
         # Combine those with nothing of note and print out interesting

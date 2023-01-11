@@ -32,13 +32,13 @@
 {% block content %}
 <h1 class="hero">Yark</h1>
 <form action="/" method="post">
-    <input type="text" name="channel" placeholder="e.g. pewdiepie">
+    <input type="text" name="archive" placeholder="e.g. pewdiepie">
 </form>
 {% if visited %}
 <div class="visited">
     <p>Recent Archives: </p>
     {% for id in visited %}
-    <a href="/channel/{{ id }}/videos">{{ id }}</a>
+    <a href="/archive/{{ id }}/videos">{{ id }}</a>
     {% endfor %}
 </div>
 {% endif %}

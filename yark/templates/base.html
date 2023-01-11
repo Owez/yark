@@ -46,7 +46,7 @@
         }
 
         #nav-content>a,
-        .channel-link {
+        .archive-link {
             color: #424242;
             margin-right: 1.5rem;
         }
@@ -83,7 +83,7 @@
             width: 80vw;
         }
 
-        .channel-link {
+        .archive-link {
             margin-left: 0.5rem;
             font-size: 95%;
         }
@@ -109,7 +109,7 @@
             input[type=submit],
             button,
             #nav-content>a,
-            .channel-link {
+            .archive-link {
                 color: rgb(200, 200, 200);
             }
         }
@@ -152,23 +152,23 @@
             }
         }
 
-        // Adds the current channel name to nav title if present 
-        function addChannelNav() {
+        // Adds the current archive name to nav title if present 
+        function addArchiveNav() {
             const path = window.location.pathname
-            if (path.startsWith("/channel/")) {
-                const channelName = path.split("/")[2]
+            if (path.startsWith("/archive/")) {
+                const archiveName = path.split("/")[2]
                 let navTitle = document.getElementById("nav-title")
-                let channelLink = document.createElement("a")
-                channelLink.title = `Go (back) to ${channelName}`
-                channelLink.href = `/channel/${channelName}/videos`
-                channelLink.appendChild(document.createTextNode(`· ${channelName}`))
-                channelLink.classList.add("channel-link")
-                navTitle.appendChild(channelLink)
+                let archiveLink = document.createElement("a")
+                archiveLink.title = `Go (back) to ${archiveName}`
+                archiveLink.href = `/archive/${archiveName}/videos`
+                archiveLink.appendChild(document.createTextNode(`· ${archiveName}`))
+                archiveLink.classList.add("archive-link")
+                navTitle.appendChild(archiveLink)
             }
         }
 
         // Add to nav
-        addChannelNav()
+        addArchiveNav()
 
         // Flask SSR error deletion
         {% if error %}
