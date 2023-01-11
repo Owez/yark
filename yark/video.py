@@ -426,6 +426,9 @@ class Comments:
 
     def update(self, comments: list[dict]):
         """Updates comments according to metadata"""
+        # All comments which have been found so we can see the difference to find deleted comments
+        known = []
+
         # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
         adoption_queue: list[tuple[str, Comment]] = []
 
@@ -433,6 +436,9 @@ class Comments:
         for entry in comments:
             # Decode the identifier and possible parent; can be used to check parent
             parent_id, id = _decode_comment_id(entry["id"])
+
+            # Add to known comments to find difference later
+            known.append(id)
 
             # Try to update comment if it's a child
             if (
@@ -476,6 +482,12 @@ class Comments:
         for parent_id, comment in adoption_queue:
             self.inner[parent_id].children.inner[comment.id] = comment
 
+        # Update those who have been deleted by finding the difference between recently got and archived
+        for id in self.inner.keys():
+            if id not in known:
+                comment = self.inner[id]
+                comment.deleted.update(None, True)
+
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
     """Decodes a comment id into it's top-level or parent and self"""
@@ -492,6 +504,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
     author: CommentAuthor
     body: Element
     favorited: Element
+    deleted: Element
     created: datetime
     children: Comments
 
@@ -517,6 +530,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
         )
         comment.body = Element.new(comment, body)
         comment.favorited = Element.new(comment, favorited)
+        comment.deleted = Element.new(comment, False)
         comment.created = created
         comment.children = Comments(channel)
         return comment
@@ -528,6 +542,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
         )
         self.body.update(None, entry["text"])
         self.favorited.update(None, entry["is_favorited"])
+        self.deleted.update(None, False)
 
     @staticmethod
     def _from_dict_head(
@@ -542,6 +557,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
         comment.author = channel.comment_authors[element["author_id"]]
         comment.body = Element._from_dict(element["body"], comment)
         comment.favorited = Element._from_dict(element["favorited"], comment)
+        comment.deleted = Element._from_dict(element["deleted"], comment)
         comment.created = datetime.fromisoformat(element["created"])
 
         # Get children using head & body method
@@ -566,6 +582,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
             "author_id": self.author.id,
             "body": self.body._to_dict(),
             "favorited": self.favorited._to_dict(),
+            "deleted": self.deleted._to_dict(),
             "created": self.created.isoformat(),
             "children": children,
         }
