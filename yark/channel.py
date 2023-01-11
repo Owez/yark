@@ -20,7 +20,7 @@ Version of Yark archives which this script is capable of properly parsing
 - Version 1 was the initial format and had all the basic information you can see in the viewer now
 - Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
 - Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
-- Version 4 introduced comments # TODO: more for 1.3
+- Version 4 introduced comments and moved `thumbnails/` to `images/` # TODO: more for 1.3
 
 Some of these breaking versions are large changes and some are relatively small.
 We don't check if a value exists or not in the archive format out of precedent
@@ -207,23 +207,34 @@ class Channel:
         # Uncomment for loading big dumps for testing
         # res = json.load(open("demo/dump.json", "r"))
 
-        # Normalize into types of videos
+        # Make buckets to normalize different types of videos
         videos = []
         livestreams = []
         shorts = []
+
+        # Videos only (basic channel or playlist)
         if "entries" not in res["entries"][0]:
-            # Videos only
             videos = res["entries"]
+
+        # Videos and at least one other (livestream/shorts)
         else:
-            # Videos and at least one other (livestream/shorts)
             for entry in res["entries"]:
+                # Find the kind of category this is; youtube formats these as 3 playlists
                 kind = entry["title"].split(" - ")[-1].lower()
+
+                # Plain videos
                 if kind == "videos":
                     videos = entry["entries"]
+
+                # Livestreams
                 elif kind == "live":
                     livestreams = entry["entries"]
+
+                # Shorts
                 elif kind == "shorts":
                     shorts = entry["entries"]
+
+                # Unknown 4th kind; youtube might've updated
                 else:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
@@ -239,10 +250,43 @@ class Channel:
 
     def download(self, config: DownloadConfig):
         """Downloads all videos which haven't already been downloaded"""
-        # Clean out old part files
+        # Prepare; clean out old part files and get settings
         self._clean_parts()
+        settings = self._dl_settings(config)
 
-        # Create settings for the downloader
+        # Retry downloading 5 times in total for all videos
+        for i in range(5):
+            # Try to curate a list and download videos on it
+            try:
+                # Curate list of non-downloaded videos
+                not_downloaded = self._curate(config)
+
+                # Stop if there's nothing to download
+                if len(not_downloaded) == 0:
+                    break
+
+                # Print curated if this is the first time
+                if i == 0:
+                    _log_download_count(len(not_downloaded))
+
+                # Launch core to download all curated videos
+                self._dl_launch(settings, not_downloaded)
+
+                # Stop if we've got them all
+                break
+
+            # Report error and retry/stop
+            except Exception as exception:
+                # Get around carriage return
+                if i == 0:
+                    print()
+
+                # Report error
+                _err_dl("videos", exception, i != 4)
+
+    def _dl_settings(self, config: DownloadConfig) -> dict:
+        """Generates customized yt-dlp settings from `config` passed in"""
+        # Always present
         settings = {
             # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
@@ -251,85 +295,72 @@ class Channel:
             # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
         }
+
+        # Custom yt-dlp format
         if config.format is not None:
             settings["format"] = config.format
 
-        # Attach to the downloader
-        with YoutubeDL(settings) as ydl:
-            # Retry downloading 5 times in total for all videos
-            for i in range(5):
-                # Try to curate a list and download videos on it
-                try:
-                    # Curate list of non-downloaded videos
-                    not_downloaded = self._curate(config)
+        # Return
+        return settings
 
-                    # Stop if there's nothing to download
-                    if len(not_downloaded) == 0:
-                        break
+    def _dl_launch(self, settings: dict, not_downloaded: list[Video]):
+        """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
+        # Continuously try to download after private/deleted videos are found
+        # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
+        while True:
+            # Download from curated list then exit the optimistic loop
+            try:
+                urls = [video.url() for video in not_downloaded]
+                with YoutubeDL(settings) as ydl:
+                    ydl.download(urls)
+                break
 
-                    # Print curated if this is the first time
-                    if i == 0:
-                        fmt_num = (
-                            "a new video"
-                            if len(not_downloaded) == 1
-                            else f"{len(not_downloaded)} new videos"
-                        )
-                        print(f"Downloading {fmt_num}..")
+            # Special handling for private/deleted videos which are archived, if not we raise again
+            except DownloadError as exception:
+                new_not_downloaded = self._dl_exception_handle(
+                    not_downloaded, exception
+                )
+                if new_not_downloaded is not None:
+                    not_downloaded = new_not_downloaded
 
-                    # Continuously try to download after private/deleted videos are found
-                    # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
-                    while True:
-                        # Download from curated list then exit the optimistic loop
-                        try:
-                            urls = [video.url() for video in not_downloaded]
-                            ydl.download(urls)
-                            break
+    def _dl_exception_handle(
+        self, not_downloaded: list[Video], exception: DownloadError
+    ) -> Optional[list[Video]]:
+        """Handle for failed downloads if there's a special private/deleted video"""
+        # Set new list for not downloaded to return later
+        new_not_downloaded = None
 
-                        # Special handling for private/deleted videos which are archived, if not we raise again
-                        except DownloadError as exception:
-                            # Video is privated or deleted
-                            if (
-                                "Private video" in exception.msg
-                                or "This video has been removed by the uploader"
-                                in exception.msg
-                            ):
-                                # Skip video from curated and get it as a return
-                                not_downloaded, video = _skip_video(
-                                    not_downloaded, "deleted"
-                                )
+        # Video is privated or deleted
+        if (
+            "Private video" in exception.msg
+            or "This video has been removed by the uploader" in exception.msg
+        ):
+            # Skip video from curated and get it as a return
+            new_not_downloaded, video = _skip_video(not_downloaded, "deleted")
 
-                                # If this is a new occurrence then set it & report
-                                # This will only happen if its deleted after getting metadata, like in a dry run
-                                if video.deleted.current() == False:
-                                    self.reporter.deleted.append(video)
-                                    video.deleted.update(None, True)
+            # If this is a new occurrence then set it & report
+            # This will only happen if its deleted after getting metadata, like in a dry run
+            if video.deleted.current() == False:
+                self.reporter.deleted.append(video)
+                video.deleted.update(None, True)
 
-                            # User hasn't got ffmpeg installed and youtube hasn't got format 22
-                            # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
-                            # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
-                            elif " bytes, expected " in exception.msg:
-                                # Skip video from curated
-                                not_downloaded, _ = _skip_video(
-                                    not_downloaded,
-                                    "no format found; please download ffmpeg!",
-                                    True,
-                                )
+        # User hasn't got ffmpeg installed and youtube hasn't got format 22
+        # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
+        # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
+        elif " bytes, expected " in exception.msg:
+            # Skip video from curated
+            new_not_downloaded, _ = _skip_video(
+                not_downloaded,
+                "no format found; please download ffmpeg!",
+                True,
+            )
 
-                            # Nevermind, normal exception
-                            else:
-                                raise exception
+        # Nevermind, normal exception
+        else:
+            raise exception
 
-                    # Stop if we've got them all
-                    break
-
-                # Report error and retry/stop
-                except Exception as exception:
-                    # Get around carriage return
-                    if i == 0:
-                        print()
-
-                    # Report error
-                    _err_dl("videos", exception, i != 4)
+        # Return
+        return new_not_downloaded
 
     def search(self, id: str):
         """Searches channel for a video with the corresponding `id` and returns"""
@@ -514,6 +545,12 @@ class Channel:
 
     def __repr__(self) -> str:
         return self.path.name
+
+
+def _log_download_count(count: int):
+    """Tells user that `count` number of videos have been downloaded"""
+    fmt_num = "a new video" if count == 1 else f"{count} new videos"
+    print(f"Downloading {fmt_num}..")
 
 
 def _skip_video(
