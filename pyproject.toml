@@ -16,7 +16,6 @@ include = [{ path = "templates/*" }]
 [tool.poetry.dependencies]
 python = "^3.9"
 Flask = "^2.2.2"
-requests = "^2.28.1"
 colorama = "^0.4.6"
 yt-dlp = "^2023.1.2"
 

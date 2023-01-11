@@ -293,7 +293,7 @@ class Element:
         return encoded
 
 
-class Image: 
+class Image:
     parent: Video | CommentAuthor
     id: str
     path: Path
@@ -394,11 +394,12 @@ class CommentAuthor:
         author.channel = channel
         author.id = id
         author.name = Element._from_dict(element["name"], author)
+        author.icon = Element._from_dict(element["icon"], author)
         return author
 
     def _to_dict_head(self) -> dict:
         """Encodes comment author to the body part of a head + body, e.g. `"head": { body }`"""
-        return {"name": self.name._to_dict()}
+        return {"name": self.name._to_dict(), "icon": self.icon._to_dict()}
 
 
 class Comments:
