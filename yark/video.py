@@ -522,7 +522,7 @@ def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
     return None, id
 
 
-class Comment:  # TODO: figure out if a comment has been deleted
+class Comment:
     channel: Channel
     parent: Optional[Comment]
     id: str
