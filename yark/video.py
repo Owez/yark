@@ -9,6 +9,9 @@ import hashlib
 from .errors import NoteNotFoundException
 from .utils import _truncate_text
 from typing import TYPE_CHECKING, Any, Optional
+import multiprocessing
+from functools import partial
+from .config import Config
 
 if TYPE_CHECKING:
     from .channel import Channel
@@ -36,7 +39,7 @@ class Video:
     comments: Comments
 
     @staticmethod
-    def new(entry: dict[str, Any], channel: Channel) -> Video:
+    def new(config: Config, entry: dict[str, Any], channel: Channel) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
@@ -59,7 +62,7 @@ class Video:
         video.notes = []
 
         # Add comments if they're there
-        if entry["comments"] is not None:
+        if config.comments and entry["comments"] is not None:
             video.comments.update(entry["comments"])
 
         # Runtime-only
@@ -73,7 +76,7 @@ class Video:
         """Returns a phantom video for use in places where videos are required but we don't have a video"""
         return Video()
 
-    def update(self, entry: dict):
+    def update(self, config: Config, entry: dict):
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update("title", entry["title"])
@@ -86,7 +89,7 @@ class Video:
             "thumbnail", Image.new(self, entry["thumbnail"], IMAGE_THUMBNAIL)
         )
         self.deleted.update("undeleted", False)
-        if entry["comments"] is not None:
+        if config.comments and entry["comments"] is not None:
             self.comments.update(entry["comments"])
 
         # Runtime-only
@@ -431,56 +434,23 @@ class Comments:
     def update(self, comments: list[dict]):
         """Updates comments according to metadata"""
         # All comments which have been found so we can see the difference to find deleted comments
-        known = []
+        known: list[str] = []
 
         # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
         adoption_queue: list[tuple[str, Comment]] = []
 
-        # Go through comments found
-        for entry in comments:
-            # Decode the identifier and possible parent; can be used to check parent
-            parent_id, id = _decode_comment_id(entry["id"])
+        # Go through comments found using processing pool for images
+        p = multiprocessing.Pool(16)
+        p.map(
+            partial(
+                self._update_comment,
+                known=known,
+                adoption_queue=adoption_queue,
+            ),
+            comments,
+        )
 
-            # Add to known comments to find difference later
-            known.append(id)
-
-            # Try to update comment if it's a child
-            if (
-                parent_id is not None
-                and parent_id in self.inner
-                and id in self.inner[parent_id].children.inner
-            ):
-                comment = self.inner[parent_id].children.inner[id]
-                comment.update(entry)
-
-            # Try to update comment if it's a parent
-            elif id in self.inner:
-                comment = self.inner[id]
-                comment.update(entry)
-
-            # Create a new comment
-            else:
-                # Encode into a full comment with no parent no matter what
-                created = datetime.fromtimestamp(entry["timestamp"])
-                comment = Comment.new(
-                    self.channel,
-                    None,
-                    id,
-                    entry["author_id"],
-                    entry["author"],
-                    entry["author_thumbnail"],
-                    entry["text"],
-                    entry["is_favorited"],
-                    created,
-                )
-
-                # Add comment to our comments
-                if parent_id is None:
-                    self.inner[id] = comment
-
-                # Add to adoption queue if the comment is a child
-                else:
-                    adoption_queue.append((parent_id, comment))
+        print(len(known))
 
         # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
@@ -491,6 +461,57 @@ class Comments:
             if id not in known:
                 comment = self.inner[id]
                 comment.deleted.update(None, True)
+
+    def _update_comment(
+        self,
+        entry: dict,
+        known: list[str],
+        adoption_queue: list[tuple[str, Comment]],
+    ):
+        """Runs through the complete update procedures for one comment"""
+        # Decode the identifier and possible parent; can be used to check parent
+        parent_id, id = _decode_comment_id(entry["id"])
+
+        # Add to known comments to find difference later
+        known.append(id)
+
+        # Try to update comment if it's a child
+        if (
+            parent_id is not None
+            and parent_id in self.inner
+            and id in self.inner[parent_id].children.inner
+        ):
+            comment = self.inner[parent_id].children.inner[id]
+            comment.update(entry)
+
+        # Try to update comment if it's a parent
+        elif id in self.inner:
+            comment = self.inner[id]
+            comment.update(entry)
+
+        # Create a new comment
+        else:
+            # Encode into a full comment with no parent no matter what
+            created = datetime.fromtimestamp(entry["timestamp"])
+            comment = Comment.new(
+                self.channel,
+                None,
+                id,
+                entry["author_id"],
+                entry["author"],
+                entry["author_thumbnail"],
+                entry["text"],
+                entry["is_favorited"],
+                created,
+            )
+
+            # Add comment to our comments
+            if parent_id is None:
+                self.inner[id] = comment
+
+            # Add to adoption queue if the comment is a child
+            else:
+                adoption_queue.append((parent_id, comment))
 
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 from datetime import datetime
 import json
-import os
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
@@ -12,6 +11,8 @@ import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element, CommentAuthor
+from typing import Optional
+from .config import Config
 
 ARCHIVE_COMPAT = 4
 """
@@ -29,50 +30,6 @@ breaking change to the format. The only downside to this is that the migrator
 gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
-
-from typing import Optional
-
-
-class DownloadConfig:
-    max_videos: Optional[int]
-    max_livestreams: Optional[int]
-    max_shorts: Optional[int]
-    skip_download: bool
-    skip_metadata: bool
-    format: Optional[str]
-
-    def __init__(self) -> None:
-        self.max_videos = None
-        self.max_livestreams = None
-        self.max_shorts = None
-        self.skip_download = False
-        self.skip_metadata = False
-        self.format = None
-
-    def submit(self):
-        """Submits configuration, this has the effect of normalising maximums to 0 properly"""
-        # Adjust remaining maximums if one is given
-        no_maximums = (
-            self.max_videos is None
-            and self.max_livestreams is None
-            and self.max_shorts is None
-        )
-        if not no_maximums:
-            if self.max_videos is None:
-                self.max_videos = 0
-            if self.max_livestreams is None:
-                self.max_livestreams = 0
-            if self.max_shorts is None:
-                self.max_shorts = 0
-
-        # If all are 0 as its equivalent to skipping download
-        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
-            print(
-                Fore.YELLOW
-                + "Using the skip downloads option is recommended over setting maximums to 0"
-                + Fore.RESET
-            )
-            self.skip_download = True
 
 
 class VideoLogger:
@@ -167,7 +124,7 @@ class Channel:
         # Decode and return
         return Channel._from_dict(encoded, path)
 
-    def metadata(self):
+    def metadata(self, config: Config):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
@@ -177,35 +134,35 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Fetch comments from videos
-            "getcomments": True,
+            "getcomments": config.comments,
         }
 
         # Get response and snip it
-        res = None
-        with YoutubeDL(settings) as ydl:
-            for i in range(3):
-                try:
-                    res = ydl.extract_info(self.url, download=False)
-                    break
-                except Exception as exception:
-                    # Report error
-                    retrying = i != 2
-                    _err_dl("metadata", exception, retrying)
+        # res = None
+        # with YoutubeDL(settings) as ydl:
+        #     for i in range(3):
+        #         try:
+        #             res = ydl.extract_info(self.url, download=False)
+        #             break
+        #         except Exception as exception:
+        #             # Report error
+        #             retrying = i != 2
+        #             _err_dl("metadata", exception, retrying)
 
-                    # Print retrying message
-                    if retrying:
-                        print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )
+        #             # Print retrying message
+        #             if retrying:
+        #                 print(
+        #                     Style.DIM
+        #                     + f"  • Retrying metadata download.."
+        #                     + Style.RESET_ALL
+        #                 )
 
         # Uncomment for saving big dumps for testing
         # with open("demo/dump.json", "w+") as file:
         #     json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
+        res = json.load(open("demo/dump.json", "r"))
 
         # Make buckets to normalize different types of videos
         videos = []
@@ -239,16 +196,16 @@ class Channel:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
-        self._parse_metadata("video", videos, self.videos)
-        self._parse_metadata("livestream", livestreams, self.livestreams)
-        self._parse_metadata("shorts", shorts, self.shorts)
+        self._parse_metadata("video", config, videos, self.videos)
+        self._parse_metadata("livestream", config, livestreams, self.livestreams)
+        self._parse_metadata("shorts", config, shorts, self.shorts)
 
         # Go through each and report deleted
         self._report_deleted(self.videos)
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, config: DownloadConfig):
+    def download(self, config: Config):
         """Downloads all videos which haven't already been downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
@@ -284,7 +241,7 @@ class Channel:
                 # Report error
                 _err_dl("videos", exception, i != 4)
 
-    def _dl_settings(self, config: DownloadConfig) -> dict:
+    def _dl_settings(self, config: Config) -> dict:
         """Generates customized yt-dlp settings from `config` passed in"""
         # Always present
         settings = {
@@ -372,7 +329,7 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, config: DownloadConfig) -> list[Video]:
+    def _curate(self, config: Config) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
         def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
@@ -422,32 +379,39 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind: str, input: list[dict], bucket: list[Video]):
-        """Parses metadata for a category of video into it's bucket"""
+    def _parse_metadata(
+        self, kind: str, config: Config, entries: list[dict], videos: list[Video]
+    ):
+        """Parses metadata for a category of video into it's `videos` bucket"""
+        # Parse each video
         print(f"Parsing {kind} metadata..")
-        for entry in input:
-            # Skip video if there's no formats available; happens with upcoming videos/livestreams
-            if "formats" not in entry or len(entry["formats"]) == 0:
-                continue
-
-            # Updated intra-loop marker
-            updated = False
-
-            # Update video if it exists
-            for video in bucket:
-                if video.id == entry["id"]:
-                    video.update(entry)
-                    updated = True
-                    break
-
-            # Add new video if not
-            if not updated:
-                video = Video.new(entry, self)
-                bucket.append(video)
-                self.reporter.added.append(video)
+        for entry in entries:
+            self._parse_metadata_video(config, entry, videos)
 
         # Sort videos by newest
-        bucket.sort(reverse=True)
+        videos.sort(reverse=True)
+
+    def _parse_metadata_video(self, config: Config, entry: dict, videos: list[Video]):
+        """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
+        # Skip video if there's no formats available; happens with upcoming videos/livestreams
+        if "formats" not in entry or len(entry["formats"]) == 0:
+            return
+
+        # Updated intra-loop marker
+        updated = False
+
+        # Update video if it exists
+        for video in videos:
+            if video.id == entry["id"]:
+                video.update(config, entry)
+                updated = True
+                break
+
+        # Add new video if not
+        if not updated:
+            video = Video.new(config, entry, self)
+            videos.append(video)
+            self.reporter.added.append(video)
 
     def _report_deleted(self, videos: list):
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""

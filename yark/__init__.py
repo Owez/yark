@@ -8,7 +8,7 @@ Commonly-used
 -------------
 
 - `Channel`
-    - `DownloadConfig`
+    - `Config`
 - `Video`
     - `Element`
     - `Note`
@@ -24,7 +24,8 @@ Commonly-used
 Beware that using Yark as a library is currently experimental and breaking changes here are not tracked!
 """
 
-from .channel import Channel, DownloadConfig
+from .channel import Channel
+from .config import Config
 from .video import (
     Video,
     Element,
