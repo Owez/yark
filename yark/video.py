@@ -58,6 +58,10 @@ class Video:
         video.comments = Comments(channel)
         video.notes = []
 
+        # Add comments if they're there
+        if entry["comments"] is not None:
+            video.comments.update(entry["comments"])
+
         # Runtime-only
         video.known_not_deleted = True
 
