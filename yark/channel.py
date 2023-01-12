@@ -39,6 +39,7 @@ class DownloadConfig:
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
+    proxy: Optional[str]
 
     def __init__(self) -> None:
         self.max_videos = None
@@ -47,6 +48,7 @@ class DownloadConfig:
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
+        self.proxy = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
@@ -170,7 +172,7 @@ class Channel:
         # Decode and return
         return Channel._from_dict(encoded, path)
 
-    def metadata(self):
+    def metadata(self, config: DownloadConfig):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
@@ -180,6 +182,9 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
         }
+
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
 
         # Get response and snip it
         res = None
@@ -254,6 +259,8 @@ class Channel:
         }
         if config.format is not None:
             settings["format"] = config.format
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
 
         # Attach to the downloader
         with YoutubeDL(settings) as ydl:

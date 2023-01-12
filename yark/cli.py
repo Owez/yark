@@ -65,7 +65,7 @@ def _cli():
         if len(args) == 2 and args[1] == "--help":
             # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n  --proxy=[str]        Downloads using yt-dlp proxy server format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -119,6 +119,10 @@ def _cli():
                 elif config_arg.startswith("--format="):
                     config.format = parse_value(config_arg)
 
+                # yt-dlp proxy
+                elif config_arg.startswith("--proxy="):
+                    config.proxy = parse_value(config_arg)
+
                 # Unknown argument
                 else:
                     print(HELP, file=sys.stderr)
@@ -136,7 +140,7 @@ def _cli():
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
-                channel.metadata()
+                channel.metadata(config)
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
             else:
