@@ -137,6 +137,10 @@ class Archive:
             "getcomments": config.comments,
         }
 
+        # Custom yt-dlp proxy
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
+
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
             for i in range(3):
@@ -255,6 +259,10 @@ class Archive:
         # Custom yt-dlp format
         if config.format is not None:
             settings["format"] = config.format
+
+       # Custom yt-dlp proxy
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
 
         # Return
         return settings
