@@ -8,11 +8,12 @@ import threading
 import webbrowser
 from importlib.metadata import version
 from .errors import _err_msg, ArchiveNotFoundException
-from .channel import Channel, DownloadConfig
+from .archive import Archive
+from .config import Config
 from .viewer import viewer
 import requests
 
-HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
+HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
 
 
@@ -53,11 +54,11 @@ def _cli():
 
         # Bad arguments
         if len(args) < 3:
-            _err_msg("Please provide an archive name and the channel url")
+            _err_msg("Please provide an archive name and the target's url")
             sys.exit(1)
 
-        # Create channel
-        Channel.new(Path(args[1]), args[2])
+        # Create archive
+        Archive.new(Path(args[1]), args[2])
 
     # Refresh
     elif args[0] == "refresh":
@@ -65,7 +66,7 @@ def _cli():
         if len(args) == 2 and args[1] == "--help":
             # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --comments            Archives all comments (slow)\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\nAdvanced Arguments:\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --comments\n  $ yark refresh demo --videos=50 --livestreams=2\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -75,7 +76,7 @@ def _cli():
             sys.exit(1)
 
         # Figure out configuration
-        config = DownloadConfig()
+        config = Config()
         if len(args) > 2:
 
             def parse_value(config_arg: str) -> str:
@@ -95,8 +96,12 @@ def _cli():
 
             # Go through each configuration argument
             for config_arg in args[2:]:
+                # Enable comment fetching
+                if config_arg.startswith("--comments"):
+                    config.comments = True
+
                 # Video maximum
-                if config_arg.startswith("--videos="):
+                elif config_arg.startswith("--videos="):
                     config.max_videos = parse_maximum_int(config_arg)
 
                 # Livestream maximum
@@ -130,19 +135,19 @@ def _cli():
         # Submit config settings
         config.submit()
 
-        # Refresh channel using config context
+        # Refresh archive using config context
         try:
-            channel = Channel.load(args[1])
+            archive = Archive.load(args[1])
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
-                channel.metadata()
+                archive.metadata(config)
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
             else:
-                channel.download(config)
-            channel.commit()
-            channel.reporter.print()
+                archive.download(config)
+            archive.commit()
+            archive.reporter.print()
         except ArchiveNotFoundException:
             _err_archive_not_found()
 
@@ -158,21 +163,21 @@ def _cli():
         if len(args) == 2 and args[1] == "--help":
             _err_no_help()
 
-        # Start on channel name
+        # Start on archive name
         if len(args) > 1:
             # Get name
-            channel = args[1]
+            archive = args[1]
 
             # Jank archive check
-            if not Path(channel).exists():
+            if not Path(archive).exists():
                 _err_archive_not_found()
 
             # Launch and start browser
-            print(f"Starting viewer for {channel}..")
-            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}/videos")
+            print(f"Starting viewer for {archive}..")
+            webbrowser.open(f"http://127.0.0.1:7667/archive/{archive}/videos")
             launch()
 
-        # Start on channel finder
+        # Start on archive finder
         else:
             print("Starting viewer..")
             webbrowser.open(f"http://127.0.0.1:7667/")
@@ -185,8 +190,8 @@ def _cli():
             _err_msg("Please provide the archive name")
             sys.exit(1)
 
-        channel = Channel.load(Path(args[1]))
-        channel.reporter.interesting_changes()
+        archive = Archive.load(Path(args[1]))
+        archive.reporter.interesting_changes()
 
     # Unknown
     else:

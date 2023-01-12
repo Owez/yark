@@ -68,9 +68,9 @@
 
 {% block content %}
 <h1 class="hero">{{ name }}'s videos</h1>
-{% if channel.videos %}
+{% if archive.videos %}
 <div id="content">
-    {% for video in channel.videos %}
+    {% for video in archive.videos %}
     <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
@@ -126,9 +126,9 @@
     } else {
         const existingVisited = JSON.parse(visitedCookie)
         let cleaned = []
-        existingVisited.forEach(channelId => {
-            if (channelId != id) {
-                cleaned.push(channelId)
+        existingVisited.forEach(archiveId => {
+            if (archiveId != id) {
+                cleaned.push(archiveId)
             }
         });
         cleaned.push(id)

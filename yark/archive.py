@@ -1,9 +1,8 @@
-"""Channel and overall archive management with downloader"""
+"""Archive management with metadata/video downloading core"""
 
 from __future__ import annotations
 from datetime import datetime
 import json
-import os
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
@@ -12,15 +11,17 @@ import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element, CommentAuthor
+from typing import Optional
+from .config import Config
 
 ARCHIVE_COMPAT = 4
 """
 Version of Yark archives which this script is capable of properly parsing
 
 - Version 1 was the initial format and had all the basic information you can see in the viewer now
-- Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a simple url
+- Version 2 introduced livestreams and shorts into the mix, as well as making the channel id into a general url
 - Version 3 was a minor change to introduce a deleted tag so we have full reporting capability
-- Version 4 introduced comments # TODO: more for 1.3
+- Version 4 introduced comments and moved `thumbnails/` to `images/` # TODO: more for 1.3
 
 Some of these breaking versions are large changes and some are relatively small.
 We don't check if a value exists or not in the archive format out of precedent
@@ -29,50 +30,6 @@ breaking change to the format. The only downside to this is that the migrator
 gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
-
-from typing import Optional
-
-
-class DownloadConfig:
-    max_videos: Optional[int]
-    max_livestreams: Optional[int]
-    max_shorts: Optional[int]
-    skip_download: bool
-    skip_metadata: bool
-    format: Optional[str]
-
-    def __init__(self) -> None:
-        self.max_videos = None
-        self.max_livestreams = None
-        self.max_shorts = None
-        self.skip_download = False
-        self.skip_metadata = False
-        self.format = None
-
-    def submit(self):
-        """Submits configuration, this has the effect of normalising maximums to 0 properly"""
-        # Adjust remaining maximums if one is given
-        no_maximums = (
-            self.max_videos is None
-            and self.max_livestreams is None
-            and self.max_shorts is None
-        )
-        if not no_maximums:
-            if self.max_videos is None:
-                self.max_videos = 0
-            if self.max_livestreams is None:
-                self.max_livestreams = 0
-            if self.max_shorts is None:
-                self.max_shorts = 0
-
-        # If all are 0 as its equivalent to skipping download
-        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
-            print(
-                Fore.YELLOW
-                + "Using the skip downloads option is recommended over setting maximums to 0"
-                + Fore.RESET
-            )
-            self.skip_download = True
 
 
 class VideoLogger:
@@ -115,7 +72,7 @@ class VideoLogger:
         pass
 
 
-class Channel:
+class Archive:
     path: Path
     version: int
     url: str
@@ -126,31 +83,31 @@ class Channel:
     reporter: Reporter
 
     @staticmethod
-    def new(path: Path, url: str) -> Channel:
-        """Creates a new channel"""
+    def new(path: Path, url: str) -> Archive:
+        """Creates a new archive"""
         # Details
-        print("Creating new channel..")
-        channel = Channel()
-        channel.path = Path(path)
-        channel.version = ARCHIVE_COMPAT
-        channel.url = url
-        channel.videos = []
-        channel.livestreams = []
-        channel.shorts = []
-        channel.comment_authors = {}
-        channel.reporter = Reporter(channel)
+        print("Creating new archive..")
+        archive = Archive()
+        archive.path = Path(path)
+        archive.version = ARCHIVE_COMPAT
+        archive.url = url
+        archive.videos = []
+        archive.livestreams = []
+        archive.shorts = []
+        archive.comment_authors = {}
+        archive.reporter = Reporter(archive)
 
         # Commit and return
-        channel.commit()
-        return channel
+        archive.commit()
+        return archive
 
     @staticmethod
-    def load(path: Path) -> Channel:
-        """Loads existing channel from path"""
+    def load(path: Path) -> Archive:
+        """Loads existing archive from path"""
         # Check existence
         path = Path(path)
-        channel_name = path.name
-        print(f"Loading {channel_name} channel..")
+        archive_name = path.name
+        print(f"Loading {archive_name} archive..")
         if not path.exists():
             raise ArchiveNotFoundException("Archive doesn't exist")
 
@@ -161,14 +118,14 @@ class Channel:
         archive_version = encoded["version"]
         if archive_version != ARCHIVE_COMPAT:
             encoded = _migrate_archive(
-                archive_version, ARCHIVE_COMPAT, encoded, path, channel_name
+                archive_version, ARCHIVE_COMPAT, encoded, path, archive_name
             )
 
         # Decode and return
-        return Channel._from_dict(encoded, path)
+        return Archive._from_dict(encoded, path)
 
-    def metadata(self):
-        """Queries YouTube for all channel metadata to refresh known videos"""
+    def metadata(self, config: Config):
+        """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
         settings = {
@@ -177,11 +134,10 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Fetch comments from videos
-            "getcomments": True,
+            "getcomments": config.comments,
         }
 
         # Get response and snip it
-        res = None
         with YoutubeDL(settings) as ydl:
             for i in range(3):
                 try:
@@ -201,48 +157,92 @@ class Channel:
                         )
 
         # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
+        with open("demo/dump.json", "w+") as file:
+            json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
         # res = json.load(open("demo/dump.json", "r"))
 
-        # Normalize into types of videos
+        # Make buckets to normalize different types of videos
         videos = []
         livestreams = []
         shorts = []
+
+        # Videos only (basic channel or playlist)
         if "entries" not in res["entries"][0]:
-            # Videos only
             videos = res["entries"]
+
+        # Videos and at least one other (livestream/shorts)
         else:
-            # Videos and at least one other (livestream/shorts)
             for entry in res["entries"]:
+                # Find the kind of category this is; youtube formats these as 3 playlists
                 kind = entry["title"].split(" - ")[-1].lower()
+
+                # Plain videos
                 if kind == "videos":
                     videos = entry["entries"]
+
+                # Livestreams
                 elif kind == "live":
                     livestreams = entry["entries"]
+
+                # Shorts
                 elif kind == "shorts":
                     shorts = entry["entries"]
+
+                # Unknown 4th kind; youtube might've updated
                 else:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
-        self._parse_metadata("video", videos, self.videos)
-        self._parse_metadata("livestream", livestreams, self.livestreams)
-        self._parse_metadata("shorts", shorts, self.shorts)
+        self._parse_metadata("video", config, videos, self.videos)
+        self._parse_metadata("livestream", config, livestreams, self.livestreams)
+        self._parse_metadata("shorts", config, shorts, self.shorts)
 
         # Go through each and report deleted
         self._report_deleted(self.videos)
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, config: DownloadConfig):
+    def download(self, config: Config):
         """Downloads all videos which haven't already been downloaded"""
-        # Clean out old part files
+        # Prepare; clean out old part files and get settings
         self._clean_parts()
+        settings = self._dl_settings(config)
 
-        # Create settings for the downloader
+        # Retry downloading 5 times in total for all videos
+        for i in range(5):
+            # Try to curate a list and download videos on it
+            try:
+                # Curate list of non-downloaded videos
+                not_downloaded = self._curate(config)
+
+                # Stop if there's nothing to download
+                if len(not_downloaded) == 0:
+                    break
+
+                # Print curated if this is the first time
+                if i == 0:
+                    _log_download_count(len(not_downloaded))
+
+                # Launch core to download all curated videos
+                self._dl_launch(settings, not_downloaded)
+
+                # Stop if we've got them all
+                break
+
+            # Report error and retry/stop
+            except Exception as exception:
+                # Get around carriage return
+                if i == 0:
+                    print()
+
+                # Report error
+                _err_dl("videos", exception, i != 4)
+
+    def _dl_settings(self, config: Config) -> dict:
+        """Generates customized yt-dlp settings from `config` passed in"""
+        # Always present
         settings = {
             # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
@@ -251,88 +251,75 @@ class Channel:
             # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
         }
+
+        # Custom yt-dlp format
         if config.format is not None:
             settings["format"] = config.format
 
-        # Attach to the downloader
-        with YoutubeDL(settings) as ydl:
-            # Retry downloading 5 times in total for all videos
-            for i in range(5):
-                # Try to curate a list and download videos on it
-                try:
-                    # Curate list of non-downloaded videos
-                    not_downloaded = self._curate(config)
+        # Return
+        return settings
 
-                    # Stop if there's nothing to download
-                    if len(not_downloaded) == 0:
-                        break
+    def _dl_launch(self, settings: dict, not_downloaded: list[Video]):
+        """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
+        # Continuously try to download after private/deleted videos are found
+        # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
+        while True:
+            # Download from curated list then exit the optimistic loop
+            try:
+                urls = [video.url() for video in not_downloaded]
+                with YoutubeDL(settings) as ydl:
+                    ydl.download(urls)
+                break
 
-                    # Print curated if this is the first time
-                    if i == 0:
-                        fmt_num = (
-                            "a new video"
-                            if len(not_downloaded) == 1
-                            else f"{len(not_downloaded)} new videos"
-                        )
-                        print(f"Downloading {fmt_num}..")
+            # Special handling for private/deleted videos which are archived, if not we raise again
+            except DownloadError as exception:
+                new_not_downloaded = self._dl_exception_handle(
+                    not_downloaded, exception
+                )
+                if new_not_downloaded is not None:
+                    not_downloaded = new_not_downloaded
 
-                    # Continuously try to download after private/deleted videos are found
-                    # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
-                    while True:
-                        # Download from curated list then exit the optimistic loop
-                        try:
-                            urls = [video.url() for video in not_downloaded]
-                            ydl.download(urls)
-                            break
+    def _dl_exception_handle(
+        self, not_downloaded: list[Video], exception: DownloadError
+    ) -> Optional[list[Video]]:
+        """Handle for failed downloads if there's a special private/deleted video"""
+        # Set new list for not downloaded to return later
+        new_not_downloaded = None
 
-                        # Special handling for private/deleted videos which are archived, if not we raise again
-                        except DownloadError as exception:
-                            # Video is privated or deleted
-                            if (
-                                "Private video" in exception.msg
-                                or "This video has been removed by the uploader"
-                                in exception.msg
-                            ):
-                                # Skip video from curated and get it as a return
-                                not_downloaded, video = _skip_video(
-                                    not_downloaded, "deleted"
-                                )
+        # Video is privated or deleted
+        if (
+            "Private video" in exception.msg
+            or "This video has been removed by the uploader" in exception.msg
+        ):
+            # Skip video from curated and get it as a return
+            new_not_downloaded, video = _skip_video(not_downloaded, "deleted")
 
-                                # If this is a new occurrence then set it & report
-                                # This will only happen if its deleted after getting metadata, like in a dry run
-                                if video.deleted.current() == False:
-                                    self.reporter.deleted.append(video)
-                                    video.deleted.update(None, True)
+            # If this is a new occurrence then set it & report
+            # This will only happen if its deleted after getting metadata, like in a dry run
+            if video.deleted.current() == False:
+                self.reporter.deleted.append(video)
+                video.deleted.update(None, True)
 
-                            # User hasn't got ffmpeg installed and youtube hasn't got format 22
-                            # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
-                            # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
-                            elif " bytes, expected " in exception.msg:
-                                # Skip video from curated
-                                not_downloaded, _ = _skip_video(
-                                    not_downloaded,
-                                    "no format found; please download ffmpeg!",
-                                    True,
-                                )
+        # User hasn't got ffmpeg installed and youtube hasn't got format 22
+        # NOTE: see #55 <https://github.com/Owez/yark/issues/55> to learn more
+        # NOTE: sadly yt-dlp doesn't let us access yt_dlp.utils.ContentTooShortError so we check msg
+        elif " bytes, expected " in exception.msg:
+            # Skip video from curated
+            new_not_downloaded, _ = _skip_video(
+                not_downloaded,
+                "no format found; please download ffmpeg!",
+                True,
+            )
 
-                            # Nevermind, normal exception
-                            else:
-                                raise exception
+        # Nevermind, normal exception
+        else:
+            raise exception
 
-                    # Stop if we've got them all
-                    break
-
-                # Report error and retry/stop
-                except Exception as exception:
-                    # Get around carriage return
-                    if i == 0:
-                        print()
-
-                    # Report error
-                    _err_dl("videos", exception, i != 4)
+        # Return
+        return new_not_downloaded
 
     def search(self, id: str):
-        """Searches channel for a video with the corresponding `id` and returns"""
+        """Searches archive for a video with the corresponding `id` and returns"""
         # Search
         for video in self.videos:
             if video.id == id:
@@ -341,7 +328,7 @@ class Channel:
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
 
-    def _curate(self, config: DownloadConfig) -> list[Video]:
+    def _curate(self, config: Config) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
         def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
@@ -391,32 +378,39 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind: str, input: list[dict], bucket: list[Video]):
-        """Parses metadata for a category of video into it's bucket"""
+    def _parse_metadata(
+        self, kind: str, config: Config, entries: list[dict], videos: list[Video]
+    ):
+        """Parses metadata for a category of video into it's `videos` bucket"""
+        # Parse each video
         print(f"Parsing {kind} metadata..")
-        for entry in input:
-            # Skip video if there's no formats available; happens with upcoming videos/livestreams
-            if "formats" not in entry or len(entry["formats"]) == 0:
-                continue
-
-            # Updated intra-loop marker
-            updated = False
-
-            # Update video if it exists
-            for video in bucket:
-                if video.id == entry["id"]:
-                    video.update(entry)
-                    updated = True
-                    break
-
-            # Add new video if not
-            if not updated:
-                video = Video.new(entry, self)
-                bucket.append(video)
-                self.reporter.added.append(video)
+        for entry in entries:
+            self._parse_metadata_video(config, entry, videos)
 
         # Sort videos by newest
-        bucket.sort(reverse=True)
+        videos.sort(reverse=True)
+
+    def _parse_metadata_video(self, config: Config, entry: dict, videos: list[Video]):
+        """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
+        # Skip video if there's no formats available; happens with upcoming videos/livestreams
+        if "formats" not in entry or len(entry["formats"]) == 0:
+            return
+
+        # Updated intra-loop marker
+        updated = False
+
+        # Update video if it exists
+        for video in videos:
+            if video.id == entry["id"]:
+                video.update(config, entry)
+                updated = True
+                break
+
+        # Add new video if not
+        if not updated:
+            video = Video.new(config, entry, self)
+            videos.append(video)
+            self.reporter.added.append(video)
 
     def _report_deleted(self, videos: list):
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
@@ -461,39 +455,39 @@ class Channel:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path) -> Channel:
+    def _from_dict(encoded: dict, path: Path) -> Archive:
         """Decodes archive which is being loaded back up"""
-        # Initiate channel
-        channel = Channel()
+        # Initiate archive
+        archive = Archive()
 
         # Decode head & body style comment authors; needed above video decoding for comments
-        channel.comment_authors = {}
+        archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
-            channel.comment_authors[id] = CommentAuthor._from_dict_head(
-                channel, id, encoded["comment_authors"][id]
+            archive.comment_authors[id] = CommentAuthor._from_dict_head(
+                archive, id, encoded["comment_authors"][id]
             )
 
         # Basics
-        channel.path = path
-        channel.version = encoded["version"]
-        channel.url = encoded["url"]
-        channel.reporter = Reporter(channel)
-        channel.videos = [
-            Video._from_dict(video, channel) for video in encoded["videos"]
+        archive.path = path
+        archive.version = encoded["version"]
+        archive.url = encoded["url"]
+        archive.reporter = Reporter(archive)
+        archive.videos = [
+            Video._from_dict(video, archive) for video in encoded["videos"]
         ]
-        channel.livestreams = [
-            Video._from_dict(video, channel) for video in encoded["livestreams"]
+        archive.livestreams = [
+            Video._from_dict(video, archive) for video in encoded["livestreams"]
         ]
-        channel.shorts = [
-            Video._from_dict(video, channel) for video in encoded["shorts"]
+        archive.shorts = [
+            Video._from_dict(video, archive) for video in encoded["shorts"]
         ]
-        channel.comment_authors = {}
+        archive.comment_authors = {}
 
         # Return
-        return channel
+        return archive
 
     def _to_dict(self) -> dict:
-        """Converts channel data to a dictionary to commit"""
+        """Converts archive data to a dictionary to commit"""
         # Encode comment authors
         comment_authors = {}
         for id in self.comment_authors.keys():
@@ -514,6 +508,12 @@ class Channel:
 
     def __repr__(self) -> str:
         return self.path.name
+
+
+def _log_download_count(count: int):
+    """Tells user that `count` number of videos have been downloaded"""
+    fmt_num = "a new video" if count == 1 else f"{count} new videos"
+    print(f"Downloading {fmt_num}..")
 
 
 def _skip_video(
@@ -553,7 +553,7 @@ def _migrate_archive(
     expected_version: int,
     encoded: dict,
     path: Path,
-    channel_name: str,
+    archive_name: str,
 ) -> dict:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
@@ -565,7 +565,7 @@ def _migrate_archive(
 
         # From version 1 to version 2
         elif cur == 1:
-            # Channel id to url
+            # Target id to url
             encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
             del encoded["id"]
             print(
@@ -610,7 +610,7 @@ def _migrate_archive(
                 thumbnails.rename(path / "images")
             except:
                 _err_msg(
-                    f"Couldn't rename {channel_name}/thumbnails directory to {channel_name}/images, please manually rename to continue!"
+                    f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
                 )
                 sys.exit(1)
 
@@ -627,7 +627,7 @@ def _migrate_archive(
     # Inform user of the backup process
     print(
         Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
+        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
         + Fore.RESET
     )
 
@@ -668,9 +668,9 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
         elif ERRORS[3] in exception.msg:
             msg = "Video deleted whilst downloading"
 
-        # Channel not found, might need to retry with alternative route
+        # Target not found, might need to retry with alternative route
         elif ERRORS[4] in exception.msg:
-            msg = "Couldn't find channel by it's id"
+            msg = "Couldn't find target by it's id"
 
         # Random timeout; not sure if its user-end or youtube-end
         elif ERRORS[5] in exception.msg:

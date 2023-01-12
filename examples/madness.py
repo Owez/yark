@@ -1,28 +1,30 @@
-from yark import Channel, DownloadConfig
+from yark import Archive, Config
 from pathlib import Path
 
-# Create a new channel
-channel = Channel.new(
+# Create a new archive
+archive = Archive.new(
     Path("demo"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
 )
 
-# Refresh only metadata and commit to file
-channel.metadata()
-channel.commit()
-
-# Load the channel back up from file for the fun of it
-channel = Channel.load(Path("demo"))
-
-# Print all the video id's of the channel
-print(", ".join([video.id for video in channel.videos]))
-
-# Get a cool video I made and print it's description
-video = channel.search("annp92OPZgQ")
-print(video.description.current())
-
-# Download the 5 most recent videos and 10 most recent shorts
-config = DownloadConfig()
+# Create a config for metadata/video downloads
+config = Config()
 config.max_videos = 5
 config.max_shorts = 10
 config.submit()
-channel.download(config)
+
+# Refresh only metadata and commit to file
+archive.metadata(config)
+archive.commit()
+
+# Load the archive back up from file for the fun of it
+archive = Archive.load(Path("demo"))
+
+# Print all the video id's of the archive
+print(", ".join([video.id for video in archive.videos]))
+
+# Get a cool video I made and print it's description
+video = archive.search("annp92OPZgQ")
+print(video.description.current())
+
+# Download the 5 most recent videos and 10 most recent shorts
+archive.download(config)

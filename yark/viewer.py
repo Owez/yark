@@ -18,7 +18,7 @@ from .errors import (
     VideoNotFoundException,
     TimestampException,
 )
-from .channel import Channel
+from .archive import Archive
 from .video import Note
 
 routes = Blueprint("routes", __name__, template_folder="templates")
@@ -26,11 +26,11 @@ routes = Blueprint("routes", __name__, template_folder="templates")
 
 @routes.route("/", methods=["POST", "GET"])
 def index():
-    """Open channel for non-selected channel"""
-    # Redirect to requested channel
+    """Open archive for non-selected archive"""
+    # Redirect to requested archive
     if request.method == "POST":
-        name = request.form["channel"]
-        return redirect(url_for("routes.channel", name=name, kind="videos"))
+        name = request.form["archive"]
+        return redirect(url_for("routes.archive", name=name, kind="videos"))
 
     # Show page
     elif request.method == "GET":
@@ -41,44 +41,44 @@ def index():
         return render_template("index.html", error=error, visited=visited)
 
 
-@routes.route("/channel/<name>")
-def channel_empty(name):
-    """Empty channel url, just redirect to videos by default"""
-    return redirect(url_for("routes.channel", name=name, kind="videos"))
+@routes.route("/archive/<name>")
+def archive_empty(name):
+    """Empty archive url, just redirect to videos by default"""
+    return redirect(url_for("routes.archive", name=name, kind="videos"))
 
 
-@routes.route("/channel/<name>/<kind>")
-def channel(name, kind):
-    """Channel information"""
+@routes.route("/archive/<name>/<kind>")
+def archive(name, kind):
+    """Archive information"""
     if kind not in ["videos", "livestreams", "shorts"]:
         return redirect(url_for("routes.index", error="Video kind not recognised"))
 
     try:
-        channel = Channel.load(name)
-        ldir = os.listdir(channel.path / "videos")
+        archive = Archive.load(name)
+        ldir = os.listdir(archive.path / "videos")
         return render_template(
-            "channel.html", title=name, channel=channel, name=name, ldir=ldir
+            "archive.html", title=name, archive=archive, name=name, ldir=ldir
         )
     except ArchiveNotFoundException:
         return redirect(
-            url_for("routes.index", error="Couldn't open channel's archive")
+            url_for("routes.index", error="Couldn't open archive's archive")
         )
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
+@routes.route("/archive/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
 def video(name, kind, id):
     """Detailed video information and viewer"""
     if kind not in ["videos", "livestreams", "shorts"]:
         return redirect(
-            url_for("routes.channel", name=name, error="Video kind not recognised")
+            url_for("routes.archive", name=name, error="Video kind not recognised")
         )
 
     try:
         # Get information
-        channel = Channel.load(name)
-        video = channel.search(id)
+        archive = Archive.load(name)
+        video = archive.search(id)
 
         # Return video webpage
         if request.method == "GET":
@@ -109,7 +109,7 @@ def video(name, kind, id):
 
             # Save new note
             video.notes.append(note)
-            video.channel.commit()
+            video.archive.commit()
 
             # Return
             return note._to_dict(), 200
@@ -132,7 +132,7 @@ def video(name, kind, id):
                 note.title = update["title"]
             if "body" in update:
                 note.body = update["body"]
-            video.channel.commit()
+            video.archive.commit()
 
             # Return
             return "Updated", 200
@@ -150,7 +150,7 @@ def video(name, kind, id):
                 if note.id != delete["id"]:
                     filtered_notes.append(note)
             video.notes = filtered_notes
-            video.channel.commit()
+            video.archive.commit()
 
             # Return
             return "Deleted", 200
@@ -158,7 +158,7 @@ def video(name, kind, id):
     # Archive not found
     except ArchiveNotFoundException:
         return redirect(
-            url_for("routes.index", error="Couldn't open channel's archive")
+            url_for("routes.index", error="Couldn't open archive's archive")
         )
 
     # Video not found

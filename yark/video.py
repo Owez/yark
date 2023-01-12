@@ -1,4 +1,4 @@
-"""Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
+"""Single video inside of an archive, allowing reporting and addition/updates to it's status using timestamps"""
 
 from __future__ import annotations
 from datetime import datetime
@@ -9,9 +9,12 @@ import hashlib
 from .errors import NoteNotFoundException
 from .utils import _truncate_text
 from typing import TYPE_CHECKING, Any, Optional
+import multiprocessing
+from functools import partial
+from .config import Config
 
 if TYPE_CHECKING:
-    from .channel import Channel
+    from .archive import Archive
 
 IMAGE_THUMBNAIL = "webp"
 """Image extension setting for all thumbnails"""
@@ -21,7 +24,7 @@ IMAGE_AUTHOR_ICON = "jpg"
 
 
 class Video:
-    channel: "Channel"
+    archive: "Archive"
     id: str
     uploaded: datetime
     width: int
@@ -36,11 +39,11 @@ class Video:
     comments: Comments
 
     @staticmethod
-    def new(entry: dict[str, Any], channel: Channel) -> Video:
+    def new(config: Config, entry: dict[str, Any], archive: Archive) -> Video:
         """Create new video from metadata entry"""
         # Normal
         video = Video()
-        video.channel = channel
+        video.archive = archive
         video.id = entry["id"]
         video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
@@ -55,11 +58,11 @@ class Video:
             video, Image.new(video, entry["thumbnail"], IMAGE_THUMBNAIL)
         )
         video.deleted = Element.new(video, False)
-        video.comments = Comments(channel)
+        video.comments = Comments(archive)
         video.notes = []
 
         # Add comments if they're there
-        if entry["comments"] is not None:
+        if config.comments and entry["comments"] is not None:
             video.comments.update(entry["comments"])
 
         # Runtime-only
@@ -73,7 +76,7 @@ class Video:
         """Returns a phantom video for use in places where videos are required but we don't have a video"""
         return Video()
 
-    def update(self, entry: dict):
+    def update(self, config: Config, entry: dict):
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update("title", entry["title"])
@@ -86,7 +89,7 @@ class Video:
             "thumbnail", Image.new(self, entry["thumbnail"], IMAGE_THUMBNAIL)
         )
         self.deleted.update("undeleted", False)
-        if entry["comments"] is not None:
+        if config.comments and entry["comments"] is not None:
             self.comments.update(entry["comments"])
 
         # Runtime-only
@@ -94,7 +97,7 @@ class Video:
 
     def filename(self) -> Optional[str]:
         """Returns the filename for the downloaded video, if any"""
-        videos = self.channel.path / "videos"
+        videos = self.archive.path / "videos"
         for file in videos.iterdir():
             if file.stem == self.id and file.suffix != ".part":
                 return file.name
@@ -125,11 +128,11 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, channel: Channel) -> Video:
-        """Converts id and encoded dictionary to video for loading a channel"""
+    def _from_dict(encoded: dict, archive: Archive) -> Video:
+        """Converts id and encoded dictionary to video for loading an archive"""
         # Normal
         video = Video()
-        video.channel = channel
+        video.archive = archive
         video.id = encoded["id"]
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
@@ -142,7 +145,7 @@ class Video:
             encoded["thumbnail"], video, IMAGE_THUMBNAIL
         )
         video.deleted = Element._from_dict(encoded["deleted"], video)
-        video.comments = Comments(channel)
+        video.comments = Comments(archive)
         video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
 
         # Load data
@@ -221,11 +224,11 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 
 class Element:
-    parent: Video | Comment | Channel | CommentAuthor
+    parent: Video | Comment | Archive | CommentAuthor
     inner: dict[datetime, Any]
 
     @staticmethod
-    def new(parent: Video | Comment | Channel | CommentAuthor, data):
+    def new(parent: Video | Comment | Archive | CommentAuthor, data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
         element.parent = parent
@@ -243,14 +246,14 @@ class Element:
 
             # Report if wanted
             if kind is not None:
-                channel = (
-                    self.parent.channel
+                archive = (
+                    self.parent.archive
                     if isinstance(self.parent, Video)
                     or isinstance(self.parent, Comment)
                     or isinstance(self.parent, CommentAuthor)
-                    else self.parent  # NOTE: this can be simplified but Channel would be a circular dep
+                    else self.parent  # NOTE: this can be simplified but Archive would be a circular dep
                 )
-                channel.reporter.add_updated(kind, self)
+                archive.reporter.add_updated(kind, self)
 
         # Return self
         return self
@@ -265,7 +268,7 @@ class Element:
 
     @staticmethod
     def _from_dict(
-        encoded: dict, parent: Video | Comment | Channel | CommentAuthor
+        encoded: dict, parent: Video | Comment | Archive | CommentAuthor
     ) -> Element:
         """Converts encoded dictionary into element"""
         # Basics
@@ -326,7 +329,7 @@ class Image:
 
     def _path(self) -> Path:
         """Returns path to current image"""
-        return self.parent.channel.path / "images" / f"{self.id}.{self.ext}"
+        return self.parent.archive.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
     def load(id: str, parent: Video | CommentAuthor, ext: str):
@@ -359,29 +362,29 @@ def _image_and_hash(url: str) -> tuple[bytes, str]:
 
 
 class CommentAuthor:
-    channel: Channel
+    archive: Archive
     id: str
     name: Element
     icon: Element
 
     @staticmethod
     def new_or_update(
-        channel: Channel, id: str, name: str, icon_url: str
+        archive: Archive, id: str, name: str, icon_url: str
     ) -> CommentAuthor:
         """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
-        # Get from channel
-        author = channel.comment_authors.get(id)
+        # Get from archive
+        author = archive.comment_authors.get(id)
 
         # Create new
         if author is None:
             author = CommentAuthor()
-            author.channel = channel
+            author.archive = archive
             author.id = id
             author.name = Element.new(author, name)
             author.icon = Element.new(
                 author, Image.new(author, icon_url, IMAGE_AUTHOR_ICON)
             )
-            channel.comment_authors[id] = author
+            archive.comment_authors[id] = author
 
         # Update existing
         else:
@@ -392,10 +395,10 @@ class CommentAuthor:
         return author
 
     @staticmethod
-    def _from_dict_head(channel: Channel, id: str, element: dict) -> CommentAuthor:
+    def _from_dict_head(archive: Archive, id: str, element: dict) -> CommentAuthor:
         """Decodes from the dictionary with a head `id`, e.g. `"head": { body }`"""
         author = CommentAuthor()
-        author.channel = channel
+        author.archive = archive
         author.id = id
         author.name = Element._from_dict(element["name"], author)
         author.icon = Element._from_dict(element["icon"], author)
@@ -407,18 +410,18 @@ class CommentAuthor:
 
 
 class Comments:
-    channel: Channel
+    archive: Archive
     inner: dict[str, Comment]
 
-    def __init__(self, channel: Channel) -> None:
-        self.channel = channel
+    def __init__(self, archive: Archive) -> None:
+        self.archive = archive
         self.inner = {}
 
     def load_archive(self, comments: dict[str, dict]):
         """Loads comments from a comment level in a Yark archive"""
         for id in comments.keys():
             self.inner[id] = Comment._from_dict_head(
-                self.channel, None, id, comments[id]
+                self.archive, None, id, comments[id]
             )
 
     def save_archive(self) -> dict[str, dict]:
@@ -431,56 +434,21 @@ class Comments:
     def update(self, comments: list[dict]):
         """Updates comments according to metadata"""
         # All comments which have been found so we can see the difference to find deleted comments
-        known = []
+        known: list[str] = []
 
         # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
         adoption_queue: list[tuple[str, Comment]] = []
 
-        # Go through comments found
-        for entry in comments:
-            # Decode the identifier and possible parent; can be used to check parent
-            parent_id, id = _decode_comment_id(entry["id"])
-
-            # Add to known comments to find difference later
-            known.append(id)
-
-            # Try to update comment if it's a child
-            if (
-                parent_id is not None
-                and parent_id in self.inner
-                and id in self.inner[parent_id].children.inner
-            ):
-                comment = self.inner[parent_id].children.inner[id]
-                comment.update(entry)
-
-            # Try to update comment if it's a parent
-            elif id in self.inner:
-                comment = self.inner[id]
-                comment.update(entry)
-
-            # Create a new comment
-            else:
-                # Encode into a full comment with no parent no matter what
-                created = datetime.fromtimestamp(entry["timestamp"])
-                comment = Comment.new(
-                    self.channel,
-                    None,
-                    id,
-                    entry["author_id"],
-                    entry["author"],
-                    entry["author_thumbnail"],
-                    entry["text"],
-                    entry["is_favorited"],
-                    created,
-                )
-
-                # Add comment to our comments
-                if parent_id is None:
-                    self.inner[id] = comment
-
-                # Add to adoption queue if the comment is a child
-                else:
-                    adoption_queue.append((parent_id, comment))
+        # Go through comments found using processing pool for images
+        p = multiprocessing.Pool(16)
+        p.map(
+            partial(
+                self._update_comment,
+                known=known,
+                adoption_queue=adoption_queue,
+            ),
+            comments,
+        )
 
         # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
@@ -492,6 +460,57 @@ class Comments:
                 comment = self.inner[id]
                 comment.deleted.update(None, True)
 
+    def _update_comment(
+        self,
+        entry: dict,
+        known: list[str],
+        adoption_queue: list[tuple[str, Comment]],
+    ):
+        """Runs through the complete update procedures for one comment"""
+        # Decode the identifier and possible parent; can be used to check parent
+        parent_id, id = _decode_comment_id(entry["id"])
+
+        # Add to known comments to find difference later
+        known.append(id)
+
+        # Try to update comment if it's a child
+        if (
+            parent_id is not None
+            and parent_id in self.inner
+            and id in self.inner[parent_id].children.inner
+        ):
+            comment = self.inner[parent_id].children.inner[id]
+            comment.update(entry)
+
+        # Try to update comment if it's a parent
+        elif id in self.inner:
+            comment = self.inner[id]
+            comment.update(entry)
+
+        # Create a new comment
+        else:
+            # Encode into a full comment with no parent no matter what
+            created = datetime.fromtimestamp(entry["timestamp"])
+            comment = Comment.new(
+                self.archive,
+                None,
+                id,
+                entry["author_id"],
+                entry["author"],
+                entry["author_thumbnail"],
+                entry["text"],
+                entry["is_favorited"],
+                created,
+            )
+
+            # Add comment to our comments
+            if parent_id is None:
+                self.inner[id] = comment
+
+            # Add to adoption queue if the comment is a child
+            else:
+                adoption_queue.append((parent_id, comment))
+
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
     """Decodes a comment id into it's top-level or parent and self"""
@@ -501,8 +520,8 @@ def _decode_comment_id(id: str) -> tuple[Optional[str], str]:
     return None, id
 
 
-class Comment:  # TODO: figure out if a comment has been deleted
-    channel: Channel
+class Comment:
+    archive: Archive
     parent: Optional[Comment]
     id: str
     author: CommentAuthor
@@ -514,7 +533,7 @@ class Comment:  # TODO: figure out if a comment has been deleted
 
     @staticmethod
     def new(
-        channel: Channel,
+        archive: Archive,
         parent: Optional[Comment],
         id: str,
         author_id: str,
@@ -526,23 +545,23 @@ class Comment:  # TODO: figure out if a comment has been deleted
     ) -> Comment:
         """Creates a new comment with simplified information inputs"""
         comment = Comment()
-        comment.channel = channel
+        comment.archive = archive
         comment.parent = parent
         comment.id = id
         comment.author = CommentAuthor.new_or_update(
-            channel, author_id, author_name, author_icon_url
+            archive, author_id, author_name, author_icon_url
         )
         comment.body = Element.new(comment, body)
         comment.favorited = Element.new(comment, favorited)
         comment.deleted = Element.new(comment, False)
         comment.created = created
-        comment.children = Comments(channel)
+        comment.children = Comments(archive)
         return comment
 
     def update(self, entry: dict[str, Any]):
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
         self.author.new_or_update(
-            self.channel, entry["author_id"], entry["author"], entry["author_thumbnail"]
+            self.archive, entry["author_id"], entry["author"], entry["author_thumbnail"]
         )
         self.body.update(None, entry["text"])
         self.favorited.update(None, entry["is_favorited"])
@@ -550,25 +569,25 @@ class Comment:  # TODO: figure out if a comment has been deleted
 
     @staticmethod
     def _from_dict_head(
-        channel: Channel, parent: Optional[Comment], id: str, element: dict
+        archive: Archive, parent: Optional[Comment], id: str, element: dict
     ) -> Comment:
         """Loads existing comment and it's children attached to a video dict in a head + body format"""
         # Basic
         comment = Comment()
-        comment.channel = channel
+        comment.archive = archive
         comment.parent = parent
         comment.id = id
-        comment.author = channel.comment_authors[element["author_id"]]
+        comment.author = archive.comment_authors[element["author_id"]]
         comment.body = Element._from_dict(element["body"], comment)
         comment.favorited = Element._from_dict(element["favorited"], comment)
         comment.deleted = Element._from_dict(element["deleted"], comment)
         comment.created = datetime.fromisoformat(element["created"])
 
         # Get children using head & body method
-        comment.children = Comments(channel)
+        comment.children = Comments(archive)
         for id in element["children"].keys():
             comment.children.inner[id] = Comment._from_dict_head(
-                channel, comment, id, element["children"][id]
+                archive, comment, id, element["children"][id]
             )
 
         # Return
