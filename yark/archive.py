@@ -239,7 +239,7 @@ class Archive:
         # End by converting any downloaded but unsupported video file formats
         if anything_downloaded:
             converter = Converter(self.path / "videos")
-            converter.all()
+            converter.run()
 
     def _md_settings(self, config: Config) -> dict:
         """Generates customized yt-dlp settings for metadata from `config` passed in"""
@@ -641,7 +641,7 @@ def _migrate_archive(
 
             # Convert unsupported formats, because of #75 <https://github.com/Owez/yark/issues/75>
             converter = Converter(path / "videos")
-            converter.all()
+            converter.run()
 
         # Unknown version
         else:
