@@ -57,6 +57,11 @@
         margin-top: -5px;
     }
 
+    .no-videos {
+        text-align: center;
+        line-height: 1.5;
+    }
+
 
     @media (prefers-color-scheme: dark) {
         .thumbnail {
@@ -67,11 +72,11 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="hero">{{ name }}'s videos</h1>
-{% if archive.videos %}
+<h1 class="hero">{{ name }}'s {{ kind }}</h1>
+{% if videos %}
 <div id="content">
-    {% for video in archive.videos %}
-    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
+    {% for video in videos %}
+    <a href="{{ url_for('routes.video', name=name, kind=kind, id=video.id) }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
             <img src="{{ url_for('routes.archive_image', name=name, id=video.thumbnail.current().id) }}" {% if not
@@ -92,7 +97,8 @@
     {% endfor %}
 </div>
 {% else %}
-<p style="text-align: center;">No videos found!</p>
+<p class="no-videos">No {{ kind }} found!<br />Try to <a href="https://github.com/Owez/yark/#managing-your-archive"
+        class="funky">refresh</a> your archive?</p>
 {% endif %}
 {% endblock %}
 

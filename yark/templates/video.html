@@ -6,10 +6,24 @@
         margin-bottom: 3rem;
     }
 
-    video {
+    #player {
         margin-top: 8vh;
         border-radius: 0.75rem;
         max-height: 65vh;
+    }
+
+    #player.empty {
+        height: 65vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #player.empty>p {
+        font-family: monospace;
+        text-align: center;
+        line-height: 1.5;
+        font-size: large;
     }
 
     .info {
@@ -45,7 +59,7 @@
         margin-bottom: 0.65rem;
     }
 
-    video,
+    #player,
     h1,
     #description,
     .info {
@@ -54,7 +68,7 @@
 
     @media screen and (max-width: 850px) {
 
-        video,
+        #player,
         h1,
         canvas,
         #description,
@@ -77,7 +91,7 @@
     }
 
     .note,
-    video {
+    #player {
         box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
     }
 
@@ -144,7 +158,7 @@
     @media (prefers-color-scheme: dark) {
 
         .note,
-        video {
+        #player {
             background-color: rgba(255, 255, 255, 0.0225);
         }
 
@@ -167,8 +181,16 @@
 {% block content %}
 <div id="content">
     <!-- Video -->
+    {% if video.filename() %}
     <video src="{{ url_for('routes.archive_video', name=name, file=video.filename()) }}" id="player" autoplay
         controls></video>
+    {% else %}
+    <div id="player" class="empty">
+        <p>Video not found!<br />Please <a href="https://github.com/Owez/yark/#managing-your-archive"
+                class="funky">refresh</a> your
+            archive</p>
+    </div>
+    {% endif %}
     <!-- Information -->
     <h1 title="Title of the video">{{ video.title.current() }}</h1>
     <div class="info">
@@ -189,9 +211,11 @@
             <!-- Youtube link -->
             <a title="Open the video on YouTube" href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
             <!-- Download link -->
+            {% if video.filename() %}
             <span class="spacer">•</span>
             <a title="Save the video to downloads"
                 href="{{ url_for('routes.archive_video', name=name, file=video.filename()) }}" download>💾</a>
+            {% endif %}
             <!-- Like count -->
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}
