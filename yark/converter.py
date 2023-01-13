@@ -11,14 +11,22 @@ class Converter:
         _ensure_dir(path_videos)
         self.path_videos = path_videos
 
-    def all(self):
+    def run(self):
         """Goes through the videos directory given and converts all videos we can, e.g. mkv to mp4"""
         # Convert mkv videos
         for path in self.path_videos.glob("*.mkv"):
-            self.convert_mkv(path)
+            self._convert_copy_codec(path)
 
-    def convert_mkv(self, path: Path):
-        """Converts mkv at path to a fully-supported mp4 video"""
+        # Convert flv videos
+        for path in self.path_videos.glob("*.flv"):
+            self._convert_copy_codec(path)
+
+        # Convert 3gp videos
+        for path in self.path_videos.glob("*.3gp"):
+            self._convert_copy_codec(path)
+
+    def _convert_copy_codec(self, path: Path):
+        """Runs complete conversion process for ffmpeg commands which can copy codecs"""
         # Check everything exists
         self._ensure(path)
 
