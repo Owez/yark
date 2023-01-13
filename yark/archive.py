@@ -13,6 +13,7 @@ from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element, CommentAuthor
 from typing import Optional
 from .config import Config
+from .converter import Converter
 
 ARCHIVE_COMPAT = 4
 """
@@ -204,6 +205,7 @@ class Archive:
         settings = self._dl_settings(config)
 
         # Retry downloading 5 times in total for all videos
+        anything_downloaded = True
         for i in range(5):
             # Try to curate a list and download videos on it
             try:
@@ -212,6 +214,7 @@ class Archive:
 
                 # Stop if there's nothing to download
                 if len(not_downloaded) == 0:
+                    anything_downloaded = False
                     break
 
                 # Print curated if this is the first time
@@ -233,6 +236,11 @@ class Archive:
                 # Report error
                 _err_dl("videos", exception, i != 4)
 
+        # End by converting any downloaded but unsupported video file formats
+        if anything_downloaded:
+            converter = Converter(self.path / "videos")
+            converter.all()
+
     def _md_settings(self, config: Config) -> dict:
         """Generates customized yt-dlp settings for metadata from `config` passed in"""
         # Always present
@@ -252,7 +260,6 @@ class Archive:
         # Return
         return settings
 
-
     def _dl_settings(self, config: Config) -> dict:
         """Generates customized yt-dlp settings from `config` passed in"""
         # Always present
@@ -269,7 +276,7 @@ class Archive:
         if config.format is not None:
             settings["format"] = config.format
 
-       # Custom yt-dlp proxy
+        # Custom yt-dlp proxy
         if config.proxy is not None:
             settings["proxy"] = config.proxy
 
@@ -442,6 +449,7 @@ class Archive:
         deletion_bucket: list[Path] = []
 
         # Scan through and find part files
+        # NOTE: can this be improved with a set and 2x path.glob()?
         videos = self.path / "videos"
         for file in videos.iterdir():
             if file.suffix == ".part" or file.suffix == ".ytdl":
@@ -630,6 +638,10 @@ def _migrate_archive(
                     f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
                 )
                 sys.exit(1)
+
+            # Convert unsupported formats, because of #75 <https://github.com/Owez/yark/issues/75>
+            converter = Converter(path / "videos")
+            converter.all()
 
         # Unknown version
         else:

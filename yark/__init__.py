@@ -16,10 +16,15 @@ Commonly-used
     - `CommentAuthor`
     - `Image`
 - `viewer()`
+
+Exceptions
+----------
 - `ArchiveNotFoundException`
+- `ArchiveStructureException`
 - `VideoNotFoundException`
 - `NoteNotFoundException`
 - `TimestampException`
+- `FileNotFoundException`
 
 Beware that using Yark as a library is currently experimental and breaking changes here are not tracked!
 """
@@ -37,7 +42,9 @@ from .video import (
 from .viewer import viewer
 from .errors import (
     ArchiveNotFoundException,
+    ArchiveStructureException,
     VideoNotFoundException,
     NoteNotFoundException,
     TimestampException,
+    ConversionException,
 )

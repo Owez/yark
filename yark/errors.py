@@ -2,6 +2,7 @@
 
 from colorama import Style, Fore
 import sys
+from pathlib import Path
 
 
 class ArchiveNotFoundException(Exception):
@@ -30,6 +31,26 @@ class TimestampException(Exception):
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+
+class ArchiveStructureException(Exception):
+    """Directory or file inside of an archive for a required operation couldn't be found when it should've"""
+
+    def __init__(self, path: Path, *args: object) -> None:
+        super().__init__(*args)
+        self.path = path
+
+
+class ConversionException(Exception):
+    """Couldn't convert a video file format to a different one because of an error with FFmpeg"""
+
+    def __init__(
+        self,
+        stderr: str,
+        *args: object,
+    ) -> None:
+        super().__init__(*args)
+        self.stderr = stderr
 
 
 def _err_msg(msg: str, report_msg: bool = False):
