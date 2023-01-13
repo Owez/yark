@@ -128,14 +128,7 @@ class Archive:
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
-        settings = {
-            # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(),
-            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
-            "ignore_no_formats_error": True,
-            # Fetch comments from videos
-            "getcomments": config.comments,
-        }
+        settings = self._md_settings(config)
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
@@ -157,8 +150,8 @@ class Archive:
                         )
 
         # Uncomment for saving big dumps for testing
-        with open("demo/dump.json", "w+") as file:
-            json.dump(res, file)
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
         # res = json.load(open("demo/dump.json", "r"))
@@ -240,6 +233,26 @@ class Archive:
                 # Report error
                 _err_dl("videos", exception, i != 4)
 
+    def _md_settings(self, config: Config) -> dict:
+        """Generates customized yt-dlp settings for metadata from `config` passed in"""
+        # Always present
+        settings = {
+            # Centralized logging system; makes output fully quiet
+            "logger": VideoLogger(),
+            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
+            "ignore_no_formats_error": True,
+            # Fetch comments from videos
+            "getcomments": config.comments,
+        }
+
+        # Custom yt-dlp proxy
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
+
+        # Return
+        return settings
+
+
     def _dl_settings(self, config: Config) -> dict:
         """Generates customized yt-dlp settings from `config` passed in"""
         # Always present
@@ -255,6 +268,10 @@ class Archive:
         # Custom yt-dlp format
         if config.format is not None:
             settings["format"] = config.format
+
+       # Custom yt-dlp proxy
+        if config.proxy is not None:
+            settings["proxy"] = config.proxy
 
         # Return
         return settings

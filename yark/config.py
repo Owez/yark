@@ -10,6 +10,7 @@ class Config:
     skip_metadata: bool
     comments: bool
     format: Optional[str]
+    proxy: Optional[str]
 
     def __init__(self) -> None:
         self.max_videos = None
@@ -19,6 +20,7 @@ class Config:
         self.skip_metadata = False
         self.comments = False
         self.format = None
+        self.proxy = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
