@@ -11,35 +11,35 @@ class Converter:
         _ensure_dir(path_videos)
         self.path_videos = path_videos
 
-    def mkv(self, video_name: str):
+    def all(self):
+        """Goes through the videos directory given and converts all videos we can, e.g. mkv to mp4"""
+        # Convert mkv videos
+        for path in self.path_videos.glob("*.mkv"):
+            self.convert_mkv(path)
+
+    def convert_mkv(self, path: Path):
         """Converts mkv at path to a fully-supported mp4 video"""
         # Check everything exists
-        self._ensure(video_name)
+        self._ensure(path)
 
         # Generate/resolve paths
-        mkv_path, mp4_path = self._resolve(video_name, ".mp4")
+        mkv_path, mp4_path = self._resolve(path, ".mp4")
 
         # Tell ffmpeg to convert
         _ffmpeg_run(["-y", "-i", mkv_path, "-codec", "copy", mp4_path])
 
-    def delete(self):
-        """Deletes the current path after conversion"""
-        self.path.unlink()
+        # Delete the original path
+        path.unlink()
 
-    def _ensure(self, video_name: str):
+    def _ensure(self, path: Path):
         """Ensures that everything is ready to go, might error out or raise `FileNotFoundException` exception"""
         _ensure_ffmpeg()
         _ensure_dir(self.path_videos)
-        _ensure_file(self._path_video_name(video_name))
+        _ensure_file(path)
 
-    def _resolve(self, video_name: str, new_suffix: str) -> tuple[str, str]:
+    def _resolve(self, path: Path, new_suffix: str) -> tuple[str, str]:
         """Resolves path and creates a new one with the suffix replaced by the new suffix"""
-        path = self._path_video_name(video_name)
         return str(path.resolve()), str(path.with_suffix(new_suffix).resolve())
-
-    def _path_video_name(self, video_name: str) -> Path:
-        """Generates path to inputted video name from the baseline converter path"""
-        return self.path_videos / video_name
 
 
 def _ffmpeg_installed() -> bool:

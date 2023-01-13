@@ -70,7 +70,7 @@ The archive format itself is simple and consists of a directory-based structure 
   - `yark.bak` – Backup archive file to protect against data damage
   - `videos/` – Directory containing all known videos
     - `[id].*` – Files containing video data for YouTube videos
-  - `images/` – Directory containing all known images (e.g. thumbnails, icons)
+  - `images/` – Directory containing all known images (e.g., thumbnails, icons)
     - `[hash].png` – Files containing images with their BLAKE2 hash
 
 It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.
