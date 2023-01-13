@@ -1,22 +1,23 @@
 """Video conversion for formats not supported by the HTML `<video>` tag, our low bar"""
 
 from pathlib import Path
-from .errors import _err_msg, FileNotFoundException, ConversionException
+from .errors import _err_msg, ArchiveStructureException, ConversionException
 import subprocess
 import sys
 
 
 class Converter:
-    def __init__(self, path: Path) -> None:
-        self.path = path
+    def __init__(self, path_videos: Path) -> None:
+        _ensure_dir(path_videos)
+        self.path_videos = path_videos
 
-    def mkv(self):
+    def mkv(self, video_name: str):
         """Converts mkv at path to a fully-supported mp4 video"""
         # Check everything exists
-        self._ensure()
+        self._ensure(video_name)
 
         # Generate/resolve paths
-        mkv_path, mp4_path = self._resolve(".mp4")
+        mkv_path, mp4_path = self._resolve(video_name, ".mp4")
 
         # Tell ffmpeg to convert
         _ffmpeg_run(["-y", "-i", mkv_path, "-codec", "copy", mp4_path])
@@ -25,14 +26,20 @@ class Converter:
         """Deletes the current path after conversion"""
         self.path.unlink()
 
-    def _ensure(self):
+    def _ensure(self, video_name: str):
         """Ensures that everything is ready to go, might error out or raise `FileNotFoundException` exception"""
         _ensure_ffmpeg()
-        _ensure_file(self.path)
+        _ensure_dir(self.path_videos)
+        _ensure_file(self._path_video_name(video_name))
 
-    def _resolve(self, new_suffix: str) -> tuple[Path, Path]:
+    def _resolve(self, video_name: str, new_suffix: str) -> tuple[str, str]:
         """Resolves path and creates a new one with the suffix replaced by the new suffix"""
-        return self.path.resolve(), self.path.with_suffix(new_suffix).resolve()
+        path = self._path_video_name(video_name)
+        return str(path.resolve()), str(path.with_suffix(new_suffix).resolve())
+
+    def _path_video_name(self, video_name: str) -> Path:
+        """Generates path to inputted video name from the baseline converter path"""
+        return self.path_videos / video_name
 
 
 def _ffmpeg_installed() -> bool:
@@ -76,9 +83,15 @@ def _ffmpeg_run(args: list[str]):
 
 
 def _ensure_file(path: Path):
-    """Ensures that the `path` inputted exists and isn't a dir or raises the `FileNotFoundException` exception"""
+    """Ensures that the `path` inputted exists and isn't a dir or raises the `ArchiveStructureException` exception"""
     if not path.exists() or path.is_dir():
-        raise FileNotFoundException(path)
+        raise ArchiveStructureException(path)
+
+
+def _ensure_dir(path: Path):
+    """Ensures that the `path` inputted exists and isn't a file or raises the `ArchiveStructureException` exception"""
+    if not path.exists() or path.is_file():
+        raise ArchiveStructureException(path)
 
 
 def _ensure_ffmpeg():

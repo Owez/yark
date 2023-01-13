@@ -2,6 +2,7 @@
 
 from colorama import Style, Fore
 import sys
+from pathlib import Path
 
 
 class ArchiveNotFoundException(Exception):
@@ -32,12 +33,12 @@ class TimestampException(Exception):
         super().__init__(*args)
 
 
-class FileNotFoundException(Exception):
-    """File inside of an archive (e.g., image/video) for a required operation couldn't be found"""
+class ArchiveStructureException(Exception):
+    """Directory or file inside of an archive for a required operation couldn't be found when it should've"""
 
-    def __init__(self, file, *args: object) -> None:
+    def __init__(self, path: Path, *args: object) -> None:
         super().__init__(*args)
-        self.file = file
+        self.path = path
 
 
 class ConversionException(Exception):
