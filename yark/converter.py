@@ -17,10 +17,6 @@ class Converter:
         for path in self.path_videos.glob("*.mkv"):
             self._convert_copy_codec(path)
 
-        # Convert flv videos
-        for path in self.path_videos.glob("*.flv"):
-            self._convert_copy_codec(path)
-
         # Convert 3gp videos
         for path in self.path_videos.glob("*.3gp"):
             self._convert_copy_codec(path)
