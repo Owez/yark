@@ -66,7 +66,7 @@ def _cli():
         if len(args) == 2 and args[1] == "--help":
             # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --comments            Archives all comments (slow)\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\nAdvanced Arguments:\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --comments\n  $ yark refresh demo --videos=50 --livestreams=2\n  $ yark refresh demo --skip-download"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --comments            Archives all comments (slow)\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\nAdvanced Arguments:\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format\n  --proxy=[str]         Downloads using a proxy server for yt-dlp\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --comments\n  $ yark refresh demo --videos=50 --livestreams=2\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -123,6 +123,10 @@ def _cli():
                 # Custom yt-dlp format
                 elif config_arg.startswith("--format="):
                     config.format = parse_value(config_arg)
+
+                # Custom yt-dlp proxy
+                elif config_arg.startswith("--proxy="):
+                    config.proxy = parse_value(config_arg)
 
                 # Unknown argument
                 else:
