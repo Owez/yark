@@ -32,6 +32,26 @@ class TimestampException(Exception):
         super().__init__(*args)
 
 
+class FileNotFoundException(Exception):
+    """File inside of an archive (e.g., image/video) for a required operation couldn't be found"""
+
+    def __init__(self, file, *args: object) -> None:
+        super().__init__(*args)
+        self.file = file
+
+
+class ConversionException(Exception):
+    """Couldn't convert a video file format to a different one because of an error with FFmpeg"""
+
+    def __init__(
+        self,
+        stderr: str,
+        *args: object,
+    ) -> None:
+        super().__init__(*args)
+        self.stderr = stderr
+
+
 def _err_msg(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (
