@@ -37,8 +37,9 @@ def index():
         visited = request.cookies.get("visited")
         if visited is not None:
             visited = json.loads(visited)
-        error = request.args["error"] if "error" in request.args else None
-        return render_template("index.html", error=error, visited=visited)
+        return render_template(
+            "index.html", visited=visited, error=request.args.get("error")
+        )
 
 
 @routes.route("/archive/<name>")
@@ -51,13 +52,32 @@ def archive_empty(name):
 def archive(name, kind):
     """Archive information"""
     if kind not in ["videos", "livestreams", "shorts"]:
-        return redirect(url_for("routes.index", error="Video kind not recognised"))
+        return redirect(
+            url_for(
+                "routes.archive",
+                name=name,
+                kind="videos",
+                error="Video kind not recognized",
+            )
+        )
 
     try:
         archive = Archive.load(name)
-        ldir = os.listdir(archive.path / "videos")
+        videos = (
+            archive.videos
+            if kind == "videos"
+            else archive.livestreams
+            if kind == "livestreams"
+            else archive.shorts
+        )
         return render_template(
-            "archive.html", title=name, archive=archive, name=name, ldir=ldir
+            "archive.html",
+            title=name,
+            archive=archive,
+            name=name,
+            kind=kind,
+            videos=videos,
+            error=request.args.get("error"),
         )
     except ArchiveNotFoundException:
         return redirect(
@@ -72,7 +92,12 @@ def video(name, kind, id):
     """Detailed video information and viewer"""
     if kind not in ["videos", "livestreams", "shorts"]:
         return redirect(
-            url_for("routes.archive", name=name, error="Video kind not recognised")
+            url_for(
+                "routes.archive",
+                name=name,
+                kind="videos",
+                error="Video kind not recognized",
+            )
         )
 
     try:
@@ -92,6 +117,7 @@ def video(name, kind, id):
                 video=video,
                 views_data=views_data,
                 likes_data=likes_data,
+                error=request.args.get("error"),
             )
 
         # Add new note
