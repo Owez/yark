@@ -9,21 +9,14 @@
     #player {
         margin-top: 8vh;
         border-radius: 0.75rem;
-        max-height: 65vh;
+        max-height: 70vh;
     }
 
-    #player.empty {
+    .not-found-code-outer {
         height: 65vh;
         display: flex;
         justify-content: center;
         align-items: center;
-    }
-
-    #player.empty>p {
-        font-family: monospace;
-        text-align: center;
-        line-height: 1.5;
-        font-size: large;
     }
 
     .info {
@@ -185,10 +178,12 @@
     <video src="{{ url_for('routes.archive_video', name=name, file=video.filename()) }}" id="player" autoplay
         controls></video>
     {% else %}
-    <div id="player" class="empty">
-        <p>Video not found!<br />Please <a href="https://github.com/Owez/yark/#managing-your-archive"
-                class="funky">refresh</a> your
-            archive</p>
+    <div id="player">
+        <div class="not-found-code-outer">
+            <p class="not-found-code">Video not found!<br />Please <a
+                    href="https://github.com/Owez/yark/#managing-your-archive" class="funky">refresh</a> your
+                archive</p>
+        </div>
     </div>
     {% endif %}
     <!-- Information -->
