@@ -388,10 +388,11 @@ class Archive:
         # Return
         return not_downloaded
 
-    def commit(self):
+    def commit(self, backup: bool = False):
         """Commits (saves) archive to path; do this once you've finished all of your transactions"""
-        # Save backup
-        self._backup()
+        # Save backup if explicitly wanted
+        if backup:
+            self._backup()
 
         # Directories
         print(f"Committing {self} to file..")
@@ -452,8 +453,8 @@ class Archive:
 
         # Scan through and find part files
         videos = self.path / "videos"
-        deletion_bucket.extend([file in videos.glob("*.part")])
-        deletion_bucket.extend([file in videos.glob("*.ytdl")])
+        deletion_bucket.extend([file for file in videos.glob("*.part")])
+        deletion_bucket.extend([file for file in videos.glob("*.ytdl")])
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
