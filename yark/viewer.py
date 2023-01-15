@@ -108,8 +108,8 @@ def video(name, kind, id):
         # Return video webpage
         if request.method == "GET":
             title = f"{video.title.current()} · {name}"
-            views_data = json.dumps(video.views._to_dict())
-            likes_data = json.dumps(video.likes._to_dict())
+            views_data = json.dumps(video.views._to_archive_o())
+            likes_data = json.dumps(video.likes._to_archive_o())
             return render_template(
                 "video.html",
                 title=title,
@@ -138,7 +138,7 @@ def video(name, kind, id):
             video.archive.commit()
 
             # Return
-            return note._to_dict(), 200
+            return note._to_archive_o(), 200
 
         # Update existing note
         elif request.method == "PATCH":

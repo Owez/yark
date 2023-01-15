@@ -128,8 +128,8 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_dict(encoded: dict, archive: Archive) -> Video:
-        """Converts id and encoded dictionary to video for loading an archive"""
+    def _from_archive_o(encoded: dict, archive: Archive) -> Video:
+        """TODO: make _ib"""
         # Normal
         video = Video()
         video.archive = archive
@@ -137,16 +137,16 @@ class Video:
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
-        video.title = Element._from_dict(encoded["title"], video)
-        video.description = Element._from_dict(encoded["description"], video)
-        video.views = Element._from_dict(encoded["views"], video)
-        video.likes = Element._from_dict(encoded["likes"], video)
+        video.title = Element._from_archive_o(encoded["title"], video)
+        video.description = Element._from_archive_o(encoded["description"], video)
+        video.views = Element._from_archive_o(encoded["views"], video)
+        video.likes = Element._from_archive_o(encoded["likes"], video)
         video.thumbnail = Image._from_element(
             encoded["thumbnail"], video, IMAGE_THUMBNAIL
         )
-        video.deleted = Element._from_dict(encoded["deleted"], video)
+        video.deleted = Element._from_archive_o(encoded["deleted"], video)
         video.comments = Comments(archive)
-        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+        video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]
 
         # Load data
         video.comments.load_archive(encoded["comments"])
@@ -157,21 +157,21 @@ class Video:
         # Return
         return video
 
-    def _to_dict(self) -> dict:
-        """Converts video information to dictionary for committing, doesn't include id"""
+    def _to_archive_o(self) -> dict:
+        """TODO: make _b"""
         return {
             "id": self.id,
             "uploaded": self.uploaded.isoformat(),
             "width": self.width,
             "height": self.height,
-            "title": self.title._to_dict(),
-            "description": self.description._to_dict(),
-            "views": self.views._to_dict(),
-            "likes": self.likes._to_dict(),
-            "thumbnail": self.thumbnail._to_dict(),
-            "deleted": self.deleted._to_dict(),
+            "title": self.title._to_archive_o(),
+            "description": self.description._to_archive_o(),
+            "views": self.views._to_archive_o(),
+            "likes": self.likes._to_archive_o(),
+            "thumbnail": self.thumbnail._to_archive_o(),
+            "deleted": self.deleted._to_archive_o(),
             "comments": self.comments.save_archive(),
-            "notes": [note._to_dict() for note in self.notes],
+            "notes": [note._to_archive_o() for note in self.notes],
         }
 
     def __repr__(self) -> str:
@@ -267,10 +267,10 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_dict(
+    def _from_archive_o(
         encoded: dict, parent: Video | Comment | Archive | CommentAuthor
     ) -> Element:
-        """Converts encoded dictionary into element"""
+        """Converts object dict from archive to this element"""
         # Basics
         element = Element()
         element.parent = parent
@@ -284,8 +284,8 @@ class Element:
         # Return
         return element
 
-    def _to_dict(self) -> dict:
-        """Converts element to dictionary for committing"""
+    def _to_archive_o(self) -> dict:
+        """Converts element to object dict for an archive"""
         # Convert each item
         encoded = {}
         for date in self.inner:
@@ -344,7 +344,7 @@ class Image:
     @staticmethod
     def _from_element(element: dict, video: Video, ext: str) -> Element:
         """Converts element of images to properly formed images"""
-        decoded = Element._from_dict(element, video)
+        decoded = Element._from_archive_o(element, video)
         for date in decoded.inner:
             decoded.inner[date] = Image.load(decoded.inner[date], video, ext)
         return decoded
@@ -395,18 +395,18 @@ class CommentAuthor:
         return author
 
     @staticmethod
-    def _from_dict_head(archive: Archive, id: str, element: dict) -> CommentAuthor:
-        """Decodes from the dictionary with a head `id`, e.g. `"head": { body }`"""
+    def _from_archive_ib(archive: Archive, id: str, element: dict) -> CommentAuthor:
+        """Decodes comment author from the body dict and adds the id passed in from an archive"""
         author = CommentAuthor()
         author.archive = archive
         author.id = id
-        author.name = Element._from_dict(element["name"], author)
-        author.icon = Element._from_dict(element["icon"], author)
+        author.name = Element._from_archive_o(element["name"], author)
+        author.icon = Element._from_archive_o(element["icon"], author)
         return author
 
-    def _to_dict_head(self) -> dict:
-        """Encodes comment author to the body part of a head + body, e.g. `"head": { body }`"""
-        return {"name": self.name._to_dict(), "icon": self.icon._to_dict()}
+    def _to_archive_b(self) -> dict:
+        """Encodes comment author to it's dict body for an archive"""
+        return {"name": self.name._to_archive_o(), "icon": self.icon._to_archive_o()}
 
 
 class Comments:
@@ -420,7 +420,7 @@ class Comments:
     def load_archive(self, comments: dict[str, dict]):
         """Loads comments from a comment level in a Yark archive"""
         for id in comments.keys():
-            self.inner[id] = Comment._from_dict_head(
+            self.inner[id] = Comment._from_archive_ib(
                 self.archive, None, id, comments[id]
             )
 
@@ -428,7 +428,7 @@ class Comments:
         """Saves each comment as a dictionary inside of comments"""
         payload = {}
         for id in self.inner:
-            payload[id] = self.inner[id]._to_dict_head()
+            payload[id] = self.inner[id]._to_archive_b()
         return payload
 
     def update(self, comments: list[dict]):
@@ -568,44 +568,44 @@ class Comment:
         self.deleted.update(None, False)
 
     @staticmethod
-    def _from_dict_head(
+    def _from_archive_ib(
         archive: Archive, parent: Optional[Comment], id: str, element: dict
     ) -> Comment:
-        """Loads existing comment and it's children attached to a video dict in a head + body format"""
+        """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
         # Basic
         comment = Comment()
         comment.archive = archive
         comment.parent = parent
         comment.id = id
         comment.author = archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_dict(element["body"], comment)
-        comment.favorited = Element._from_dict(element["favorited"], comment)
-        comment.deleted = Element._from_dict(element["deleted"], comment)
+        comment.body = Element._from_archive_o(element["body"], comment)
+        comment.favorited = Element._from_archive_o(element["favorited"], comment)
+        comment.deleted = Element._from_archive_o(element["deleted"], comment)
         comment.created = datetime.fromisoformat(element["created"])
 
-        # Get children using head & body method
+        # Get children using the id & body method
         comment.children = Comments(archive)
         for id in element["children"].keys():
-            comment.children.inner[id] = Comment._from_dict_head(
+            comment.children.inner[id] = Comment._from_archive_ib(
                 archive, comment, id, element["children"][id]
             )
 
         # Return
         return comment
 
-    def _to_dict_head(self) -> dict:
-        """Converts comment and it's children to dictionary representation in a head + body format"""
-        # Get children using head & body method
+    def _to_archive_b(self) -> dict:
+        """Converts comment to it's archival dict body"""
+        # Get children using the id & body method
         children = {}
         for id in self.children.inner.keys():
-            children[id] = self.children.inner[id]._to_dict_head()
+            children[id] = self.children.inner[id]._to_archive_b()
 
         # Basics
         payload = {
             "author_id": self.author.id,
-            "body": self.body._to_dict(),
-            "favorited": self.favorited._to_dict(),
-            "deleted": self.deleted._to_dict(),
+            "body": self.body._to_archive_o(),
+            "favorited": self.favorited._to_archive_o(),
+            "deleted": self.deleted._to_archive_o(),
             "created": self.created.isoformat(),
             "children": children,
         }
@@ -633,8 +633,8 @@ class Note:
         return note
 
     @staticmethod
-    def _from_dict(video: Video, element: dict) -> Note:
-        """Loads existing note attached to a video dict"""
+    def _from_archive_o(video: Video, element: dict) -> Note:
+        """Loads existing note object dict from an archive"""
         note = Note()
         note.video = video
         note.id = element["id"]
@@ -643,8 +643,8 @@ class Note:
         note.body = element["body"]
         return note
 
-    def _to_dict(self) -> dict:
-        """Converts note to dictionary representation"""
+    def _to_archive_o(self) -> dict:
+        """Converts note to it's object dict for archival"""
         return {
             "id": self.id,
             "timestamp": self.timestamp,

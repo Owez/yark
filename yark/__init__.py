@@ -9,12 +9,12 @@ Commonly-used
 
 - `Archive`
     - `Config`
-- `Video`
-    - `Element`
-    - `Note`
-    - `Comment`
+    - `Video`
+        - `Element`
+        - `Note`
+        - `Comment`
+        - `Image`
     - `CommentAuthor`
-    - `Image`
 - `viewer()`
 
 Exceptions

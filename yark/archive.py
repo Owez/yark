@@ -123,7 +123,7 @@ class Archive:
             )
 
         # Decode and return
-        return Archive._from_dict(encoded, path)
+        return Archive._from_archive_o(encoded, path)
 
     def metadata(self, config: Config):
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
@@ -400,7 +400,7 @@ class Archive:
 
         # Config
         with open(self.path / "yark.json", "w+") as file:
-            json.dump(self._to_dict(), file)
+            json.dump(self._to_archive_o(), file)
 
     def _parse_metadata(
         self, kind: str, config: Config, entries: list[dict], videos: list[Video]
@@ -449,11 +449,9 @@ class Archive:
         deletion_bucket: list[Path] = []
 
         # Scan through and find part files
-        # NOTE: can this be improved with a set and 2x path.glob()?
         videos = self.path / "videos"
-        for file in videos.iterdir():
-            if file.suffix == ".part" or file.suffix == ".ytdl":
-                deletion_bucket.append(file)
+        deletion_bucket.extend([file in videos.glob("*.part")])
+        deletion_bucket.extend([file in videos.glob("*.ytdl")])
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
@@ -480,15 +478,15 @@ class Archive:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_dict(encoded: dict, path: Path) -> Archive:
-        """Decodes archive which is being loaded back up"""
+    def _from_archive_o(encoded: dict, path: Path) -> Archive:
+        """Decodes object dict from archive which is being loaded back up"""
         # Initiate archive
         archive = Archive()
 
         # Decode head & body style comment authors; needed above video decoding for comments
         archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
-            archive.comment_authors[id] = CommentAuthor._from_dict_head(
+            archive.comment_authors[id] = CommentAuthor._from_archive_ib(
                 archive, id, encoded["comment_authors"][id]
             )
 
@@ -498,33 +496,33 @@ class Archive:
         archive.url = encoded["url"]
         archive.reporter = Reporter(archive)
         archive.videos = [
-            Video._from_dict(video, archive) for video in encoded["videos"]
+            Video._from_archive_o(video, archive) for video in encoded["videos"]
         ]
         archive.livestreams = [
-            Video._from_dict(video, archive) for video in encoded["livestreams"]
+            Video._from_archive_o(video, archive) for video in encoded["livestreams"]
         ]
         archive.shorts = [
-            Video._from_dict(video, archive) for video in encoded["shorts"]
+            Video._from_archive_o(video, archive) for video in encoded["shorts"]
         ]
         archive.comment_authors = {}
 
         # Return
         return archive
 
-    def _to_dict(self) -> dict:
-        """Converts archive data to a dictionary to commit"""
+    def _to_archive_o(self) -> dict:
+        """Converts all archive data to a object dict to commit"""
         # Encode comment authors
         comment_authors = {}
         for id in self.comment_authors.keys():
-            comment_authors[id] = self.comment_authors[id]._to_dict_head()
+            comment_authors[id] = self.comment_authors[id]._to_archive_b()
 
         # Basics
         payload = {
             "version": self.version,
             "url": self.url,
-            "videos": [video._to_dict() for video in self.videos],
-            "livestreams": [video._to_dict() for video in self.livestreams],
-            "shorts": [video._to_dict() for video in self.shorts],
+            "videos": [video._to_archive_o() for video in self.videos],
+            "livestreams": [video._to_archive_o() for video in self.livestreams],
+            "shorts": [video._to_archive_o() for video in self.shorts],
             "comment_authors": comment_authors,
         }
 
@@ -610,11 +608,17 @@ def _migrate_archive(
             # Add deleted status to every video/livestream/short
             # NOTE: none is fine for new elements, just a slight bodge
             for video in encoded["videos"]:
-                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
+                video["deleted"] = Element.new(
+                    Video._new_empty(), False
+                )._to_archive_o()
             for video in encoded["livestreams"]:
-                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
+                video["deleted"] = Element.new(
+                    Video._new_empty(), False
+                )._to_archive_o()
             for video in encoded["shorts"]:
-                video["deleted"] = Element.new(Video._new_empty(), False)._to_dict()
+                video["deleted"] = Element.new(
+                    Video._new_empty(), False
+                )._to_archive_o()
 
         # From version 3 to version 4
         elif cur == 3:
