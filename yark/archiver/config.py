@@ -2,7 +2,7 @@
 
 from typing import Optional, Any
 from colorama import Fore
-from .logger import VideoLogger
+from ..logger import VideoLogger
 from pathlib import Path
 
 

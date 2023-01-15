@@ -18,8 +18,8 @@ from .errors import (
     VideoNotFoundException,
     TimestampException,
 )
-from .archive import Archive
-from .video import Note
+from .archiver.archive import Archive
+from .archiver.video import Note
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 

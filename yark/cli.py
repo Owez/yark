@@ -7,9 +7,10 @@ import sys
 import threading
 import webbrowser
 from importlib.metadata import version
-from .errors import _err_msg, ArchiveNotFoundException
-from .archive import Archive
-from .config import Config
+from .errors import ArchiveNotFoundException
+from .logger import _err_msg
+from .archiver.archive import Archive
+from .archiver.config import Config
 from .viewer import viewer
 import requests
 

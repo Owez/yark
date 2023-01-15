@@ -52,12 +52,3 @@ class ConversionException(Exception):
         super().__init__(*args)
         self.stderr = stderr
 
-
-def _err_msg(msg: str, report_msg: bool = False):
-    """Provides a red-coloured error message to the user in the STDERR pipe"""
-    msg = (
-        msg
-        if not report_msg
-        else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
-    )
-    print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)

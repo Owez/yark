@@ -1,7 +1,8 @@
 """Video conversion for formats not supported by the HTML `<video>` tag, our low bar"""
 
 from pathlib import Path
-from .errors import _err_msg, ArchiveStructureException, ConversionException
+from ..errors import ArchiveStructureException, ConversionException
+from ..logger import _err_msg
 import subprocess
 import sys
 

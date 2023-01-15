@@ -1,5 +1,9 @@
 """Logging core for formatting output to users"""
 
+from colorama import Style, Fore
+import sys
+
+
 class VideoLogger:
     @staticmethod
     def downloading(d):
@@ -38,3 +42,13 @@ class VideoLogger:
     def error(self, msg):
         """Error log messages"""
         pass
+
+
+def _err_msg(msg: str, report_msg: bool = False):
+    """Provides a red-coloured error message to the user in the STDERR pipe"""
+    msg = (
+        msg
+        if not report_msg
+        else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+    )
+    print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)

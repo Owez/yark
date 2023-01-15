@@ -6,8 +6,8 @@ from pathlib import Path
 from uuid import uuid4
 import requests
 import hashlib
-from .errors import NoteNotFoundException
-from .utils import _truncate_text
+from ..errors import NoteNotFoundException
+from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Any, Optional
 import multiprocessing
 from functools import partial

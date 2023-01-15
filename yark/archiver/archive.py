@@ -9,11 +9,13 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
+from ..errors import ArchiveNotFoundException, VideoNotFoundException
+from ..logger import _err_msg
 from .video import Video, Element, CommentAuthor, Videos
 from typing import Optional
 from .config import Config
 from .converter import Converter
+from .migrator import _migrate
 
 ARCHIVE_COMPAT = 4
 """
@@ -78,7 +80,7 @@ class Archive:
         # Check version before fully decoding and exit if wrong
         archive_version = encoded["version"]
         if archive_version != ARCHIVE_COMPAT:
-            encoded = _migrate_archive(
+            encoded = _migrate(
                 archive_version, ARCHIVE_COMPAT, encoded, path, archive_name
             )
 
@@ -485,103 +487,6 @@ def _skip_video(
     raise Exception(
         "We expected to skip a video and return it but nothing to skip was found"
     )
-
-
-def _migrate_archive(
-    current_version: int,
-    expected_version: int,
-    encoded: dict,
-    path: Path,
-    archive_name: str,
-) -> dict:
-    """Automatically migrates an archive from one version to another by bootstrapping"""
-
-    def migrate_step(cur: int, encoded: dict) -> dict:
-        """Step in recursion to migrate from one to another, contains migration logic"""
-        # Stop because we've reached the desired version
-        if cur == expected_version:
-            return encoded
-
-        # From version 1 to version 2
-        elif cur == 1:
-            # Target id to url
-            encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
-            del encoded["id"]
-            print(
-                Fore.YELLOW
-                + "Please make sure "
-                + encoded["url"]
-                + " is the correct url"
-                + Fore.RESET
-            )
-
-            # Empty livestreams/shorts lists
-            encoded["livestreams"] = []
-            encoded["shorts"] = []
-
-        # From version 2 to version 3
-        elif cur == 2:
-            # Add deleted status to every video/livestream/short
-            # NOTE: none is fine for new elements, just a slight bodge
-            for video in encoded["videos"]:
-                video["deleted"] = Element.new(
-                    Video._new_empty(), False
-                )._to_archive_o()
-            for video in encoded["livestreams"]:
-                video["deleted"] = Element.new(
-                    Video._new_empty(), False
-                )._to_archive_o()
-            for video in encoded["shorts"]:
-                video["deleted"] = Element.new(
-                    Video._new_empty(), False
-                )._to_archive_o()
-
-        # From version 3 to version 4
-        elif cur == 3:
-            # Add empty comment author store
-            encoded["comment_authors"] = {}
-
-            # Add blank comment section to each video
-            for video in encoded["videos"]:
-                video["comments"] = {}
-            for video in encoded["livestreams"]:
-                video["comments"] = {}
-            for video in encoded["shorts"]:
-                video["comments"] = {}
-
-            # Rename thumbnails directory to images
-            try:
-                thumbnails = path / "thumbnails"
-                thumbnails.rename(path / "images")
-            except:
-                _err_msg(
-                    f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
-                )
-                sys.exit(1)
-
-            # Convert unsupported formats, because of #75 <https://github.com/Owez/yark/issues/75>
-            converter = Converter(path / "videos")
-            converter.run()
-
-        # Unknown version
-        else:
-            _err_msg(f"Unknown archive version v{cur} found during migration", True)
-            sys.exit(1)
-
-        # Increment version and run again until version has been reached
-        cur += 1
-        encoded["version"] = cur
-        return migrate_step(cur, encoded)
-
-    # Inform user of the backup process
-    print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
-        + Fore.RESET
-    )
-
-    # Start recursion step
-    return migrate_step(current_version, encoded)
 
 
 def _err_dl(name: str, exception: DownloadError, retrying: bool):
