@@ -33,46 +33,6 @@ having way more complexity in the archiver decoding system itself.
 """
 
 
-class VideoLogger:
-    @staticmethod
-    def downloading(d):
-        """Progress hook for video downloading"""
-        # Get video's id
-        id = d["info_dict"]["id"]
-
-        # Downloading percent
-        if d["status"] == "downloading":
-            percent = d["_percent_str"].strip()
-            print(
-                Style.DIM + f"  • Downloading {id}, at {percent}.." + Style.NORMAL,
-                end="\r",
-            )
-
-        # Finished a video's download
-        elif d["status"] == "finished":
-            print(
-                Style.DIM
-                + f"  • Downloaded {id}                               "
-                + Style.NORMAL
-            )
-
-    def debug(self, msg):
-        """Debug log messages, ignored"""
-        pass
-
-    def info(self, msg):
-        """Info log messages ignored"""
-        pass
-
-    def warning(self, msg):
-        """Warning log messages ignored"""
-        pass
-
-    def error(self, msg):
-        """Error log messages"""
-        pass
-
-
 class Archive:
     path: Path
     version: int
@@ -129,7 +89,7 @@ class Archive:
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
-        settings = self._md_settings(config)
+        settings = config.settings_md()
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
@@ -202,7 +162,7 @@ class Archive:
         """Downloads all videos which haven't already been downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
-        settings = self._dl_settings(config)
+        settings = config.settings_dl(self.path)
 
         # Retry downloading 5 times in total for all videos
         anything_downloaded = True
@@ -240,48 +200,6 @@ class Archive:
         if anything_downloaded:
             converter = Converter(self.path / "videos")
             converter.run()
-
-    def _md_settings(self, config: Config) -> dict:
-        """Generates customized yt-dlp settings for metadata from `config` passed in"""
-        # Always present
-        settings = {
-            # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(),
-            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
-            "ignore_no_formats_error": True,
-            # Fetch comments from videos
-            "getcomments": config.comments,
-        }
-
-        # Custom yt-dlp proxy
-        if config.proxy is not None:
-            settings["proxy"] = config.proxy
-
-        # Return
-        return settings
-
-    def _dl_settings(self, config: Config) -> dict:
-        """Generates customized yt-dlp settings from `config` passed in"""
-        # Always present
-        settings = {
-            # Set the output path
-            "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
-            # Centralized logger hook for ignoring all stdout
-            "logger": VideoLogger(),
-            # Logger hook for download progress
-            "progress_hooks": [VideoLogger.downloading],
-        }
-
-        # Custom yt-dlp format
-        if config.format is not None:
-            settings["format"] = config.format
-
-        # Custom yt-dlp proxy
-        if config.proxy is not None:
-            settings["proxy"] = config.proxy
-
-        # Return
-        return settings
 
     def _dl_launch(self, settings: dict, not_downloaded: list[Video]):
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""

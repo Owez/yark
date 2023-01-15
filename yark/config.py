@@ -1,5 +1,9 @@
-from typing import Optional
+"""Configuration for metadata/downloads"""
+
+from typing import Optional, Any
 from colorama import Fore
+from .logger import VideoLogger
+from pathlib import Path
 
 
 class Config:
@@ -46,3 +50,44 @@ class Config:
                 + Fore.RESET
             )
             self.skip_download = True
+
+    def settings_dl(self, path: Path) -> dict[str, Any]:
+        """Generates customized yt-dlp settings from `config` passed in"""
+        settings = {
+            # Set the output path
+            "outtmpl": f"{path}/videos/%(id)s.%(ext)s",
+            # Centralized logger hook for ignoring all stdout
+            "logger": VideoLogger(),
+            # Logger hook for download progress
+            "progress_hooks": [VideoLogger.downloading],
+        }
+
+        # Custom yt-dlp format
+        if self.format is not None:
+            settings["format"] = self.format
+
+        # Custom yt-dlp proxy
+        if self.proxy is not None:
+            settings["proxy"] = self.proxy
+
+        # Return
+        return settings
+
+    def settings_md(self) -> dict[str, Any]:
+        """Generates customized yt-dlp settings for metadata from `config` passed in"""
+        # Always present
+        settings = {
+            # Centralized logging system; makes output fully quiet
+            "logger": VideoLogger(),
+            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
+            "ignore_no_formats_error": True,
+            # Fetch comments from videos
+            "getcomments": self.comments,
+        }
+
+        # Custom yt-dlp proxy
+        if self.proxy is not None:
+            settings["proxy"] = self.proxy
+
+        # Return
+        return settings

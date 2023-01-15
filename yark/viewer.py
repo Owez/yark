@@ -69,7 +69,7 @@ def archive(name, kind):
             else archive.livestreams
             if kind == "livestreams"
             else archive.shorts
-        )
+        ).inner.values()
         return render_template(
             "archive.html",
             title=name,
