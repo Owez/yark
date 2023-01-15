@@ -11,7 +11,8 @@ import sys
 from .reporter import Reporter
 from ..errors import ArchiveNotFoundException, VideoNotFoundException
 from ..logger import _err_msg
-from .video import Video, Element, CommentAuthor, Videos
+from .video.video import Video, Videos
+from .video.comment_author import CommentAuthor
 from typing import Optional
 from .config import Config
 from .converter import Converter

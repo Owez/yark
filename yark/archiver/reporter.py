@@ -2,7 +2,7 @@
 
 from colorama import Fore, Style
 import datetime
-from .video import Video, Element
+from .video.video import Video, Element
 from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
 

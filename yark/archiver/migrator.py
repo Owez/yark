@@ -1,8 +1,8 @@
 """Migrator for old versions of archives to new ones"""
 
 from pathlib import Path
-from colorama import Fore, Style
-from .video import Video, Element
+from colorama import Fore
+from .video.video import Video, Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter

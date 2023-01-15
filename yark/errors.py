@@ -51,4 +51,3 @@ class ConversionException(Exception):
     ) -> None:
         super().__init__(*args)
         self.stderr = stderr
-

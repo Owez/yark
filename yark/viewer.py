@@ -19,7 +19,7 @@ from .errors import (
     TimestampException,
 )
 from .archiver.archive import Archive
-from .archiver.video import Note
+from .archiver.video.note import Note
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
