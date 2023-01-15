@@ -128,12 +128,12 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_archive_o(encoded: dict, archive: Archive) -> Video:
-        """TODO: make _ib"""
+    def _from_archive_ib(archive: Archive, id: str, encoded: dict) -> Video:
+        """Converts archive body dict into a new video with an id passed in"""
         # Normal
         video = Video()
         video.archive = archive
-        video.id = encoded["id"]
+        video.id = id
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
@@ -145,11 +145,8 @@ class Video:
             encoded["thumbnail"], video, IMAGE_THUMBNAIL
         )
         video.deleted = Element._from_archive_o(encoded["deleted"], video)
-        video.comments = Comments(archive)
+        video.comments = Comments._from_archive_o(archive, encoded["comments"])
         video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]
-
-        # Load data
-        video.comments.load_archive(encoded["comments"])
 
         # Runtime-only
         video.known_not_deleted = False
@@ -157,10 +154,9 @@ class Video:
         # Return
         return video
 
-    def _to_archive_o(self) -> dict:
-        """TODO: make _b"""
+    def _to_archive_b(self) -> dict:
+        """Converts this video into a dict body for saving to the archive under an id"""
         return {
-            "id": self.id,
             "uploaded": self.uploaded.isoformat(),
             "width": self.width,
             "height": self.height,
@@ -170,7 +166,7 @@ class Video:
             "likes": self.likes._to_archive_o(),
             "thumbnail": self.thumbnail._to_archive_o(),
             "deleted": self.deleted._to_archive_o(),
-            "comments": self.comments.save_archive(),
+            "comments": self.comments._to_archive_o(),
             "notes": [note._to_archive_o() for note in self.notes],
         }
 
@@ -221,6 +217,30 @@ def _magnitude(count: Optional[int] = None) -> str:
     else:
         value = "{:.1f}".format(float(count) / 1000000000.0)
         return value + "b"
+
+
+class Videos:
+    archive: Archive
+    inner: dict[str, Video]
+
+    def __init__(self, archive: Archive) -> None:
+        self.archive = archive
+        self.inner = {}
+
+    @staticmethod
+    def _from_archive_o(archive: Archive, videos: dict[str, dict]):
+        """Loads videos from it's object in the archive"""
+        output = Videos(archive)
+        for id in videos.keys():
+            output.inner[id] = Video._from_archive_ib(archive, id, videos[id])
+        return output
+
+    def _to_archive_o(self) -> dict[str, dict]:
+        """Saves each video as an id & body style dict inside of a videos object"""
+        payload = {}
+        for id in self.inner:
+            payload[id] = self.inner[id]._to_archive_b()
+        return payload
 
 
 class Element:
@@ -417,20 +437,6 @@ class Comments:
         self.archive = archive
         self.inner = {}
 
-    def load_archive(self, comments: dict[str, dict]):
-        """Loads comments from a comment level in a Yark archive"""
-        for id in comments.keys():
-            self.inner[id] = Comment._from_archive_ib(
-                self.archive, None, id, comments[id]
-            )
-
-    def save_archive(self) -> dict[str, dict]:
-        """Saves each comment as a dictionary inside of comments"""
-        payload = {}
-        for id in self.inner:
-            payload[id] = self.inner[id]._to_archive_b()
-        return payload
-
     def update(self, comments: list[dict]):
         """Updates comments according to metadata"""
         # All comments which have been found so we can see the difference to find deleted comments
@@ -510,6 +516,21 @@ class Comments:
             # Add to adoption queue if the comment is a child
             else:
                 adoption_queue.append((parent_id, comment))
+
+    @staticmethod
+    def _from_archive_o(archive: Archive, comments: dict[str, dict]):
+        """Loads comments from a comment level in a Yark archive"""
+        output = Comments(archive)
+        for id in comments.keys():
+            output.inner[id] = Comment._from_archive_ib(archive, None, id, comments[id])
+        return output
+
+    def _to_archive_o(self) -> dict[str, dict]:
+        """Saves each comment as an id & body style dict inside of comments"""
+        payload = {}
+        for id in self.inner:
+            payload[id] = self.inner[id]._to_archive_b()
+        return payload
 
 
 def _decode_comment_id(id: str) -> tuple[Optional[str], str]:

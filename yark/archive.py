@@ -10,7 +10,7 @@ from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
-from .video import Video, Element, CommentAuthor
+from .video import Video, Element, CommentAuthor, Videos
 from typing import Optional
 from .config import Config
 from .converter import Converter
@@ -77,9 +77,9 @@ class Archive:
     path: Path
     version: int
     url: str
-    videos: list[Video]
-    livestreams: list[Video]
-    shorts: list[Video]
+    videos: Videos
+    livestreams: Videos
+    shorts: Videos
     comment_authors: dict[str, CommentAuthor]
     reporter: Reporter
 
@@ -92,9 +92,9 @@ class Archive:
         archive.path = Path(path)
         archive.version = ARCHIVE_COMPAT
         archive.url = url
-        archive.videos = []
-        archive.livestreams = []
-        archive.shorts = []
+        archive.videos = Videos(archive)
+        archive.livestreams = Videos(archive)
+        archive.shorts = Videos(archive)
         archive.comment_authors = {}
         archive.reporter = Reporter(archive)
 
@@ -483,27 +483,24 @@ class Archive:
         # Initiate archive
         archive = Archive()
 
-        # Decode head & body style comment authors; needed above video decoding for comments
+        # Decode id & body style comment authors
+        # NOTE: needed above video decoding for comments
         archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
                 archive, id, encoded["comment_authors"][id]
             )
 
+        # Decode id & body style videos/livestreams/shorts
+        archive.videos = archive._decode_videos_ib(encoded["videos"])  # TODO
+        archive.livestreams = archive._decode_videos_ib(encoded["livestreams"])  # TODO
+        archive.shorts = archive._decode_videos_ib(encoded["shorts"])  # TODO
+
         # Basics
         archive.path = path
         archive.version = encoded["version"]
         archive.url = encoded["url"]
         archive.reporter = Reporter(archive)
-        archive.videos = [
-            Video._from_archive_o(video, archive) for video in encoded["videos"]
-        ]
-        archive.livestreams = [
-            Video._from_archive_o(video, archive) for video in encoded["livestreams"]
-        ]
-        archive.shorts = [
-            Video._from_archive_o(video, archive) for video in encoded["shorts"]
-        ]
         archive.comment_authors = {}
 
         # Return
