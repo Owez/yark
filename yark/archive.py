@@ -342,12 +342,12 @@ class Archive:
         # Return
         return new_not_downloaded
 
-    def search(self, id: str):
+    def search(self, id: str) -> Video:
         """Searches archive for a video with the corresponding `id` and returns"""
         # Search
-        for video in self.videos:
-            if video.id == id:
-                return video
+        found = self.videos.inner[id]
+        if found is not None:
+            return found
 
         # Raise exception if it's not found
         raise VideoNotFoundException(f"Couldn't find {id} inside archive")
@@ -355,22 +355,24 @@ class Archive:
     def _curate(self, config: Config) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
+        def curate_list(videos: Videos, maximum: Optional[int]) -> list[Video]:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
                 # Fix the maximum to the length so we don't try to get more than there is
-                fixed_maximum = min(max(len(videos) - 1, 0), maximum)
+                fixed_maximum = min(max(len(videos.inner) - 1, 0), maximum)
 
                 # Set the available videos to this fixed maximum
-                new_videos = []
+                new_videos = {}
+                values = list(videos.inner.values())
                 for ind in range(fixed_maximum):
-                    new_videos.append(videos[ind])
-                videos = new_videos
+                    video = values[ind]
+                    new_videos[video.id] = videos.inner[video.id]
+                videos.inner = new_videos
 
             # Find undownloaded videos in available list
             not_downloaded = []
-            for video in videos:
+            for video in videos.inner.values():
                 if not video.downloaded():
                     not_downloaded.append(video)
 
@@ -403,7 +405,7 @@ class Archive:
             json.dump(self._to_archive_o(), file)
 
     def _parse_metadata(
-        self, kind: str, config: Config, entries: list[dict], videos: list[Video]
+        self, kind: str, config: Config, entries: list[dict], videos: Videos
     ):
         """Parses metadata for a category of video into it's `videos` bucket"""
         # Parse each video
@@ -411,10 +413,10 @@ class Archive:
         for entry in entries:
             self._parse_metadata_video(config, entry, videos)
 
-        # Sort videos by newest
-        videos.sort(reverse=True)
+        # Sort videos by newest for display and so we can curate with maximums
+        # TODO: or curate won't work
 
-    def _parse_metadata_video(self, config: Config, entry: dict, videos: list[Video]):
+    def _parse_metadata_video(self, config: Config, entry: dict, videos: Videos):
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
         if "formats" not in entry or len(entry["formats"]) == 0:
@@ -424,7 +426,7 @@ class Archive:
         updated = False
 
         # Update video if it exists
-        for video in videos:
+        for video in videos.inner.values():
             if video.id == entry["id"]:
                 video.update(config, entry)
                 updated = True
@@ -433,12 +435,12 @@ class Archive:
         # Add new video if not
         if not updated:
             video = Video.new(config, entry, self)
-            videos.append(video)
+            videos.inner[video.id] = video
             self.reporter.added.append(video)
 
-    def _report_deleted(self, videos: list):
+    def _report_deleted(self, videos: Videos):
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
-        for video in videos:
+        for video in videos.inner.values():
             if video.deleted.current() == False and not video.known_not_deleted:
                 self.reporter.deleted.append(video)
                 video.deleted.update(None, True)
@@ -491,15 +493,13 @@ class Archive:
                 archive, id, encoded["comment_authors"][id]
             )
 
-        # Decode id & body style videos/livestreams/shorts
-        archive.videos = archive._decode_videos_ib(encoded["videos"])  # TODO
-        archive.livestreams = archive._decode_videos_ib(encoded["livestreams"])  # TODO
-        archive.shorts = archive._decode_videos_ib(encoded["shorts"])  # TODO
-
         # Basics
         archive.path = path
         archive.version = encoded["version"]
         archive.url = encoded["url"]
+        archive.videos = Videos._from_archive_o(archive, encoded["videos"])
+        archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
+        archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
         archive.reporter = Reporter(archive)
         archive.comment_authors = {}
 
@@ -517,9 +517,9 @@ class Archive:
         payload = {
             "version": self.version,
             "url": self.url,
-            "videos": [video._to_archive_o() for video in self.videos],
-            "livestreams": [video._to_archive_o() for video in self.livestreams],
-            "shorts": [video._to_archive_o() for video in self.shorts],
+            "videos": self.videos._to_archive_o(),
+            "livestreams": self.livestreams._to_archive_o(),
+            "shorts": self.shorts._to_archive_o(),
             "comment_authors": comment_authors,
         }
 

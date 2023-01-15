@@ -20,7 +20,7 @@ archive.commit()
 archive = Archive.load(Path("demo"))
 
 # Print all the video id's of the archive
-print(", ".join([video.id for video in archive.videos]))
+print(", ".join([id for id in archive.videos.inner.keys()]))
 
 # Get a cool video I made and print it's description
 video = archive.search("annp92OPZgQ")
