@@ -345,7 +345,6 @@ class Archive:
     def search_video(self, id: str):
         """Searches archive for a video with the corresponding `id` and returns"""
         # Search
-        print(self.videos)
         for video in self.videos:
             if video.id == id:
                 return video
