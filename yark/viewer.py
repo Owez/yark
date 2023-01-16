@@ -109,9 +109,6 @@ def video(name, kind, id):
             video = archive.search_livestreams(id)
         elif kind == "shorts":
             video = archive.search_shorts(id)
-        else:
-            return
-
 
         # Return video webpage
         if request.method == "GET":
