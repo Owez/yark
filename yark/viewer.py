@@ -104,7 +104,7 @@ def video(name, kind, id):
         # Get information
         archive = Archive.load(name)
         if kind == "videos":
-            video = archive.search_video(id)
+            video = archive.search_videos(id)
         elif kind == "livestreams":
             video = archive.search_livestreams(id)
         elif kind == "shorts":
