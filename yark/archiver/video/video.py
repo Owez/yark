@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from datetime import datetime
-from uuid import uuid4
 from ...errors import NoteNotFoundException
 from ...utils import _truncate_text
 from typing import TYPE_CHECKING, Any, Optional
@@ -17,9 +16,6 @@ if TYPE_CHECKING:
 
 IMAGE_THUMBNAIL = "webp"
 """Image extension setting for all thumbnails"""
-
-IMAGE_AUTHOR_ICON = "jpg"
-"""Image extension setting for all author icons"""
 
 
 class Video:
@@ -225,6 +221,12 @@ class Videos:
     def __init__(self, archive: Archive) -> None:
         self.archive = archive
         self.inner = {}
+
+    def sort(self):
+        """Sorts `inner` videos content by newest date uploaded"""
+        sorted_kv = sorted(self.inner.items(), key=lambda item: item[1].uploaded)
+        sorted_dict = {k: v for k, v in sorted_kv}
+        self.inner = sorted_dict
 
     @staticmethod
     def _from_archive_o(archive: Archive, videos: dict[str, dict]):

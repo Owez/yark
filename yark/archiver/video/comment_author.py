@@ -1,19 +1,25 @@
 from __future__ import annotations
-from ..archive import Archive
 from .element import Element
 from .image import Image
-from .video import IMAGE_AUTHOR_ICON
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..archive import Archive
+
+
+IMAGE_AUTHOR_ICON = "jpg"
+"""Image extension setting for all author icons"""
 
 
 class CommentAuthor:
-    archive: Archive
+    archive: "Archive"
     id: str
     name: Element
     icon: Element
 
     @staticmethod
     def new_or_update(
-        archive: Archive, id: str, name: str, icon_url: str
+        archive: "Archive", id: str, name: str, icon_url: str
     ) -> CommentAuthor:
         """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
         # Get from archive
@@ -39,7 +45,7 @@ class CommentAuthor:
         return author
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, element: dict) -> CommentAuthor:
+    def _from_archive_ib(archive: "Archive", id: str, element: dict) -> CommentAuthor:
         """Decodes comment author from the body dict and adds the id passed in from an archive"""
         author = CommentAuthor()
         author.archive = archive

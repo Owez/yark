@@ -4,14 +4,16 @@ from __future__ import annotations
 import multiprocessing
 from functools import partial
 from typing import TYPE_CHECKING, Optional, Any
-from ..archive import Archive
 from .comment_author import CommentAuthor
 from .element import Element
 import datetime
 
+if TYPE_CHECKING:
+    from ..archive import Archive
+
 
 class Comment:
-    archive: Archive
+    archive: "Archive"
     parent: Optional[Comment]
     id: str
     author: CommentAuthor
@@ -23,7 +25,7 @@ class Comment:
 
     @staticmethod
     def new(
-        archive: Archive,
+        archive: "Archive",
         parent: Optional[Comment],
         id: str,
         author_id: str,
@@ -59,7 +61,7 @@ class Comment:
 
     @staticmethod
     def _from_archive_ib(
-        archive: Archive, parent: Optional[Comment], id: str, element: dict
+        archive: "Archive", parent: Optional[Comment], id: str, element: dict
     ) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
         # Basic
@@ -108,7 +110,7 @@ class Comments:
     archive: "Archive"
     inner: dict[str, Comment]
 
-    def __init__(self, archive: Archive) -> None:
+    def __init__(self, archive: "Archive") -> None:
         self.archive = archive
         self.inner = {}
 
@@ -193,7 +195,7 @@ class Comments:
                 adoption_queue.append((parent_id, comment))
 
     @staticmethod
-    def _from_archive_o(archive: Archive, comments: dict[str, dict]):
+    def _from_archive_o(archive: "Archive", comments: dict[str, dict]):
         """Loads comments from a comment level in a Yark archive"""
         output = Comments(archive)
         for id in comments.keys():

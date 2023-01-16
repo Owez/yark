@@ -1,20 +1,23 @@
 from __future__ import annotations
-from .video import Video
-from .comment_author import CommentAuthor
 from pathlib import Path
 from .element import Element
 import requests
 import hashlib
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .video import Video
+    from .comment_author import CommentAuthor
 
 
 class Image:
-    parent: Video | CommentAuthor
+    parent: "Video" | "CommentAuthor"
     id: str
     path: Path
     ext: str
 
     @staticmethod
-    def new(parent: Video | CommentAuthor, url: str, ext: str) -> Image:
+    def new(parent: "Video" | "CommentAuthor", url: str, ext: str) -> Image:
         """Pulls a new image from YouTube and saves"""
         # Basic details
         image = Image()
@@ -39,7 +42,7 @@ class Image:
         return self.parent.archive.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def load(id: str, parent: Video | CommentAuthor, ext: str):
+    def load(id: str, parent: "Video" | "CommentAuthor", ext: str):
         """Loads existing image from saved path by id"""
         image = Image()
         image.id = id
@@ -49,7 +52,7 @@ class Image:
         return image
 
     @staticmethod
-    def _from_element(element: dict, video: Video, ext: str) -> Element:
+    def _from_element(element: dict, video: "Video", ext: str) -> Element:
         """Converts element of images to properly formed images"""
         decoded = Element._from_archive_o(element, video)
         for date in decoded.inner:

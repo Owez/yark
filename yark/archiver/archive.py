@@ -336,7 +336,7 @@ class Archive:
             self._parse_metadata_video(config, entry, videos)
 
         # Sort videos by newest for display and so we can curate with maximums
-        # TODO: or curate won't work
+        videos.sort()
 
     def _parse_metadata_video(self, config: Config, entry: dict, videos: Videos):
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""

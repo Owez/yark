@@ -1,18 +1,20 @@
 from __future__ import annotations
-from .video import Video
-from .comments import Comment
-from ..archive import Archive
-from .comment_author import CommentAuthor
 import datetime
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .video import Video
+    from .comments import Comment
+    from ..archive import Archive
+    from .comment_author import CommentAuthor
 
 
 class Element:
-    parent: Video | Comment | Archive | CommentAuthor
+    parent: "Video" | "Comment" | "Archive" | "CommentAuthor"
     inner: dict[datetime.datetime, Any]
 
     @staticmethod
-    def new(parent: Video | Comment | Archive | CommentAuthor, data):
+    def new(parent: "Video" | "Comment" | "Archive" | "CommentAuthor", data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
         element.parent = parent
@@ -52,7 +54,7 @@ class Element:
 
     @staticmethod
     def _from_archive_o(
-        encoded: dict, parent: Video | Comment | Archive | CommentAuthor
+        encoded: dict, parent: "Video" | "Comment" | "Archive" | "CommentAuthor"
     ) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
