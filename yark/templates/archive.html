@@ -55,7 +55,6 @@
     .frost {
         filter: blur(5px);
         opacity: 0.4;
-        margin-top: -5px;
     }
 
     .no-videos {
@@ -63,17 +62,15 @@
         line-height: 1.5;
     }
 
-    .funky {
-        background-image: linear-gradient(43deg, #5e54c9 0%, #50c8c4 100%);
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
     #kind-select {
         display: flex;
         justify-content: center;
         margin-bottom: 1.75rem;
         font-weight: bold;
+    }
+
+    #kind-select>a.selected {
+        color: #347BC6;
     }
 
     .kind-select-centre {
@@ -93,6 +90,10 @@
         #kind-select {
             color: lightgray;
         }
+
+        #kind-select>a.selected {
+            color: #5178C6;
+        }
     }
 </style>
 {% endblock %}
@@ -101,17 +102,17 @@
 <h1 class="hero">{{ name }}</h1>
 <div id="kind-select">
     {% if kind == 'videos' %}
-    <a href="/archive/{{ name }}/videos" class="funky">videos</a>
+    <a href="/archive/{{ name }}/videos" class="selected">videos</a>
     {% else %}
     <a href="/archive/{{ name }}/videos">videos</a>
     {% endif %}
     {% if kind == 'livestreams' %}
-    <a href="/archive/{{ name }}/livestreams" class="kind-select-centre funky">livestreams</a>
+    <a href="/archive/{{ name }}/livestreams" class="kind-select-centre selected">livestreams</a>
     {% else %}
     <a href="/archive/{{ name }}/livestreams" class="kind-select-centre">livestreams</a>
     {% endif %}
     {% if kind == 'shorts' %}
-    <a href="/archive/{{ name }}/shorts" class="funky">shorts</a>
+    <a href="/archive/{{ name }}/shorts" class="selected">shorts</a>
     {% else %}
     <a href="/archive/{{ name }}/shorts">shorts</a>
     {% endif %}

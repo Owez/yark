@@ -84,6 +84,10 @@
         margin-right: 0.5rem;
     }
 
+    .spacer-likes {
+        margin-right: 0.45rem;
+    }
+
     ul {
         line-height: 2.25rem;
     }
@@ -197,7 +201,7 @@
         {% set views = video.views.current() %}
         <p>
             <!-- View count -->
-            <span title="View count of the video">{{ views }} view{% if views != 1 %}s{% endif %}</span>
+            <span title="View count of the video">{{ "{:,}".format(views) }} view{% if views != 1 %}s{% endif %}</span>
             <!-- Uploaded -->
             <span class="spacer">•</span>
             <span title="Upload time of the video">{{ video.uploaded.strftime("%d/%m/%Y") }}</span>
@@ -220,7 +224,7 @@
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}
             <span class="spacer">•</span>
-            <span title="Like count of the video">👍 {{ likes }}</span>
+            <span title="Like count of the video"><span class="spacer-likes">👍</span>{{ "{:,}".format(likes) }}</span>
             {% endif %}
         </p>
     </div>
