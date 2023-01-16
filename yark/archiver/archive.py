@@ -278,27 +278,30 @@ class Archive:
 
         def curate_list(videos: Videos, maximum: Optional[int]) -> list[Video]:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
+            # Make a list for the videos
+            found_videos = []
+
+            # Add all videos because there's no maximum
+            if maximum is None:
+                found_videos = list(videos.inner.values())
+
             # Cut available videos to maximum if present for deterministic getting
-            if maximum is not None:
+            else:
                 # Fix the maximum to the length so we don't try to get more than there is
                 fixed_maximum = min(max(len(videos.inner) - 1, 0), maximum)
 
                 # Set the available videos to this fixed maximum
-                new_videos = {}
                 values = list(videos.inner.values())
                 for ind in range(fixed_maximum):
+                    # Get video
                     video = values[ind]
-                    new_videos[video.id] = videos.inner[video.id]
-                videos.inner = new_videos
 
-            # Find undownloaded videos in available list
-            not_downloaded = []
-            for video in videos.inner.values():
-                if not video.downloaded():
-                    not_downloaded.append(video)
+                    # Save video if it's not been downloaded yet
+                    if not video.downloaded():
+                        found_videos.append(video)
 
             # Return
-            return not_downloaded
+            return found_videos
 
         # Curate
         not_downloaded = []
