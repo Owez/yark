@@ -342,10 +342,28 @@ class Archive:
         # Return
         return new_not_downloaded
 
-    def search(self, id: str):
+    def search_video(self, id: str):
         """Searches archive for a video with the corresponding `id` and returns"""
         # Search
+        print(self.videos)
         for video in self.videos:
+            if video.id == id:
+                return video
+
+        # Raise exception if it's not found
+        raise VideoNotFoundException(f"Couldn't find {id} inside archive")
+
+    def search_livestreams(self, id: str):
+        """Searches archive for a livestream with the corresponding `id` and returns"""
+        # Search
+        for video in self.livestreams:
+            if video.id == id:
+                return video
+
+    def search_shorts(self, id: str):
+        """Searches archive for a short with the corresponding `id` and returns"""
+        # Search
+        for video in self.shorts:
             if video.id == id:
                 return video
 

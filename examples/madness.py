@@ -23,7 +23,7 @@ archive = Archive.load(Path("demo"))
 print(", ".join([video.id for video in archive.videos]))
 
 # Get a cool video I made and print it's description
-video = archive.search("annp92OPZgQ")
+video = archive.search_video("annp92OPZgQ")
 print(video.description.current())
 
 # Download the 5 most recent videos and 10 most recent shorts

@@ -19,7 +19,7 @@ from .errors import (
     TimestampException,
 )
 from .archive import Archive
-from .video import Note
+from .video import Note, Video
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
@@ -103,7 +103,15 @@ def video(name, kind, id):
     try:
         # Get information
         archive = Archive.load(name)
-        video = archive.search(id)
+        if kind == "videos":
+            video = archive.search_video(id)
+        elif kind == "livestreams":
+            video = archive.search_livestreams(id)
+        elif kind == "shorts":
+            video = archive.search_shorts(id)
+        else:
+            return
+
 
         # Return video webpage
         if request.method == "GET":
