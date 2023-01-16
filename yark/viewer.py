@@ -103,7 +103,12 @@ def video(name, kind, id):
     try:
         # Get information
         archive = Archive.load(name)
-        video = archive.search(id)
+        if kind == "videos":
+            video = archive.search_videos(id)
+        elif kind == "livestreams":
+            video = archive.search_livestreams(id)
+        elif kind == "shorts":
+            video = archive.search_shorts(id)
 
         # Return video webpage
         if request.method == "GET":
