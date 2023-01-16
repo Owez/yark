@@ -21,7 +21,7 @@ class Element:
         element.inner = {datetime.datetime.utcnow(): data}
         return element
 
-    def update(self, kind: Optional[str], data):
+    def update(self, kind: Optional[str], data: Any):
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
@@ -40,9 +40,6 @@ class Element:
                     else self.parent  # NOTE: this can be simplified but Archive would be a circular dep
                 )
                 archive.reporter.add_updated(kind, self)
-
-        # Return self
-        return self
 
     def current(self):
         """Returns most recent element"""

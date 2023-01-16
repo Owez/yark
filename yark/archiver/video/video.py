@@ -224,7 +224,9 @@ class Videos:
 
     def sort(self):
         """Sorts `inner` videos content by newest date uploaded"""
-        sorted_kv = sorted(self.inner.items(), key=lambda item: item[1].uploaded)
+        sorted_kv = sorted(
+            self.inner.items(), key=lambda item: item[1].uploaded, reverse=True
+        )
         sorted_dict = {k: v for k, v in sorted_kv}
         self.inner = sorted_dict
 
