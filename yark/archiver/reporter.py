@@ -102,7 +102,7 @@ class Reporter:
 
             # Truncate title, get viewer link, and format all together with viewer link
             title = _truncate_text(video.title.current(), 51).strip()
-            url = f"http://127.0.0.1:7667/archive/{video.archive}/{kind}/{video.id}"
+            url = f"http://127.0.0.1:7667/archive/{video.parent.archive}/{kind}/{video.id}"
             return (
                 f"  • {title}\n    {changes}\n    "
                 + Style.DIM

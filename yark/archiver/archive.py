@@ -17,6 +17,7 @@ from typing import Optional
 from .config import Config
 from .converter import Converter
 from .migrator import _migrate
+from .parent import Parent
 
 ARCHIVE_COMPAT = 4
 """
@@ -49,15 +50,20 @@ class Archive:
     @staticmethod
     def new(path: Path, url: str) -> Archive:
         """Creates a new archive"""
-        # Details
+        # Initiate archive
         print("Creating new archive..")
         archive = Archive()
+
+        # Create an archive parent for children
+        archive_parent = Parent.new_archive(archive)
+
+        # Normal
         archive.path = Path(path)
         archive.version = ARCHIVE_COMPAT
         archive.url = url
-        archive.videos = Videos(archive)
-        archive.livestreams = Videos(archive)
-        archive.shorts = Videos(archive)
+        archive.videos = Videos(archive_parent)
+        archive.livestreams = Videos(archive_parent)
+        archive.shorts = Videos(archive_parent)
         archive.comment_authors = {}
         archive.reporter = Reporter(archive)
 
@@ -358,8 +364,9 @@ class Archive:
                 break
 
         # Add new video if not
+        archive_parent = Parent.new_archive(self)
         if not updated:
-            video = Video.new(config, entry, self)
+            video = Video.new(config, archive_parent, entry)
             videos.inner[video.id] = video
             self.reporter.added.append(video)
 
@@ -410,21 +417,26 @@ class Archive:
         # Initiate archive
         archive = Archive()
 
+        # Create an archive parent for children
+        archive_parent = Parent.new_archive(archive)
+
         # Decode id & body style comment authors
         # NOTE: needed above video decoding for comments
         archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
-                archive, id, encoded["comment_authors"][id]
+                archive_parent, id, encoded["comment_authors"][id]
             )
 
-        # Basics
+        # Normal
         archive.path = path
         archive.version = encoded["version"]
         archive.url = encoded["url"]
-        archive.videos = Videos._from_archive_o(archive, encoded["videos"])
-        archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
-        archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
+        archive.videos = Videos._from_archive_o(archive_parent, encoded["videos"])
+        archive.livestreams = Videos._from_archive_o(
+            archive_parent, encoded["livestreams"]
+        )
+        archive.shorts = Videos._from_archive_o(archive_parent, encoded["shorts"])
         archive.reporter = Reporter(archive)
         archive.comment_authors = {}
 

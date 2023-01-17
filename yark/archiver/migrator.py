@@ -6,6 +6,7 @@ from .video.video import Video, Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter
+from .parent import Parent
 
 
 def _migrate(
@@ -56,13 +57,13 @@ def _step(
     # From version 2 to version 3
     elif cur == 2:
         # Add deleted status to every video/livestream/short
-        # NOTE: none is fine for new elements, just a slight bodge
+        # NOTE: this bodged empty parent (should be Parent.new_video) is fine, its never used
         for video in encoded["videos"]:
-            video["deleted"] = Element.new(Video._new_empty(), False)._to_archive_o()
+            video["deleted"] = Element.new(Parent(), False)._to_archive_o()
         for video in encoded["livestreams"]:
-            video["deleted"] = Element.new(Video._new_empty(), False)._to_archive_o()
+            video["deleted"] = Element.new(Parent(), False)._to_archive_o()
         for video in encoded["shorts"]:
-            video["deleted"] = Element.new(Video._new_empty(), False)._to_archive_o()
+            video["deleted"] = Element.new(Parent(), False)._to_archive_o()
 
     # From version 3 to version 4
     elif cur == 3:

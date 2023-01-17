@@ -4,14 +4,11 @@
 from __future__ import annotations
 import multiprocessing
 from functools import partial
-from typing import TYPE_CHECKING, Optional, Any
+from typing import Optional, Any
 from .comment_author import CommentAuthor
 from .element import Element
 from ..parent import Parent
 import datetime
-
-if TYPE_CHECKING:
-    from ..archive import Archive
 
 
 class Comment:
@@ -36,15 +33,21 @@ class Comment:
         created: datetime.datetime,
     ) -> Comment:
         """Creates a new comment with simplified information inputs"""
+        # Initiate comment
         comment = Comment()
+
+        # Make comment parent for children
+        comment_parent = Parent.new_comment(parent.archive, comment)
+
+        # Normal
         comment.parent = parent
         comment.id = id
         comment.author = CommentAuthor.new_or_update(
-            Parent(parent.archive), author_id, author_name, author_icon_url
+            Parent.new_archive(parent.archive), author_id, author_name, author_icon_url
         )
-        comment.body = Element.new(comment, body)
-        comment.favorited = Element.new(comment, favorited)
-        comment.deleted = Element.new(comment, False)
+        comment.body = Element.new(comment_parent, body)
+        comment.favorited = Element.new(comment_parent, favorited)
+        comment.deleted = Element.new(comment_parent, False)
         comment.created = created
         comment.children = Comments(Parent.new_comment(parent.archive, comment))
         return comment
@@ -52,7 +55,7 @@ class Comment:
     def update(self, entry: dict[str, Any]):
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
         self.author.new_or_update(
-            Parent(self.parent.archive),
+            Parent.new_archive(self.parent.archive),
             entry["author_id"],
             entry["author"],
             entry["author_thumbnail"],
@@ -64,18 +67,26 @@ class Comment:
     @staticmethod
     def _from_archive_ib(parent: Parent, id: str, element: dict) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
-        # Basic
+        # Initiate comment
+        comment = Comment()
+
+        # Make comment parent for children
+        comment_parent = Parent.new_comment(parent.archive, comment)
+
+        # Normal
         comment = Comment()
         comment.parent = parent
         comment.id = id
         comment.author = parent.archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_archive_o(element["body"], comment)
-        comment.favorited = Element._from_archive_o(element["favorited"], comment)
-        comment.deleted = Element._from_archive_o(element["deleted"], comment)
+        comment.body = Element._from_archive_o(element["body"], comment_parent)
+        comment.favorited = Element._from_archive_o(
+            element["favorited"], comment_parent
+        )
+        comment.deleted = Element._from_archive_o(element["deleted"], comment_parent)
         comment.created = datetime.datetime.fromisoformat(element["created"])
 
         # Get children using the id & body method
-        comment.children = Comments(Parent.new_comment(parent.archive, comment))
+        comment.children = Comments(comment_parent)
         for id in element["children"].keys():
             comment.children.inner[id] = Comment._from_archive_ib(
                 comment.children.parent, id, element["children"][id]
@@ -134,8 +145,11 @@ class Comments:
 
         # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
+            # Set the parent of this child comment to the same one the children list uses (they're the same)
             parent = self.inner[parent_id].children
             comment.parent = parent.parent
+
+            # Add this child comment into aforementioned children list
             self.inner[parent_id].children.inner[comment.id] = comment
 
         # Update those who have been deleted by finding the difference between recently got and archived

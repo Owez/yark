@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from ...errors import NoteNotFoundException
 from ...utils import _truncate_text
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 from ..config import Config
 from .comments import Comments
 from .element import Element
@@ -258,7 +258,7 @@ class Videos:
         output = Videos(parent)
         for id in videos.keys():
             output.inner[id] = Video._from_archive_ib(
-                Parent(parent.archive), id, videos[id]
+                Parent.new_archive(parent.archive), id, videos[id]
             )
         return output
 

@@ -1,3 +1,5 @@
+"""User note-taking/journaling to record interesting parts of videos using a timestamp"""
+
 from __future__ import annotations
 from uuid import uuid4
 from typing import Optional
