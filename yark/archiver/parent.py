@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from .archive import Archive
-from typing import Optional
+from typing import Optional, Any
 from .video.video import Video
 from .video.comments import Comment
 from .video.comment_author import CommentAuthor
@@ -16,6 +16,23 @@ class Parent:
 
     def __init__(self, archive: Archive) -> None:
         self.archive = archive
+
+    def closest(self) -> Any:
+        """Gets the closest parent for the known context"""
+        # Comment author
+        if self.comment_author is not None:
+            return self.comment_author
+
+        # Comment
+        elif self.comment is not None:
+            return self.comment
+
+        # Video
+        elif self.video is not None:
+            return self.video
+
+        # Just the archive
+        return self.archive
 
     @staticmethod
     def new_video(archive: Archive, video: Video) -> Parent:

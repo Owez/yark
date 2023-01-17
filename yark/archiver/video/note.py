@@ -2,6 +2,7 @@ from __future__ import annotations
 from uuid import uuid4
 from typing import Optional
 from typing import TYPE_CHECKING
+from ..parent import Parent
 
 if TYPE_CHECKING:
     from .video import Video

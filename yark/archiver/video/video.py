@@ -10,6 +10,7 @@ from .comments import Comments
 from .element import Element
 from .image import Image
 from .note import Note
+from ..parent import Parent
 
 if TYPE_CHECKING:
     from ..archive import Archive

@@ -3,6 +3,7 @@ from pathlib import Path
 from .element import Element
 import requests
 import hashlib
+from ..parent import Parent
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
