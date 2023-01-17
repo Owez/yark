@@ -12,15 +12,12 @@ from .image import Image
 from .note import Note
 from ..parent import Parent
 
-if TYPE_CHECKING:
-    from ..archive import Archive
-
 IMAGE_THUMBNAIL = "webp"
 """Image extension setting for all thumbnails"""
 
 
 class Video:
-    archive: "Archive"
+    parent: Parent
     id: str
     uploaded: datetime
     width: int
@@ -35,26 +32,36 @@ class Video:
     comments: Comments
 
     @staticmethod
-    def new(config: Config, entry: dict[str, Any], archive: Archive) -> Video:
+    def new(config: Config, parent: Parent, entry: dict[str, Any]) -> Video:
         """Create new video from metadata entry"""
-        # Normal
+        # Initiate video
         video = Video()
-        video.archive = archive
+
+        # Make parent for reuse in children elements
+        video_parent = Parent.new_video(parent.archive, video)
+
+        # Normal
+        video.parent = parent
         video.id = entry["id"]
         video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
-        video.title = Element.new(video, entry["title"])
-        video.description = Element.new(video, entry["description"])
-        video.views = Element.new(video, entry["view_count"])
+        video.title = Element.new(video_parent, entry["title"])
+        video.description = Element.new(video_parent, entry["description"])
+        video.views = Element.new(video_parent, entry["view_count"])
         video.likes = Element.new(
-            video, entry["like_count"] if "like_count" in entry else None
+            video_parent, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(
-            video, Image.new(video, entry["thumbnail"], IMAGE_THUMBNAIL)
+        video.thumbnail = Element.new_subparent(
+            video_parent,
+            lambda e: Image.new(
+                Parent.new_element(e.parent.archive, e),
+                entry["thumbnail"],
+                IMAGE_THUMBNAIL,
+            ),
         )
-        video.deleted = Element.new(video, False)
-        video.comments = Comments(archive)
+        video.deleted = Element.new(video_parent, False)
+        video.comments = Comments(video_parent)
         video.notes = []
 
         # Add comments if they're there
@@ -82,7 +89,12 @@ class Video:
             "like count", entry["like_count"] if "like_count" in entry else None
         )
         self.thumbnail.update(
-            "thumbnail", Image.new(self, entry["thumbnail"], IMAGE_THUMBNAIL)
+            "thumbnail",
+            Image.new(
+                Parent.new_element(self.parent.archive, self.thumbnail),
+                entry["thumbnail"],
+                IMAGE_THUMBNAIL,
+            ),
         )
         self.deleted.update("undeleted", False)
         if config.comments and entry["comments"] is not None:
@@ -93,7 +105,7 @@ class Video:
 
     def filename(self) -> Optional[str]:
         """Returns the filename for the downloaded video, if any"""
-        videos = self.archive.path / "videos"
+        videos = self.parent.archive.path / "videos"
         for file in videos.iterdir():
             if file.stem == self.id and file.suffix != ".part":
                 return file.name
@@ -124,25 +136,34 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, encoded: dict) -> Video:
+    def _from_archive_ib(parent: Parent, id: str, encoded: dict) -> Video:
         """Converts archive body dict into a new video with an id passed in"""
-        # Normal
+        # Initiate video
         video = Video()
-        video.archive = archive
+
+        # Make parent for reuse in children elements
+        video_parent = Parent.new_video(parent.archive, video)
+
+        # Normal
+        video.parent = parent
         video.id = id
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
-        video.title = Element._from_archive_o(encoded["title"], video)
-        video.description = Element._from_archive_o(encoded["description"], video)
-        video.views = Element._from_archive_o(encoded["views"], video)
-        video.likes = Element._from_archive_o(encoded["likes"], video)
-        video.thumbnail = Image._from_element(
-            encoded["thumbnail"], video, IMAGE_THUMBNAIL
+        video.title = Element._from_archive_o(encoded["title"], video_parent)
+        video.description = Element._from_archive_o(
+            encoded["description"], video_parent
         )
-        video.deleted = Element._from_archive_o(encoded["deleted"], video)
-        video.comments = Comments._from_archive_o(archive, encoded["comments"])
-        video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]
+        video.views = Element._from_archive_o(encoded["views"], video_parent)
+        video.likes = Element._from_archive_o(encoded["likes"], video_parent)
+        video.thumbnail = Image._from_element(
+            encoded["thumbnail"], video_parent, IMAGE_THUMBNAIL
+        )
+        video.deleted = Element._from_archive_o(encoded["deleted"], video_parent)
+        video.comments = Comments._from_archive_o(video_parent, encoded["comments"])
+        video.notes = [
+            Note._from_archive_o(video_parent, note) for note in encoded["notes"]
+        ]
 
         # Runtime-only
         video.known_not_deleted = False
@@ -216,11 +237,11 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 
 class Videos:
-    archive: Archive
+    parent: Parent
     inner: dict[str, Video]
 
-    def __init__(self, archive: Archive) -> None:
-        self.archive = archive
+    def __init__(self, parent: Parent) -> None:
+        self.archive = parent
         self.inner = {}
 
     def sort(self):
@@ -232,11 +253,13 @@ class Videos:
         self.inner = sorted_dict
 
     @staticmethod
-    def _from_archive_o(archive: Archive, videos: dict[str, dict]):
+    def _from_archive_o(parent: Parent, videos: dict[str, dict]):
         """Loads videos from it's object in the archive"""
-        output = Videos(archive)
+        output = Videos(parent)
         for id in videos.keys():
-            output.inner[id] = Video._from_archive_ib(archive, id, videos[id])
+            output.inner[id] = Video._from_archive_ib(
+                Parent(parent.archive), id, videos[id]
+            )
         return output
 
     def _to_archive_o(self) -> dict[str, dict]:

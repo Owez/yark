@@ -6,19 +6,15 @@ import hashlib
 from ..parent import Parent
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .video import Video
-    from .comment_author import CommentAuthor
-
 
 class Image:
-    parent: "Video" | "CommentAuthor"
+    parent: Parent
     id: str
     path: Path
     ext: str
 
     @staticmethod
-    def new(parent: "Video" | "CommentAuthor", url: str, ext: str) -> Image:
+    def new(parent: Parent, url: str, ext: str) -> Image:
         """Pulls a new image from YouTube and saves"""
         # Basic details
         image = Image()
@@ -43,7 +39,7 @@ class Image:
         return self.parent.archive.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def load(id: str, parent: "Video" | "CommentAuthor", ext: str):
+    def load(id: str, parent: Parent, ext: str):
         """Loads existing image from saved path by id"""
         image = Image()
         image.id = id
@@ -53,11 +49,11 @@ class Image:
         return image
 
     @staticmethod
-    def _from_element(element: dict, video: "Video", ext: str) -> Element:
+    def _from_element(element: dict, parent: Parent, ext: str) -> Element:
         """Converts element of images to properly formed images"""
-        decoded = Element._from_archive_o(element, video)
+        decoded = Element._from_archive_o(element, parent)
         for date in decoded.inner:
-            decoded.inner[date] = Image.load(decoded.inner[date], video, ext)
+            decoded.inner[date] = Image.load(decoded.inner[date], parent, ext)
         return decoded
 
     def _to_element(self) -> str:

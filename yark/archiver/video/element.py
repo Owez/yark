@@ -1,25 +1,27 @@
 from __future__ import annotations
 import datetime
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, Callable
 from ..parent import Parent
-
-if TYPE_CHECKING:
-    from .video import Video
-    from .comments import Comment
-    from ..archive import Archive
-    from .comment_author import CommentAuthor
 
 
 class Element:
-    parent: "Video" | "Comment" | "Archive" | "CommentAuthor"
+    parent: Parent
     inner: dict[datetime.datetime, Any]
 
     @staticmethod
-    def new(parent: "Video" | "Comment" | "Archive" | "CommentAuthor", data):
-        """Creates new element attached to a video with some initial data"""
+    def new(parent: Parent, data: Any):
+        """Creates new element attached with some initial data"""
         element = Element()
         element.parent = parent
         element.inner = {datetime.datetime.utcnow(): data}
+        return element
+
+    @staticmethod
+    def new_subparent(parent: Parent, data_subparent: Callable[[Element], Any]):
+        """Creates a new element with data that uses the newly-created element during initiation, used for when data has this element as a parent"""
+        element = Element()
+        element.parent = parent
+        element.inner = {datetime.datetime.utcnow(): data_subparent(element)}
         return element
 
     def update(self, kind: Optional[str], data: Any):
@@ -33,14 +35,7 @@ class Element:
 
             # Report if wanted
             if kind is not None:
-                archive = (
-                    self.parent.archive
-                    if isinstance(self.parent, Video)
-                    or isinstance(self.parent, Comment)
-                    or isinstance(self.parent, CommentAuthor)
-                    else self.parent  # NOTE: this can be simplified but Archive would be a circular dep
-                )
-                archive.reporter.add_updated(kind, self)
+                self.parent.archive.reporter.add_updated(kind, self)
 
     def current(self):
         """Returns most recent element"""
@@ -51,9 +46,7 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_archive_o(
-        encoded: dict, parent: "Video" | "Comment" | "Archive" | "CommentAuthor"
-    ) -> Element:
+    def _from_archive_o(encoded: dict, parent: Parent) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
         element = Element()
