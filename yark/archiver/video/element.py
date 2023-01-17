@@ -46,7 +46,7 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_archive_o(encoded: dict, parent: Parent) -> Element:
+    def _from_archive_o(parent: Parent, encoded: dict) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
         element = Element()

@@ -78,11 +78,11 @@ class Comment:
         comment.parent = parent
         comment.id = id
         comment.author = parent.archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_archive_o(element["body"], comment_parent)
+        comment.body = Element._from_archive_o(comment_parent, element["body"])
         comment.favorited = Element._from_archive_o(
-            element["favorited"], comment_parent
+            comment_parent, element["favorited"]
         )
-        comment.deleted = Element._from_archive_o(element["deleted"], comment_parent)
+        comment.deleted = Element._from_archive_o(comment_parent, element["deleted"])
         comment.created = datetime.datetime.fromisoformat(element["created"])
 
         # Get children using the id & body method

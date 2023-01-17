@@ -1,4 +1,10 @@
-"""Useful shared utility functions"""
+"""Useful shared utility constants, classes, and functions"""
+
+IMAGE_AUTHOR_ICON = "jpg"
+"""Image extension setting for all author icons"""
+
+IMAGE_THUMBNAIL = "webp"
+"""Image extension setting for all thumbnails"""
 
 
 def _truncate_text(text: str, to: int = 31) -> str:

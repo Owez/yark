@@ -50,7 +50,7 @@ class Image:
     @staticmethod
     def _from_element(element: dict, parent: Parent, ext: str) -> Element:
         """Converts element of images to properly formed images"""
-        decoded = Element._from_archive_o(element, parent)
+        decoded = Element._from_archive_o(parent,element)
         for date in decoded.inner:
             decoded.inner[date] = Image.load(decoded.inner[date], parent, ext)
         return decoded

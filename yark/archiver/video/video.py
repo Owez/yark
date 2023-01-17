@@ -11,9 +11,7 @@ from .element import Element
 from .image import Image
 from .note import Note
 from ..parent import Parent
-
-IMAGE_THUMBNAIL = "webp"
-"""Image extension setting for all thumbnails"""
+from ...utils import IMAGE_THUMBNAIL
 
 
 class Video:
@@ -63,21 +61,14 @@ class Video:
         video.deleted = Element.new(video_parent, False)
         video.comments = Comments(video_parent)
         video.notes = []
+        video.known_not_deleted = True
 
         # Add comments if they're there
         if config.comments and entry["comments"] is not None:
             video.comments.update(entry["comments"])
 
-        # Runtime-only
-        video.known_not_deleted = True
-
         # Return
         return video
-
-    @staticmethod
-    def _new_empty() -> Video:
-        """Returns a phantom video for use in places where videos are required but we don't have a video"""
-        return Video()
 
     def update(self, config: Config, entry: dict):
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
@@ -99,8 +90,6 @@ class Video:
         self.deleted.update("undeleted", False)
         if config.comments and entry["comments"] is not None:
             self.comments.update(entry["comments"])
-
-        # Runtime-only
         self.known_not_deleted = True
 
     def filename(self) -> Optional[str]:
@@ -150,22 +139,20 @@ class Video:
         video.uploaded = datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
-        video.title = Element._from_archive_o(encoded["title"], video_parent)
+        video.title = Element._from_archive_o(video_parent, encoded["title"])
         video.description = Element._from_archive_o(
-            encoded["description"], video_parent
+            video_parent, encoded["description"]
         )
-        video.views = Element._from_archive_o(encoded["views"], video_parent)
-        video.likes = Element._from_archive_o(encoded["likes"], video_parent)
+        video.views = Element._from_archive_o(video_parent, encoded["views"])
+        video.likes = Element._from_archive_o(video_parent, encoded["likes"])
         video.thumbnail = Image._from_element(
             encoded["thumbnail"], video_parent, IMAGE_THUMBNAIL
         )
-        video.deleted = Element._from_archive_o(encoded["deleted"], video_parent)
+        video.deleted = Element._from_archive_o(video_parent, encoded["deleted"])
         video.comments = Comments._from_archive_o(video_parent, encoded["comments"])
         video.notes = [
             Note._from_archive_o(video_parent, note) for note in encoded["notes"]
         ]
-
-        # Runtime-only
         video.known_not_deleted = False
 
         # Return

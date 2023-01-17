@@ -20,6 +20,7 @@ from .errors import (
 )
 from .archiver.archive import Archive
 from .archiver.video.note import Note
+from .archiver.video.video import Video
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
@@ -63,13 +64,7 @@ def archive(name, kind):
 
     try:
         archive = Archive.load(name)
-        videos = (
-            archive.videos
-            if kind == "videos"
-            else archive.livestreams
-            if kind == "livestreams"
-            else archive.shorts
-        ).inner.values()
+        videos = _videos_from_kind(archive, kind)
         return render_template(
             "archive.html",
             title=name,
@@ -135,7 +130,7 @@ def video(name, kind, id):
 
             # Save new note
             video.notes.append(note)
-            video.archive.commit()
+            video.parent.archive.commit()
 
             # Return
             return note._to_archive_o(), 200
@@ -158,7 +153,7 @@ def video(name, kind, id):
                 note.title = update["title"]
             if "body" in update:
                 note.body = update["body"]
-            video.archive.commit()
+            video.parent.archive.commit()
 
             # Return
             return "Updated", 200
@@ -176,7 +171,7 @@ def video(name, kind, id):
                 if note.id != delete["id"]:
                     filtered_notes.append(note)
             video.notes = filtered_notes
-            video.archive.commit()
+            video.parent.archive.commit()
 
             # Return
             return "Deleted", 200
@@ -297,3 +292,13 @@ def _encode_timestamp(timestamp: int) -> str:
 
     # Return
     return ":".join(parts)
+
+
+def _videos_from_kind(archive: Archive, kind: str) -> list[Video]:
+    """Returns the video list depending on kind of video users are searching for, e.g. `videos` or `shorts`"""
+    videos = archive.videos
+    if kind == "livestreams":
+        videos = archive.livestreams
+    elif kind == "shorts":
+        videos = archive.shorts
+    return list(videos.inner.values())

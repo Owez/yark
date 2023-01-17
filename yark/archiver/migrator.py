@@ -7,6 +7,7 @@ from ..logger import _err_msg
 import sys
 from .converter import Converter
 from .parent import Parent
+from typing import Any
 
 
 def _migrate(
@@ -88,6 +89,20 @@ def _step(
             )
             sys.exit(1)
 
+        # Make each video category use "id": {"body"} instead of {"id", "body"}
+        new_videos: dict[str, dict[str, Any]] = {}
+        for video in encoded["videos"]:
+            _o_to_ib_video(new_videos, video)
+        encoded["videos"] = new_videos
+        new_livestreams: dict[str, dict[str, Any]] = {}
+        for video in encoded["livestreams"]:
+            _o_to_ib_video(new_livestreams, video)
+        encoded["livestreams"] = new_livestreams
+        new_shorts: dict[str, dict[str, Any]] = {}
+        for video in encoded["shorts"]:
+            _o_to_ib_video(new_shorts, video)
+        encoded["shorts"] = new_shorts
+
         # Convert unsupported formats, because of #75 <https://github.com/Owez/yark/issues/75>
         converter = Converter(path / "videos")
         converter.run()
@@ -101,3 +116,10 @@ def _step(
     cur += 1
     encoded["version"] = cur
     return _step(expected_version, path, cur, encoded, archive_name)
+
+
+def _o_to_ib_video(new_videos: dict[str, dict[str, Any]], video: dict[str, Any]):
+    """Adds old format `video` into the new `new_videos` dict"""
+    id = video["id"]
+    del video["id"]
+    new_videos[id] = video

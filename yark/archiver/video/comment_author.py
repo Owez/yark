@@ -1,12 +1,8 @@
 from __future__ import annotations
 from .element import Element
 from .image import Image
-from typing import TYPE_CHECKING
 from ..parent import Parent
-
-
-IMAGE_AUTHOR_ICON = "jpg"
-"""Image extension setting for all author icons"""
+from ...utils import IMAGE_AUTHOR_ICON
 
 
 class CommentAuthor:
@@ -70,8 +66,8 @@ class CommentAuthor:
         # Normal
         author.parent = parent
         author.id = id
-        author.name = Element._from_archive_o(element["name"], archive_parent)
-        author.icon = Element._from_archive_o(element["icon"], archive_parent)
+        author.name = Element._from_archive_o(archive_parent,element["name"])
+        author.icon = Element._from_archive_o(archive_parent,element["icon"])
         return author
 
     def _to_archive_b(self) -> dict:
