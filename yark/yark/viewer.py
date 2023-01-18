@@ -40,7 +40,7 @@ def index():
         if visited is not None:
             visited = json.loads(visited)
         return render_template(
-            "index.html", visited=visited, error=request.args.get("error")
+            "templates/index.html", visited=visited, error=request.args.get("error")
         )
 
 
@@ -67,7 +67,7 @@ def archive(name, kind):
         archive = Archive.load(name)
         videos = _videos_from_kind(archive, kind)
         return render_template(
-            "archive.html",
+            "templates/archive.html",
             title=name,
             archive=archive,
             name=name,
@@ -107,7 +107,7 @@ def video(name, kind, id):
             views_data = json.dumps(video.views._to_archive_o())
             likes_data = json.dumps(video.likes._to_archive_o())
             return render_template(
-                "video.html",
+                "templates/video.html",
                 title=title,
                 name=name,
                 video=video,
