@@ -13,6 +13,9 @@ from .archiver.archive import Archive
 from .archiver.config import Config
 from .viewer import viewer
 import requests
+from .utils import PYPI_VERSION
+from typing import Optional, Any
+from requests.exceptions import HTTPError, ConnectionError
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
@@ -207,27 +210,45 @@ def _cli():
 
 def _pypi_version():
     """Checks if there's a new version of Yark and tells the user if it's significant"""
+
+    def get_data() -> Optional[Any]:
+        """Gets JSON data for current version of Yark on PyPI or returns nothing if there was a minor error"""
+        minor_error = lambda: _err_msg(
+            "Couldn't check for a new version of Yark, your connection might be faulty!"
+        )
+        try:
+            return requests.get("https://pypi.org/pypi/yark/json", timeout=2).json()
+        except HTTPError:
+            minor_error()
+            return None
+        except ConnectionError:
+            minor_error()
+            return None
+        except TimeoutError:
+            minor_error()
+            _err_msg(
+                Style.DIM + "This was caused by the request timing out" + Style.NORMAL
+            )
+            return None
+
     # Get package data from PyPI
-    data = requests.get("https://pypi.org/pypi/yark/json").json()
+    data = get_data()
+    if data is None:
+        return
 
-    def decode_version(version: str) -> tuple:
-        """Decodes stringified versioning into a tuple"""
-        return tuple([int(v) for v in version.split(".")[:2]])
+    # Decode their versioning information
+    rewrite_and_major = [int(v) for v in data["info"]["version"].split(".")[:2]]
+    their_rewrite, their_major = (rewrite_and_major[0], rewrite_and_major[1])
 
-    # Generate versions
-    our_major, our_minor = decode_version(version("yark"))
-    their_major, their_minor = decode_version(data["info"]["version"])
+    # Get our versioning information from local hardcoded constant
+    our_rewrite, our_major = PYPI_VERSION
 
     # Compare versions
-    if their_major > our_major:
+    if their_rewrite > our_rewrite or their_major > our_major:
         print(
             Fore.YELLOW
-            + f"There's a major update for Yark ready to download! Run `pip3 install --upgrade yark`"
+            + "There's a major update for Yark ready to download, please update!"
             + Fore.RESET
-        )
-    elif their_minor > our_minor:
-        print(
-            f"There's a small update for Yark ready to download! Run `pip3 install --upgrade yark`"
         )
 
 
