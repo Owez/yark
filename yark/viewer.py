@@ -21,6 +21,7 @@ from .errors import (
 from .archiver.archive import Archive
 from .archiver.video.note import Note
 from .archiver.video.video import Video
+from typing import Optional
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
@@ -98,12 +99,7 @@ def video(name, kind, id):
     try:
         # Get information
         archive = Archive.load(name)
-        if kind == "videos":
-            video = archive.search_videos(id)
-        elif kind == "livestreams":
-            video = archive.search_livestreams(id)
-        elif kind == "shorts":
-            video = archive.search_shorts(id)
+        video = _search_video_from_kind(archive, kind, id)
 
         # Return video webpage
         if request.method == "GET":
@@ -307,3 +303,13 @@ def _videos_from_kind(archive: Archive, kind: str) -> list[Video]:
     elif kind == "shorts":
         videos = archive.shorts
     return list(videos.inner.values())
+
+
+def _search_video_from_kind(archive: Archive, kind: str, id: str) -> Optional[Video]:
+    """Searches the provided archive for the video id depending on kind, e.g. `videos` or `shorts`"""
+    if kind == "videos":
+        return archive.search_videos(id)
+    elif kind == "livestreams":
+        return archive.search_livestreams(id)
+    else:
+        return archive.search_shorts(id)
