@@ -1,13 +1,14 @@
 """Migrator for old versions of archives to new ones"""
 
 from pathlib import Path
-from colorama import Fore
-from .video.video import Video, Element
+from colorama import Fore, Style
+from .video.video import Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter
 from .parent import Parent
 from typing import Any
+from ..utils import ARCHIVE_COMPAT, PYPI_VERSION
 
 
 def _migrate(
@@ -18,6 +19,18 @@ def _migrate(
     archive_name: str,
 ) -> dict:
     """Automatically migrates an archive from one version to another by bootstrapping"""
+
+    # Tell user we can't downgrade
+    if expected_version < current_version:
+        _err_msg(
+            f"The version of Yark you're currently using supports up to v{ARCHIVE_COMPAT} archives but your archive is v{current_version}!"
+        )
+        _err_msg(
+            Style.DIM
+            + f"To fix this, you might want to upgrade your current Yark {PYPI_VERSION[0]}.{PYPI_VERSION[0]} to a newer one"
+            + Style.NORMAL
+        )
+        sys.exit(1)
 
     # Inform user of the backup process
     print(
