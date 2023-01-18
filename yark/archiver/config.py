@@ -6,6 +6,10 @@ from ..logger import VideoLogger
 from pathlib import Path
 
 
+YtDlpSettings = dict[str, Any]
+"""Download settings which the `yt-dlp` library uses during initiation"""
+
+
 class Config:
     max_videos: Optional[int]
     max_livestreams: Optional[int]
@@ -51,7 +55,7 @@ class Config:
             )
             self.skip_download = True
 
-    def settings_dl(self, path: Path) -> dict[str, Any]:
+    def settings_dl(self, path: Path) -> YtDlpSettings:
         """Generates customized yt-dlp settings from `config` passed in"""
         settings = {
             # Set the output path
@@ -73,7 +77,7 @@ class Config:
         # Return
         return settings
 
-    def settings_md(self) -> dict[str, Any]:
+    def settings_md(self) -> YtDlpSettings:
         """Generates customized yt-dlp settings for metadata from `config` passed in"""
         # Always present
         settings = {
