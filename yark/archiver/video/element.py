@@ -1,7 +1,7 @@
 from __future__ import annotations
 import datetime
-from typing import Any, Optional,TYPE_CHECKING
-
+from typing import Any, Optional, TYPE_CHECKING
+from .video import Video
 
 if TYPE_CHECKING:
     from ..archive import Archive
@@ -19,7 +19,7 @@ class Element:
         element.inner = {datetime.datetime.utcnow(): data}
         return element
 
-    def update(self, kind: Optional[str], data: Any):
+    def update(self, kind_video: Optional[tuple[str, Video]], data: Any):
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
@@ -28,9 +28,9 @@ class Element:
             # Update
             self.inner[datetime.datetime.utcnow()] = data
 
-            # Report if wanted
-            if kind is not None:
-                self.archive.reporter.add_updated(kind, self)
+            # Report about a change to a video if wanted
+            if kind_video is not None:
+                self.archive.reporter.add_updated(kind_video[0], kind_video[1])
 
     def current(self):
         """Returns most recent element"""

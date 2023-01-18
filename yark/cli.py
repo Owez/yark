@@ -144,7 +144,7 @@ def _cli():
 
         # Refresh archive using config context
         try:
-            archive = Archive.load(args[1])
+            archive = Archive.load(Path(args[1]))
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
@@ -174,15 +174,15 @@ def _cli():
         # Start on archive name
         if len(args) > 1:
             # Get name
-            archive = args[1]
+            archive_name = args[1]
 
             # Jank archive check
-            if not Path(archive).exists():
+            if not Path(archive_name).exists():
                 _err_archive_not_found()
 
             # Launch and start browser
-            print(f"Starting viewer for {archive}..")
-            webbrowser.open(f"http://127.0.0.1:7667/archive/{archive}/videos")
+            print(f"Starting viewer for {archive_name}..")
+            webbrowser.open(f"http://127.0.0.1:7667/archive/{archive_name}/videos")
             launch()
 
         # Start on archive finder

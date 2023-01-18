@@ -11,6 +11,7 @@ from .element import Element
 from .image import Image
 from .note import Note
 from ...utils import IMAGE_THUMBNAIL
+from ...errors import VideoNotFoundException
 
 if TYPE_CHECKING:
     from ..archive import Archive
@@ -69,21 +70,21 @@ class Video:
     def update(self, config: Config, entry: dict):
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
-        self.title.update("title", entry["title"])
-        self.description.update("description", entry["description"])
-        self.views.update("view count", entry["view_count"])
+        self.title.update(("title", self), entry["title"])
+        self.description.update(("description", self), entry["description"])
+        self.views.update(("view count", self), entry["view_count"])
         self.likes.update(
-            "like count", entry["like_count"] if "like_count" in entry else None
+            ("like count", self), entry["like_count"] if "like_count" in entry else None
         )
         self.thumbnail.update(
-            "thumbnail",
+            ("thumbnail", self),
             Image.new(
                 self.archive,
                 entry["thumbnail"],
                 IMAGE_THUMBNAIL,
             ),
         )
-        self.deleted.update("undeleted", False)
+        self.deleted.update(("undeleted", self), False)
         if config.comments and entry["comments"] is not None:
             self.comments.update(entry["comments"])
         self.known_not_deleted = True
@@ -225,9 +226,12 @@ class Videos:
         sorted_dict = {k: v for k, v in sorted_kv}
         self.inner = sorted_dict
 
-    def get(self, id: str) -> Optional[Video]:
-        """Gets a video inside of the list via it's identifier"""
-        return self.inner.get(id)
+    def search(self, id: str) -> Video:
+        """Gets a video inside of the list via it's identifier or raises ``"""
+        found = self.inner.get(id)
+        if found is not None:
+            return found
+        raise VideoNotFoundException()
 
     @staticmethod
     def _from_archive_o(archive: Archive, videos: dict[str, dict]):

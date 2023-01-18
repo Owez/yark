@@ -9,7 +9,7 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from ..errors import ArchiveNotFoundExceptions
+from ..errors import ArchiveNotFoundException
 from ..logger import _err_msg
 from .video.video import Video, Videos
 from .video.comment_author import CommentAuthor

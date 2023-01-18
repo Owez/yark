@@ -5,15 +5,17 @@ import datetime
 from .video.video import Video, Element
 from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
+from .video.video import Videos
 
 if TYPE_CHECKING:
     from .archive import Archive
+
 
 class Reporter:
     archive: "Archive"
     added: list[Video]
     deleted: list[Video]
-    updated: list[tuple[str, Element]]
+    updated: list[tuple[str, Video]]
 
     def __init__(self, archive: "Archive") -> None:
         self.archive = archive
@@ -27,16 +29,16 @@ class Reporter:
         print(f"Report for {self.archive}:")
 
         # Updated
-        for kind, element in self.updated:
+        for kind, video in self.updated:
             colour = (
                 Fore.CYAN
                 if kind in ["title", "description", "undeleted"]
                 else Fore.BLUE
             )
-            video = f"  • {element.parent}".ljust(82)
+            video_fmt = f"  • {video}".ljust(82)
             kind = f" │ 🔥{kind.capitalize()}"
 
-            print(colour + video + kind)
+            print(colour + video_fmt + kind)
 
         # Added
         for video in self.added:
@@ -53,9 +55,9 @@ class Reporter:
         # Watermark
         print(_watermark())
 
-    def add_updated(self, kind: str, element: Element):
+    def add_updated(self, kind: str, video: Video):
         """Tells reporter that an element has been updated"""
-        self.updated.append((kind, element))
+        self.updated.append((kind, video))
 
     def reset(self):
         """Resets reporting values for new run"""
@@ -110,12 +112,12 @@ class Reporter:
                 + "\n"
             )
 
-        def fmt_category(kind: str, videos: list) -> Optional[str]:
+        def fmt_category(kind: str, videos: Videos) -> Optional[str]:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
             # Add interesting videos to buffer
             HEADING = f"Interesting {kind}:\n"
             buf = HEADING
-            for video in videos:
+            for video in videos.inner.values():
                 buf += fmt_video(kind, video)
 
             # Return depending on if the buf is just the heading
@@ -132,7 +134,7 @@ class Reporter:
         ]
 
         # Combine those with nothing of note and print out interesting
-        not_of_note = []
+        not_of_note: list[str] = []
         for name, buf in categories:
             if buf is None:
                 not_of_note.append(name)
@@ -141,8 +143,8 @@ class Reporter:
 
         # Print out those with nothing of note at the end
         if len(not_of_note) != 0:
-            not_of_note = "/".join(not_of_note)
-            print(f"No interesting {not_of_note} found")
+            not_of_note_fmt = "/".join(not_of_note)
+            print(f"No interesting {not_of_note_fmt} found")
 
         # Watermark
         print(_watermark())

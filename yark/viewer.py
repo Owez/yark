@@ -99,7 +99,7 @@ def video(name, kind, id):
     try:
         # Get information
         archive = Archive.load(name)
-        video = _search_video_from_kind(archive, kind, id)
+        video = _video_from_kind(archive, kind, id)
 
         # Return video webpage
         if request.method == "GET":
@@ -120,7 +120,7 @@ def video(name, kind, id):
         elif request.method == "POST":
             # Parse json
             new = request.get_json()
-            if not "title" in new:
+            if new is None or "title" not in new:
                 return "Invalid schema", 400
 
             # Create note
@@ -131,7 +131,7 @@ def video(name, kind, id):
 
             # Save new note
             video.notes.append(note)
-            video.parent.archive.commit()
+            video.archive.commit()
 
             # Return
             return note._to_archive_o(), 200
@@ -140,7 +140,11 @@ def video(name, kind, id):
         elif request.method == "PATCH":
             # Parse json
             update = request.get_json()
-            if not "id" in update or (not "title" in update and not "body" in update):
+            if (
+                update is None
+                or "id" not in update
+                or ("title" not in update and "body" not in update)
+            ):
                 return "Invalid schema", 400
 
             # Find note
@@ -154,7 +158,7 @@ def video(name, kind, id):
                 note.title = update["title"]
             if "body" in update:
                 note.body = update["body"]
-            video.parent.archive.commit()
+            video.archive.commit()
 
             # Return
             return "Updated", 200
@@ -163,7 +167,7 @@ def video(name, kind, id):
         elif request.method == "DELETE":
             # Parse json
             delete = request.get_json()
-            if not "id" in delete:
+            if delete is None or  "id" not in delete:
                 return "Invalid schema", 400
 
             # Filter out note with id and save
@@ -172,7 +176,7 @@ def video(name, kind, id):
                 if note.id != delete["id"]:
                     filtered_notes.append(note)
             video.notes = filtered_notes
-            video.parent.archive.commit()
+            video.archive.commit()
 
             # Return
             return "Deleted", 200
@@ -305,11 +309,11 @@ def _videos_from_kind(archive: Archive, kind: str) -> list[Video]:
     return list(videos.inner.values())
 
 
-def _search_video_from_kind(archive: Archive, kind: str, id: str) -> Optional[Video]:
+def _video_from_kind(archive: Archive, kind: str, id: str) -> Video:
     """Searches the provided archive for the video id depending on kind, e.g. `videos` or `shorts`"""
     if kind == "videos":
-        return archive.videos.get(id)
+        return archive.videos.search(id)
     elif kind == "livestreams":
-        return archive.livestreams.get(id)
+        return archive.livestreams.search(id)
     else:
-        return archive.shorts.get(id)
+        return archive.shorts.search(id)
