@@ -3,6 +3,7 @@ from pathlib import Path
 import requests
 import hashlib
 from typing import TYPE_CHECKING
+from .element import Element
 
 if TYPE_CHECKING:
     from ..archive import Archive
@@ -52,6 +53,14 @@ class Image:
     def _to_element(self) -> str:
         """Converts images instance to value used for element identification"""
         return self.id
+
+
+def image_element_from_archive(archive: Archive, element: dict, ext: str) -> Element:
+    """Helper function to convert a dict-based element containing images to properly formed element"""
+    decoded = Element._from_archive_o(archive, element)
+    for date in decoded.inner:
+        decoded.inner[date] = Image.load(archive, decoded.inner[date], ext)
+    return decoded
 
 
 def _image_and_hash(url: str) -> tuple[bytes, str]:

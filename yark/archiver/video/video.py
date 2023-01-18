@@ -8,7 +8,7 @@ from typing import Any, Optional, TYPE_CHECKING
 from ..config import Config
 from .comments import Comments
 from .element import Element
-from .image import Image
+from .image import Image, image_element_from_archive
 from .note import Note
 from ...utils import IMAGE_THUMBNAIL
 from ...errors import VideoNotFoundException
@@ -134,9 +134,9 @@ class Video:
         video.description = Element._from_archive_o(archive, encoded["description"])
         video.views = Element._from_archive_o(archive, encoded["views"])
         video.likes = Element._from_archive_o(archive, encoded["likes"])
-        video.thumbnail = Image._from_element(
-            encoded["thumbnail"], video, IMAGE_THUMBNAIL
-        )  # TODO: redo this from element
+        video.thumbnail = image_element_from_archive(
+            archive, encoded["thumbnail"], IMAGE_THUMBNAIL
+        )
         video.deleted = Element._from_archive_o(archive, encoded["deleted"])
         video.comments = Comments._from_archive_o(archive, video, encoded["comments"])
         video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]

@@ -22,8 +22,8 @@ Some of these breaking versions are large changes and some are relatively small.
 We don't check if a value exists or not in the archive format out of precedent
 and we don't have optionally-present values, meaning that any new tags are a
 breaking change to the format. The only downside to this is that the migrator
-gets a line or two of extra code every breaking change. This is much better than
-having way more complexity in the archiver decoding system itself.
+gets a line or two of extra code every breaking change. This is better than having
+more complexity in the archiver decoding system itself.
 """
 
 

@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from .video import Video
 
 
-
 class Note:
     parent: Video
     id: str

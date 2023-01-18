@@ -167,7 +167,7 @@ def video(name, kind, id):
         elif request.method == "DELETE":
             # Parse json
             delete = request.get_json()
-            if delete is None or  "id" not in delete:
+            if delete is None or "id" not in delete:
                 return "Invalid schema", 400
 
             # Filter out note with id and save
