@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 from uuid import uuid4
-from typing import Optional
-from ..parent import Parent
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .video import Video
+
 
 
 class Note:
-    parent: Parent
+    parent: Video
     id: str
     timestamp: int
     title: str
     body: Optional[str]
 
     @staticmethod
-    def new(parent: Parent, timestamp: int, title: str, body: Optional[str] = None):
+    def new(parent: Video, timestamp: int, title: str, body: Optional[str] = None):
         """Creates a new note"""
         note = Note()
         note.parent = parent
@@ -25,7 +28,7 @@ class Note:
         return note
 
     @staticmethod
-    def _from_archive_o(parent: Parent, element: dict) -> Note:
+    def _from_archive_o(parent: Video, element: dict) -> Note:
         """Loads existing note object dict from an archive"""
         note = Note()
         note.parent = parent

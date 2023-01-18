@@ -308,8 +308,8 @@ def _videos_from_kind(archive: Archive, kind: str) -> list[Video]:
 def _search_video_from_kind(archive: Archive, kind: str, id: str) -> Optional[Video]:
     """Searches the provided archive for the video id depending on kind, e.g. `videos` or `shorts`"""
     if kind == "videos":
-        return archive.search_videos(id)
+        return archive.videos.get(id)
     elif kind == "livestreams":
-        return archive.search_livestreams(id)
+        return archive.livestreams.get(id)
     else:
-        return archive.search_shorts(id)
+        return archive.shorts.get(id)

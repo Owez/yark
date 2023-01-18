@@ -1,23 +1,25 @@
 from __future__ import annotations
 from pathlib import Path
-from .element import Element
 import requests
 import hashlib
-from ..parent import Parent
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..archive import Archive
 
 
 class Image:
-    parent: Parent
+    archive: Archive
     id: str
     path: Path
     ext: str
 
     @staticmethod
-    def new(parent: Parent, url: str, ext: str) -> Image:
+    def new(archive: Archive, url: str, ext: str) -> Image:
         """Pulls a new image from YouTube and saves"""
         # Basic details
         image = Image()
-        image.parent = parent
+        image.archive = archive
         image.ext = ext
 
         # Get image and id which is a hash
@@ -35,25 +37,17 @@ class Image:
 
     def _path(self) -> Path:
         """Returns path to current image"""
-        return self.parent.archive.path / "images" / f"{self.id}.{self.ext}"
+        return self.archive.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def load(id: str, parent: Parent, ext: str):
+    def load(archive: Archive, id: str, ext: str):
         """Loads existing image from saved path by id"""
         image = Image()
+        image.archive = archive
         image.id = id
-        image.parent = parent
         image.ext = ext
         image.path = image._path() / f"{image.id}.{ext}"
         return image
-
-    @staticmethod
-    def _from_element(element: dict, parent: Parent, ext: str) -> Element:
-        """Converts element of images to properly formed images"""
-        decoded = Element._from_archive_o(parent,element)
-        for date in decoded.inner:
-            decoded.inner[date] = Image.load(decoded.inner[date], parent, ext)
-        return decoded
 
     def _to_element(self) -> str:
         """Converts images instance to value used for element identification"""

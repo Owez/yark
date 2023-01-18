@@ -4,15 +4,18 @@
 from __future__ import annotations
 import multiprocessing
 from functools import partial
-from typing import Optional, Any
+from typing import Optional, Any, TYPE_CHECKING
 from .comment_author import CommentAuthor
 from .element import Element
-from ..parent import Parent
 import datetime
+
+if TYPE_CHECKING:
+    from ..video.video import Video
+    from ..archive import Archive
 
 
 class Comment:
-    parent: Parent
+    archive: Archive
     id: str
     author: CommentAuthor
     body: Element
@@ -23,7 +26,7 @@ class Comment:
 
     @staticmethod
     def new(
-        parent: Parent,
+        archive: Archive,
         id: str,
         author_id: str,
         author_name: str,
@@ -36,26 +39,23 @@ class Comment:
         # Initiate comment
         comment = Comment()
 
-        # Make comment parent for children
-        comment_parent = Parent.new_comment(parent.archive, comment)
-
         # Normal
-        comment.parent = parent
+        comment.archive = archive
         comment.id = id
         comment.author = CommentAuthor.new_or_update(
-            Parent.new_archive(parent.archive), author_id, author_name, author_icon_url
+            archive, author_id, author_name, author_icon_url
         )
-        comment.body = Element.new(comment_parent, body)
-        comment.favorited = Element.new(comment_parent, favorited)
-        comment.deleted = Element.new(comment_parent, False)
+        comment.body = Element.new(archive, body)
+        comment.favorited = Element.new(archive, favorited)
+        comment.deleted = Element.new(archive, False)
         comment.created = created
-        comment.children = Comments(Parent.new_comment(parent.archive, comment))
+        comment.children = Comments(archive)
         return comment
 
     def update(self, entry: dict[str, Any]):
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
         self.author.new_or_update(
-            Parent.new_archive(self.parent.archive),
+            self.archive,
             entry["author_id"],
             entry["author"],
             entry["author_thumbnail"],
@@ -65,31 +65,26 @@ class Comment:
         self.deleted.update(None, False)
 
     @staticmethod
-    def _from_archive_ib(parent: Parent, id: str, element: dict) -> Comment:
+    def _from_archive_ib(archive: Archive, id: str, element: dict) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
         # Initiate comment
         comment = Comment()
 
-        # Make comment parent for children
-        comment_parent = Parent.new_comment(parent.archive, comment)
-
         # Normal
         comment = Comment()
-        comment.parent = parent
+        comment.archive = archive
         comment.id = id
-        comment.author = parent.archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_archive_o(comment_parent, element["body"])
-        comment.favorited = Element._from_archive_o(
-            comment_parent, element["favorited"]
-        )
-        comment.deleted = Element._from_archive_o(comment_parent, element["deleted"])
+        comment.author = archive.comment_authors[element["author_id"]]
+        comment.body = Element._from_archive_o(archive, element["body"])
+        comment.favorited = Element._from_archive_o(archive, element["favorited"])
+        comment.deleted = Element._from_archive_o(archive, element["deleted"])
         comment.created = datetime.datetime.fromisoformat(element["created"])
 
         # Get children using the id & body method
-        comment.children = Comments(comment_parent)
+        comment.children = Comments(archive)
         for id in element["children"].keys():
             comment.children.inner[id] = Comment._from_archive_ib(
-                comment.children.parent, id, element["children"][id]
+                archive, id, element["children"][id]
             )
 
         # Return
@@ -117,11 +112,11 @@ class Comment:
 
 
 class Comments:
-    parent: Parent
+    archive: Archive
     inner: dict[str, Comment]
 
-    def __init__(self, parent: Parent) -> None:
-        self.parent = parent
+    def __init__(self, archive: Archive) -> None:
+        self.archive = archive
         self.inner = {}
 
     def update(self, comments: list[dict]):
@@ -145,9 +140,12 @@ class Comments:
 
         # Add all the children to parents now we know they're all there
         for parent_id, comment in adoption_queue:
-            # Set the parent of this child comment to the same one the children list uses (they're the same)
-            parent = self.inner[parent_id].children
-            comment.parent = parent.parent
+            # TODO: fix
+            # # Set the parent of this child comment to the same one the children list uses (they're the same)
+            # parent = self.inner[parent_id].children
+            # comment.parent = (
+            #     parent
+            # )  # TODO: check this is right for ParentCommentChild
 
             # Add this child comment into aforementioned children list
             self.inner[parent_id].children.inner[comment.id] = comment
@@ -190,7 +188,7 @@ class Comments:
             # Encode into a full comment with no parent no matter what
             created = datetime.datetime.fromtimestamp(entry["timestamp"])
             comment = Comment.new(
-                self.parent,
+                self.archive,
                 id,
                 entry["author_id"],
                 entry["author"],
@@ -209,11 +207,13 @@ class Comments:
                 adoption_queue.append((parent_id, comment))
 
     @staticmethod
-    def _from_archive_o(parent: Parent, comments: dict[str, dict]):
+    def _from_archive_o(
+        archive: Archive, parent: Video | Comment, comments: dict[str, dict]
+    ):
         """Loads comments from a comment level in a Yark archive"""
-        output = Comments(parent)
+        output = Comments(archive)
         for id in comments.keys():
-            output.inner[id] = Comment._from_archive_ib(output.parent, id, comments[id])
+            output.inner[id] = Comment._from_archive_ib(archive, id, comments[id])
         return output
 
     def _to_archive_o(self) -> dict[str, dict]:

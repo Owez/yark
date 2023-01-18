@@ -1,27 +1,22 @@
 from __future__ import annotations
 import datetime
-from typing import Any, Optional, Callable
-from ..parent import Parent
+from typing import Any, Optional,TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from ..archive import Archive
 
 
 class Element:
-    parent: Parent
+    archive: Archive
     inner: dict[datetime.datetime, Any]
 
     @staticmethod
-    def new(parent: Parent, data: Any):
+    def new(archive: Archive, data: Any):
         """Creates new element attached with some initial data"""
         element = Element()
-        element.parent = parent
+        element.archive = archive
         element.inner = {datetime.datetime.utcnow(): data}
-        return element
-
-    @staticmethod
-    def new_subparent(parent: Parent, data_subparent: Callable[[Element], Any]):
-        """Creates a new element with data that uses the newly-created element during initiation, used for when data has this element as a parent"""
-        element = Element()
-        element.parent = parent
-        element.inner = {datetime.datetime.utcnow(): data_subparent(element)}
         return element
 
     def update(self, kind: Optional[str], data: Any):
@@ -35,7 +30,7 @@ class Element:
 
             # Report if wanted
             if kind is not None:
-                self.parent.archive.reporter.add_updated(kind, self)
+                self.archive.reporter.add_updated(kind, self)
 
     def current(self):
         """Returns most recent element"""
@@ -46,11 +41,11 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_archive_o(parent: Parent, encoded: dict) -> Element:
+    def _from_archive_o(archive: Archive, encoded: dict) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
         element = Element()
-        element.parent = parent
+        element.archive = archive
         element.inner = {}
 
         # Inner elements

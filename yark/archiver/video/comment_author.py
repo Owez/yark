@@ -1,43 +1,40 @@
 from __future__ import annotations
 from .element import Element
 from .image import Image
-from ..parent import Parent
 from ...utils import IMAGE_AUTHOR_ICON
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..archive import Archive
 
 
 class CommentAuthor:
-    parent: Parent
+    archive: Archive
     id: str
     name: Element
     icon: Element
 
     @staticmethod
     def new_or_update(
-        parent: Parent, id: str, name: str, icon_url: str
+        archive: Archive, id: str, name: str, icon_url: str
     ) -> CommentAuthor:
         """Adds a new author with `name` of `id` if it doesn't exist, or tries to update `name` if it does"""
         # Try to get from archive
-        author = parent.archive.comment_authors.get(id)
+        author = archive.comment_authors.get(id)
 
         # Create new if it's not there
         if author is None:
             # Initiate comment author
             author = CommentAuthor()
 
-            # Create a comment author parent for children
-            archive_parent = Parent.new_comment_author(parent.archive, author)
-
             # Normal
-            author.parent = parent
+            author.archive = archive
             author.id = id
-            author.name = Element.new(archive_parent, name)
-            author.icon = Element.new_subparent(
-                archive_parent,
-                lambda e: Image.new(
-                    Parent.new_element(e.parent.archive, e), icon_url, IMAGE_AUTHOR_ICON
-                ),
+            author.name = Element.new(archive, name)
+            author.icon = Element.new(
+                archive, Image.new(archive, icon_url, IMAGE_AUTHOR_ICON)
             )
-            parent.archive.comment_authors[id] = author
+            archive.comment_authors[id] = author
 
         # Update existing
         else:
@@ -45,7 +42,7 @@ class CommentAuthor:
             author.icon.update(
                 None,
                 Image.new(
-                    Parent.new_element(author.parent.archive, author.icon),
+                    archive,
                     icon_url,
                     IMAGE_AUTHOR_ICON,
                 ),
@@ -55,19 +52,16 @@ class CommentAuthor:
         return author
 
     @staticmethod
-    def _from_archive_ib(parent: Parent, id: str, element: dict) -> CommentAuthor:
+    def _from_archive_ib(archive: Archive, id: str, element: dict) -> CommentAuthor:
         """Decodes comment author from the body dict and adds the id passed in from an archive"""
         # Initiate comment author
         author = CommentAuthor()
 
-        # Create a comment author parent for children
-        archive_parent = Parent.new_comment_author(parent.archive, author)
-
         # Normal
-        author.parent = parent
+        author.archive = archive
         author.id = id
-        author.name = Element._from_archive_o(archive_parent,element["name"])
-        author.icon = Element._from_archive_o(archive_parent,element["icon"])
+        author.name = Element._from_archive_o(archive, element["name"])
+        author.icon = Element._from_archive_o(archive, element["icon"])
         return author
 
     def _to_archive_b(self) -> dict:
