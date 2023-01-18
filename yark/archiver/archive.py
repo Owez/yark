@@ -9,7 +9,7 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from ..errors import ArchiveNotFoundException, VideoNotFoundException
+from ..errors import ArchiveNotFoundExceptions
 from ..logger import _err_msg
 from .video.video import Video, Videos
 from .video.comment_author import CommentAuthor
@@ -17,7 +17,6 @@ from typing import Optional
 from .config import Config
 from .converter import Converter
 from .migrator import _migrate
-from .parent import Parent
 from ..utils import ARCHIVE_COMPAT
 
 
@@ -34,20 +33,14 @@ class Archive:
     @staticmethod
     def new(path: Path, url: str) -> Archive:
         """Creates a new archive"""
-        # Initiate archive
         print("Creating new archive..")
         archive = Archive()
-
-        # Create an archive parent for children
-        archive_parent = Parent.new_archive(archive)
-
-        # Normal
         archive.path = Path(path)
         archive.version = ARCHIVE_COMPAT
         archive.url = url
-        archive.videos = Videos(archive_parent)
-        archive.livestreams = Videos(archive_parent)
-        archive.shorts = Videos(archive_parent)
+        archive.videos = Videos(archive)
+        archive.livestreams = Videos(archive)
+        archive.shorts = Videos(archive)
         archive.comment_authors = {}
         archive.reporter = Reporter(archive)
 
@@ -253,18 +246,6 @@ class Archive:
         # Return
         return new_not_downloaded
 
-    def search_videos(self, id: str) -> Optional[Video]:
-        """Searches archive for a video with the corresponding `id` and returns"""
-        return self.videos.inner.get(id)
-
-    def search_livestreams(self, id: str) -> Optional[Video]:
-        """Searches archive for a livestream with the corresponding `id` and returns"""
-        return self.livestreams.inner.get(id)
-
-    def search_shorts(self, id: str) -> Optional[Video]:
-        """Searches archive for a short with the corresponding `id` and returns"""
-        return self.shorts.inner.get(id)
-
     def _curate(self, config: Config) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
@@ -350,9 +331,8 @@ class Archive:
                 break
 
         # Add new video if not
-        archive_parent = Parent.new_archive(self)
         if not updated:
-            video = Video.new(config, archive_parent, entry)
+            video = Video.new(config, self, entry)
             videos.inner[video.id] = video
             self.reporter.added.append(video)
 
@@ -403,26 +383,21 @@ class Archive:
         # Initiate archive
         archive = Archive()
 
-        # Create an archive parent for children
-        archive_parent = Parent.new_archive(archive)
-
         # Decode id & body style comment authors
         # NOTE: needed above video decoding for comments
         archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
-                archive_parent, id, encoded["comment_authors"][id]
+                archive, id, encoded["comment_authors"][id]
             )
 
         # Normal
         archive.path = path
         archive.version = encoded["version"]
         archive.url = encoded["url"]
-        archive.videos = Videos._from_archive_o(archive_parent, encoded["videos"])
-        archive.livestreams = Videos._from_archive_o(
-            archive_parent, encoded["livestreams"]
-        )
-        archive.shorts = Videos._from_archive_o(archive_parent, encoded["shorts"])
+        archive.videos = Videos._from_archive_o(archive, encoded["videos"])
+        archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
+        archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
         archive.reporter = Reporter(archive)
         archive.comment_authors = {}
 
