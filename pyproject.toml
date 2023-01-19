@@ -7,21 +7,15 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/owez/yark"
 classifiers = [
-    "Topic :: System :: Archiving",
-    "Topic :: System :: Archiving :: Backup",
-    "Topic :: Multimedia :: Video",
-]
-include = [{ path = "templates/*" }]
+    "Private :: Do not Upload",
+] # NOTE: work around for poetry #1537 <https://github.com/python-poetry/poetry/issues/1537>
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "~3.11"
 Flask = "^2.2.2"
 colorama = "^0.4.6"
 yt-dlp = "^2023.1.2"
 requests = "^2.28.1"
-
-[tool.poetry.scripts]
-yark = "yark.cli:_cli"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
@@ -31,10 +25,15 @@ types-colorama = "^0.4.15.4"
 types-requests = "^2.28.11.7"
 black = "^22.12.0"
 pylint = "^2.15.10"
+pyinstaller = "^5.7.0"
+
+[tool.poetry.scripts]
+yark = "yark.cli:_cli"
 
 [tool.poe.tasks]
 lint = { shell = "set -e && mypy yark --check-untyped-defs && pylint yark" }
 fmt = "black yark"
+build = "pyinstaller yark.spec"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

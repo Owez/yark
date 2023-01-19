@@ -21,7 +21,6 @@ from .errors import (
 from .archiver.archive import Archive
 from .archiver.video.note import Note
 from .archiver.video.video import Video
-from typing import Optional
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
@@ -76,9 +75,7 @@ def archive(name, kind):
             error=request.args.get("error"),
         )
     except ArchiveNotFoundException:
-        return redirect(
-            url_for("routes.index", error="Couldn't open archive's archive")
-        )
+        return redirect(url_for("routes.index", error="Couldn't open archive"))
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
@@ -215,7 +212,7 @@ def archive_image(name, id):
 def viewer() -> Flask:
     """Generates viewer flask app, launch by just using the typical `app.run()`"""
     # Make flask app
-    app = Flask(__name__)
+    app = _make_app()
 
     # Only log errors
     log = logging.getLogger("werkzeug")
@@ -317,3 +314,13 @@ def _video_from_kind(archive: Archive, kind: str, id: str) -> Video:
         return archive.livestreams.search(id)
     else:
         return archive.shorts.search(id)
+
+
+def _make_app() -> Flask:
+    """Loads app with proper templates folder; this is so frozen PyInstaller installs work"""
+    import sys
+    from pathlib import Path
+    if getattr(sys, "frozen", False):
+        template_folder = Path(sys._MEIPASS) / "templates"  # type: ignore
+        return Flask(__name__, template_folder=str(template_folder))
+    return Flask(__name__)
