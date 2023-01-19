@@ -1,10 +1,10 @@
 from __future__ import annotations
 import datetime
 from typing import Any, Optional, TYPE_CHECKING
-from .video import Video
 
 if TYPE_CHECKING:
     from ..archive import Archive
+    from .video import Video
 
 
 class Element:
