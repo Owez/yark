@@ -20,6 +20,8 @@ from .errors import (
 )
 from .archive import Archive
 from .video import Note
+import sys
+from pathlib import Path
 
 routes = Blueprint("routes", __name__, template_folder="templates")
 
@@ -81,7 +83,7 @@ def archive(name, kind):
         )
     except ArchiveNotFoundException:
         return redirect(
-            url_for("routes.index", error="Couldn't open archive's archive")
+            url_for("routes.index", error="Couldn't open archive")
         )
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
@@ -220,7 +222,7 @@ def archive_image(name, id):
 def viewer() -> Flask:
     """Generates viewer flask app, launch by just using the typical `app.run()`"""
     # Make flask app
-    app = Flask(__name__)
+    app = _make_app()
 
     # Only log errors
     log = logging.getLogger("werkzeug")
@@ -302,3 +304,11 @@ def _encode_timestamp(timestamp: int) -> str:
 
     # Return
     return ":".join(parts)
+
+
+def _make_app() -> Flask:
+    """Loads app with proper templates folder depending on it's frozen status from pypinstaller"""
+    if getattr(sys, "frozen", False):
+        template_folder = Path(sys._MEIPASS) / "templates"
+        return Flask(__name__, template_folder=str(template_folder))
+    return Flask(__name__)

@@ -1,5 +1,6 @@
 .vscode
 demo/
 **/.DS*
+build/
 dist/
 __pycache__/
