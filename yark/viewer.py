@@ -82,9 +82,7 @@ def archive(name, kind):
             error=request.args.get("error"),
         )
     except ArchiveNotFoundException:
-        return redirect(
-            url_for("routes.index", error="Couldn't open archive")
-        )
+        return redirect(url_for("routes.index", error="Couldn't open archive"))
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
@@ -307,8 +305,8 @@ def _encode_timestamp(timestamp: int) -> str:
 
 
 def _make_app() -> Flask:
-    """Loads app with proper templates folder depending on it's frozen status from pypinstaller"""
+    """Loads app with proper templates folder; this is so frozen PyInstaller installs work"""
     if getattr(sys, "frozen", False):
-        template_folder = Path(sys._MEIPASS) / "templates"
+        template_folder = Path(sys._MEIPASS) / "templates"  # type: ignore
         return Flask(__name__, template_folder=str(template_folder))
     return Flask(__name__)
