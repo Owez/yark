@@ -320,6 +320,7 @@ def _make_app() -> Flask:
     """Loads app with proper templates folder; this is so frozen PyInstaller installs work"""
     import sys
     from pathlib import Path
+
     if getattr(sys, "frozen", False):
         template_folder = Path(sys._MEIPASS) / "templates"  # type: ignore
         return Flask(__name__, template_folder=str(template_folder))

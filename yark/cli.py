@@ -15,7 +15,7 @@ from .viewer import viewer
 import requests
 from .utils import PYPI_VERSION
 from typing import Optional, Any
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
@@ -34,16 +34,7 @@ def _cli():
         sys.exit(1)
 
     # Version announcements before going further
-    try:
-        _pypi_version()
-    except Exception as err:
-        _err_msg(
-            f"Error: Failed to check for new Yark version, info:\n"
-            + Style.NORMAL
-            + str(err)
-            + Style.BRIGHT,
-            True,
-        )
+    _pypi_version()
 
     # Help
     if args[0] in ["help", "--help", "-h"]:
@@ -69,7 +60,7 @@ def _cli():
         # More help
         if len(args) == 2 and args[1] == "--help":
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --comments            Archives all comments (slow)\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\nAdvanced Arguments:\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format\n  --proxy=[str]         Downloads using a proxy server for yt-dlp\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --comments\n  $ yark refresh demo --videos=50 --livestreams=2\n  $ yark refresh demo --skip-download"
+                "yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --comments            Archives all comments (slow)\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n\nAdvanced Arguments:\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format\n  --proxy=[str]         Downloads using a proxy server for yt-dlp\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --comments\n  $ yark refresh demo --videos=50 --livestreams=2\n  $ yark refresh demo --skip-download"
             )
             sys.exit(0)
 
@@ -90,7 +81,7 @@ def _cli():
                 maximum = parse_value(config_arg)
                 try:
                     return int(maximum)
-                except:
+                except Exception:
                     print(HELP, file=sys.stderr)
                     _err_msg(
                         f"\nError: The value '{maximum}' isn't a valid maximum number"
@@ -188,7 +179,7 @@ def _cli():
         # Start on archive finder
         else:
             print("Starting viewer..")
-            webbrowser.open(f"http://127.0.0.1:7667/")
+            webbrowser.open("http://127.0.0.1:7667/")
             launch()
 
     # Report
@@ -213,19 +204,28 @@ def _pypi_version():
 
     def get_data() -> Optional[Any]:
         """Gets JSON data for current version of Yark on PyPI or returns nothing if there was a minor error"""
-        minor_error = lambda: _err_msg(
+        # Error message to use if this fails
+        MINOR_ERROR = (
             "Couldn't check for a new version of Yark, your connection might be faulty!"
         )
+
+        # Try to get from the PyPI API
         try:
             return requests.get("https://pypi.org/pypi/yark/json", timeout=2).json()
+
+        # General HTTP fault
         except HTTPError:
-            minor_error()
+            _err_msg(MINOR_ERROR)
             return None
-        except ConnectionError:
-            minor_error()
+
+        # Couldn't connect to PyPI immediately
+        except requests.exceptions.ConnectionError:
+            _err_msg(MINOR_ERROR)
             return None
+
+        # Couldn't connect to PyPI after a while
         except TimeoutError:
-            minor_error()
+            _err_msg(MINOR_ERROR)
             _err_msg(
                 Style.DIM + "This was caused by the request timing out" + Style.NORMAL
             )
