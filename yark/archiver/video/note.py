@@ -16,7 +16,9 @@ class Note:
     body: Optional[str]
 
     @staticmethod
-    def new(parent: Video, timestamp: int, title: str, body: Optional[str] = None):
+    def new(
+        parent: Video, timestamp: int, title: str, body: Optional[str] = None
+    ) -> Note:
         """Creates a new note"""
         note = Note()
         note.parent = parent

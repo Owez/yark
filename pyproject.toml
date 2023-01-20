@@ -31,7 +31,7 @@ pyinstaller = "^5.7.0"
 yark = "yark.cli:_cli"
 
 [tool.poe.tasks]
-lint = { shell = "set -e && mypy yark --check-untyped-defs && pylint yark" }
+lint = { shell = "set -e && mypy yark --strict && pylint yark" }
 fmt = "black yark"
 build = "pyinstaller yark.spec"
 

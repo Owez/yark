@@ -41,7 +41,7 @@ class Image:
         return self.archive.path / "images" / f"{self.id}.{self.ext}"
 
     @staticmethod
-    def load(archive: Archive, id: str, ext: str):
+    def load(archive: Archive, id: str, ext: str) -> Image:
         """Loads existing image from saved path by id"""
         image = Image()
         image.archive = archive

@@ -52,7 +52,7 @@ class Comment:
         comment.children = Comments(archive)
         return comment
 
-    def update(self, entry: dict[str, Any]):
+    def update(self, entry: dict[str, Any]) -> None:
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
         self.author.new_or_update(
             self.archive,
@@ -119,7 +119,7 @@ class Comments:
         self.archive = archive
         self.inner = {}
 
-    def update(self, comments: list[dict]):
+    def update(self, comments: list[dict]) -> None:
         """Updates comments according to metadata"""
         # All comments which have been found so we can see the difference to find deleted comments
         known: list[str] = []
@@ -161,7 +161,7 @@ class Comments:
         entry: dict,
         known: list[str],
         adoption_queue: list[tuple[str, Comment]],
-    ):
+    ) -> None:
         """Runs through the complete update procedures for one comment"""
         # Decode the identifier and possible parent; can be used to check parent
         parent_id, id = _decode_comment_id(entry["id"])
@@ -209,7 +209,7 @@ class Comments:
     @staticmethod
     def _from_archive_o(
         archive: Archive, parent: Video | Comment, comments: dict[str, dict]
-    ):
+    ) -> Comments:
         """Loads comments from a comment level in a Yark archive"""
         output = Comments(archive)
         for id in comments.keys():

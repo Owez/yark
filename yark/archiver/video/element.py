@@ -12,14 +12,14 @@ class Element:
     inner: dict[datetime.datetime, Any]
 
     @staticmethod
-    def new(archive: Archive, data: Any):
+    def new(archive: Archive, data: Any) -> Element:
         """Creates new element attached with some initial data"""
         element = Element()
         element.archive = archive
         element.inner = {datetime.datetime.utcnow(): data}
         return element
 
-    def update(self, kind_video: Optional[tuple[str, Video]], data: Any):
+    def update(self, kind_video: Optional[tuple[str, Video]], data: Any) -> None:
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
@@ -32,7 +32,7 @@ class Element:
             if kind_video is not None:
                 self.archive.reporter.add_updated(kind_video[0], kind_video[1])
 
-    def current(self):
+    def current(self) -> Any:
         """Returns most recent element"""
         return self.inner[list(self.inner.keys())[-1]]
 

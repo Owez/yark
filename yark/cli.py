@@ -21,7 +21,7 @@ HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [
 """User-facing help message provided from the cli"""
 
 
-def _cli():
+def _cli() -> None:
     """Command-line-interface launcher"""
 
     # Get arguments
@@ -153,7 +153,7 @@ def _cli():
     # View
     elif args[0] == "view":
 
-        def launch():
+        def launch() -> None:
             """Launches viewer"""
             app = viewer()
             threading.Thread(target=lambda: app.run(port=7667)).run()
@@ -199,7 +199,7 @@ def _cli():
         sys.exit(1)
 
 
-def _pypi_version():
+def _pypi_version() -> None:
     """Checks if there's a new version of Yark and tells the user if it's significant"""
 
     def get_data() -> Optional[Any]:
@@ -252,13 +252,13 @@ def _pypi_version():
         )
 
 
-def _err_archive_not_found():
+def _err_archive_not_found() -> None:
     """Errors out the user if the archive doesn't exist"""
     _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
     sys.exit(1)
 
 
-def _err_no_help():
+def _err_no_help() -> None:
     """Prints out help message and exits, displaying a 'no additional help' message"""
     print(HELP)
     print("\nThere's no additional help for this command")

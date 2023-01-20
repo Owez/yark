@@ -71,7 +71,7 @@ class Archive:
         # Decode and return
         return Archive._from_archive_o(encoded, path)
 
-    def metadata(self, config: Config):
+    def metadata(self, config: Config) -> None:
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
@@ -144,7 +144,7 @@ class Archive:
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, config: Config):
+    def download(self, config: Config) -> None:
         """Downloads all videos which haven't already been downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
@@ -187,7 +187,7 @@ class Archive:
             converter = Converter(self.path / "videos")
             converter.run()
 
-    def _dl_launch(self, settings: dict, not_downloaded: list[Video]):
+    def _dl_launch(self, settings: dict, not_downloaded: list[Video]) -> None:
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
         # Continuously try to download after private/deleted videos are found
         # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -285,7 +285,7 @@ class Archive:
         # Return
         return not_downloaded
 
-    def commit(self, backup: bool = False):
+    def commit(self, backup: bool = False) -> None:
         """Commits (saves) archive to path; do this once you've finished all of your transactions"""
         # Save backup if explicitly wanted
         if backup:
@@ -304,7 +304,7 @@ class Archive:
 
     def _parse_metadata(
         self, kind: str, config: Config, entries: list[dict], videos: Videos
-    ):
+    ) -> None:
         """Parses metadata for a category of video into it's `videos` bucket"""
         # Parse each video
         print(f"Parsing {kind} metadata..")
@@ -314,7 +314,9 @@ class Archive:
         # Sort videos by newest for display and so we can curate with maximums
         videos.sort()
 
-    def _parse_metadata_video(self, config: Config, entry: dict, videos: Videos):
+    def _parse_metadata_video(
+        self, config: Config, entry: dict, videos: Videos
+    ) -> None:
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
         if "formats" not in entry or len(entry["formats"]) == 0:
@@ -336,14 +338,14 @@ class Archive:
             videos.inner[video.id] = video
             self.reporter.added.append(video)
 
-    def _report_deleted(self, videos: Videos):
+    def _report_deleted(self, videos: Videos) -> None:
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
         for video in videos.inner.values():
             if video.deleted.current() == False and not video.known_not_deleted:
                 self.reporter.deleted.append(video)
                 video.deleted.update(None, True)
 
-    def _clean_parts(self):
+    def _clean_parts(self) -> None:
         """Cleans old temporary `.part` files which where stopped during download if present"""
         # Make a bucket for found files
         deletion_bucket: list[Path] = []
@@ -359,7 +361,7 @@ class Archive:
             for file in deletion_bucket:
                 file.unlink()
 
-    def _backup(self):
+    def _backup(self) -> None:
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
         # Get current archive path
         ARCHIVE_PATH = self.path / "yark.json"
@@ -428,7 +430,7 @@ class Archive:
         return self.path.name
 
 
-def _log_download_count(count: int):
+def _log_download_count(count: int) -> None:
     """Tells user that `count` number of videos have been downloaded"""
     fmt_num = "a new video" if count == 1 else f"{count} new videos"
     print(f"Downloading {fmt_num}..")
@@ -466,7 +468,7 @@ def _skip_video(
     )
 
 
-def _err_dl(name: str, exception: DownloadError, retrying: bool):
+def _err_dl(name: str, exception: DownloadError, retrying: bool) -> None:
     """Prints errors to stdout depending on what kind of download error occurred"""
     # Default message
     msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"

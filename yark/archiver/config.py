@@ -30,7 +30,7 @@ class Config:
         self.format = None
         self.proxy = None
 
-    def submit(self):
+    def submit(self) -> None:
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
         # Adjust remaining maximums if one is given
         no_maximums = (

@@ -67,7 +67,7 @@ class Video:
         # Return
         return video
 
-    def update(self, config: Config, entry: dict):
+    def update(self, config: Config, entry: dict) -> None:
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update(("title", self), entry["title"])
@@ -109,7 +109,7 @@ class Video:
             or len(self.deleted.inner) > 1
         )
 
-    def search(self, id: str):
+    def search(self, id: str) -> Note:
         """Searches video for note's id"""
         for note in self.notes:
             if note.id == id:
@@ -218,7 +218,7 @@ class Videos:
         self.archive = archive
         self.inner = {}
 
-    def sort(self):
+    def sort(self) -> None:
         """Sorts `inner` videos content by newest date uploaded"""
         sorted_kv = sorted(
             self.inner.items(), key=lambda item: item[1].uploaded, reverse=True
@@ -234,7 +234,7 @@ class Videos:
         raise VideoNotFoundException()
 
     @staticmethod
-    def _from_archive_o(archive: Archive, videos: dict[str, dict]):
+    def _from_archive_o(archive: Archive, videos: dict[str, dict]) -> Videos:
         """Loads videos from it's object in the archive"""
         output = Videos(archive)
         for id in videos.keys():

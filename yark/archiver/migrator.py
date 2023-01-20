@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from .video.video import Element
+from .video.element import Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter
@@ -133,7 +133,9 @@ def _step(
     return _step(expected_version, path, cur, encoded, archive_name)
 
 
-def _o_to_ib_video(new_videos: dict[str, dict[str, Any]], video: dict[str, Any]):
+def _o_to_ib_video(
+    new_videos: dict[str, dict[str, Any]], video: dict[str, Any]
+) -> None:
     """Adds old format `video` into the new `new_videos` dict"""
     id = video["id"]
     del video["id"]
