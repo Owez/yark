@@ -380,6 +380,10 @@
         {% elif not mto_likes %}
         <li>No like changes on record</li>
         {% endif %}
+        <!-- Comments summary -->
+        {% if video.comments.empty() %}
+        <li>No comments on record</li>
+        {% endif %}
     </ul>
     <!-- Graphs -->
     {% if mto_views or mto_likes %}
@@ -538,6 +542,15 @@
             }
         })
     </script>
+    {% endif %}
+    <!-- Comments -->
+    {% if not video.comments.empty() %}
+    <h2>Comments</h2>
+    {% set cpage = request.args.get('cpage') if request.args.get('cpage') else 1 %}
+    {% for comment in video.comments.paginate(cpage) %}
+    <!-- TODO -->
+    {{ comment.body.current() }}
+    {% endfor %}
     {% endif %}
 </div>
 {% endblock %}

@@ -22,7 +22,7 @@ from .archiver.archive import Archive
 from .archiver.video.note import Note
 from .archiver.video.video import Video
 
-routes = Blueprint("routes", __name__, template_folder="templates")
+routes = Blueprint("routes", __name__)
 
 
 @routes.route("/", methods=["POST", "GET"])
