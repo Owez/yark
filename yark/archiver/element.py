@@ -1,24 +1,22 @@
 from __future__ import annotations
 import datetime
 from typing import Any, Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .archive import Archive
     from .video.video import Video
 
 
-# NOTE: maybe make into dataclass
+@dataclass()
 class Element:
     archive: Archive
-    inner: dict[datetime.datetime, Any]
+    inner: dict[datetime.datetime, Any] = field(default_factory=dict)
 
     @staticmethod
-    def new(archive: Archive, data: Any) -> Element:
-        """Creates new element attached with some initial data"""
-        element = Element()
-        element.archive = archive
-        element.inner = {datetime.datetime.utcnow(): data}
-        return element
+    def new_data(archive: Archive, data: Any) -> Element:
+        """Creates a new element with some initial data inside of it"""
+        return Element(archive, {datetime.datetime.utcnow(): data})
 
     def update(self, kind_video: Optional[tuple[str, Video]], data: Any) -> None:
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
@@ -45,9 +43,7 @@ class Element:
     def _from_archive_o(archive: Archive, encoded: dict[str, Any]) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
-        element = Element()
-        element.archive = archive
-        element.inner = {}
+        element = Element(archive)
 
         # Inner elements
         for key in encoded:

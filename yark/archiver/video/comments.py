@@ -11,7 +11,6 @@ import datetime
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
-    from ..video.video import Video
     from ..archive import Archive
 
 
@@ -47,9 +46,9 @@ class Comment:
         comment.author = CommentAuthor.new_or_update(
             archive, author_id, author_name, author_icon_url
         )
-        comment.body = Element.new(archive, body)
-        comment.favorited = Element.new(archive, favorited)
-        comment.deleted = Element.new(archive, False)
+        comment.body = Element.new_data(archive, body)
+        comment.favorited = Element.new_data(archive, favorited)
+        comment.deleted = Element.new_data(archive, False)
         comment.created = created
         comment.children = Comments(archive)
         return comment

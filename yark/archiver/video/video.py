@@ -43,13 +43,13 @@ class Video:
         video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
-        video.title = Element.new(archive, entry["title"])
-        video.description = Element.new(archive, entry["description"])
-        video.views = Element.new(archive, entry["view_count"])
-        video.likes = Element.new(
+        video.title = Element.new_data(archive, entry["title"])
+        video.description = Element.new_data(archive, entry["description"])
+        video.views = Element.new_data(archive, entry["view_count"])
+        video.likes = Element.new_data(
             archive, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(
+        video.thumbnail = Element.new_data(
             archive,
             Image.new(
                 archive,
@@ -57,7 +57,7 @@ class Video:
                 IMAGE_THUMBNAIL,
             ),
         )
-        video.deleted = Element.new(archive, False)
+        video.deleted = Element.new_data(archive, False)
         video.comments = Comments(archive)
         video.notes = []
         video.known_not_deleted = True

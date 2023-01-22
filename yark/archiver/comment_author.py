@@ -30,8 +30,8 @@ class CommentAuthor:
             # Normal
             author.archive = archive
             author.id = id
-            author.name = Element.new(archive, name)
-            author.icon = Element.new(
+            author.name = Element.new_data(archive, name)
+            author.icon = Element.new_data(
                 archive, Image.new(archive, icon_url, IMAGE_AUTHOR_ICON)
             )
             archive.comment_authors[id] = author
