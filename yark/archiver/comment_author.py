@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .archive import Archive
 
-
+# NOTE: maybe make into dataclass
 class CommentAuthor:
     archive: Archive
     id: str

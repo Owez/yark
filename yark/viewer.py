@@ -124,7 +124,7 @@ def video(name, kind, id):
             timestamp = _decode_timestamp(new["timestamp"])
             title = new["title"]
             body = new["body"] if "body" in new else None
-            note = Note.new(video, timestamp, title, body)
+            note = Note(video, timestamp, title, body)
 
             # Save new note
             video.notes.append(note)

@@ -8,12 +8,14 @@ from typing import Optional, Any, TYPE_CHECKING
 from ..comment_author import CommentAuthor
 from ..element import Element
 import datetime
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from ..video.video import Video
     from ..archive import Archive
 
 
+# NOTE: maybe make into dataclass
 class Comment:
     archive: Archive
     id: str
@@ -111,13 +113,10 @@ class Comment:
         return payload
 
 
+@dataclass
 class Comments:
     archive: Archive
-    inner: dict[str, Comment]
-
-    def __init__(self, archive: Archive) -> None:
-        self.archive = archive
-        self.inner = {}
+    inner: dict[str, Comment] = field(default_factory=dict)
 
     def update(self, comments: list[dict]) -> None:
         """Updates comments according to metadata"""

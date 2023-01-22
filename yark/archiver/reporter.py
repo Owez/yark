@@ -6,22 +6,18 @@ from .video.video import Video
 from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
 from .video.video import Videos
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .archive import Archive
 
 
+@dataclass
 class Reporter:
     archive: "Archive"
-    added: list[Video]
-    deleted: list[Video]
-    updated: list[tuple[str, Video]]
-
-    def __init__(self, archive: "Archive") -> None:
-        self.archive = archive
-        self.added = []
-        self.deleted = []
-        self.updated = []
+    added: list[Video] = field(default_factory=list)
+    deleted: list[Video] = field(default_factory=list)
+    updated: list[tuple[str, Video]] = field(default_factory=list)
 
     def print(self) -> None:
         """Prints coloured report to STDOUT"""

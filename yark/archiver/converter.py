@@ -8,9 +8,7 @@ import sys
 
 
 class Converter:
-    def __init__(self, path_videos: Path) -> None:
-        _ensure_dir(path_videos)
-        self.path_videos = path_videos
+    path_videos: Path
 
     def run(self) -> None:
         """Goes through the videos directory given and converts all videos we can, e.g. mkv to mp4"""

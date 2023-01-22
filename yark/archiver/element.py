@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from .video.video import Video
 
 
+# NOTE: maybe make into dataclass
 class Element:
     archive: Archive
     inner: dict[datetime.datetime, Any]

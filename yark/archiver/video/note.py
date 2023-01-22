@@ -3,41 +3,31 @@
 from __future__ import annotations
 from uuid import uuid4
 from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .video import Video
 
 
+@dataclass
 class Note:
     parent: Video
-    id: str
     timestamp: int
     title: str
-    body: Optional[str]
 
-    @staticmethod
-    def new(
-        parent: Video, timestamp: int, title: str, body: Optional[str] = None
-    ) -> Note:
-        """Creates a new note"""
-        note = Note()
-        note.parent = parent
-        note.id = str(uuid4())
-        note.timestamp = timestamp
-        note.title = title
-        note.body = body
-        return note
+    id: str = field(default_factory=uuid4)
+    body: Optional[str] = None
 
     @staticmethod
     def _from_archive_o(parent: Video, element: dict) -> Note:
         """Loads existing note object dict from an archive"""
-        note = Note()
-        note.parent = parent
-        note.id = element["id"]
-        note.timestamp = element["timestamp"]
-        note.title = element["title"]
-        note.body = element["body"]
-        return note
+        return Note(
+            parent,
+            element["timestamp"],
+            element["title"],
+            element["id"],
+            element["body"],
+        )
 
     def _to_archive_o(self) -> dict:
         """Converts note to it's object dict for archival"""

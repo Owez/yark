@@ -20,6 +20,7 @@ from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
 
 
+# NOTE: maybe make into dataclass
 class Archive:
     path: Path
     version: int
@@ -254,9 +255,11 @@ class Archive:
             # Make a list for the videos
             found_videos = []
 
-            # Add all videos because there's no maximum
+            # Add all undownloaded videos because there's no maximum
             if maximum is None:
-                found_videos = list(videos.inner.values())
+                found_videos = list(
+                    [video for video in videos.inner.values() if not video.downloaded()]
+                )
 
             # Cut available videos to maximum if present for deterministic getting
             else:

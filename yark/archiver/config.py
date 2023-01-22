@@ -4,31 +4,22 @@ from typing import Optional, Any
 from colorama import Fore
 from ..logger import VideoLogger
 from pathlib import Path
-
+from dataclasses import dataclass
 
 YtDlpSettings = dict[str, Any]
 """Download settings which the `yt-dlp` library uses during initiation"""
 
 
+@dataclass
 class Config:
-    max_videos: Optional[int]
-    max_livestreams: Optional[int]
-    max_shorts: Optional[int]
-    skip_download: bool
-    skip_metadata: bool
-    comments: bool
-    format: Optional[str]
-    proxy: Optional[str]
-
-    def __init__(self) -> None:
-        self.max_videos = None
-        self.max_livestreams = None
-        self.max_shorts = None
-        self.skip_download = False
-        self.skip_metadata = False
-        self.comments = False
-        self.format = None
-        self.proxy = None
+    max_videos: Optional[int] = None
+    max_livestreams: Optional[int] = None
+    max_shorts: Optional[int] = None
+    skip_download: bool = False
+    skip_metadata: bool = False
+    comments: bool = False
+    format: Optional[str] = None
+    proxy: Optional[str] = None
 
     def submit(self) -> None:
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""

@@ -12,11 +12,13 @@ from .image import Image, image_element_from_archive
 from .note import Note
 from ...utils import IMAGE_THUMBNAIL
 from ...errors import VideoNotFoundException
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from ..archive import Archive
 
 
+# NOTE: maybe make this into dataclass
 class Video:
     archive: Archive
     id: str
@@ -210,13 +212,10 @@ def _magnitude(count: Optional[int] = None) -> str:
         return value + "b"
 
 
+@dataclass
 class Videos:
     archive: Archive
-    inner: dict[str, Video]
-
-    def __init__(self, archive: Archive) -> None:
-        self.archive = archive
-        self.inner = {}
+    inner: dict[str, Video] = field(default_factory=dict)
 
     def sort(self) -> None:
         """Sorts `inner` videos content by newest date uploaded"""
