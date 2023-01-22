@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 def _migrate(
     current_version: int,
     expected_version: int,
-    encoded: dict,
+    encoded: dict[str, Any],
     path: Path,
     archive_name: str,
-) -> dict:
+) -> dict[str, Any]:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
     # Tell user we can't downgrade
@@ -46,8 +46,12 @@ def _migrate(
 
 
 def _step(
-    expected_version: int, path: Path, cur: int, encoded: dict, archive_name: str
-) -> dict:
+    expected_version: int,
+    path: Path,
+    cur: int,
+    encoded: dict[str, Any],
+    archive_name: str,
+) -> dict[str, Any]:
     """Step in recursion to migrate from one to another, contains migration logic"""
     # Stop because we've reached the desired version
     if cur == expected_version:

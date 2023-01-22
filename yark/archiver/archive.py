@@ -13,8 +13,8 @@ from ..errors import ArchiveNotFoundException
 from ..logger import _err_msg
 from .video.video import Video, Videos
 from .comment_author import CommentAuthor
-from typing import Optional
-from .config import Config
+from typing import Optional, Any
+from .config import Config, YtDlpSettings
 from .converter import Converter
 from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
@@ -35,7 +35,7 @@ class Archive:
     shorts: Videos = field(init=False)
     reporter: Reporter = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.videos = Videos(self)
         self.livestreams = Videos(self)
         self.shorts = Videos(self)
@@ -183,7 +183,7 @@ class Archive:
         # Say that something was downloaded
         return True
 
-    def _dl_launch(self, settings: dict, not_downloaded: list[Video]) -> None:
+    def _dl_launch(self, settings: YtDlpSettings, not_downloaded: list[Video]) -> None:
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
         # Continuously try to download after private/deleted videos are found
         # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -301,7 +301,7 @@ class Archive:
             json.dump(self._to_archive_o(), file)
 
     def _parse_metadata(
-        self, kind: str, config: Config, entries: list[dict], videos: Videos
+        self, kind: str, config: Config, entries: list[dict[str, Any]], videos: Videos
     ) -> None:
         """Parses metadata for a category of video into it's `videos` bucket"""
         # Parse each video
@@ -313,7 +313,7 @@ class Archive:
         videos.sort()
 
     def _parse_metadata_video(
-        self, config: Config, entry: dict, videos: Videos
+        self, config: Config, entry: dict[str, Any], videos: Videos
     ) -> None:
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
@@ -378,23 +378,20 @@ class Archive:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_archive_o(encoded: dict, path: Path) -> Archive:
+    def _from_archive_o(encoded: dict[str, Any], path: Path) -> Archive:
         """Decodes object dict from archive which is being loaded back up"""
+
+        # Initiate archive
+        archive = Archive(path, encoded["url"], encoded["version"])
+
         # Decode id & body style comment authors
         # NOTE: needed above video decoding for comments
-        comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
                 archive, id, encoded["comment_authors"][id]
             )
 
-        # Initiate archive
-        archive = Archive(
-            path,
-            encoded["url"],
-            encoded["version"],
-            comment_authors,
-        )
+        # Load up videos/livestreams/shorts
         archive.videos = Videos._from_archive_o(archive, encoded["videos"])
         archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
         archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
@@ -402,7 +399,7 @@ class Archive:
         # Return
         return archive
 
-    def _to_archive_o(self) -> dict:
+    def _to_archive_o(self) -> dict[str, Any]:
         """Converts all archive data to a object dict to commit"""
         # Encode comment authors
         comment_authors = {}

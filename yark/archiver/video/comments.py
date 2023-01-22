@@ -67,7 +67,7 @@ class Comment:
         self.deleted.update(None, False)
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, element: dict) -> Comment:
+    def _from_archive_ib(archive: Archive, id: str, element: dict[str, Any]) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
         # Initiate comment
         comment = Comment()
@@ -92,7 +92,7 @@ class Comment:
         # Return
         return comment
 
-    def _to_archive_b(self) -> dict:
+    def _to_archive_b(self) -> dict[str, Any]:
         """Converts comment to it's archival dict body"""
         # Get children using the id & body method
         children = {}
@@ -118,7 +118,7 @@ class Comments:
     archive: Archive
     inner: dict[str, Comment] = field(default_factory=dict)
 
-    def update(self, comments: list[dict]) -> None:
+    def update(self, comments: list[dict[str, Any]]) -> None:
         """Updates comments according to metadata"""
         # All comments which have been found so we can see the difference to find deleted comments
         known: list[str] = []
@@ -157,7 +157,7 @@ class Comments:
 
     def _update_comment(
         self,
-        entry: dict,
+        entry: dict[str, Any],
         known: list[str],
         adoption_queue: list[tuple[str, Comment]],
     ) -> None:
@@ -207,7 +207,7 @@ class Comments:
 
     @staticmethod
     def _from_archive_o(
-        archive: Archive, parent: Video | Comment, comments: dict[str, dict]
+        archive: Archive, comments: dict[str, dict[str, Any]]
     ) -> Comments:
         """Loads comments from a comment level in a Yark archive"""
         output = Comments(archive)
@@ -215,7 +215,7 @@ class Comments:
             output.inner[id] = Comment._from_archive_ib(archive, id, comments[id])
         return output
 
-    def _to_archive_o(self) -> dict[str, dict]:
+    def _to_archive_o(self) -> dict[str, dict[str, Any]]:
         """Saves each comment as an id & body style dict inside of comments"""
         payload = {}
         for id in self.inner:

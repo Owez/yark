@@ -69,7 +69,7 @@ class Video:
         # Return
         return video
 
-    def update(self, config: Config, entry: dict) -> None:
+    def update(self, config: Config, entry: dict[str, Any]) -> None:
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update(("title", self), entry["title"])
@@ -124,7 +124,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, encoded: dict) -> Video:
+    def _from_archive_ib(archive: Archive, id: str, encoded: dict[str, Any]) -> Video:
         """Converts archive body dict into a new video with an id passed in"""
         video = Video()
         video.archive = archive
@@ -140,14 +140,14 @@ class Video:
             archive, encoded["thumbnail"], IMAGE_THUMBNAIL
         )
         video.deleted = Element._from_archive_o(archive, encoded["deleted"])
-        video.comments = Comments._from_archive_o(archive, video, encoded["comments"])
+        video.comments = Comments._from_archive_o(archive, encoded["comments"])
         video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]
         video.known_not_deleted = False
 
         # Return
         return video
 
-    def _to_archive_b(self) -> dict:
+    def _to_archive_b(self) -> dict[str, Any]:
         """Converts this video into a dict body for saving to the archive under an id"""
         return {
             "uploaded": self.uploaded.isoformat(),
@@ -181,7 +181,7 @@ class Video:
         # Return
         return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Video) -> bool:
         return self.uploaded < other.uploaded
 
 
@@ -233,14 +233,14 @@ class Videos:
         raise VideoNotFoundException()
 
     @staticmethod
-    def _from_archive_o(archive: Archive, entry: dict[str, dict]):
+    def _from_archive_o(archive: Archive, entry: dict[str, dict[str, Any]]) -> Videos:
         """Loads videos from it's object in the archive"""
         videos = Videos(archive)
         for id in entry.keys():
             videos.inner[id] = Video._from_archive_ib(archive, id, entry[id])
         return videos
 
-    def _to_archive_o(self) -> dict[str, dict]:
+    def _to_archive_o(self) -> dict[str, dict[str, Any]]:
         """Saves each video as an id & body style dict inside of a videos object"""
         payload = {}
         for id in self.inner:

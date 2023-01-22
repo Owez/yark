@@ -2,11 +2,12 @@
 
 from colorama import Style, Fore
 import sys
+from typing import Any
 
 
 class VideoLogger:
     @staticmethod
-    def downloading(d) -> None:
+    def downloading(d: dict[str, Any]) -> None:
         """Progress hook for video downloading"""
         # Get video's id
         id = d["info_dict"]["id"]

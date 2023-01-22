@@ -2,7 +2,7 @@ from __future__ import annotations
 from pathlib import Path
 import requests
 import hashlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from ..element import Element
 from dataclasses import dataclass
 
@@ -44,7 +44,9 @@ class Image:
         return self.id
 
 
-def image_element_from_archive(archive: Archive, element: dict, ext: str) -> Element:
+def image_element_from_archive(
+    archive: Archive, element: dict[str, Any], ext: str
+) -> Element:
     """Helper function to convert a dict-based element containing images to properly formed element"""
     decoded = Element._from_archive_o(archive, element)
     for date in decoded.inner:
