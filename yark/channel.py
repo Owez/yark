@@ -91,7 +91,7 @@ class VideoLogger:
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
             print(
-                Style.DIM + f"  • Downloading {id}, at {percent}.." + Style.NORMAL,
+                Style.DIM + f"  • Downloading {id}, at {percent}..                " + Style.NORMAL,
                 end="\r",
             )
 
@@ -99,7 +99,7 @@ class VideoLogger:
         elif d["status"] == "finished":
             print(
                 Style.DIM
-                + f"  • Downloaded {id}                               "
+                + f"  • Downloaded {id}        "
                 + Style.NORMAL
             )
 
