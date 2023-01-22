@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ..archive import Archive
 
 
-# NOTE: maybe make into dataclass
+@dataclass
 class Comment:
     archive: Archive
     id: str
@@ -37,21 +37,18 @@ class Comment:
         created: datetime.datetime,
     ) -> Comment:
         """Creates a new comment with simplified information inputs"""
-        # Initiate comment
-        comment = Comment()
-
-        # Normal
-        comment.archive = archive
-        comment.id = id
-        comment.author = CommentAuthor.new_or_update(
-            archive, author_id, author_name, author_icon_url
+        return Comment(
+            archive,
+            id,
+            CommentAuthor.new_or_update(
+                archive, author_id, author_name, author_icon_url
+            ),
+            Element.new_data(archive, body),
+            Element.new_data(archive, favorited),
+            Element.new_data(archive, False),
+            created,
+            Comments(archive),
         )
-        comment.body = Element.new_data(archive, body)
-        comment.favorited = Element.new_data(archive, favorited)
-        comment.deleted = Element.new_data(archive, False)
-        comment.created = created
-        comment.children = Comments(archive)
-        return comment
 
     def update(self, entry: dict[str, Any]) -> None:
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
@@ -68,25 +65,25 @@ class Comment:
     @staticmethod
     def _from_archive_ib(archive: Archive, id: str, element: dict[str, Any]) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
-        # Initiate comment
-        comment = Comment()
-
-        # Normal
-        comment = Comment()
-        comment.archive = archive
-        comment.id = id
-        comment.author = archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_archive_o(archive, element["body"])
-        comment.favorited = Element._from_archive_o(archive, element["favorited"])
-        comment.deleted = Element._from_archive_o(archive, element["deleted"])
-        comment.created = datetime.datetime.fromisoformat(element["created"])
 
         # Get children using the id & body method
-        comment.children = Comments(archive)
+        children = Comments(archive)
         for id in element["children"].keys():
-            comment.children.inner[id] = Comment._from_archive_ib(
+            children.inner[id] = Comment._from_archive_ib(
                 archive, id, element["children"][id]
             )
+
+        # Initiate comment
+        comment = Comment(
+            archive,
+            id,
+            archive.comment_authors[element["author_id"]],
+            Element._from_archive_o(archive, element["body"]),
+            Element._from_archive_o(archive, element["favorited"]),
+            Element._from_archive_o(archive, element["deleted"]),
+            datetime.datetime.fromisoformat(element["created"]),
+            children,
+        )
 
         # Return
         return comment

@@ -22,24 +22,35 @@ from dataclasses import dataclass, field
 
 
 # NOTE: maybe make into dataclass
-@dataclass
+@dataclass(init=False)
 class Archive:
     path: Path
     url: str
+    version: int
+    videos: Videos
+    livestreams: Videos
+    shorts: Videos
+    reporter: Reporter
+    comment_authors: dict[str, CommentAuthor]
 
-    version: int = ARCHIVE_COMPAT
-    comment_authors: dict[str, CommentAuthor] = field(default_factory=dict)
-
-    videos: Videos = field(init=False)
-    livestreams: Videos = field(init=False)
-    shorts: Videos = field(init=False)
-    reporter: Reporter = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.videos = Videos(self)
-        self.livestreams = Videos(self)
-        self.shorts = Videos(self)
+    def __init__(
+        self,
+        path: Path,
+        url: str,
+        version: int = ARCHIVE_COMPAT,
+        videos: Videos | None = None,
+        livestreams: Videos | None = None,
+        shorts: Videos | None = None,
+        comment_authors: dict[str, CommentAuthor] = {},
+    ) -> None:
+        self.path = path
+        self.url = url
+        self.version = version
+        self.videos = Videos(self) if videos is None else videos
+        self.livestreams = Videos(self) if livestreams is None else livestreams
+        self.shorts = Videos(self) if shorts is None else shorts
         self.reporter = Reporter(self)
+        self.comment_authors = comment_authors
 
     @staticmethod
     def load(path: Path) -> Archive:
