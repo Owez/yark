@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yark"
-version = "1.2.3"
+version = "1.2.4"
 description = "YouTube archiving made simple."
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 license = "MIT"
@@ -13,16 +13,16 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "~3.11"
 Flask = "^2.2.2"
+requests = "^2.28.2"
 colorama = "^0.4.6"
-yt-dlp = "^2023.1.2"
-requests = "^2.28.1"
+yt-dlp = "^2023.1.6"
+progress = "^1.6"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
-poethepoet = "^0.17.1"
-types-urllib3 = "^1.26.25.4"
+poethepoet = "^0.18.1"
 types-colorama = "^0.4.15.4"
-types-requests = "^2.28.11.7"
+types-requests = "^2.28.11.8"
 black = "^22.12.0"
 pyinstaller = "^5.7.0"
 
