@@ -11,9 +11,12 @@ import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element, CommentAuthor
-from typing import Optional
+from typing import Optional, Any
 from .config import Config
 from .converter import Converter
+import time
+from progress.spinner import PieSpinner
+from concurrent.futures import ThreadPoolExecutor
 
 ARCHIVE_COMPAT = 4
 """
@@ -127,16 +130,32 @@ class Archive:
 
     def metadata(self, config: Config):
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
-        # Construct downloader
-        print("Downloading metadata..")
-        settings = self._md_settings(config)
+        # Download metadata
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(self._metadata_download, config)
+            _progress_spinner("Downloading metadata..", future)
+            res = future.result()
 
-        # Get response and snip it
+        # Uncomment for saving big dumps for testing
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
+
+        # Uncomment for loading big dumps for testing
+        # res = json.load(open("demo/dump.json", "r"))
+
+        # Parse metadata
+        self._metadata_parse(config, res)
+
+    def _metadata_download(self, config: Config) -> dict[str, Any]:
+        """Downloads metadata"""
+        # Get settings
+        settings = self._settings_metadata(config)
+
+        # Pull metadata from youtube
         with YoutubeDL(settings) as ydl:
             for i in range(3):
                 try:
-                    res = ydl.extract_info(self.url, download=False)
-                    break
+                    return ydl.extract_info(self.url, download=False)
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
@@ -146,17 +165,12 @@ class Archive:
                     if retrying:
                         print(
                             Style.DIM
-                            + f"  • Retrying metadata download.."
+                            + f"\n  • Retrying metadata download.."
                             + Style.RESET_ALL
                         )
 
-        # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
-
-        # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
-
+    def _metadata_parse(self, config: Config, res: dict[str, Any]):
+        """Parses previously downloaded metadata"""
         # Make buckets to normalize different types of videos
         videos = []
         livestreams = []
@@ -189,9 +203,9 @@ class Archive:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
-        self._parse_metadata("video", config, videos, self.videos)
-        self._parse_metadata("livestream", config, livestreams, self.livestreams)
-        self._parse_metadata("shorts", config, shorts, self.shorts)
+        self._metadata_parse_videos("video", config, videos, self.videos)
+        self._metadata_parse_videos("livestream", config, livestreams, self.livestreams)
+        self._metadata_parse_videos("shorts", config, shorts, self.shorts)
 
         # Go through each and report deleted
         self._report_deleted(self.videos)
@@ -202,7 +216,7 @@ class Archive:
         """Downloads all videos which haven't already been downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
-        settings = self._dl_settings(config)
+        settings = self._settings_dl(config)
 
         # Retry downloading 5 times in total for all videos
         anything_downloaded = True
@@ -241,7 +255,7 @@ class Archive:
             converter = Converter(self.path / "videos")
             converter.run()
 
-    def _md_settings(self, config: Config) -> dict:
+    def _settings_metadata(self, config: Config) -> dict:
         """Generates customized yt-dlp settings for metadata from `config` passed in"""
         # Always present
         settings = {
@@ -260,7 +274,7 @@ class Archive:
         # Return
         return settings
 
-    def _dl_settings(self, config: Config) -> dict:
+    def _settings_dl(self, config: Config) -> dict:
         """Generates customized yt-dlp settings from `config` passed in"""
         # Always present
         settings = {
@@ -416,19 +430,25 @@ class Archive:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(
+    def _metadata_parse_videos(
         self, kind: str, config: Config, entries: list[dict], videos: list[Video]
     ):
         """Parses metadata for a category of video into it's `videos` bucket"""
-        # Parse each video
-        print(f"Parsing {kind} metadata..")
-        for entry in entries:
-            self._parse_metadata_video(config, entry, videos)
 
-        # Sort videos by newest
-        videos.sort(reverse=True)
+        def comp():
+            """Computes the actual parsing, in this function so that it can be ran with the loading spinner"""
+            # Parse each video
+            for entry in entries:
+                self._metadata_parse_video(config, entry, videos)
 
-    def _parse_metadata_video(self, config: Config, entry: dict, videos: list[Video]):
+            # Sort videos by newest
+            videos.sort(reverse=True)
+
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(comp)
+            _progress_spinner(f"Parsing {kind} metadata..", future)
+
+    def _metadata_parse_video(self, config: Config, entry: dict, videos: list[Video]):
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
         if "formats" not in entry or len(entry["formats"]) == 0:
@@ -732,3 +752,23 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     else:
         _err_msg(f"  • Sorry, failed to download {name}", True)
         sys.exit(1)
+
+
+def _progress_spinner(msg: str, future):
+    """Shows a progress spinner displaying `msg` after 2 seconds until future is finished"""
+    # Print loading progress at the start without loading indicator so theres always a print
+    print(msg, end="\r")
+
+    # Start spinning
+    with PieSpinner(f"{msg} ") as bar:
+        # Don't show bar for 2 seconds but check if future is done
+        no_bar_time = time.time() + 2
+        while time.time() < no_bar_time:
+            if future.done():
+                return
+            time.sleep(0.25)
+
+        # Show loading spinner
+        while not future.done():
+            bar.next()
+            time.sleep(0.075)
