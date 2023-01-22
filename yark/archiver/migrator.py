@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from .video.element import Element
+from .element import Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter

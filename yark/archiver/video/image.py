@@ -3,7 +3,7 @@ from pathlib import Path
 import requests
 import hashlib
 from typing import TYPE_CHECKING
-from .element import Element
+from ..element import Element
 
 if TYPE_CHECKING:
     from ..archive import Archive

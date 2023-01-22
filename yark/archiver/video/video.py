@@ -7,7 +7,7 @@ from ...utils import _truncate_text
 from typing import Any, Optional, TYPE_CHECKING
 from ..config import Config
 from .comments import Comments
-from .element import Element
+from ..element import Element
 from .image import Image, image_element_from_archive
 from .note import Note
 from ...utils import IMAGE_THUMBNAIL

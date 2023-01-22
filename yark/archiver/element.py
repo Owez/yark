@@ -3,8 +3,8 @@ import datetime
 from typing import Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..archive import Archive
-    from .video import Video
+    from .archive import Archive
+    from .video.video import Video
 
 
 class Element:

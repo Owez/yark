@@ -1,11 +1,11 @@
 from __future__ import annotations
 from .element import Element
-from .image import Image
-from ...utils import IMAGE_AUTHOR_ICON
+from .video.image import Image
+from ..utils import IMAGE_AUTHOR_ICON
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..archive import Archive
+    from .archive import Archive
 
 
 class CommentAuthor:
