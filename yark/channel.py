@@ -12,6 +12,12 @@ import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
+from typing import Any
+import time
+from progress.spinner import PieSpinner
+from concurrent.futures import ThreadPoolExecutor
+import time
+import concurrent.futures.thread
 
 ARCHIVE_COMPAT = 3
 """
@@ -91,7 +97,11 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}                               " + Style.NORMAL)
+            print(
+                Style.DIM
+                + f"  • Downloaded {id}                               "
+                + Style.NORMAL
+            )
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -168,8 +178,45 @@ class Channel:
 
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
+        # Print loading progress at the start without loading indicator so theres always a print
+        msg = "Downloading metadata.."
+        print(msg, end="\r")
+
+        # Download metadata and give the user a spinner bar
+        with ThreadPoolExecutor() as ex:
+            # Make future for downloading metadata
+            future = ex.submit(self._download_metadata)
+
+            # Start spinning
+            with PieSpinner(f"{msg} ") as bar:
+                # Don't show bar for 2 seconds but check if future is done
+                no_bar_time = time.time() + 2
+                while time.time() < no_bar_time:
+                    if future.done():
+                        break
+                    time.sleep(0.25)
+
+                # Show loading spinner
+                while not future.done():
+                    bar.next()
+                    time.sleep(0.075)
+
+            # Get result from thread now that it's finished
+            res = future.result()
+
+        # Uncomment for saving big dumps for testing
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
+
+        # Uncomment for loading big dumps for testing
+        # res = json.load(open("demo/dump.json", "r"))
+
+        # Parse downloaded metadata
+        self._parse_metadata(res)
+
+    def _download_metadata(self) -> dict[str, Any]:
+        """Downloads metadata dict and returns for further parsing"""
         # Construct downloader
-        print("Downloading metadata..")
         settings = {
             # Centralized logging system; makes output fully quiet
             "logger": VideoLogger(),
@@ -178,12 +225,11 @@ class Channel:
         }
 
         # Get response and snip it
-        res = None
         with YoutubeDL(settings) as ydl:
             for i in range(3):
                 try:
-                    res = ydl.extract_info(self.url, download=False)
-                    break
+                    res: dict[str, Any] = ydl.extract_info(self.url, download=False)
+                    return res
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
@@ -195,15 +241,10 @@ class Channel:
                             Style.DIM
                             + f"  • Retrying metadata download.."
                             + Style.RESET_ALL
-                        )
+                        )  # TODO: compat with loading bar
 
-        # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
-
-        # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
-
+    def _parse_metadata(self, res: dict[str, Any]):
+        """Parses entirety of downloaded metadata"""
         # Normalize into types of videos
         videos = []
         livestreams = []
@@ -225,9 +266,9 @@ class Channel:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
-        self._parse_metadata("video", videos, self.videos)
-        self._parse_metadata("livestream", livestreams, self.livestreams)
-        self._parse_metadata("shorts", shorts, self.shorts)
+        self._parse_metadata_videos("video", videos, self.videos)
+        self._parse_metadata_videos("livestream", livestreams, self.livestreams)
+        self._parse_metadata_videos("shorts", shorts, self.shorts)
 
         # Go through each and report deleted
         self._report_deleted(self.videos)
@@ -388,10 +429,35 @@ class Channel:
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_dict(), file)
 
-    def _parse_metadata(self, kind: str, input: list, bucket: list):
-        """Parses metadata for a category of video into it's bucket"""
-        print(f"Parsing {kind} metadata..")
-        for entry in input:
+    def _parse_metadata_videos(self, kind: str, i: list, bucket: list):
+        """Parses metadata for a category of video into it's bucket and tells user what's happening"""
+
+        # Print at the start without loading indicator so theres always a print
+        msg = f"Parsing {kind} metadata.."
+        print(msg, end="\r")
+
+        # Start computing and show loading spinner
+        with ThreadPoolExecutor() as ex:
+            # Make future for computation of the video list
+            future = ex.submit(self._parse_metadata_videos_comp, i, bucket)
+
+            # Start spinning
+            with PieSpinner(f"{msg} ") as bar:
+                # Don't show bar for 2 seconds but check if future is done
+                no_bar_time = time.time() + 2
+                while time.time() < no_bar_time:
+                    if future.done():
+                        return
+                    time.sleep(0.25)
+
+                # Spin until future is done
+                while not future.done():
+                    time.sleep(0.075)
+                    bar.next()
+
+    def _parse_metadata_videos_comp(self, i: list, bucket: list):
+        """Computes the actual parsing for `_parse_metadata_videos` without outputting what's happening"""
+        for entry in i:
             # Skip video if there's no formats available; happens with upcoming videos/livestreams
             if "formats" not in entry or len(entry["formats"]) == 0:
                 continue
