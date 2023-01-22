@@ -12,41 +12,45 @@ from .reporter import Reporter
 from ..errors import ArchiveNotFoundException
 from ..logger import _err_msg
 from .video.video import Video, Videos
-from .video.comment_author import CommentAuthor
-from typing import Optional
-from .config import Config
+from .comment_author import CommentAuthor
+from typing import Optional, Any
+from .config import Config, YtDlpSettings
 from .converter import Converter
 from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
+from dataclasses import dataclass, field
 
 
+# NOTE: maybe make into dataclass
+@dataclass(init=False)
 class Archive:
     path: Path
-    version: int
     url: str
+    version: int
     videos: Videos
     livestreams: Videos
     shorts: Videos
-    comment_authors: dict[str, CommentAuthor]
     reporter: Reporter
+    comment_authors: dict[str, CommentAuthor]
 
-    @staticmethod
-    def new(path: Path, url: str) -> Archive:
-        """Creates a new archive"""
-        print("Creating new archive..")
-        archive = Archive()
-        archive.path = Path(path)
-        archive.version = ARCHIVE_COMPAT
-        archive.url = url
-        archive.videos = Videos(archive)
-        archive.livestreams = Videos(archive)
-        archive.shorts = Videos(archive)
-        archive.comment_authors = {}
-        archive.reporter = Reporter(archive)
-
-        # Commit and return
-        archive.commit()
-        return archive
+    def __init__(
+        self,
+        path: Path,
+        url: str,
+        version: int = ARCHIVE_COMPAT,
+        videos: Videos | None = None,
+        livestreams: Videos | None = None,
+        shorts: Videos | None = None,
+        comment_authors: dict[str, CommentAuthor] = {},
+    ) -> None:
+        self.path = path
+        self.url = url
+        self.version = version
+        self.videos = Videos(self) if videos is None else videos
+        self.livestreams = Videos(self) if livestreams is None else livestreams
+        self.shorts = Videos(self) if shorts is None else shorts
+        self.reporter = Reporter(self)
+        self.comment_authors = comment_authors
 
     @staticmethod
     def load(path: Path) -> Archive:
@@ -71,7 +75,7 @@ class Archive:
         # Decode and return
         return Archive._from_archive_o(encoded, path)
 
-    def metadata(self, config: Config):
+    def metadata(self, config: Config) -> None:
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
         # Construct downloader
         print("Downloading metadata..")
@@ -144,8 +148,8 @@ class Archive:
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, config: Config):
-        """Downloads all videos which haven't already been downloaded"""
+    def download(self, config: Config) -> bool:
+        """Downloads all videos which haven't already been downloaded, returning if anything was downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
         settings = config.settings_dl(self.path)
@@ -158,10 +162,10 @@ class Archive:
                 # Curate list of non-downloaded videos
                 not_downloaded = self._curate(config)
 
-                # Stop if there's nothing to download
+                # Return if there's nothing to download
                 if len(not_downloaded) == 0:
                     anything_downloaded = False
-                    break
+                    return False
 
                 # Print curated if this is the first time
                 if i == 0:
@@ -187,7 +191,10 @@ class Archive:
             converter = Converter(self.path / "videos")
             converter.run()
 
-    def _dl_launch(self, settings: dict, not_downloaded: list[Video]):
+        # Say that something was downloaded
+        return True
+
+    def _dl_launch(self, settings: YtDlpSettings, not_downloaded: list[Video]) -> None:
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
         # Continuously try to download after private/deleted videos are found
         # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -254,9 +261,11 @@ class Archive:
             # Make a list for the videos
             found_videos = []
 
-            # Add all videos because there's no maximum
+            # Add all undownloaded videos because there's no maximum
             if maximum is None:
-                found_videos = list(videos.inner.values())
+                found_videos = list(
+                    [video for video in videos.inner.values() if not video.downloaded()]
+                )
 
             # Cut available videos to maximum if present for deterministic getting
             else:
@@ -285,7 +294,7 @@ class Archive:
         # Return
         return not_downloaded
 
-    def commit(self, backup: bool = False):
+    def commit(self, backup: bool = False) -> None:
         """Commits (saves) archive to path; do this once you've finished all of your transactions"""
         # Save backup if explicitly wanted
         if backup:
@@ -303,8 +312,8 @@ class Archive:
             json.dump(self._to_archive_o(), file)
 
     def _parse_metadata(
-        self, kind: str, config: Config, entries: list[dict], videos: Videos
-    ):
+        self, kind: str, config: Config, entries: list[dict[str, Any]], videos: Videos
+    ) -> None:
         """Parses metadata for a category of video into it's `videos` bucket"""
         # Parse each video
         print(f"Parsing {kind} metadata..")
@@ -314,7 +323,9 @@ class Archive:
         # Sort videos by newest for display and so we can curate with maximums
         videos.sort()
 
-    def _parse_metadata_video(self, config: Config, entry: dict, videos: Videos):
+    def _parse_metadata_video(
+        self, config: Config, entry: dict[str, Any], videos: Videos
+    ) -> None:
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
         if "formats" not in entry or len(entry["formats"]) == 0:
@@ -336,14 +347,14 @@ class Archive:
             videos.inner[video.id] = video
             self.reporter.added.append(video)
 
-    def _report_deleted(self, videos: Videos):
+    def _report_deleted(self, videos: Videos) -> None:
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
         for video in videos.inner.values():
             if video.deleted.current() == False and not video.known_not_deleted:
                 self.reporter.deleted.append(video)
                 video.deleted.update(None, True)
 
-    def _clean_parts(self):
+    def _clean_parts(self) -> None:
         """Cleans old temporary `.part` files which where stopped during download if present"""
         # Make a bucket for found files
         deletion_bucket: list[Path] = []
@@ -359,7 +370,7 @@ class Archive:
             for file in deletion_bucket:
                 file.unlink()
 
-    def _backup(self):
+    def _backup(self) -> None:
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
         # Get current archive path
         ARCHIVE_PATH = self.path / "yark.json"
@@ -378,33 +389,28 @@ class Archive:
                 file_backup.write(save)
 
     @staticmethod
-    def _from_archive_o(encoded: dict, path: Path) -> Archive:
+    def _from_archive_o(encoded: dict[str, Any], path: Path) -> Archive:
         """Decodes object dict from archive which is being loaded back up"""
+
         # Initiate archive
-        archive = Archive()
+        archive = Archive(path, encoded["url"], encoded["version"])
 
         # Decode id & body style comment authors
         # NOTE: needed above video decoding for comments
-        archive.comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
                 archive, id, encoded["comment_authors"][id]
             )
 
-        # Normal
-        archive.path = path
-        archive.version = encoded["version"]
-        archive.url = encoded["url"]
+        # Load up videos/livestreams/shorts
         archive.videos = Videos._from_archive_o(archive, encoded["videos"])
         archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
         archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
-        archive.reporter = Reporter(archive)
-        archive.comment_authors = {}
 
         # Return
         return archive
 
-    def _to_archive_o(self) -> dict:
+    def _to_archive_o(self) -> dict[str, Any]:
         """Converts all archive data to a object dict to commit"""
         # Encode comment authors
         comment_authors = {}
@@ -428,7 +434,7 @@ class Archive:
         return self.path.name
 
 
-def _log_download_count(count: int):
+def _log_download_count(count: int) -> None:
     """Tells user that `count` number of videos have been downloaded"""
     fmt_num = "a new video" if count == 1 else f"{count} new videos"
     print(f"Downloading {fmt_num}..")
@@ -466,7 +472,7 @@ def _skip_video(
     )
 
 
-def _err_dl(name: str, exception: DownloadError, retrying: bool):
+def _err_dl(name: str, exception: DownloadError, retrying: bool) -> None:
     """Prints errors to stdout depending on what kind of download error occurred"""
     # Default message
     msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"

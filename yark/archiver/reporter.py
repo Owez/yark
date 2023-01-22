@@ -2,28 +2,24 @@
 
 from colorama import Fore, Style
 import datetime
-from .video.video import Video, Element
+from .video.video import Video
 from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
 from .video.video import Videos
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .archive import Archive
 
 
+@dataclass
 class Reporter:
     archive: "Archive"
-    added: list[Video]
-    deleted: list[Video]
-    updated: list[tuple[str, Video]]
+    added: list[Video] = field(default_factory=list)
+    deleted: list[Video] = field(default_factory=list)
+    updated: list[tuple[str, Video]] = field(default_factory=list)
 
-    def __init__(self, archive: "Archive") -> None:
-        self.archive = archive
-        self.added = []
-        self.deleted = []
-        self.updated = []
-
-    def print(self):
+    def print(self) -> None:
         """Prints coloured report to STDOUT"""
         # Initial message
         print(f"Report for {self.archive}:")
@@ -55,17 +51,17 @@ class Reporter:
         # Watermark
         print(_watermark())
 
-    def add_updated(self, kind: str, video: Video):
+    def add_updated(self, kind: str, video: Video) -> None:
         """Tells reporter that an element has been updated"""
         self.updated.append((kind, video))
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets reporting values for new run"""
         self.added = []
         self.deleted = []
         self.updated = []
 
-    def interesting_changes(self):
+    def interesting_changes(self) -> None:
         """Reports on the most interesting changes for the archive linked to this reporter"""
 
         def fmt_video(kind: str, video: Video) -> str:
@@ -83,7 +79,7 @@ class Reporter:
             maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
             add_buf = lambda name, change, colour: buf.append(
                 colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
-            )
+            )  # TODO: move to def
 
             # Figure out how many changes have happened in each category and format them together
             change_deleted = sum(

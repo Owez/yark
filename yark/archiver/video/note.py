@@ -2,42 +2,39 @@
 
 from __future__ import annotations
 from uuid import uuid4
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Any
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .video import Video
 
 
+def _id_generator() -> str:
+    """Generates an identifier for new notes"""
+    return str(uuid4())
+
+
+@dataclass
 class Note:
     parent: Video
-    id: str
     timestamp: int
     title: str
-    body: Optional[str]
+
+    id: str = field(default_factory=_id_generator)
+    body: Optional[str] = None
 
     @staticmethod
-    def new(parent: Video, timestamp: int, title: str, body: Optional[str] = None):
-        """Creates a new note"""
-        note = Note()
-        note.parent = parent
-        note.id = str(uuid4())
-        note.timestamp = timestamp
-        note.title = title
-        note.body = body
-        return note
-
-    @staticmethod
-    def _from_archive_o(parent: Video, element: dict) -> Note:
+    def _from_archive_o(parent: Video, element: dict[str, Any]) -> Note:
         """Loads existing note object dict from an archive"""
-        note = Note()
-        note.parent = parent
-        note.id = element["id"]
-        note.timestamp = element["timestamp"]
-        note.title = element["title"]
-        note.body = element["body"]
-        return note
+        return Note(
+            parent,
+            element["timestamp"],
+            element["title"],
+            element["id"],
+            element["body"],
+        )
 
-    def _to_archive_o(self) -> dict:
+    def _to_archive_o(self) -> dict[str, Any]:
         """Converts note to it's object dict for archival"""
         return {
             "id": self.id,

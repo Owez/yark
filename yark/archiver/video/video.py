@@ -7,16 +7,18 @@ from ...utils import _truncate_text
 from typing import Any, Optional, TYPE_CHECKING
 from ..config import Config
 from .comments import Comments
-from .element import Element
+from ..element import Element
 from .image import Image, image_element_from_archive
 from .note import Note
 from ...utils import IMAGE_THUMBNAIL
 from ...errors import VideoNotFoundException
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from ..archive import Archive
 
 
+# NOTE: maybe make this into dataclass
 class Video:
     archive: Archive
     id: str
@@ -41,13 +43,13 @@ class Video:
         video.uploaded = _decode_date_yt(entry["upload_date"])
         video.width = entry["width"]
         video.height = entry["height"]
-        video.title = Element.new(archive, entry["title"])
-        video.description = Element.new(archive, entry["description"])
-        video.views = Element.new(archive, entry["view_count"])
-        video.likes = Element.new(
+        video.title = Element.new_data(archive, entry["title"])
+        video.description = Element.new_data(archive, entry["description"])
+        video.views = Element.new_data(archive, entry["view_count"])
+        video.likes = Element.new_data(
             archive, entry["like_count"] if "like_count" in entry else None
         )
-        video.thumbnail = Element.new(
+        video.thumbnail = Element.new_data(
             archive,
             Image.new(
                 archive,
@@ -55,7 +57,7 @@ class Video:
                 IMAGE_THUMBNAIL,
             ),
         )
-        video.deleted = Element.new(archive, False)
+        video.deleted = Element.new_data(archive, False)
         video.comments = Comments(archive)
         video.notes = []
         video.known_not_deleted = True
@@ -67,7 +69,7 @@ class Video:
         # Return
         return video
 
-    def update(self, config: Config, entry: dict):
+    def update(self, config: Config, entry: dict[str, Any]) -> None:
         """Updates video using new metadata schema, adding a new timestamp to any changes"""
         # Normal
         self.title.update(("title", self), entry["title"])
@@ -109,7 +111,7 @@ class Video:
             or len(self.deleted.inner) > 1
         )
 
-    def search(self, id: str):
+    def search(self, id: str) -> Note:
         """Searches video for note's id"""
         for note in self.notes:
             if note.id == id:
@@ -122,7 +124,7 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.id}"
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, encoded: dict) -> Video:
+    def _from_archive_ib(archive: Archive, id: str, encoded: dict[str, Any]) -> Video:
         """Converts archive body dict into a new video with an id passed in"""
         video = Video()
         video.archive = archive
@@ -138,14 +140,14 @@ class Video:
             archive, encoded["thumbnail"], IMAGE_THUMBNAIL
         )
         video.deleted = Element._from_archive_o(archive, encoded["deleted"])
-        video.comments = Comments._from_archive_o(archive, video, encoded["comments"])
+        video.comments = Comments._from_archive_o(archive, encoded["comments"])
         video.notes = [Note._from_archive_o(video, note) for note in encoded["notes"]]
         video.known_not_deleted = False
 
         # Return
         return video
 
-    def _to_archive_b(self) -> dict:
+    def _to_archive_b(self) -> dict[str, Any]:
         """Converts this video into a dict body for saving to the archive under an id"""
         return {
             "uploaded": self.uploaded.isoformat(),
@@ -179,7 +181,7 @@ class Video:
         # Return
         return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: Video) -> bool:
         return self.uploaded < other.uploaded
 
 
@@ -210,15 +212,12 @@ def _magnitude(count: Optional[int] = None) -> str:
         return value + "b"
 
 
+@dataclass
 class Videos:
     archive: Archive
-    inner: dict[str, Video]
+    inner: dict[str, Video] = field(default_factory=dict)
 
-    def __init__(self, archive: Archive) -> None:
-        self.archive = archive
-        self.inner = {}
-
-    def sort(self):
+    def sort(self) -> None:
         """Sorts `inner` videos content by newest date uploaded"""
         sorted_kv = sorted(
             self.inner.items(), key=lambda item: item[1].uploaded, reverse=True
@@ -234,14 +233,14 @@ class Videos:
         raise VideoNotFoundException()
 
     @staticmethod
-    def _from_archive_o(archive: Archive, videos: dict[str, dict]):
+    def _from_archive_o(archive: Archive, entry: dict[str, dict[str, Any]]) -> Videos:
         """Loads videos from it's object in the archive"""
-        output = Videos(archive)
-        for id in videos.keys():
-            output.inner[id] = Video._from_archive_ib(archive, id, videos[id])
-        return output
+        videos = Videos(archive)
+        for id in entry.keys():
+            videos.inner[id] = Video._from_archive_ib(archive, id, entry[id])
+        return videos
 
-    def _to_archive_o(self) -> dict[str, dict]:
+    def _to_archive_o(self) -> dict[str, dict[str, Any]]:
         """Saves each video as an id & body style dict inside of a videos object"""
         payload = {}
         for id in self.inner:

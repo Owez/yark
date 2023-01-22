@@ -2,12 +2,12 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from .video.video import Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter
 from typing import Any, TYPE_CHECKING
 from ..utils import ARCHIVE_COMPAT, PYPI_VERSION
+import datetime
 
 if TYPE_CHECKING:
     from .archive import Archive
@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 def _migrate(
     current_version: int,
     expected_version: int,
-    encoded: dict,
+    encoded: dict[str, Any],
     path: Path,
     archive_name: str,
-) -> dict:
+) -> dict[str, Any]:
     """Automatically migrates an archive from one version to another by bootstrapping"""
 
     # Tell user we can't downgrade
@@ -46,8 +46,12 @@ def _migrate(
 
 
 def _step(
-    expected_version: int, path: Path, cur: int, encoded: dict, archive_name: str
-) -> dict:
+    expected_version: int,
+    path: Path,
+    cur: int,
+    encoded: dict[str, Any],
+    archive_name: str,
+) -> dict[str, Any]:
     """Step in recursion to migrate from one to another, contains migration logic"""
     # Stop because we've reached the desired version
     if cur == expected_version:
@@ -73,13 +77,13 @@ def _step(
     # From version 2 to version 3
     elif cur == 2:
         # Add deleted status to every video/livestream/short
-        # NOTE: this bodged empty archive is fine, its never called on
+        not_deleted = {datetime.datetime.utcnow().isoformat(): False}
         for video in encoded["videos"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
         for video in encoded["livestreams"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
         for video in encoded["shorts"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
 
     # From version 3 to version 4
     elif cur == 3:
@@ -133,7 +137,9 @@ def _step(
     return _step(expected_version, path, cur, encoded, archive_name)
 
 
-def _o_to_ib_video(new_videos: dict[str, dict[str, Any]], video: dict[str, Any]):
+def _o_to_ib_video(
+    new_videos: dict[str, dict[str, Any]], video: dict[str, Any]
+) -> None:
     """Adds old format `video` into the new `new_videos` dict"""
     id = video["id"]
     del video["id"]

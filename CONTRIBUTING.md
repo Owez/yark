@@ -68,3 +68,5 @@ Whereas the `_b` and `_ib` ones would be used for a JSON child object which woul
 ```
 
 These two are used because the full objects (the first example) is easier to implement and are more self-contained, but we often need to select items by their ID straight from their parents.
+
+This system will be changed to dataclasses soon because it's not a good way to this. But for now this is what the archival conversion system looks like.

@@ -1,25 +1,24 @@
 from __future__ import annotations
 import datetime
 from typing import Any, Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
-    from ..archive import Archive
-    from .video import Video
+    from .archive import Archive
+    from .video.video import Video
 
 
+@dataclass()
 class Element:
     archive: Archive
-    inner: dict[datetime.datetime, Any]
+    inner: dict[datetime.datetime, Any] = field(default_factory=dict)
 
     @staticmethod
-    def new(archive: Archive, data: Any):
-        """Creates new element attached with some initial data"""
-        element = Element()
-        element.archive = archive
-        element.inner = {datetime.datetime.utcnow(): data}
-        return element
+    def new_data(archive: Archive, data: Any) -> Element:
+        """Creates a new element with some initial data inside of it"""
+        return Element(archive, {datetime.datetime.utcnow(): data})
 
-    def update(self, kind_video: Optional[tuple[str, Video]], data: Any):
+    def update(self, kind_video: Optional[tuple[str, Video]], data: Any) -> None:
         """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
         # Check if updating is needed
         has_id = hasattr(data, "id")
@@ -32,7 +31,7 @@ class Element:
             if kind_video is not None:
                 self.archive.reporter.add_updated(kind_video[0], kind_video[1])
 
-    def current(self):
+    def current(self) -> Any:
         """Returns most recent element"""
         return self.inner[list(self.inner.keys())[-1]]
 
@@ -41,12 +40,10 @@ class Element:
         return len(self.inner) > 1
 
     @staticmethod
-    def _from_archive_o(archive: Archive, encoded: dict) -> Element:
+    def _from_archive_o(archive: Archive, encoded: dict[str, Any]) -> Element:
         """Converts object dict from archive to this element"""
         # Basics
-        element = Element()
-        element.archive = archive
-        element.inner = {}
+        element = Element(archive)
 
         # Inner elements
         for key in encoded:
@@ -56,7 +53,7 @@ class Element:
         # Return
         return element
 
-    def _to_archive_o(self) -> dict:
+    def _to_archive_o(self) -> dict[str, Any]:
         """Converts element to object dict for an archive"""
         # Convert each item
         encoded = {}

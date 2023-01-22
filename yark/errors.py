@@ -8,29 +8,17 @@ from pathlib import Path
 class ArchiveNotFoundException(Exception):
     """Archive couldn't be found, the name was probably incorrect"""
 
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
 
 class VideoNotFoundException(Exception):
     """Video couldn't be found, the id was probably incorrect"""
-
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 
 
 class NoteNotFoundException(Exception):
     """Note couldn't be found, the id was probably incorrect"""
 
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
 
 class TimestampException(Exception):
     """Invalid timestamp inputted for note"""
-
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 
 
 class ArchiveStructureException(Exception):

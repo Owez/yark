@@ -5,15 +5,16 @@ from __future__ import annotations
 import multiprocessing
 from functools import partial
 from typing import Optional, Any, TYPE_CHECKING
-from .comment_author import CommentAuthor
-from .element import Element
+from ..comment_author import CommentAuthor
+from ..element import Element
 import datetime
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
-    from ..video.video import Video
     from ..archive import Archive
 
 
+@dataclass
 class Comment:
     archive: Archive
     id: str
@@ -36,23 +37,20 @@ class Comment:
         created: datetime.datetime,
     ) -> Comment:
         """Creates a new comment with simplified information inputs"""
-        # Initiate comment
-        comment = Comment()
-
-        # Normal
-        comment.archive = archive
-        comment.id = id
-        comment.author = CommentAuthor.new_or_update(
-            archive, author_id, author_name, author_icon_url
+        return Comment(
+            archive,
+            id,
+            CommentAuthor.new_or_update(
+                archive, author_id, author_name, author_icon_url
+            ),
+            Element.new_data(archive, body),
+            Element.new_data(archive, favorited),
+            Element.new_data(archive, False),
+            created,
+            Comments(archive),
         )
-        comment.body = Element.new(archive, body)
-        comment.favorited = Element.new(archive, favorited)
-        comment.deleted = Element.new(archive, False)
-        comment.created = created
-        comment.children = Comments(archive)
-        return comment
 
-    def update(self, entry: dict[str, Any]):
+    def update(self, entry: dict[str, Any]) -> None:
         """Updates comment using new metadata schema, adding a new timestamp to any changes and also updating it's author automatically"""
         self.author.new_or_update(
             self.archive,
@@ -65,32 +63,32 @@ class Comment:
         self.deleted.update(None, False)
 
     @staticmethod
-    def _from_archive_ib(archive: Archive, id: str, element: dict) -> Comment:
+    def _from_archive_ib(archive: Archive, id: str, element: dict[str, Any]) -> Comment:
         """Loads a comment from it's body dict with it's id passed in, use this as a new body"""
-        # Initiate comment
-        comment = Comment()
-
-        # Normal
-        comment = Comment()
-        comment.archive = archive
-        comment.id = id
-        comment.author = archive.comment_authors[element["author_id"]]
-        comment.body = Element._from_archive_o(archive, element["body"])
-        comment.favorited = Element._from_archive_o(archive, element["favorited"])
-        comment.deleted = Element._from_archive_o(archive, element["deleted"])
-        comment.created = datetime.datetime.fromisoformat(element["created"])
 
         # Get children using the id & body method
-        comment.children = Comments(archive)
+        children = Comments(archive)
         for id in element["children"].keys():
-            comment.children.inner[id] = Comment._from_archive_ib(
+            children.inner[id] = Comment._from_archive_ib(
                 archive, id, element["children"][id]
             )
+
+        # Initiate comment
+        comment = Comment(
+            archive,
+            id,
+            archive.comment_authors[element["author_id"]],
+            Element._from_archive_o(archive, element["body"]),
+            Element._from_archive_o(archive, element["favorited"]),
+            Element._from_archive_o(archive, element["deleted"]),
+            datetime.datetime.fromisoformat(element["created"]),
+            children,
+        )
 
         # Return
         return comment
 
-    def _to_archive_b(self) -> dict:
+    def _to_archive_b(self) -> dict[str, Any]:
         """Converts comment to it's archival dict body"""
         # Get children using the id & body method
         children = {}
@@ -111,15 +109,12 @@ class Comment:
         return payload
 
 
+@dataclass
 class Comments:
     archive: Archive
-    inner: dict[str, Comment]
+    inner: dict[str, Comment] = field(default_factory=dict)
 
-    def __init__(self, archive: Archive) -> None:
-        self.archive = archive
-        self.inner = {}
-
-    def update(self, comments: list[dict[str, Any]]):
+    def update(self, comments: list[dict[str, Any]]) -> None:
         """Updates comments according to metadata"""
         # All comments identifiers which have been found so we can see the difference to find deleted comments
         known: list[str] = []
@@ -244,15 +239,15 @@ class Comments:
 
     @staticmethod
     def _from_archive_o(
-        archive: Archive, parent: Video | Comment, comments: dict[str, dict]
-    ):
+        archive: Archive, comments: dict[str, dict[str, Any]]
+    ) -> Comments:
         """Loads comments from a comment level in a Yark archive"""
         output = Comments(archive)
         for id in comments.keys():
             output.inner[id] = Comment._from_archive_ib(archive, id, comments[id])
         return output
 
-    def _to_archive_o(self) -> dict[str, dict]:
+    def _to_archive_o(self) -> dict[str, dict[str, Any]]:
         """Saves each comment as an id & body style dict inside of comments"""
         payload = {}
         for id in self.inner:

@@ -2,11 +2,12 @@
 
 from colorama import Style, Fore
 import sys
+from typing import Any
 
 
 class VideoLogger:
     @staticmethod
-    def downloading(d):
+    def downloading(d: dict[str, Any]) -> None:
         """Progress hook for video downloading"""
         # Get video's id
         id = d["info_dict"]["id"]
@@ -25,24 +26,24 @@ class VideoLogger:
         elif d["status"] == "finished":
             print(Style.DIM + f"  • Downloaded {id}                " + Style.NORMAL)
 
-    def debug(self, msg):
+    def debug(self, _msg: str) -> None:
         """Debug log messages, ignored"""
         pass
 
-    def info(self, msg):
+    def info(self, _msg: str) -> None:
         """Info log messages ignored"""
         pass
 
-    def warning(self, msg):
+    def warning(self, _msg: str) -> None:
         """Warning log messages ignored"""
         pass
 
-    def error(self, msg):
+    def error(self, _msg: str) -> None:
         """Error log messages"""
         pass
 
 
-def _err_msg(msg: str, report_msg: bool = False):
+def _err_msg(msg: str, report_msg: bool = False) -> None:
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (
         msg
