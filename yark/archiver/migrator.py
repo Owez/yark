@@ -2,12 +2,12 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from .element import Element
 from ..logger import _err_msg
 import sys
 from .converter import Converter
 from typing import Any, TYPE_CHECKING
 from ..utils import ARCHIVE_COMPAT, PYPI_VERSION
+import datetime
 
 if TYPE_CHECKING:
     from .archive import Archive
@@ -73,13 +73,13 @@ def _step(
     # From version 2 to version 3
     elif cur == 2:
         # Add deleted status to every video/livestream/short
-        # NOTE: this bodged empty archive is fine, its never called on
+        not_deleted = {datetime.datetime.utcnow().isoformat(): False}
         for video in encoded["videos"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
         for video in encoded["livestreams"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
         for video in encoded["shorts"]:
-            video["deleted"] = Element.new(Archive(), False)._to_archive_o()
+            video["deleted"] = not_deleted
 
     # From version 3 to version 4
     elif cur == 3:

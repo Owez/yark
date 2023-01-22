@@ -233,12 +233,12 @@ class Videos:
         raise VideoNotFoundException()
 
     @staticmethod
-    def _from_archive_o(archive: Archive, videos: dict[str, dict]) -> Videos:
+    def _from_archive_o(archive: Archive, entry: dict[str, dict]):
         """Loads videos from it's object in the archive"""
-        output = Videos(archive)
-        for id in videos.keys():
-            output.inner[id] = Video._from_archive_ib(archive, id, videos[id])
-        return output
+        videos = Videos(archive)
+        for id in entry.keys():
+            videos.inner[id] = Video._from_archive_ib(archive, id, entry[id])
+        return videos
 
     def _to_archive_o(self) -> dict[str, dict]:
         """Saves each video as an id & body style dict inside of a videos object"""

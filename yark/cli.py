@@ -53,7 +53,7 @@ def _cli() -> None:
             sys.exit(1)
 
         # Create archive
-        Archive.new(Path(args[1]), args[2])
+        Archive(Path(args[1]), args[2])
 
     # Refresh
     elif args[0] == "refresh":
@@ -135,17 +135,25 @@ def _cli() -> None:
 
         # Refresh archive using config context
         try:
+            # Load up the archive
             archive = Archive.load(Path(args[1]))
+
+            # Get metadata if wanted
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
                 archive.metadata(config)
                 archive.commit(True)
+
+            # Download videos if wanted
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
             else:
-                archive.download(config)
-                archive.commit()
+                anything_downloaded = archive.download(config)
+                if anything_downloaded:
+                    archive.commit()
+
+            # Report the changes which have been made
             archive.reporter.print()
         except ArchiveNotFoundException:
             _err_archive_not_found()

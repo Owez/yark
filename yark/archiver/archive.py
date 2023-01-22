@@ -18,36 +18,28 @@ from .config import Config
 from .converter import Converter
 from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
+from dataclasses import dataclass, field
 
 
 # NOTE: maybe make into dataclass
+@dataclass
 class Archive:
     path: Path
-    version: int
     url: str
-    videos: Videos
-    livestreams: Videos
-    shorts: Videos
-    comment_authors: dict[str, CommentAuthor]
-    reporter: Reporter
 
-    @staticmethod
-    def new(path: Path, url: str) -> Archive:
-        """Creates a new archive"""
-        print("Creating new archive..")
-        archive = Archive()
-        archive.path = Path(path)
-        archive.version = ARCHIVE_COMPAT
-        archive.url = url
-        archive.videos = Videos(archive)
-        archive.livestreams = Videos(archive)
-        archive.shorts = Videos(archive)
-        archive.comment_authors = {}
-        archive.reporter = Reporter(archive)
+    version: int = ARCHIVE_COMPAT
+    comment_authors: dict[str, CommentAuthor] = field(default_factory=dict)
 
-        # Commit and return
-        archive.commit()
-        return archive
+    videos: Videos = field(init=False)
+    livestreams: Videos = field(init=False)
+    shorts: Videos = field(init=False)
+    reporter: Reporter = field(init=False)
+
+    def __post_init__(self):
+        self.videos = Videos(self)
+        self.livestreams = Videos(self)
+        self.shorts = Videos(self)
+        self.reporter = Reporter(self)
 
     @staticmethod
     def load(path: Path) -> Archive:
@@ -145,8 +137,8 @@ class Archive:
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
 
-    def download(self, config: Config) -> None:
-        """Downloads all videos which haven't already been downloaded"""
+    def download(self, config: Config) -> bool:
+        """Downloads all videos which haven't already been downloaded, returning if anything was downloaded"""
         # Prepare; clean out old part files and get settings
         self._clean_parts()
         settings = config.settings_dl(self.path)
@@ -159,10 +151,10 @@ class Archive:
                 # Curate list of non-downloaded videos
                 not_downloaded = self._curate(config)
 
-                # Stop if there's nothing to download
+                # Return if there's nothing to download
                 if len(not_downloaded) == 0:
                     anything_downloaded = False
-                    break
+                    return False
 
                 # Print curated if this is the first time
                 if i == 0:
@@ -187,6 +179,9 @@ class Archive:
         if anything_downloaded:
             converter = Converter(self.path / "videos")
             converter.run()
+
+        # Say that something was downloaded
+        return True
 
     def _dl_launch(self, settings: dict, not_downloaded: list[Video]) -> None:
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
@@ -385,26 +380,24 @@ class Archive:
     @staticmethod
     def _from_archive_o(encoded: dict, path: Path) -> Archive:
         """Decodes object dict from archive which is being loaded back up"""
-        # Initiate archive
-        archive = Archive()
-
         # Decode id & body style comment authors
         # NOTE: needed above video decoding for comments
-        archive.comment_authors = {}
+        comment_authors = {}
         for id in encoded["comment_authors"].keys():
             archive.comment_authors[id] = CommentAuthor._from_archive_ib(
                 archive, id, encoded["comment_authors"][id]
             )
 
-        # Normal
-        archive.path = path
-        archive.version = encoded["version"]
-        archive.url = encoded["url"]
+        # Initiate archive
+        archive = Archive(
+            path,
+            encoded["url"],
+            encoded["version"],
+            comment_authors,
+        )
         archive.videos = Videos._from_archive_o(archive, encoded["videos"])
         archive.livestreams = Videos._from_archive_o(archive, encoded["livestreams"])
         archive.shorts = Videos._from_archive_o(archive, encoded["shorts"])
-        archive.reporter = Reporter(archive)
-        archive.comment_authors = {}
 
         # Return
         return archive
