@@ -19,7 +19,8 @@ from .converter import Converter
 from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
 from dataclasses import dataclass, field
-
+from concurrent.futures import ThreadPoolExecutor, Future
+from progress.spinner import PieSpinner
 
 # NOTE: maybe make into dataclass
 @dataclass(init=False)
@@ -77,16 +78,33 @@ class Archive:
 
     def metadata(self, config: Config) -> None:
         """Queries YouTube for all channel/playlist metadata to refresh known videos"""
-        # Construct downloader
-        print("Downloading metadata..")
+        # Download metadata
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(self._metadata_download, config)
+            _progress_spinner("Downloading metadata..", future)
+            res = future.result()
+
+        # Uncomment for saving big dumps for testing
+        # with open("demo/dump.json", "w+") as file:
+        #     json.dump(res, file)
+
+        # Uncomment for loading big dumps for testing
+        # res = json.load(open("demo/dump.json", "r"))
+
+        # Parse metadata
+        self._metadata_parse(config, res)
+
+    def _metadata_download(self, config: Config) -> dict[str, Any]:
+        """Downloads metadata"""
+        # Get settings
         settings = config.settings_md()
 
-        # Get response and snip it
+        # Pull metadata from youtube
         with YoutubeDL(settings) as ydl:
             for i in range(3):
                 try:
-                    res = ydl.extract_info(self.url, download=False)
-                    break
+                    res: dict[str, Any] = ydl.extract_info(self.url, download=False)
+                    return res
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
@@ -96,17 +114,14 @@ class Archive:
                     if retrying:
                         print(
                             Style.DIM
-                            + f"  • Retrying metadata download.."
+                            + f"\n  • Retrying metadata download.."
                             + Style.RESET_ALL
                         )
 
-        # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
+        raise Exception()
 
-        # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
-
+    def _metadata_parse(self, config: Config, res: dict[str, Any]) -> None:
+        """Parses previously downloaded metadata"""
         # Make buckets to normalize different types of videos
         videos = []
         livestreams = []
@@ -139,14 +154,60 @@ class Archive:
                     _err_msg(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
-        self._parse_metadata("video", config, videos, self.videos)
-        self._parse_metadata("livestream", config, livestreams, self.livestreams)
-        self._parse_metadata("shorts", config, shorts, self.shorts)
+        self._metadata_parse_videos("video", config, videos, self.videos)
+        self._metadata_parse_videos("livestream", config, livestreams, self.livestreams)
+        self._metadata_parse_videos("shorts", config, shorts, self.shorts)
 
         # Go through each and report deleted
         self._report_deleted(self.videos)
         self._report_deleted(self.livestreams)
         self._report_deleted(self.shorts)
+
+    def _metadata_parse_videos(
+        self,
+        kind: str,
+        config: Config,
+        entries: list[dict[str, Any]],
+        videos: Videos,
+    ) -> None:
+        """Parses metadata for a category of video into it's `videos` bucket"""
+
+        def comp() -> None:
+            """Computes the actual parsing, in this function so that it can be ran with the loading spinner"""
+            # Parse each video
+            for entry in entries:
+                self._metadata_parse_video(config, entry, videos)
+
+            # Sort videos by newest
+            videos.sort()
+
+        with ThreadPoolExecutor(1) as executor:
+            future = executor.submit(comp)
+            _progress_spinner(f"Parsing {kind} metadata..", future)
+
+    def _metadata_parse_video(
+        self, config: Config, entry: dict[str, Any], videos: Videos
+    ) -> None:
+        """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
+        # Skip video if there's no formats available; happens with upcoming videos/livestreams
+        if "formats" not in entry or len(entry["formats"]) == 0:
+            return
+
+        # Updated intra-loop marker
+        updated = False
+
+        # Update video if it exists
+        found_video = videos.inner.get(entry["id"])
+        if found_video is not None:
+            found_video.update(config, entry)
+            updated = True
+            return
+
+        # Add new video if not
+        if not updated:
+            video = Video.new(config, self, entry)
+            videos.inner[video.id] = video
+            self.reporter.added.append(video)
 
     def download(self, config: Config) -> bool:
         """Downloads all videos which haven't already been downloaded, returning if anything was downloaded"""
@@ -310,42 +371,6 @@ class Archive:
         # Config
         with open(self.path / "yark.json", "w+") as file:
             json.dump(self._to_archive_o(), file)
-
-    def _parse_metadata(
-        self, kind: str, config: Config, entries: list[dict[str, Any]], videos: Videos
-    ) -> None:
-        """Parses metadata for a category of video into it's `videos` bucket"""
-        # Parse each video
-        print(f"Parsing {kind} metadata..")
-        for entry in entries:
-            self._parse_metadata_video(config, entry, videos)
-
-        # Sort videos by newest for display and so we can curate with maximums
-        videos.sort()
-
-    def _parse_metadata_video(
-        self, config: Config, entry: dict[str, Any], videos: Videos
-    ) -> None:
-        """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
-        # Skip video if there's no formats available; happens with upcoming videos/livestreams
-        if "formats" not in entry or len(entry["formats"]) == 0:
-            return
-
-        # Updated intra-loop marker
-        updated = False
-
-        # Update video if it exists
-        for video in videos.inner.values():
-            if video.id == entry["id"]:
-                video.update(config, entry)
-                updated = True
-                break
-
-        # Add new video if not
-        if not updated:
-            video = Video.new(config, self, entry)
-            videos.inner[video.id] = video
-            self.reporter.added.append(video)
 
     def _report_deleted(self, videos: Videos) -> None:
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
@@ -526,3 +551,23 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool) -> None:
     else:
         _err_msg(f"  • Sorry, failed to download {name}", True)
         sys.exit(1)
+
+
+def _progress_spinner(msg: str, future: Future[Any]) -> None:
+    """Shows a progress spinner displaying `msg` after 2 seconds until future is finished"""
+    # Print loading progress at the starts without loading indicator so theres always a print
+    print(msg, end="\r")
+
+    # Start spinning
+    with PieSpinner(f"{msg} ") as bar:
+        # Don't show bar for 2 seconds but check if future is done
+        no_bar_time = time.time() + 2
+        while time.time() < no_bar_time:
+            if future.done():
+                return
+            time.sleep(0.25)
+
+        # Show loading spinner
+        while not future.done():
+            bar.next()
+            time.sleep(0.075)
