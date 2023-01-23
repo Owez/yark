@@ -166,6 +166,10 @@
         margin-right: 0.75rem;
     }
 
+    .comment-icon.child {
+        margin-left: 27.5px;
+    }
+
     .comment-title {
         margin-top: 0;
         margin-bottom: 0;
@@ -176,6 +180,16 @@
     .comment-body {
         margin-top: 5px;
         font-size: 0.9rem;
+    }
+
+    .comment-page-num {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .disabled {
+        opacity: 0.5;
+        text-decoration: line-through;
     }
 
     @media screen and (max-width: 850px) {
@@ -499,7 +513,8 @@
             <!-- Right content -->
             <div class="top-right">
                 <!-- Delete button -->
-                <button onclick="deleteNote(this.parentElement.parentElement, '{{ note.id }}')" class="delete">🗑</button>
+                <button onclick="deleteNote(this.parentElement.parentElement, '{{ note.id }}')"
+                    class="delete">🗑</button>
                 <!-- Timestamp -->
                 <a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
                     note.timestamp|timestamp }}</a>
@@ -579,8 +594,29 @@
     <!-- Comments -->
     {% if not video.comments.empty() %}
     <h2>Comments</h2>
-    {% set cpage = request.args.get('cpage') if request.args.get('cpage') else 1 %}
+    {% set cpage = request.args.get('cpage') | int if request.args.get('cpage') else 1 %}
+    <!-- Comment pages -->
+    {% if video.comments.inner.keys()|length > 50 %}
+    <p>
+        <button {% if cpage==1 %}class="disabled" {% else %}onclick="toCommentPage({{ cpage - 1 }})" {% endif %}>
+            < </button>
+                <span class="comment-page-num">Page {{ cpage }}</span>
+                <button {% if video.comments.inner.keys()|length < cpage*50 %}class="disabled" {% else
+                    %}onclick="toCommentPage({{ cpage + 1 }})" {% endif %}> > </button>
+    </p>
+    <script>
+        // Sets the url to provided comment page
+        function toCommentPage(page) {
+            let urlParams = new URLSearchParams(window.location.search);
+            urlParams.set("cpage", page);
+            console.log(urlParams)
+            window.location.search = urlParams;
+        }
+    </script>
+    {% endif %}
+    <!-- Comment listing -->
     {% for comment in video.comments.paginate(cpage) %}
+    <!-- Main comment -->
     <div class="comment">
         <!-- User icon -->
         <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"
@@ -589,13 +625,31 @@
         <div class="comment-content">
             <!-- Author's name -->
             <p class="comment-title" title="Author's username">{{ comment.author.name.current() }}<span class="sublime">
-                    • {{ comment.created.strftime('%a %e %b %Y') }}</span></p>
+                    • {{ comment.created.strftime('%d %b %Y (%I:%M%p)') }}</span></p>
             <!-- Body -->
             <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
                 comment.body.current()
                 }}</p>
         </div>
     </div>
+    <!-- Child comment -->
+    {% for comment in comment.children.paginate(cpage) %}
+    <div class="comment">
+        <!-- User icon -->
+        <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"
+            alt="{{ comment.author.name.current() }}'s Icon" class="comment-icon child">
+        <!-- Text content -->
+        <div class="comment-content">
+            <!-- Author's name -->
+            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }}<span class="sublime">
+                    • {{ comment.created.strftime('%d %b %Y (%I:%M%p)') }}</span></p>
+            <!-- Body -->
+            <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
+                comment.body.current()
+                }}</p>
+        </div>
+    </div>
+    {% endfor %}
     {% endfor %}
     {% endif %}
 </div>
