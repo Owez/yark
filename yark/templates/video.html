@@ -633,7 +633,7 @@
         </div>
     </div>
     <!-- Child comment -->
-    {% for comment in comment.children %}
+    {% for comment in comment.children.inner.values() %}
     <div class="comment">
         <!-- User icon -->
         <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"

@@ -183,9 +183,12 @@ class Comments:
         """Returns if there are any comments or not"""
         return len(self.inner) == 0
 
-    def paginate(self, page: int, items: int = 50) -> list[Comment] | None:
+    def paginate(self, page: int, items: int = 50) -> list[Comment]:
         """Paginates comments stored by a `page` of length `items`"""
-        return list(self.inner.values())  # TODO: implement
+        start = (page - 1) * items
+        if start > len(self.inner.keys()):
+            return []
+        return list(self.inner.values())[start : start + items]
 
     # def _update_comment(
     #     self,
