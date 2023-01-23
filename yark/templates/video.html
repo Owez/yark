@@ -64,19 +64,11 @@
         width: 60vw;
     }
 
-    @media screen and (max-width: 850px) {
-
-        #player,
-        h1,
-        canvas,
-        #description,
-        .info {
-            width: 80vw;
-        }
-
-        .note {
-            width: calc(80vw - 2.5rem);
-        }
+    button.delete {
+        border: 0;
+        padding: 0;
+        font-size: 1rem;
+        margin-right: 1rem;
     }
 
     .spacer {
@@ -135,6 +127,16 @@
         align-items: center;
     }
 
+    .top-right {
+        display: flex;
+    }
+
+    .timestamp {
+        color: #098fb4;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
     .top>.title {
         font-weight: bold;
         font-size: 1.2rem;
@@ -151,14 +153,10 @@
         margin-top: 1rem;
     }
 
-    .top>.timestamp {
-        color: #098fb4;
-        margin-top: 0;
-        margin-bottom: 0;
-    }
-
     .comment {
         display: flex;
+        margin-top: 0.25rem;
+        margin-bottom: 0.5rem;
     }
 
     .comment-icon {
@@ -180,6 +178,21 @@
         font-size: 0.9rem;
     }
 
+    @media screen and (max-width: 850px) {
+
+        #player,
+        h1,
+        canvas,
+        #description,
+        .info {
+            width: 80vw;
+        }
+
+        .note {
+            width: calc(80vw - 2.5rem);
+        }
+    }
+
 
     @media (prefers-color-scheme: dark) {
 
@@ -195,10 +208,6 @@
 
         .note>.id {
             color: rgb(181, 181, 181);
-        }
-
-        .top>.timestamp {
-            color: #4bc0c0;
         }
     }
 </style>
@@ -487,18 +496,20 @@
         <div class="top">
             <!-- Title -->
             <p class="title" contenteditable="true">{{ note.title }}</p>
-            <!-- Timestamp -->
-            <a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
-                note.timestamp|timestamp }}</a>
+            <!-- Right content -->
+            <div class="top-right">
+                <!-- Delete button -->
+                <button onclick="deleteNote(this.parentElement.parentElement, '{{ note.id }}')" class="delete">🗑</button>
+                <!-- Timestamp -->
+                <a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
+                    note.timestamp|timestamp }}</a>
+            </div>
         </div>
         <!-- Identifier -->
         <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-        <!-- Body content -->
+        <!-- Optional body content -->
         <p class="body" contenteditable="true">
-            <!-- Optional user-defined body -->
-            {% if note.body %}<span>{{ note.body }}</span>{% endif %}
-            <!-- Delete button -->
-            <button onclick="deleteNote(this.parentElement.parentElement)">Delete</button>
+            {% if note.body %}{{ note.body }}{% endif %}
         </p>
     </div>
     {% endfor %}
@@ -511,10 +522,7 @@
         }
 
         // Deletes note using it's identifier
-        function deleteNote(el) {
-            // Get identifier
-            const id = el.getElementsByClassName("id")[0].innerText
-
+        function deleteNote(el, id) {
             // Send request
             fetch("", {
                 method: "DELETE",
@@ -527,7 +535,7 @@
             })
 
             // Delete note from DOM
-            el.remove()
+            el.parentElement.remove()
 
             // Delete the note heading from DOM if there aren't any notes
             if (document.getElementsByClassName("note").length == 1) {
@@ -580,8 +588,8 @@
         <!-- Text content -->
         <div class="comment-content">
             <!-- Author's name -->
-            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }} • {{
-                comment.created.strftime('%a %e %b %Y') }} • </p>
+            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }}<span class="sublime">
+                    • {{ comment.created.strftime('%a %e %b %Y') }}</span></p>
             <!-- Body -->
             <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
                 comment.body.current()

@@ -20,8 +20,9 @@ class Note:
     timestamp: int
     title: str
 
-    id: str = field(default_factory=_id_generator)
     body: Optional[str] = None
+
+    id: str = field(default_factory=_id_generator)
 
     @staticmethod
     def _from_archive_o(parent: Video, element: dict[str, Any]) -> Note:
@@ -30,8 +31,8 @@ class Note:
             parent,
             element["timestamp"],
             element["title"],
-            element["id"],
             element["body"],
+            element["id"],
         )
 
     def _to_archive_o(self) -> dict[str, Any]:
