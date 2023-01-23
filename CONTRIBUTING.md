@@ -39,6 +39,15 @@ Dependencies inside of the actual Yark code are a bit of a different story. If a
 
 ## Conventions
 
+### Branches
+
+The convention for branches/tags are:
+
+1. The `master` branch acts as a mostly stable cutting-edge snapshot of features yet to be released. Think of this as a rolling release which might have a few bugs.
+2. The `x.x-support` branches which are long-term patch/support branches for older versions which are kept alive until support is stopped for them.
+3. Development branches are "feature branches", also known as the branches which have PRs for them. These get squash-merged into `master` so that `master` has a nice history.
+4. Each release is also tagged with `vx.x` – e.g., `v1.3` or `v1.2.4`.
+
 ### To/from archives
 
 Every time an archive is committed to a file or loaded back up from one, Yark needs to convert all of the rich classes to plain JSON objects so we can store it inside of the archive format. There are a few names that you'll see all the time because of this:
