@@ -93,7 +93,8 @@
     }
 
     .note,
-    #player {
+    #player,
+    .comment-icon {
         box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
     }
 
@@ -155,6 +156,29 @@
         margin-top: 0;
         margin-bottom: 0;
     }
+
+    .comment {
+        display: flex;
+    }
+
+    .comment-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 7.5px;
+        margin-right: 0.75rem;
+    }
+
+    .comment-title {
+        margin-top: 0;
+        margin-bottom: 0;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .comment-body {
+        margin-top: 5px;
+    }
+
 
     @media (prefers-color-scheme: dark) {
 
@@ -548,8 +572,21 @@
     <h2>Comments</h2>
     {% set cpage = request.args.get('cpage') if request.args.get('cpage') else 1 %}
     {% for comment in video.comments.paginate(cpage) %}
-    <!-- TODO -->
-    {{ comment.body.current() }}
+    <div class="comment">
+        <!-- User icon -->
+        <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"
+            alt="{{ comment.author.name.current() }}'s Icon" class="comment-icon">
+        <!-- Text content -->
+        <div class="comment-content">
+            <!-- Author's name -->
+            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }} • {{
+                comment.created.strftime('%a %e %b %Y') }} • </p>
+            <!-- Body -->
+            <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
+                comment.body.current()
+                }}</p>
+        </div>
+    </div>
     {% endfor %}
     {% endif %}
 </div>

@@ -123,7 +123,7 @@
     <a href="{{ url_for('routes.video', name=name, kind=kind, id=video.id) }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
-            <img src="{{ url_for('routes.archive_image', name=name, id=video.thumbnail.current().id) }}" {% if not
+            <img src="{{ url_for('routes.archive_image', name=name, file=video.thumbnail.current().id + '.webp') }}" {% if not
                 video.downloaded() %}class="frost" {% endif %} />
         </div>
         <!-- Information -->
