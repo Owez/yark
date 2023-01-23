@@ -1,17 +1,19 @@
 """Video conversion for formats not supported by the HTML `<video>` tag, our low bar"""
 
 from pathlib import Path
-from .errors import _err_msg, ArchiveStructureException, ConversionException
+from ..errors import ArchiveStructureException, ConversionException
+from ..logger import _err_msg
 import subprocess
 import sys
 
 
 class Converter:
+    path_videos: Path
+
     def __init__(self, path_videos: Path) -> None:
-        _ensure_dir(path_videos)
         self.path_videos = path_videos
 
-    def run(self):
+    def run(self) -> None:
         """Goes through the videos directory given and converts all videos we can, e.g. mkv to mp4"""
         # Convert mkv videos
         for path in self.path_videos.glob("*.mkv"):
@@ -21,7 +23,7 @@ class Converter:
         for path in self.path_videos.glob("*.3gp"):
             self._convert_copy_codec(path)
 
-    def _convert_copy_codec(self, path: Path):
+    def _convert_copy_codec(self, path: Path) -> None:
         """Runs complete conversion process for ffmpeg commands which can copy codecs"""
         # Check everything exists
         self._ensure(path)
@@ -35,7 +37,7 @@ class Converter:
         # Delete the original path
         path.unlink()
 
-    def _ensure(self, path: Path):
+    def _ensure(self, path: Path) -> None:
         """Ensures that everything is ready to go, might error out or raise `FileNotFoundException` exception"""
         _ensure_ffmpeg()
         _ensure_dir(self.path_videos)
@@ -55,7 +57,7 @@ def _ffmpeg_installed() -> bool:
         return False
 
 
-def _ffmpeg_run(args: list[str]):
+def _ffmpeg_run(args: list[str]) -> None:
     """Runs an ffmpeg command with the `args` provided, raises `ConversionException` exception if command failed"""
     # Add ffmpeg to start of args
     process_args = ["ffmpeg"]
@@ -86,19 +88,19 @@ def _ffmpeg_run(args: list[str]):
             break
 
 
-def _ensure_file(path: Path):
+def _ensure_file(path: Path) -> None:
     """Ensures that the `path` inputted exists and isn't a dir or raises the `ArchiveStructureException` exception"""
     if not path.exists() or path.is_dir():
         raise ArchiveStructureException(path)
 
 
-def _ensure_dir(path: Path):
+def _ensure_dir(path: Path) -> None:
     """Ensures that the `path` inputted exists and isn't a file or raises the `ArchiveStructureException` exception"""
     if not path.exists() or path.is_file():
         raise ArchiveStructureException(path)
 
 
-def _ensure_ffmpeg():
+def _ensure_ffmpeg() -> None:
     """Errors out of the application if ffmpeg is not installed"""
     if not _ffmpeg_installed():
         _err_msg(

@@ -24,14 +24,15 @@ poethepoet = "^0.18.1"
 types-colorama = "^0.4.15.4"
 types-requests = "^2.28.11.8"
 black = "^22.12.0"
+pylint = "^2.15.10"
 pyinstaller = "^5.7.0"
 
 [tool.poetry.scripts]
 yark = "yark.cli:_cli"
 
 [tool.poe.tasks]
-lint = { shell = "set -e && mypy yark examples/madness.py" }
-fmt = "black yark examples/madness.py"
+lint = { shell = "set -e && mypy yark --strict && pylint yark" }
+fmt = "black yark"
 build = "pyinstaller yark.spec"
 
 [build-system]
