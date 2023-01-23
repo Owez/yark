@@ -6,7 +6,6 @@ from colorama import Style, Fore
 import sys
 import threading
 import webbrowser
-from importlib.metadata import version
 from .errors import ArchiveNotFoundException
 from .logger import _err_msg
 from .archiver.archive import Archive
@@ -53,7 +52,11 @@ def _cli() -> None:
             sys.exit(1)
 
         # Create archive
-        Archive(Path(args[1]), args[2])
+        print(f"Creating new {args[0]} archive..")
+        archive = Archive(Path(args[1]), args[2])
+
+        # Commit archive
+        archive.commit()
 
     # Refresh
     elif args[0] == "refresh":

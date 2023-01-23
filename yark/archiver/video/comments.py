@@ -116,90 +116,129 @@ class Comments:
 
     def update(self, comments: list[dict[str, Any]]) -> None:
         """Updates comments according to metadata"""
-        # All comments which have been found so we can see the difference to find deleted comments
+        # All comments identifiers which have been found so we can see the difference to find deleted comments
         known: list[str] = []
 
-        # List of comments which are children of the parent of `str`; we do this to guarantee we have all roots before we add children
-        adoption_queue: list[tuple[str, Comment]] = []
+        # Adoption queue for comments under a parent id
+        to_adopt: list[tuple[str, Comment]] = []
 
-        # Go through comments found using processing pool for images
-        p = multiprocessing.Pool(16)
-        p.map(
-            partial(
-                self._update_comment,
-                known=known,
-                adoption_queue=adoption_queue,
-            ),
-            comments,
-        )
+        # Go through comments found
+        for comment in comments:
+            known.append(comment["id"])
+            possible_child = self._update_comment(comment)
+            if possible_child:
+                to_adopt.append(possible_child)
 
-        # Add all the children to parents now we know they're all there
-        for parent_id, comment in adoption_queue:
-            # TODO: fix
-            # # Set the parent of this child comment to the same one the children list uses (they're the same)
-            # parent = self.inner[parent_id].children
-            # comment.parent = (
-            #     parent
-            # )  # TODO: check this is right for ParentCommentChild
-
-            # Add this child comment into aforementioned children list
-            self.inner[parent_id].children.inner[comment.id] = comment
+        # Add all child comments to their parents now that we know roots have been resolved
+        for parent_id, child_comment in to_adopt:
+            self.inner[parent_id].children.inner[child_comment.id] = child_comment
 
         # Update those who have been deleted by finding the difference between recently got and archived
+        # NOTE: could do set intersection?
         for id in self.inner.keys():
             if id not in known:
-                comment = self.inner[id]
-                comment.deleted.update(None, True)
+                deleted_comment = self.inner[id]
+                deleted_comment.deleted.update(None, True)
 
-    def _update_comment(
-        self,
-        entry: dict[str, Any],
-        known: list[str],
-        adoption_queue: list[tuple[str, Comment]],
-    ) -> None:
-        """Runs through the complete update procedures for one comment"""
-        # Decode the identifier and possible parent; can be used to check parent
+    def _update_comment(self, entry: dict[str, Any]) -> tuple[str, Comment] | None:
+        """Adds or update the comment from metadata provided in `entry`, returning it's parent id and parsed comment if it couldn't be added to the root"""
+        # Decode the comment's identifier and parent identifier
         parent_id, id = _decode_comment_id(entry["id"])
 
-        # Add to known comments to find difference later
-        known.append(id)
+        # Get the comment from root or from a child
+        comment = self.inner.get(id if parent_id is None else parent_id)
+        if parent_id is not None and comment is not None:
+            comment = comment.children.inner.get(id)
 
-        # Try to update comment if it's a child
-        if (
-            parent_id is not None
-            and parent_id in self.inner
-            and id in self.inner[parent_id].children.inner
-        ):
-            comment = self.inner[parent_id].children.inner[id]
-            comment.update(entry)
-
-        # Try to update comment if it's a parent
-        elif id in self.inner:
-            comment = self.inner[id]
-            comment.update(entry)
-
-        # Create a new comment
-        else:
-            # Encode into a full comment with no parent no matter what
-            created = datetime.datetime.fromtimestamp(entry["timestamp"])
+        # Create a new one if it couldn't be found
+        if comment is None:
+            # Make the new comment class
+            timestamp = datetime.datetime.fromtimestamp(entry["timestamp"])
             comment = Comment.new(
                 self.archive,
-                id,
+                entry["id"],
                 entry["author_id"],
                 entry["author"],
                 entry["author_thumbnail"],
                 entry["text"],
                 entry["is_favorited"],
-                created,
+                timestamp,
             )
 
-            # Add comment to our comments
-            if parent_id is None:
-                self.inner[id] = comment
+            # Return comment to process more because it's a child
+            if parent_id is not None:
+                return parent_id, comment
 
-            # Add to adoption queue if the comment is a child
-            else:
-                adoption_queue.append((parent_id, comment))
+            # Add straight to root
+            self.inner[comment.id] = comment
+
+        # Update the existing comment
+        else:
+            comment.update(entry)
+
+        # Return nothing if it's been added to the root
+        return None
+
+    def empty(self) -> bool:
+        """Returns if there are any comments or not"""
+        return len(self.inner) == 0
+
+    def paginate(self, page: int, items: int = 50) -> list[Comment]:
+        """Paginates comments stored by a `page` of length `items`"""
+        start = (page - 1) * items
+        if start > len(self.inner.keys()):
+            return []
+        return list(self.inner.values())[start : start + items]
+
+    # def _update_comment(
+    #     self,
+    #     entry: dict,
+    #     known: list[str],
+    #     adoption_queue: list[tuple[str, Comment]],
+    # ):
+    #     """Runs through the complete update procedures for one comment"""
+    #     # Decode the identifier and possible parent; can be used to check parent
+    #     parent_id, id = _decode_comment_id(entry["id"])
+
+    #     # Add to known comments to find difference later
+    #     known.append(id)
+
+    #     # Try to update comment if it's a child
+    #     if (
+    #         parent_id is not None
+    #         and parent_id in self.inner
+    #         and id in self.inner[parent_id].children.inner
+    #     ):
+    #         comment = self.inner[parent_id].children.inner[id]
+    #         comment.update(entry)
+
+    #     # Try to update comment if it's a parent
+    #     elif id in self.inner:
+    #         comment = self.inner[id]
+    #         comment.update(entry)
+
+    #     # Create a new comment
+    #     else:
+    #         # Encode into a full comment with no parent no matter what
+    #         created = datetime.datetime.fromtimestamp(entry["timestamp"])
+    #         comment = Comment.new(
+    #             self.archive,
+    #             id,
+    #             entry["author_id"],
+    #             entry["author"],
+    #             entry["author_thumbnail"],
+    #             entry["text"],
+    #             entry["is_favorited"],
+    #             created,
+    #         )
+
+    #         # Add comment to our comments
+    #         if parent_id is None:
+    #             self.inner[id] = comment
+
+    #         # Add to adoption queue if the comment is a child
+    #         else:
+    #             adoption_queue.append((parent_id, comment))
 
     @staticmethod
     def _from_archive_o(

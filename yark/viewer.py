@@ -22,7 +22,7 @@ from .archiver.archive import Archive
 from .archiver.video.note import Note
 from .archiver.video.video import Video
 
-routes = Blueprint("routes", __name__, template_folder="templates")
+routes = Blueprint("routes", __name__)
 
 
 @routes.route("/", methods=["POST", "GET"])
@@ -203,10 +203,10 @@ def archive_video(name, file):
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
-@routes.route("/archive/<name>/image/<id>")
-def archive_image(name, id):
+@routes.route("/archive/<name>/image/<file>")
+def archive_image(name, file):
     """Serves image file using it's id, e.g. thumbnails, author icons, etc."""
-    return send_from_directory(os.getcwd(), f"{name}/images/{id}.webp")
+    return send_from_directory(os.getcwd(), f"{name}/images/{file}")
 
 
 def viewer() -> Flask:
