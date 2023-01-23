@@ -143,7 +143,7 @@
     <script>
         // Adds an error which will automatically be deleted 
         function addError(msg) {
-            let error = document.createElement.new_data("div")
+            let error = document.createElement("div")
             error.setAttribute("id", "error")
             error.innerText = msg
             document.body.appendChild(error)
@@ -168,7 +168,7 @@
             if (path.startsWith("/archive/")) {
                 const archiveName = path.split("/")[2]
                 let navTitle = document.getElementById("nav-title")
-                let archiveLink = document.createElement.new_data("a")
+                let archiveLink = document.createElement("a")
                 archiveLink.title = `Go (back) to ${archiveName}`
                 archiveLink.href = `/archive/${archiveName}/videos`
                 archiveLink.appendChild(document.createTextNode(`· ${archiveName}`))
