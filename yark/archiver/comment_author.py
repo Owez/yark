@@ -4,37 +4,19 @@ from .video.image import Image
 from ..utils import IMAGE_AUTHOR_ICON
 from typing import TYPE_CHECKING, Any
 from dataclasses import dataclass
+from .video.image import image_element_from_archive
+from ..utils import IMAGE_AUTHOR_ICON
 
 if TYPE_CHECKING:
     from .archive import Archive
 
 
-@dataclass(init=False)
+@dataclass
 class CommentAuthor:
     archive: Archive
     id: str
     name: Element
     icon: Element
-
-    def __init__(
-        self,
-        archive: Archive,
-        id: str,
-        name_data: str | None = None,
-        icon_data: Image | None = None,
-    ) -> None:
-        self.archive = archive
-        self.id = id
-        self.name = (
-            Element(archive)
-            if name_data is None
-            else Element.new_data(archive, name_data)
-        )
-        self.icon = (
-            Element(archive)
-            if icon_data is None
-            else Element.new_data(archive, icon_data)
-        )
 
     @staticmethod
     def new_or_update(
@@ -48,7 +30,12 @@ class CommentAuthor:
         if author is None:
             # Initiate comment author
             icon = Image.new(archive, icon_url, IMAGE_AUTHOR_ICON)
-            author = CommentAuthor(archive, id, name, icon)
+            author = CommentAuthor(
+                archive,
+                id,
+                Element.new_data(archive, name),
+                Element.new_data(archive, icon),
+            )
 
             # Add comment author
             archive.comment_authors[id] = author
@@ -73,7 +60,12 @@ class CommentAuthor:
         archive: Archive, id: str, element: dict[str, Any]
     ) -> CommentAuthor:
         """Decodes comment author from the body dict and adds the id passed in from an archive"""
-        raise NotImplementedError()  # TODO: load this and image
+        return CommentAuthor(
+            archive,
+            id,
+            Element._from_archive_o(archive, element["name"]),
+            image_element_from_archive(archive, element["icon"], IMAGE_AUTHOR_ICON),
+        )
 
     def _to_archive_b(self) -> dict[str, Any]:
         """Encodes comment author to it's dict body for an archive"""
