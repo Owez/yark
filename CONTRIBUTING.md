@@ -1,3 +1,18 @@
+# Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Contributing to Yark](#contributing-to-yark)
+  - [Don't know coding?](#dont-know-coding)
+  - [Want to code?](#want-to-code)
+- [Internal Information](#internal-information)
+  - [Ideology](#ideology)
+    - [Users](#users)
+    - [KISS](#kiss)
+    - [Dependencies](#dependencies)
+  - [Conventions](#conventions)
+    - [Branches](#branches)
+    - [To/from archives](#tofrom-archives)
+
 # Contributing to Yark
 
 ## Don't know coding?
