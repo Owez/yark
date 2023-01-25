@@ -23,8 +23,14 @@
         gap: 7px;
     }
 
-    .visited > a {
-        color: rgb(106, 191, 219);
+    .visited>a {
+        color: #4a6db3;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .visited>a {
+            color: #688bd0;
+        }
     }
 </style>
 {% endblock %}
