@@ -1,5 +1,7 @@
 """Useful shared utility constants, classes, and functions"""
 
+import logging
+
 IMAGE_AUTHOR_ICON = "jpg"
 """Image extension setting for all author icons"""
 
@@ -32,3 +34,12 @@ def _truncate_text(text: str, to: int = 31) -> str:
     if len(text) > to:
         text = text[: to - 2].strip() + ".."
     return text.ljust(to)
+
+
+def _log_err(msg: str, report_msg: bool = False) -> None:
+    """Provides a red-coloured error message to the user in the STDERR pipe"""
+    logging.error(msg)
+    if report_msg:
+        logging.error(
+            "Please file a bug report if you think this is a problem with Yark!"
+        )

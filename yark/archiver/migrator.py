@@ -2,15 +2,12 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from ..logger import _err_msg
 import sys
 from .converter import Converter
-from typing import Any, TYPE_CHECKING
-from ..utils import ARCHIVE_COMPAT, PYPI_VERSION
+from typing import Any
+from ..utils import ARCHIVE_COMPAT, PYPI_VERSION, _log_err
 import datetime
-
-if TYPE_CHECKING:
-    from .archive import Archive
+import logging
 
 
 def _migrate(
@@ -24,10 +21,10 @@ def _migrate(
 
     # Tell user we can't downgrade
     if expected_version < current_version:
-        _err_msg(
+        _log_err(
             f"The version of Yark you're currently using supports up to v{ARCHIVE_COMPAT} archives but your archive is v{current_version}!"
         )
-        _err_msg(
+        _log_err(
             Style.DIM
             + f"To fix this, you might want to upgrade your current Yark {PYPI_VERSION[0]}.{PYPI_VERSION[0]} to a newer one"
             + Style.NORMAL
@@ -35,10 +32,8 @@ def _migrate(
         sys.exit(1)
 
     # Inform user of the backup process
-    print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
-        + Fore.RESET
+    logging.warn(
+        f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
     )
 
     # Start recursion step
@@ -62,13 +57,7 @@ def _step(
         # Target id to url
         encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
         del encoded["id"]
-        print(
-            Fore.YELLOW
-            + "Please make sure "
-            + encoded["url"]
-            + " is the correct url"
-            + Fore.RESET
-        )
+        logging.warn("Please make sure " + encoded["url"] + " is the correct url")
 
         # Empty livestreams/shorts lists
         encoded["livestreams"] = []
@@ -103,7 +92,7 @@ def _step(
             thumbnails = path / "thumbnails"
             thumbnails.rename(path / "images")
         except:
-            _err_msg(
+            _log_err(
                 f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
             )
             sys.exit(1)
@@ -128,7 +117,7 @@ def _step(
 
     # Unknown version
     else:
-        _err_msg(f"Unknown archive version v{cur} found during migration", True)
+        _log_err(f"Unknown archive version v{cur} found during migration", True)
         sys.exit(1)
 
     # Increment version and run again until version has been reached
