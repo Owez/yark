@@ -35,7 +35,7 @@ def index():
 
     # Show page
     elif request.method == "GET":
-        visited = request.cookies.get("visited")
+        visited = request.cookies.get("recent_archives")
         if visited is not None:
             visited = json.loads(visited)
         return render_template(

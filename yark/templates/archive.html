@@ -53,8 +53,8 @@
     }
 
     .frost {
-        filter: blur(5px);
-        opacity: 0.4;
+        filter: blur(7.5px);
+        opacity: 0.75;
     }
 
     .no-videos {
@@ -75,7 +75,7 @@
     }
 
     #kind-select>a.selected {
-        color: #347BC6;
+        color: #4a6db3;
     }
 
     .not-found-code {
@@ -92,7 +92,7 @@
         }
 
         #kind-select>a.selected {
-            color: #5178C6;
+            color: #688bd0;
         }
     }
 </style>
@@ -123,8 +123,8 @@
     <a href="{{ url_for('routes.video', name=name, kind=kind, id=video.id) }}" class="video">
         <!-- Thumbnail -->
         <div class="thumbnail">
-            <img src="{{ url_for('routes.archive_image', name=name, file=video.thumbnail.current().id + '.webp') }}" {% if not
-                video.downloaded() %}class="frost" {% endif %} />
+            <img src="{{ url_for('routes.archive_image', name=name, file=video.thumbnail.current().id + '.webp') }}" {%
+                if not video.downloaded() %}class="frost" {% endif %} />
         </div>
         <!-- Information -->
         <div class="info">
