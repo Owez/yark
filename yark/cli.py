@@ -1,13 +1,12 @@
 """Homegrown cli for managing archives"""
 
-import json
 from pathlib import Path
 from colorama import Style, Fore
 import sys
 import threading
 import webbrowser
 from .errors import ArchiveNotFoundException
-from .logger import _log_err
+from .utils import _log_err
 from .archiver.archive import Archive
 from .archiver.config import Config
 from .viewer import viewer
@@ -15,6 +14,9 @@ import requests
 from .utils import PYPI_VERSION
 from typing import Optional, Any
 from requests.exceptions import HTTPError
+from progress.spinner import PieSpinner  # type: ignore
+import time
+from concurrent.futures import Future, ThreadPoolExecutor
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
@@ -145,9 +147,24 @@ def _cli() -> None:
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
-                raw_metadata = archive.metadata_download(config)
-                archive.metadata_parse(config, raw_metadata)
-                archive.commit(True)
+                with ThreadPoolExecutor(1) as executor:
+                    # Download raw metadata
+                    future_download_metadata = executor.submit(
+                        archive.metadata_download, config
+                    )
+                    _progress_spinner(
+                        "Downloading metadata..", future_download_metadata
+                    )
+                    raw_metadata = future_download_metadata.result()
+
+                    # Parse raw metadata
+                    future_parse_metadata = executor.submit(
+                        archive.metadata_parse, config, raw_metadata
+                    )
+                    _progress_spinner("Parsing metadata..", future_parse_metadata)
+
+                    # Commit archive to file
+                    archive.commit(True)
 
             # Download videos if wanted
             if config.skip_download:
@@ -275,3 +292,23 @@ def _err_no_help() -> None:
     print(HELP)
     print("\nThere's no additional help for this command")
     sys.exit(0)
+
+
+def _progress_spinner(msg: str, future: Future[Any]) -> None:
+    """Shows a progress spinner displaying `msg` after 2 seconds until future is finished"""
+    # Print loading progress at the starts without loading indicator so theres always a print
+    print(msg, end="\r")
+
+    # Start spinning
+    with PieSpinner(f"{msg} ") as bar:
+        # Don't show bar for 2 seconds but check if future is done
+        no_bar_time = time.time() + 2
+        while time.time() < no_bar_time:
+            if future.done():
+                return
+            time.sleep(0.25)
+
+        # Show loading spinner
+        while not future.done():
+            bar.next()
+            time.sleep(0.075)

@@ -2,11 +2,36 @@
 
 from typing import Optional, Any, Callable
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 YtDlpSettings = dict[str, Any]
 """Download settings which the `yt-dlp` library uses during initiation"""
+
+
+class QuietDownloadLogger:
+    """Quiet logger extension for removing any stdout from yt-dlp components"""
+
+    @staticmethod
+    def downloading(_d: dict[str, Any]) -> None:
+        """Progress hook for video downloading, ignored"""
+        pass
+
+    def debug(self, _msg: str) -> None:
+        """Debug log messages, ignored"""
+        pass
+
+    def info(self, _msg: str) -> None:
+        """Info log messages, ignored"""
+        pass
+
+    def warning(self, _msg: str) -> None:
+        """Warning log messages, ignored"""
+        pass
+
+    def error(self, _msg: str) -> None:
+        """Error log messages, ignored"""
+        pass
 
 
 @dataclass
@@ -19,7 +44,9 @@ class Config:
     comments: bool = False
     format: Optional[str] = None
     proxy: Optional[str] = None
-    hook_logger: Any | None = None  # TODO: figure out proper type
+    hook_logger: Any = field(
+        default_factory=lambda: QuietDownloadLogger()
+    )  # TODO: figure out proper type
     hook_download: Callable[[Any], Any] | None = None  # TODO: figure out proper type
 
     def submit(self) -> None:
@@ -50,6 +77,8 @@ class Config:
         settings: YtDlpSettings = {
             # Set the output path
             "outtmpl": f"{path}/videos/%(id)s.%(ext)s",
+            # Logger for custom stdout of progress
+            "logger": self.hook_logger,
         }
 
         # Custom downloading hook
@@ -75,11 +104,9 @@ class Config:
             "ignore_no_formats_error": True,
             # Fetch comments from videos
             "getcomments": self.comments,
+            # Logger for custom stdout of progress
+            "logger": self.hook_logger,
         }
-
-        # Custom general logger hook
-        if self.hook_logger is not None:
-            settings["logger"] = self.hook_logger
 
         # Custom yt-dlp proxy
         if self.proxy is not None:

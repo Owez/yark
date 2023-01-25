@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from ..errors import ArchiveStructureException, ConversionException
-from ..logger import _log_err
+from ..utils import _log_err
 import subprocess
 import sys
 
