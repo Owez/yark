@@ -9,14 +9,13 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 import sys
 from .reporter import Reporter
 from ..errors import ArchiveNotFoundException, MetadataFailException
-from ..logger import _log_err
 from .video.video import Video, Videos
 from .comment_author import CommentAuthor
 from typing import Optional, Any
 from .config import Config, YtDlpSettings
 from .converter import Converter
 from .migrator import _migrate
-from ..utils import ARCHIVE_COMPAT
+from ..utils import ARCHIVE_COMPAT, _log_err
 from dataclasses import dataclass
 import logging
 
@@ -93,9 +92,9 @@ class Archive:
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
-                    _err_dl("metadata", exception, retrying)
+                    _download_error("metadata", exception, retrying)
 
-                    # Print retrying message
+                    # Log retrying message
                     if retrying:
                         logging.warn(f"Retrying metadata download ({i+1}/3")
 
@@ -220,12 +219,7 @@ class Archive:
 
             # Report error and retry/stop
             except Exception as exception:
-                # Get around carriage return
-                if i == 0:
-                    print()
-
-                # Report error
-                _err_dl("videos", exception, i != 4)
+                _download_error("videos", exception, i != 4)
 
         # End by converting any downloaded but unsupported video file formats
         if anything_downloaded:
@@ -371,7 +365,7 @@ class Archive:
         deletion_bucket.extend([file for file in videos.glob("*.part")])
         deletion_bucket.extend([file for file in videos.glob("*.ytdl")])
 
-        # Print and delete if there are part files present
+        # Log and delete if there are part files present
         if len(deletion_bucket) != 0:
             logging.info("Cleaning out previous temporary files..")
             for file in deletion_bucket:
@@ -474,8 +468,10 @@ def _skip_video(
     )
 
 
-def _err_dl(archive_name: str, exception: DownloadError, retrying: bool) -> None:
-    """Prints errors to stdout depending on what kind of download error occurred"""
+def _download_error(
+    archive_name: str, exception: DownloadError, retrying: bool
+) -> None:
+    """Logs errors depending on what kind of download error occurred"""
     # Default message
     msg = (
         f"Unknown error whilst downloading {archive_name}, details below:\n{exception}"
@@ -517,7 +513,7 @@ def _err_dl(archive_name: str, exception: DownloadError, retrying: bool) -> None
         elif ERRORS[5] in exception.msg:
             msg = "Timed out trying to reach YouTube"
 
-    # Print error
+    # Log error
     suffix = ", retrying in a few seconds.." if retrying else ""
     logging.warn(msg + suffix)
 

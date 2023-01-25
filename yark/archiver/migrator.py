@@ -2,15 +2,12 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from ..logger import _log_err
 import sys
 from .converter import Converter
-from typing import Any, TYPE_CHECKING
-from ..utils import ARCHIVE_COMPAT, PYPI_VERSION
+from typing import Any
+from ..utils import ARCHIVE_COMPAT, PYPI_VERSION, _log_err
 import datetime
-
-if TYPE_CHECKING:
-    from .archive import Archive
+import logging
 
 
 def _migrate(
@@ -35,10 +32,8 @@ def _migrate(
         sys.exit(1)
 
     # Inform user of the backup process
-    print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
-        + Fore.RESET
+    logging.warn(
+        f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
     )
 
     # Start recursion step
@@ -62,13 +57,7 @@ def _step(
         # Target id to url
         encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
         del encoded["id"]
-        print(
-            Fore.YELLOW
-            + "Please make sure "
-            + encoded["url"]
-            + " is the correct url"
-            + Fore.RESET
-        )
+        logging.warn("Please make sure " + encoded["url"] + " is the correct url")
 
         # Empty livestreams/shorts lists
         encoded["livestreams"] = []

@@ -145,7 +145,8 @@ def _cli() -> None:
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
-                archive.metadata(config)
+                raw_metadata = archive.metadata_download(config)
+                archive.metadata_parse(config, raw_metadata)
                 archive.commit(True)
 
             # Download videos if wanted
