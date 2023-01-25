@@ -100,7 +100,7 @@ def video(name, kind, id):
 
         # Return video webpage
         if request.method == "GET":
-            title = f"{video.title.current()} · {name}"
+            title = f"{name} · {video.title.current()}"
             views_data = json.dumps(video.views._to_archive_o())
             likes_data = json.dumps(video.likes._to_archive_o())
             return render_template(
