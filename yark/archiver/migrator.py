@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from colorama import Fore, Style
-from ..logger import _err_msg
+from ..logger import _log_err
 import sys
 from .converter import Converter
 from typing import Any, TYPE_CHECKING
@@ -24,10 +24,10 @@ def _migrate(
 
     # Tell user we can't downgrade
     if expected_version < current_version:
-        _err_msg(
+        _log_err(
             f"The version of Yark you're currently using supports up to v{ARCHIVE_COMPAT} archives but your archive is v{current_version}!"
         )
-        _err_msg(
+        _log_err(
             Style.DIM
             + f"To fix this, you might want to upgrade your current Yark {PYPI_VERSION[0]}.{PYPI_VERSION[0]} to a newer one"
             + Style.NORMAL
@@ -103,7 +103,7 @@ def _step(
             thumbnails = path / "thumbnails"
             thumbnails.rename(path / "images")
         except:
-            _err_msg(
+            _log_err(
                 f"Couldn't rename {archive_name}/thumbnails directory to {archive_name}/images, please manually rename to continue!"
             )
             sys.exit(1)
@@ -128,7 +128,7 @@ def _step(
 
     # Unknown version
     else:
-        _err_msg(f"Unknown archive version v{cur} found during migration", True)
+        _log_err(f"Unknown archive version v{cur} found during migration", True)
         sys.exit(1)
 
     # Increment version and run again until version has been reached

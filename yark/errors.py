@@ -8,6 +8,14 @@ from pathlib import Path
 class ArchiveNotFoundException(Exception):
     """Archive couldn't be found, the name was probably incorrect"""
 
+    def __init__(self, path: Path, *args: object) -> None:
+        super().__init__(*args)
+        self.path = path
+
+
+class MetadataFailException(Exception):
+    """Could not download or parse metadata for an archive"""
+
 
 class VideoNotFoundException(Exception):
     """Video couldn't be found, the id was probably incorrect"""

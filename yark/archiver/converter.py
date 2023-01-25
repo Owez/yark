@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from ..errors import ArchiveStructureException, ConversionException
-from ..logger import _err_msg
+from ..logger import _log_err
 import subprocess
 import sys
 
@@ -103,7 +103,7 @@ def _ensure_dir(path: Path) -> None:
 def _ensure_ffmpeg() -> None:
     """Errors out of the application if ffmpeg is not installed"""
     if not _ffmpeg_installed():
-        _err_msg(
+        _log_err(
             "FFmpeg is needed to convert a video but it wasn't found, please install it!"
         )
         sys.exit(1)

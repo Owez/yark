@@ -6,11 +6,10 @@ import json
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
-from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from ..errors import ArchiveNotFoundException
-from ..logger import _err_msg
+from ..errors import ArchiveNotFoundException, MetadataFailException
+from ..logger import _log_err
 from .video.video import Video, Videos
 from .comment_author import CommentAuthor
 from typing import Optional, Any
@@ -18,11 +17,13 @@ from .config import Config, YtDlpSettings
 from .converter import Converter
 from .migrator import _migrate
 from ..utils import ARCHIVE_COMPAT
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor, Future
-from progress.spinner import PieSpinner
+from dataclasses import dataclass
+import logging
 
-# NOTE: maybe make into dataclass
+RawMetadata = dict[str, Any]
+"""Raw metadata downloaded from yt-dlp to be parsed"""
+
+
 @dataclass(init=False)
 class Archive:
     path: Path
@@ -59,9 +60,9 @@ class Archive:
         # Check existence
         path = Path(path)
         archive_name = path.name
-        print(f"Loading {archive_name} archive..")
+        logging.info(f"Loading {archive_name} archive")
         if not path.exists():
-            raise ArchiveNotFoundException("Archive doesn't exist")
+            raise ArchiveNotFoundException(path)
 
         # Load config
         encoded = json.load(open(path / "yark.json", "r"))
@@ -76,26 +77,10 @@ class Archive:
         # Decode and return
         return Archive._from_archive_o(encoded, path)
 
-    def metadata(self, config: Config) -> None:
-        """Queries YouTube for all channel/playlist metadata to refresh known videos"""
-        # Download metadata
-        with ThreadPoolExecutor(1) as executor:
-            future = executor.submit(self._metadata_download, config)
-            _progress_spinner("Downloading metadata..", future)
-            res = future.result()
+    def metadata_download(self, config: Config) -> RawMetadata:
+        """Downloads raw metadata for further parsing"""
+        logging.info(f"Downloading raw metadata for {self}")
 
-        # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
-        #     json.dump(res, file)
-
-        # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
-
-        # Parse metadata
-        self._metadata_parse(config, res)
-
-    def _metadata_download(self, config: Config) -> dict[str, Any]:
-        """Downloads metadata"""
         # Get settings
         settings = config.settings_md()
 
@@ -103,7 +88,7 @@ class Archive:
         with YoutubeDL(settings) as ydl:
             for i in range(3):
                 try:
-                    res: dict[str, Any] = ydl.extract_info(self.url, download=False)
+                    res: RawMetadata = ydl.extract_info(self.url, download=False)
                     return res
                 except Exception as exception:
                     # Report error
@@ -112,28 +97,27 @@ class Archive:
 
                     # Print retrying message
                     if retrying:
-                        print(
-                            Style.DIM
-                            + f"\n  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )
+                        logging.warn(f"Retrying metadata download ({i+1}/3")
 
-        raise Exception()
+        # Couldn't download after all retries
+        raise MetadataFailException()
 
-    def _metadata_parse(self, config: Config, res: dict[str, Any]) -> None:
-        """Parses previously downloaded metadata"""
+    def metadata_parse(self, config: Config, metadata: RawMetadata) -> None:
+        """Updates current archive by parsing the raw downloaded metadata"""
+        logging.info(f"Parsing downloaded metadata for {self}")
+
         # Make buckets to normalize different types of videos
         videos = []
         livestreams = []
         shorts = []
 
         # Videos only (basic channel or playlist)
-        if "entries" not in res["entries"][0]:
-            videos = res["entries"]
+        if "entries" not in metadata["entries"][0]:
+            videos = metadata["entries"]
 
         # Videos and at least one other (livestream/shorts)
         else:
-            for entry in res["entries"]:
+            for entry in metadata["entries"]:
                 # Find the kind of category this is; youtube formats these as 3 playlists
                 kind = entry["title"].split(" - ")[-1].lower()
 
@@ -151,7 +135,7 @@ class Archive:
 
                 # Unknown 4th kind; youtube might've updated
                 else:
-                    _err_msg(f"Unknown video kind '{kind}' found", True)
+                    _log_err(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
         self._metadata_parse_videos("video", config, videos, self.videos)
@@ -171,24 +155,22 @@ class Archive:
         videos: Videos,
     ) -> None:
         """Parses metadata for a category of video into it's `videos` bucket"""
+        logging.debug(f"Parsing through {kind} for {self}")
 
-        def comp() -> None:
-            """Computes the actual parsing, in this function so that it can be ran with the loading spinner"""
-            # Parse each video
-            for entry in entries:
-                self._metadata_parse_video(config, entry, videos)
+        # Parse each video
+        for entry in entries:
+            self._metadata_parse_video(config, entry, videos)
 
-            # Sort videos by newest
-            videos.sort()
-
-        with ThreadPoolExecutor(1) as executor:
-            future = executor.submit(comp)
-            _progress_spinner(f"Parsing {kind} metadata..", future)
+        # Sort videos by newest
+        videos.sort()
 
     def _metadata_parse_video(
         self, config: Config, entry: dict[str, Any], videos: Videos
     ) -> None:
         """Parses metadata for one video, creating it or updating it depending on the `videos` already in the bucket"""
+        id = entry["id"]
+        logging.debug(f"Parsing video {id} metadata for {self}")
+
         # Skip video if there's no formats available; happens with upcoming videos/livestreams
         if "formats" not in entry or len(entry["formats"]) == 0:
             return
@@ -211,6 +193,8 @@ class Archive:
 
     def download(self, config: Config) -> bool:
         """Downloads all videos which haven't already been downloaded, returning if anything was downloaded"""
+        logging.debug(f"Downloading curated videos for {self}")
+
         # Prepare; clean out old part files and get settings
         self._clean_parts()
         settings = config.settings_dl(self.path)
@@ -228,12 +212,8 @@ class Archive:
                     anything_downloaded = False
                     return False
 
-                # Print curated if this is the first time
-                if i == 0:
-                    _log_download_count(len(not_downloaded))
-
                 # Launch core to download all curated videos
-                self._dl_launch(settings, not_downloaded)
+                self._download_launch(settings, not_downloaded)
 
                 # Stop if we've got them all
                 break
@@ -255,7 +235,9 @@ class Archive:
         # Say that something was downloaded
         return True
 
-    def _dl_launch(self, settings: YtDlpSettings, not_downloaded: list[Video]) -> None:
+    def _download_launch(
+        self, settings: YtDlpSettings, not_downloaded: list[Video]
+    ) -> None:
         """Downloads all `not_downloaded` videos passed into it whilst automatically handling privated videos, this is the core of the downloader"""
         # Continuously try to download after private/deleted videos are found
         # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -269,13 +251,13 @@ class Archive:
 
             # Special handling for private/deleted videos which are archived, if not we raise again
             except DownloadError as exception:
-                new_not_downloaded = self._dl_exception_handle(
+                new_not_downloaded = self._download_exception_handle(
                     not_downloaded, exception
                 )
                 if new_not_downloaded is not None:
                     not_downloaded = new_not_downloaded
 
-    def _dl_exception_handle(
+    def _download_exception_handle(
         self, not_downloaded: list[Video], exception: DownloadError
     ) -> Optional[list[Video]]:
         """Handle for failed downloads if there's a special private/deleted video"""
@@ -362,7 +344,7 @@ class Archive:
             self._backup()
 
         # Directories
-        print(f"Committing {self} to file..")
+        logging.info(f"Committing {self} to file")
         paths = [self.path, self.path / "images", self.path / "videos"]
         for path in paths:
             if not path.exists():
@@ -391,12 +373,14 @@ class Archive:
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
-            print("Cleaning out previous temporary files..")
+            logging.info("Cleaning out previous temporary files..")
             for file in deletion_bucket:
                 file.unlink()
 
     def _backup(self) -> None:
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
+        logging.info(f"Creating a backup for {self} as yark.bak")
+
         # Get current archive path
         ARCHIVE_PATH = self.path / "yark.json"
 
@@ -459,12 +443,6 @@ class Archive:
         return self.path.name
 
 
-def _log_download_count(count: int) -> None:
-    """Tells user that `count` number of videos have been downloaded"""
-    fmt_num = "a new video" if count == 1 else f"{count} new videos"
-    print(f"Downloading {fmt_num}..")
-
-
 def _skip_video(
     videos: list[Video],
     reason: str,
@@ -476,13 +454,12 @@ def _skip_video(
         if not video.downloaded():
             # Tell the user we're skipping over it
             if warning:
-                print(
-                    Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
-                    file=sys.stderr,
+                logging.warn(
+                    f"Skipping video {video.id} download for {video.archive} ({reason})"
                 )
             else:
-                print(
-                    Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
+                logging.info(
+                    f"Skipping video {video.id} download for {video.archive} ({reason})"
                 )
 
             # Set videos to skip over this one
@@ -497,10 +474,12 @@ def _skip_video(
     )
 
 
-def _err_dl(name: str, exception: DownloadError, retrying: bool) -> None:
+def _err_dl(archive_name: str, exception: DownloadError, retrying: bool) -> None:
     """Prints errors to stdout depending on what kind of download error occurred"""
     # Default message
-    msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"
+    msg = (
+        f"Unknown error whilst downloading {archive_name}, details below:\n{exception}"
+    )
 
     # Types of errors
     ERRORS = [
@@ -540,34 +519,11 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool) -> None:
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
-    print(
-        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
-        file=sys.stderr,
-    )
+    logging.warn(msg + suffix)
 
     # Wait if retrying, exit if failed
     if retrying:
         time.sleep(5)
     else:
-        _err_msg(f"  • Sorry, failed to download {name}", True)
+        _log_err(f"Sorry, failed to download {archive_name}", True)
         sys.exit(1)
-
-
-def _progress_spinner(msg: str, future: Future[Any]) -> None:
-    """Shows a progress spinner displaying `msg` after 2 seconds until future is finished"""
-    # Print loading progress at the starts without loading indicator so theres always a print
-    print(msg, end="\r")
-
-    # Start spinning
-    with PieSpinner(f"{msg} ") as bar:
-        # Don't show bar for 2 seconds but check if future is done
-        no_bar_time = time.time() + 2
-        while time.time() < no_bar_time:
-            if future.done():
-                return
-            time.sleep(0.25)
-
-        # Show loading spinner
-        while not future.done():
-            bar.next()
-            time.sleep(0.075)

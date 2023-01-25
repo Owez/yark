@@ -43,7 +43,7 @@ class VideoLogger:
         pass
 
 
-def _err_msg(msg: str, report_msg: bool = False) -> None:
+def _log_err(msg: str, report_msg: bool = False) -> None:
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (
         msg

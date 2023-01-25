@@ -7,7 +7,7 @@ import sys
 import threading
 import webbrowser
 from .errors import ArchiveNotFoundException
-from .logger import _err_msg
+from .logger import _log_err
 from .archiver.archive import Archive
 from .archiver.config import Config
 from .viewer import viewer
@@ -29,7 +29,7 @@ def _cli() -> None:
     # No arguments
     if len(args) == 0:
         print(HELP, file=sys.stderr)
-        _err_msg(f"\nError: No arguments provided")
+        _log_err(f"\nError: No arguments provided")
         sys.exit(1)
 
     # Version announcements before going further
@@ -48,7 +48,7 @@ def _cli() -> None:
 
         # Bad arguments
         if len(args) < 3:
-            _err_msg("Please provide an archive name and the target's url")
+            _log_err("Please provide an archive name and the target's url")
             sys.exit(1)
 
         # Create archive
@@ -69,7 +69,7 @@ def _cli() -> None:
 
         # Bad arguments
         if len(args) < 2:
-            _err_msg("Please provide the archive name")
+            _log_err("Please provide the archive name")
             sys.exit(1)
 
         # Figure out configuration
@@ -86,7 +86,7 @@ def _cli() -> None:
                     return int(maximum)
                 except Exception:
                     print(HELP, file=sys.stderr)
-                    _err_msg(
+                    _log_err(
                         f"\nError: The value '{maximum}' isn't a valid maximum number"
                     )
                     sys.exit(1)
@@ -128,7 +128,7 @@ def _cli() -> None:
                 # Unknown argument
                 else:
                     print(HELP, file=sys.stderr)
-                    _err_msg(
+                    _log_err(
                         f"\nError: Unknown configuration '{config_arg}' provided for archive refresh"
                     )
                     sys.exit(1)
@@ -197,7 +197,7 @@ def _cli() -> None:
     elif args[0] == "report":
         # Bad arguments
         if len(args) < 2:
-            _err_msg("Please provide the archive name")
+            _log_err("Please provide the archive name")
             sys.exit(1)
 
         archive = Archive.load(Path(args[1]))
@@ -206,7 +206,7 @@ def _cli() -> None:
     # Unknown
     else:
         print(HELP, file=sys.stderr)
-        _err_msg(f"\nError: Unknown command '{args[0]}' provided!", True)
+        _log_err(f"\nError: Unknown command '{args[0]}' provided!", True)
         sys.exit(1)
 
 
@@ -226,18 +226,18 @@ def _pypi_version() -> None:
 
         # General HTTP fault
         except HTTPError:
-            _err_msg(MINOR_ERROR)
+            _log_err(MINOR_ERROR)
             return None
 
         # Couldn't connect to PyPI immediately
         except requests.exceptions.ConnectionError:
-            _err_msg(MINOR_ERROR)
+            _log_err(MINOR_ERROR)
             return None
 
         # Couldn't connect to PyPI after a while
         except TimeoutError:
-            _err_msg(MINOR_ERROR)
-            _err_msg(
+            _log_err(MINOR_ERROR)
+            _log_err(
                 Style.DIM + "This was caused by the request timing out" + Style.NORMAL
             )
             return None
@@ -265,7 +265,7 @@ def _pypi_version() -> None:
 
 def _err_archive_not_found() -> None:
     """Errors out the user if the archive doesn't exist"""
-    _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
+    _log_err("Archive doesn't exist, please make sure you typed it's name correctly!")
     sys.exit(1)
 
 
