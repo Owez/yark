@@ -485,12 +485,13 @@ def _download_error(
         "No such file or directory",
         "HTTP Error 404: Not Found",
         "<urlopen error timed out>",
+        "Did not get any data blocks",
     ]
 
     # Download errors
     if type(exception) == DownloadError:
         # Server connection
-        if ERRORS[0] in exception.msg:
+        if ERRORS[0] in exception.msg or ERRORS[5] in exception.msg:
             msg = "Issue connecting with YouTube's servers"
 
         # Server fault

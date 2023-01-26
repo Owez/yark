@@ -1,19 +1,19 @@
 """Configuration for metadata/downloads"""
 
-from typing import Optional, Any, Callable
+from typing import Optional, Any, Callable, Type
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 
 YtDlpSettings = dict[str, Any]
 """Download settings which the `yt-dlp` library uses during initiation"""
 
 
-class QuietDownloadLogger:
+class DownloadLogger:
     """Quiet logger extension for removing any stdout from yt-dlp components"""
 
     @staticmethod
-    def downloading(_d: dict[str, Any]) -> None:
+    def downloading(d: dict[str, Any]) -> None:
         """Progress hook for video downloading, ignored"""
         pass
 
@@ -44,9 +44,7 @@ class Config:
     comments: bool = False
     format: Optional[str] = None
     proxy: Optional[str] = None
-    hook_logger: Any = field(
-        default_factory=lambda: QuietDownloadLogger()
-    )  # TODO: figure out proper type
+    hook_logger: Type[DownloadLogger] = DownloadLogger
     hook_download: Callable[[Any], Any] | None = None  # TODO: figure out proper type
 
     def submit(self) -> None:
@@ -78,12 +76,10 @@ class Config:
             # Set the output path
             "outtmpl": f"{path}/videos/%(id)s.%(ext)s",
             # Logger for custom stdout of progress
-            "logger": self.hook_logger,
+            "logger": self.hook_logger(),
+            # Downloading hook
+            "progress_hooks": [self.hook_logger.downloading],
         }
-
-        # Custom downloading hook
-        if self.hook_download is not None:
-            settings["progress_hooks"] = [self.hook_download]
 
         # Custom yt-dlp format
         if self.format is not None:
@@ -105,7 +101,7 @@ class Config:
             # Fetch comments from videos
             "getcomments": self.comments,
             # Logger for custom stdout of progress
-            "logger": self.hook_logger,
+            "logger": self.hook_logger(),
         }
 
         # Custom yt-dlp proxy

@@ -8,18 +8,34 @@ import webbrowser
 from .errors import ArchiveNotFoundException
 from .utils import _log_err
 from .archiver.archive import Archive
-from .archiver.config import Config
+from .archiver.config import Config, DownloadLogger
 from .viewer import viewer
 import requests
 from .utils import PYPI_VERSION
 from typing import Optional, Any
 from requests.exceptions import HTTPError
 from progress.spinner import PieSpinner  # type: ignore
+from progress.counter import Pie  # type: ignore
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
+
+download_progress_percentage: float = 0.0
+"""Percentage of the current video being downloaded from `DownloadProgressLogger` for use in progress reporting"""
+
+
+class DownloadProgressLogger(DownloadLogger):
+    def __init__(self) -> None:
+        super().__init__()
+
+    @staticmethod
+    def downloading(d: dict[str, Any]) -> None:
+        """Progress hook for video downloading, ignored"""
+        if "_percent_str" in d:
+            global download_progress_percentage
+            download_progress_percentage = float(d["_percent_str"][:-1])
 
 
 def _cli() -> None:
@@ -76,6 +92,8 @@ def _cli() -> None:
 
         # Figure out configuration
         config = Config()
+        config.hook_logger = DownloadProgressLogger
+        config.hook_download = DownloadProgressLogger.downloading
         if len(args) > 2:
 
             def parse_value(config_arg: str) -> str:
@@ -170,9 +188,15 @@ def _cli() -> None:
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
             else:
-                anything_downloaded = archive.download(config)
-                if anything_downloaded:
-                    archive.commit()
+                with ThreadPoolExecutor(1) as executor:
+                    # Download
+                    future_download = executor.submit(archive.download, config)
+                    _download_progress(future_download)
+                    anything_downloaded = future_download.result()
+
+                    # Save if anything was downloaded
+                    if anything_downloaded:
+                        archive.commit()
 
             # Report the changes which have been made
             archive.reporter.print()
@@ -312,3 +336,21 @@ def _progress_spinner(msg: str, future: Future[Any]) -> None:
         while not future.done():
             bar.next()
             time.sleep(0.075)
+
+
+def _download_progress(future: Future[Any]) -> None:
+    """Gives user user the downloading videos message with a continually resetting progress indicator"""
+    with Pie("Downloading videos.. ") as pie:
+        # Update the loading pointer until the download is completely finished
+        while not future.done():
+            # Get the download percentage from the logger hook
+            global download_progress_percentage
+            if download_progress_percentage == 100.0:
+                download_progress_percentage = 0.0
+
+            # Set the pie to be percent complete and wait
+            pie.goto(int(download_progress_percentage))
+            time.sleep(0.25)
+
+        # Make the pie black (complete) once finished for clarity
+        pie.goto(100)
