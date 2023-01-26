@@ -5,10 +5,14 @@ description = "Official management suite for Yark"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 license = "MIT"
 packages = [{ include = "yark_app" }]
+classifiers = [
+    "Private :: Do not Upload",
+] # NOTE: work around for poetry #1537 <https://github.com/python-poetry/poetry/issues/1537>
 
 [tool.poetry.dependencies]
 python = "~3.11"
 falcon = "^3.1.1"
+yark = { path = "../yark" }
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
