@@ -9,7 +9,6 @@ from .errors import ArchiveNotFoundException
 from .utils import _log_err
 from .archiver.archive import Archive
 from .archiver.config import Config, DownloadLogger
-from .viewer import viewer
 import requests
 from .utils import PYPI_VERSION
 from typing import Optional, Any
@@ -19,7 +18,7 @@ from progress.counter import Pie  # type: ignore
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 
-HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
+HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and target url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh foobar\n  $ yark view foobar"
 """User-facing help message provided from the cli"""
 
 download_progress_percentage: float = 0.0
@@ -202,38 +201,6 @@ def _cli() -> None:
             archive.reporter.print()
         except ArchiveNotFoundException:
             _err_archive_not_found()
-
-    # View
-    elif args[0] == "view":
-
-        def launch() -> None:
-            """Launches viewer"""
-            app = viewer()
-            threading.Thread(target=lambda: app.run(port=7667)).run()
-
-        # More help
-        if len(args) == 2 and args[1] == "--help":
-            _err_no_help()
-
-        # Start on archive name
-        if len(args) > 1:
-            # Get name
-            archive_name = args[1]
-
-            # Jank archive check
-            if not Path(archive_name).exists():
-                _err_archive_not_found()
-
-            # Launch and start browser
-            print(f"Starting viewer for {archive_name}..")
-            webbrowser.open(f"http://127.0.0.1:7667/archive/{archive_name}/videos")
-            launch()
-
-        # Start on archive finder
-        else:
-            print("Starting viewer..")
-            webbrowser.open("http://127.0.0.1:7667/")
-            launch()
 
     # Report
     elif args[0] == "report":

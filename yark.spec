@@ -1,4 +1,4 @@
-"""Specification file for building Yark using PyInstaller"""
+"""Specification file for building Yark using PyInstaller, make sure to build yark-app first"""
 
 block_cipher = None
 
