@@ -9,6 +9,7 @@
     - [Users](#users)
     - [KISS](#kiss)
     - [Dependencies](#dependencies)
+  - [Structure](#structure)
   - [Conventions](#conventions)
     - [Branches](#branches)
     - [To/from archives](#tofrom-archives)
@@ -51,6 +52,16 @@ Dependencies inside of the actual Yark code are a bit of a different story. If a
 [^selfc]: Like the example given in [Users](#users) before
 
 [^depsec]: Every dependency is a new [attack vector](https://en.wikipedia.org/wiki/Attack_vector) waiting to be exploited
+
+## Structure
+
+Yark is separated into three areas of concern:
+
+1. The core `yark` library which contains the underlying archiving logic
+2. The `yark-app` project which contains the main GUI and CLI for interacting with Yark
+3. The `yark-pages` project which contains webpages integral to the app
+
+When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains a [Falcon](https://falcon.readthedocs.io/en/stable/)-based API which these webpages connect to.
 
 ## Conventions
 
