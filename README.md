@@ -53,24 +53,19 @@ Under each video is a rich history report filled with timelines and graphs, as w
 
 Light and dark modes are both available and automatically apply based on the system's theme.
 
+## Roadmap
+
+Here's the general roadmap for Yark going a few months into the future for the upcoming features and changes:
+
+1. Yark 1.3 (Current): [Comments](https://github.com/Owez/yark/issues/50), [viewer tabs](https://github.com/Owez/yark/issues/30), [playlists](https://github.com/Owez/yark/issues/27), [viewed](https://github.com/Owez/yark/issues/51)
+2. Yark 1.4 (Expected ??): [Run command](https://github.com/Owez/yark/issues/83), [better homepage](https://github.com/Owez/yark/issues/65), [more graphs](https://github.com/Owez/yark/issues/74), [translations](https://github.com/Owez/yark/issues/73)
+3. Yark 1.5 (Expected ??): Full [GUI control](https://github.com/Owez/yark/issues/86) for archives and viewer polish/rewrite
+4. Onwards: Not sure yet, [create an issue](https://github.com/Owez/yark/issues/new) to help out :) 
+
 ## Details
 
-Here are some things to keep in mind when using Yark; the good and the bad:
+Some things to keep in mind when using Yark; the good and the bad:
 
 - Don't create a new archive again if you just want to update it, Yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
 - Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!
-
-## Archive Format
-
-The archive format itself is simple and consists of a directory-based structure with a core metadata file and all thumbnail/video data in their own directories as typical files:
-
-- `[name]/` – Your self-contained archive
-  - `yark.json` – Archive file with all metadata
-  - `yark.bak` – Backup archive file to protect against data damage
-  - `videos/` – Directory containing all known videos
-    - `[id].*` – Files containing video data for YouTube videos
-  - `images/` – Directory containing all known images (e.g., thumbnails, icons)
-    - `[hash].png` – Files containing images with their BLAKE2 hash
-
-It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.

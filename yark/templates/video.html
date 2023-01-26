@@ -64,19 +64,11 @@
         width: 60vw;
     }
 
-    @media screen and (max-width: 850px) {
-
-        #player,
-        h1,
-        canvas,
-        #description,
-        .info {
-            width: 80vw;
-        }
-
-        .note {
-            width: calc(80vw - 2.5rem);
-        }
+    button.delete {
+        border: 0;
+        padding: 0;
+        font-size: 1rem;
+        margin-right: 1rem;
     }
 
     .spacer {
@@ -84,12 +76,17 @@
         margin-right: 0.5rem;
     }
 
+    .spacer-likes {
+        margin-right: 0.45rem;
+    }
+
     ul {
         line-height: 2.25rem;
     }
 
     .note,
-    #player {
+    #player,
+    .comment-icon {
         box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
     }
 
@@ -130,6 +127,16 @@
         align-items: center;
     }
 
+    .top-right {
+        display: flex;
+    }
+
+    .timestamp {
+        color: #5178C6;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
     .top>.title {
         font-weight: bold;
         font-size: 1.2rem;
@@ -146,11 +153,60 @@
         margin-top: 1rem;
     }
 
-    .top>.timestamp {
-        color: #098fb4;
+    .comment {
+        display: flex;
+        margin-top: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .comment-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 7.5px;
+        margin-right: 0.75rem;
+    }
+
+    .comment-icon.child {
+        margin-left: 27.5px;
+    }
+
+    .comment-title {
         margin-top: 0;
         margin-bottom: 0;
+        font-size: 0.8rem;
+        font-weight: bold;
     }
+
+    .comment-body {
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+
+    .comment-page-num {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .disabled {
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
+
+    @media screen and (max-width: 850px) {
+
+        #player,
+        h1,
+        canvas,
+        #description,
+        .info {
+            width: 80vw;
+        }
+
+        .note {
+            width: calc(80vw - 2.5rem);
+        }
+    }
+
 
     @media (prefers-color-scheme: dark) {
 
@@ -167,10 +223,6 @@
         .note>.id {
             color: rgb(181, 181, 181);
         }
-
-        .top>.timestamp {
-            color: #4bc0c0;
-        }
     }
 </style>
 {% endblock %}
@@ -184,9 +236,10 @@
     {% else %}
     <div id="player">
         <div class="not-found-code-outer">
-            <p class="not-found-code">Video not found!<br />Please <a
-                    href="https://github.com/Owez/yark/#managing-your-archive" class="funky">refresh</a> your
-                archive</p>
+            <p class="not-found-code">
+                Video not found!<br />
+                <span class="sublime">Try to refresh your archive?</span>
+            </p>
         </div>
     </div>
     {% endif %}
@@ -196,7 +249,7 @@
         {% set views = video.views.current() %}
         <p>
             <!-- View count -->
-            <span title="View count of the video">{{ views }} view{% if views != 1 %}s{% endif %}</span>
+            <span title="View count of the video">{{ "{:,}".format(views) }} view{% if views != 1 %}s{% endif %}</span>
             <!-- Uploaded -->
             <span class="spacer">•</span>
             <span title="Upload time of the video">{{ video.uploaded.strftime("%d/%m/%Y") }}</span>
@@ -219,7 +272,7 @@
             {% set likes = video.likes.current() %}
             {% if likes or likes == 0 %}
             <span class="spacer">•</span>
-            <span title="Like count of the video">👍 {{ likes }}</span>
+            <span title="Like count of the video"><span class="spacer-likes">👍</span>{{ "{:,}".format(likes) }}</span>
             {% endif %}
         </p>
     </div>
@@ -375,6 +428,10 @@
         {% elif not mto_likes %}
         <li>No like changes on record</li>
         {% endif %}
+        <!-- Comments summary -->
+        {% if video.comments.empty() %}
+        <li>No comments on record</li>
+        {% endif %}
     </ul>
     <!-- Graphs -->
     {% if mto_views or mto_likes %}
@@ -453,18 +510,21 @@
         <div class="top">
             <!-- Title -->
             <p class="title" contenteditable="true">{{ note.title }}</p>
-            <!-- Timestamp -->
-            <a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
-                note.timestamp|timestamp }}</a>
+            <!-- Right content -->
+            <div class="top-right">
+                <!-- Delete button -->
+                <button onclick="deleteNote(this.parentElement.parentElement, '{{ note.id }}')"
+                    class="delete">🗑</button>
+                <!-- Timestamp -->
+                <a href="#player" onclick="toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
+                    note.timestamp|timestamp }}</a>
+            </div>
         </div>
         <!-- Identifier -->
         <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-        <!-- Body content -->
+        <!-- Optional body content -->
         <p class="body" contenteditable="true">
-            <!-- Optional user-defined body -->
-            {% if note.body %}<span>{{ note.body }}</span>{% endif %}
-            <!-- Delete button -->
-            <button onclick="deleteNote(this.parentElement.parentElement)">Delete</button>
+            {% if note.body %}{{ note.body }}{% endif %}
         </p>
     </div>
     {% endfor %}
@@ -477,10 +537,7 @@
         }
 
         // Deletes note using it's identifier
-        function deleteNote(el) {
-            // Get identifier
-            const id = el.getElementsByClassName("id")[0].innerText
-
+        function deleteNote(el, id) {
             // Send request
             fetch("", {
                 method: "DELETE",
@@ -493,7 +550,7 @@
             })
 
             // Delete note from DOM
-            el.remove()
+            el.parentElement.remove()
 
             // Delete the note heading from DOM if there aren't any notes
             if (document.getElementsByClassName("note").length == 1) {
@@ -533,6 +590,67 @@
             }
         })
     </script>
+    {% endif %}
+    <!-- Comments -->
+    {% if not video.comments.empty() %}
+    <h2>Comments</h2>
+    {% set cpage = request.args.get('cpage') | int if request.args.get('cpage') else 1 %}
+    <!-- Comment pages -->
+    {% if video.comments.inner.keys()|length > 50 %}
+    <p>
+        <button {% if cpage==1 %}class="disabled" {% else %}onclick="toCommentPage({{ cpage - 1 }})" {% endif %}>
+            < </button>
+                <span class="comment-page-num">Page {{ cpage }}</span>
+                <button {% if video.comments.inner.keys()|length < cpage*50 %}class="disabled" {% else
+                    %}onclick="toCommentPage({{ cpage + 1 }})" {% endif %}> > </button>
+    </p>
+    <script>
+        // Sets the url to provided comment page
+        function toCommentPage(page) {
+            let urlParams = new URLSearchParams(window.location.search);
+            urlParams.set("cpage", page);
+            console.log(urlParams)
+            window.location.search = urlParams;
+        }
+    </script>
+    {% endif %}
+    <!-- Comment listing -->
+    {% for comment in video.comments.paginate(cpage) %}
+    <!-- Main comment -->
+    <div class="comment">
+        <!-- User icon -->
+        <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"
+            alt="{{ comment.author.name.current() }}'s Icon" class="comment-icon">
+        <!-- Text content -->
+        <div class="comment-content">
+            <!-- Author's name -->
+            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }}<span class="sublime">
+                    • {{ comment.created.strftime('%d %b %Y (%I:%M%p)') }}</span></p>
+            <!-- Body -->
+            <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
+                comment.body.current()
+                }}</p>
+        </div>
+    </div>
+    <!-- Child comment -->
+    {% for comment in comment.children.inner.values() %}
+    <div class="comment">
+        <!-- User icon -->
+        <img src="{{ url_for('routes.archive_image', name=name, file=comment.author.icon.current().id + '.jpg') }}"
+            alt="{{ comment.author.name.current() }}'s Icon" class="comment-icon child">
+        <!-- Text content -->
+        <div class="comment-content">
+            <!-- Author's name -->
+            <p class="comment-title" title="Author's username">{{ comment.author.name.current() }}<span class="sublime">
+                    • {{ comment.created.strftime('%d %b %Y (%I:%M%p)') }}</span></p>
+            <!-- Body -->
+            <p class="comment-body" title="Text that {{ comment.author.name.current() }} commented">{{
+                comment.body.current()
+                }}</p>
+        </div>
+    </div>
+    {% endfor %}
+    {% endfor %}
     {% endif %}
 </div>
 {% endblock %}

@@ -2,42 +2,39 @@
 
 from colorama import Fore, Style
 import datetime
-from .video import Video, Element
-from .utils import _truncate_text
+from .video.video import Video
+from ..utils import _truncate_text
 from typing import TYPE_CHECKING, Optional
+from .video.video import Videos
+from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
     from .archive import Archive
 
 
+@dataclass
 class Reporter:
     archive: "Archive"
-    added: list[Video]
-    deleted: list[Video]
-    updated: list[tuple[str, Element]]
+    added: list[Video] = field(default_factory=list)
+    deleted: list[Video] = field(default_factory=list)
+    updated: list[tuple[str, Video]] = field(default_factory=list)
 
-    def __init__(self, archive: "Archive") -> None:
-        self.archive = archive
-        self.added = []
-        self.deleted = []
-        self.updated = []
-
-    def print(self):
+    def print(self) -> None:
         """Prints coloured report to STDOUT"""
         # Initial message
         print(f"Report for {self.archive}:")
 
         # Updated
-        for kind, element in self.updated:
+        for kind, video in self.updated:
             colour = (
                 Fore.CYAN
                 if kind in ["title", "description", "undeleted"]
                 else Fore.BLUE
             )
-            video = f"  • {element.parent}".ljust(82)
+            video_fmt = f"  • {video}".ljust(82)
             kind = f" │ 🔥{kind.capitalize()}"
 
-            print(colour + video + kind)
+            print(colour + video_fmt + kind)
 
         # Added
         for video in self.added:
@@ -54,17 +51,17 @@ class Reporter:
         # Watermark
         print(_watermark())
 
-    def add_updated(self, kind: str, element: Element):
+    def add_updated(self, kind: str, video: Video) -> None:
         """Tells reporter that an element has been updated"""
-        self.updated.append((kind, element))
+        self.updated.append((kind, video))
 
-    def reset(self):
+    def reset(self) -> None:
         """Resets reporting values for new run"""
         self.added = []
         self.deleted = []
         self.updated = []
 
-    def interesting_changes(self):
+    def interesting_changes(self) -> None:
         """Reports on the most interesting changes for the archive linked to this reporter"""
 
         def fmt_video(kind: str, video: Video) -> str:
@@ -82,7 +79,7 @@ class Reporter:
             maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
             add_buf = lambda name, change, colour: buf.append(
                 colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
-            )
+            )  # TODO: move to def
 
             # Figure out how many changes have happened in each category and format them together
             change_deleted = sum(
@@ -111,12 +108,12 @@ class Reporter:
                 + "\n"
             )
 
-        def fmt_category(kind: str, videos: list) -> Optional[str]:
+        def fmt_category(kind: str, videos: Videos) -> Optional[str]:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
             # Add interesting videos to buffer
             HEADING = f"Interesting {kind}:\n"
             buf = HEADING
-            for video in videos:
+            for video in videos.inner.values():
                 buf += fmt_video(kind, video)
 
             # Return depending on if the buf is just the heading
@@ -133,7 +130,7 @@ class Reporter:
         ]
 
         # Combine those with nothing of note and print out interesting
-        not_of_note = []
+        not_of_note: list[str] = []
         for name, buf in categories:
             if buf is None:
                 not_of_note.append(name)
@@ -142,8 +139,8 @@ class Reporter:
 
         # Print out those with nothing of note at the end
         if len(not_of_note) != 0:
-            not_of_note = "/".join(not_of_note)
-            print(f"No interesting {not_of_note} found")
+            not_of_note_fmt = "/".join(not_of_note)
+            print(f"No interesting {not_of_note_fmt} found")
 
         # Watermark
         print(_watermark())

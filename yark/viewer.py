@@ -18,10 +18,11 @@ from .errors import (
     VideoNotFoundException,
     TimestampException,
 )
-from .archive import Archive
-from .video import Note
+from .archiver.archive import Archive
+from .archiver.video.note import Note
+from .archiver.video.video import Video
 
-routes = Blueprint("routes", __name__, template_folder="templates")
+routes = Blueprint("routes", __name__)
 
 
 @routes.route("/", methods=["POST", "GET"])
@@ -63,13 +64,7 @@ def archive(name, kind):
 
     try:
         archive = Archive.load(name)
-        videos = (
-            archive.videos
-            if kind == "videos"
-            else archive.livestreams
-            if kind == "livestreams"
-            else archive.shorts
-        )
+        videos = _videos_from_kind(archive, kind)
         return render_template(
             "archive.html",
             title=name,
@@ -80,9 +75,7 @@ def archive(name, kind):
             error=request.args.get("error"),
         )
     except ArchiveNotFoundException:
-        return redirect(
-            url_for("routes.index", error="Couldn't open archive's archive")
-        )
+        return redirect(url_for("routes.index", error="Couldn't open archive"))
     except Exception as e:
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
@@ -103,18 +96,13 @@ def video(name, kind, id):
     try:
         # Get information
         archive = Archive.load(name)
-        if kind == "videos":
-            video = archive.search_videos(id)
-        elif kind == "livestreams":
-            video = archive.search_livestreams(id)
-        elif kind == "shorts":
-            video = archive.search_shorts(id)
+        video = _video_from_kind(archive, kind, id)
 
         # Return video webpage
         if request.method == "GET":
             title = f"{video.title.current()} · {name}"
-            views_data = json.dumps(video.views._to_dict())
-            likes_data = json.dumps(video.likes._to_dict())
+            views_data = json.dumps(video.views._to_archive_o())
+            likes_data = json.dumps(video.likes._to_archive_o())
             return render_template(
                 "video.html",
                 title=title,
@@ -129,27 +117,31 @@ def video(name, kind, id):
         elif request.method == "POST":
             # Parse json
             new = request.get_json()
-            if not "title" in new:
+            if new is None or "title" not in new:
                 return "Invalid schema", 400
 
             # Create note
             timestamp = _decode_timestamp(new["timestamp"])
             title = new["title"]
             body = new["body"] if "body" in new else None
-            note = Note.new(video, timestamp, title, body)
+            note = Note(video, timestamp, title, body)
 
             # Save new note
             video.notes.append(note)
             video.archive.commit()
 
             # Return
-            return note._to_dict(), 200
+            return note._to_archive_o(), 200
 
         # Update existing note
         elif request.method == "PATCH":
             # Parse json
             update = request.get_json()
-            if not "id" in update or (not "title" in update and not "body" in update):
+            if (
+                update is None
+                or "id" not in update
+                or ("title" not in update and "body" not in update)
+            ):
                 return "Invalid schema", 400
 
             # Find note
@@ -172,7 +164,7 @@ def video(name, kind, id):
         elif request.method == "DELETE":
             # Parse json
             delete = request.get_json()
-            if not "id" in delete:
+            if delete is None or "id" not in delete:
                 return "Invalid schema", 400
 
             # Filter out note with id and save
@@ -211,16 +203,16 @@ def archive_video(name, file):
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
-@routes.route("/archive/<name>/image/<id>")
-def archive_image(name, id):
+@routes.route("/archive/<name>/image/<file>")
+def archive_image(name, file):
     """Serves image file using it's id, e.g. thumbnails, author icons, etc."""
-    return send_from_directory(os.getcwd(), f"{name}/images/{id}.webp")
+    return send_from_directory(os.getcwd(), f"{name}/images/{file}")
 
 
 def viewer() -> Flask:
     """Generates viewer flask app, launch by just using the typical `app.run()`"""
     # Make flask app
-    app = Flask(__name__)
+    app = _make_app()
 
     # Only log errors
     log = logging.getLogger("werkzeug")
@@ -302,3 +294,34 @@ def _encode_timestamp(timestamp: int) -> str:
 
     # Return
     return ":".join(parts)
+
+
+def _videos_from_kind(archive: Archive, kind: str) -> list[Video]:
+    """Returns the video list depending on kind of video users are searching for, e.g. `videos` or `shorts`"""
+    videos = archive.videos
+    if kind == "livestreams":
+        videos = archive.livestreams
+    elif kind == "shorts":
+        videos = archive.shorts
+    return list(videos.inner.values())
+
+
+def _video_from_kind(archive: Archive, kind: str, id: str) -> Video:
+    """Searches the provided archive for the video id depending on kind, e.g. `videos` or `shorts`"""
+    if kind == "videos":
+        return archive.videos.search(id)
+    elif kind == "livestreams":
+        return archive.livestreams.search(id)
+    else:
+        return archive.shorts.search(id)
+
+
+def _make_app() -> Flask:
+    """Loads app with proper templates folder; this is so frozen PyInstaller installs work"""
+    import sys
+    from pathlib import Path
+
+    if getattr(sys, "frozen", False):
+        template_folder = Path(sys._MEIPASS) / "templates"  # type: ignore
+        return Flask(__name__, template_folder=str(template_folder))
+    return Flask(__name__)
