@@ -98,6 +98,7 @@ class Reporter:
             changes = ", ".join(buf) + Fore.RESET
 
             # Truncate title, get viewer link, and format all together with viewer link
+            # TODO: change this with the new viewer from #86 <https://github.com/Owez/yark/issues/86>
             title = _truncate_text(video.title.current(), 51).strip()
             url = f"http://127.0.0.1:7667/archive/{video.archive}/{kind}/{video.id}"
             return (

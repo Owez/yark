@@ -1,7 +1,10 @@
-.vscode
+# Editors/IDEs
+.vscode/
+.idea/
+
+# Yark archives
 demo/
 foobar/
-**/.DS*
-build/
-dist/
-__pycache__/
+
+# MacOS
+.DS*

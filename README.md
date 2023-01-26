@@ -3,7 +3,7 @@
 
 # Yark
 
-YouTube archiving made simple.
+YouTube archiving made simple
 
 [Installation](#installation) · [Managing your Archive](#managing-your-archive) · [Viewing your Archive](#viewing-your-archive)
 
