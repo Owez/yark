@@ -58,13 +58,13 @@ export interface ArchivePojo { path: string }
 
 /**
  * Loads up an archive and sets it as the currently-active one, then redirects to the dashboard
- * @param filepath Filepath to load archive from
+ * @param path Filepath to load archive from
  */
-export function loadArchive(filepath: string) {
-    if (filepath == undefined) {
+export function loadArchive(path: string) {
+    if (path == undefined) {
         return;
     }
-    const archive = new Archive(filepath);
+    const archive = new Archive(path);
     archive.setAsCurrent();
     goto('/archive');
 }
