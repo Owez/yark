@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+	import LoadList from './LoadList.svelte';
 	import StartCard from './StartCard.svelte';
 </script>
 
@@ -8,6 +9,6 @@
 		description="Manage/view an existing archive that you’ve already created"
 		ballKind={1}
 	>
-		<p>TODO</p>
+		<LoadList />
 	</StartCard>
 </a>

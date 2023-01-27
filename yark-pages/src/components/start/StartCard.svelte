@@ -1,29 +1,23 @@
 <script lang="ts">
 	import Ball from '../Ball.svelte';
+	import Card from '../Card.svelte';
 
-	export let ballKind: number;
 	export let title: string = 'Start Card';
 	export let description: string =
 		'This is an example of a start card which is part of the Yark design';
+	export let ballKind: number;
+	export let width: string = '18rem';
+	export let height: string = '62.5vh';
 </script>
 
-<div class="card">
+<Card {width} {height}>
 	<Ball kind={ballKind} />
 	<h1>{title}</h1>
 	<p class="description">{description}</p>
 	<slot />
-</div>
+</Card>
 
 <style lang="scss">
-	.card {
-		height: 62.5vh; 
-		width: 18rem;
-		margin: 1.5rem;
-		border: 1px solid rgba($color: #000000, $alpha: 0.12);
-		border-radius: 15px;
-		padding: 1.5rem;
-	}
-
 	h1 {
 		$margin-v: 0.75rem;
 
