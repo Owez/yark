@@ -1,6 +1,3 @@
-<!-- TODO: logo; #2 <https://github.com/Owez/yark/issues/2> -->
-<!-- TODO: add when logos done; #2 <https://github.com/Owez/yark/issues/2>: <h1 align="center">yark</h1> -->
-
 # Yark
 
 YouTube archiving made simple

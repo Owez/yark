@@ -3,7 +3,7 @@
  */
 
 import { writable } from "svelte/store";
-import type { Archive } from "./yark";
+import { Archive, type ArchivePojo } from "./yark";
 import { browser } from "$app/environment";
 
 /**
@@ -23,13 +23,36 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
+    // Create a default value
     const initialValue: YarkStore = { recents: [], openedArchive: null }
+
+    // Try to get local storage if we're in browser
     if (browser) {
+        // Get the main storage container
         const foundString = window.localStorage.getItem("yarkStore")
+
+        // Decode if it's present
         if (foundString != null) {
-            return JSON.parse(foundString)
+            /**
+             * Ad-hoc interface for decoding a Yark store
+             */
+            interface YarkStorePojo {
+                recents: ArchivePojo[],
+                openedArchive: ArchivePojo | null
+            }
+
+            // Parse the stringified JSON into the Yark store pojo
+            const yarkStorePojo: YarkStorePojo = JSON.parse(foundString);
+
+            // Parse into final value and return
+            return {
+                recents: yarkStorePojo.recents.map(archivePojo => Archive.fromPojo(archivePojo)),
+                openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null
+            }
         }
     }
+
+    // Return the default value
     return initialValue
 }
 

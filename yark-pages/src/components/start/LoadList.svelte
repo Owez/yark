@@ -10,20 +10,11 @@
 	function getArchives(recents: Archive[]): Archive[] {
 		return recents.slice().reverse().slice(0, count);
 	}
-
-	/**
-	 * Gets archive path from the provided filepath and then loads
-	 * @param event Button event with `data-path` attached to target
-	 */
-	function listLoadArchive(event: any) {
-		const filepath = event.target.getAttribute('data-path');
-		loadArchive(filepath);
-	}
 </script>
 
 <div class="list">
 	{#each getArchives($yarkStore.recents) as archive}
-		<button on:click={listLoadArchive} data-path={archive.path}>{archive.path}</button>
+		<button on:click={() => loadArchive(archive.path)}>{archive.getName()}</button>
 	{/each}
 </div>
 

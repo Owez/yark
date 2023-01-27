@@ -14,6 +14,15 @@ export class Archive {
     }
 
     /**
+     * Converts a pojo being deserialized into a full archive class
+     * @param pojo Pojo version of an archive to convert
+     * @returns The archive from it's pojo form
+     */
+    static fromPojo(pojo: ArchivePojo): Archive {
+        return new Archive(pojo.path)
+    }
+
+    /**
      * Parses the path value into a readable archive name
      * @returns Name from path
      */
@@ -25,7 +34,7 @@ export class Archive {
     /**
      * Set this archive as the currently-opened one, also adds to recent archives
      */
-    setCurrent() {
+    setAsCurrent() {
         yarkStore.update(value => {
             // Set opened archive to this
             value.openedArchive = this
@@ -43,6 +52,11 @@ export class Archive {
 }
 
 /**
+ * Pojo interface for deserializing archives
+ */
+export interface ArchivePojo { path: string }
+
+/**
  * Loads up an archive and sets it as the currently-active one, then redirects to the dashboard
  * @param filepath Filepath to load archive from
  */
@@ -51,6 +65,6 @@ export function loadArchive(filepath: string) {
         return;
     }
     const archive = new Archive(filepath);
-    archive.setCurrent();
+    archive.setAsCurrent();
     goto('/archive');
 }
