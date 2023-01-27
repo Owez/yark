@@ -7,10 +7,10 @@
 		'This is an example of a start card which is part of the Yark design';
 	export let ballKind: number;
 	export let width: string = '18rem';
-	export let height: string = '62.5vh';
+	export let height: string = '70vh';
 </script>
 
-<Card {width} {height}>
+<Card {width} {height} scroll={true}>
 	<Ball kind={ballKind} />
 	<h1>{title}</h1>
 	<p class="description">{description}</p>
@@ -29,5 +29,6 @@
 
 	.description {
 		font-size: 12pt;
+		margin-bottom: 1.5rem;
 	}
 </style>

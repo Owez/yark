@@ -1,9 +1,8 @@
-<script>
-
-	import StartCreate from "../../components/start/StartCreate.svelte";
-	import StartLoad from "../../components/start/StartLoad.svelte";
-
+<script lang="ts">
+	import StartCreate from '../../components/start/StartCreate.svelte';
+	import StartLoad from '../../components/start/StartLoad.svelte';
 </script>
+
 <div class="cards">
 	<StartCreate />
 	<StartLoad />
