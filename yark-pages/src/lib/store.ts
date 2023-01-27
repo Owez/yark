@@ -13,9 +13,7 @@ export const yarkStore = writable<YarkStore>(yarkStoreInitial())
 
 // Save all changes to the store into window
 yarkStore.subscribe((value) => {
-    if (browser) {
-        window.localStorage.setItem("yarkStore", JSON.stringify(value))
-    }
+    window.localStorage.setItem("yarkStore", JSON.stringify(value))
 })
 
 /**
@@ -23,37 +21,31 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
-    // Create a default value
-    const initialValue: YarkStore = { recents: [], openedArchive: null }
+    // Get the main storage container
+    const foundString = window.localStorage.getItem("yarkStore")
 
-    // Try to get local storage if we're in browser
-    if (browser) {
-        // Get the main storage container
-        const foundString = window.localStorage.getItem("yarkStore")
+    // Decode if it's present
+    if (foundString != null) {
+        /**
+         * Ad-hoc interface for decoding a Yark store
+         */
+        interface YarkStorePojo {
+            recents: ArchivePojo[],
+            openedArchive: ArchivePojo | null
+        }
 
-        // Decode if it's present
-        if (foundString != null) {
-            /**
-             * Ad-hoc interface for decoding a Yark store
-             */
-            interface YarkStorePojo {
-                recents: ArchivePojo[],
-                openedArchive: ArchivePojo | null
-            }
+        // Parse the stringified JSON into the Yark store pojo
+        const yarkStorePojo: YarkStorePojo = JSON.parse(foundString);
 
-            // Parse the stringified JSON into the Yark store pojo
-            const yarkStorePojo: YarkStorePojo = JSON.parse(foundString);
-
-            // Parse into final value and return
-            return {
-                recents: yarkStorePojo.recents.map(archivePojo => Archive.fromPojo(archivePojo)),
-                openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null
-            }
+        // Parse into final value and return
+        return {
+            recents: yarkStorePojo.recents.map(archivePojo => Archive.fromPojo(archivePojo)),
+            openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null
         }
     }
 
-    // Return the default value
-    return initialValue
+    // Return the default value if we couldn't get and decode an existing one
+    return { recents: [], openedArchive: null }
 }
 
 /**
