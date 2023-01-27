@@ -8,7 +8,9 @@ const config = {
 	preprocess: vitePreprocess(),
 	kit: {
 		adapter: adapter({
-			fallback: '200.html'
+			fallback: 'index.html',
+			pages: 'build',
+			assets: 'build',
 		}),
 		prerender: { entries: [] }
 	}

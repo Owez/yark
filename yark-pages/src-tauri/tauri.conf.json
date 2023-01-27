@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 575,
         "resizable": true,
         "title": "Yark",
-        "width": 800
+        "width": 845
       }
     ]
   }
