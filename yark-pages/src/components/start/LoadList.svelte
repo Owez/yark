@@ -1,33 +1,41 @@
 <script lang="ts">
 	import { yarkStore } from '$lib/store';
-	import type { Archive } from '$lib/yark';
+	import { loadArchive, type Archive } from '$lib/yark';
 
 	export let count: number = 4;
 
 	/**
 	 * Gets most recent archives up to the count
 	 */
-	function getArchives(): Archive[] {
-		return $yarkStore.recents.reverse().slice(0, count);
+	function getArchives(recents: Archive[]): Archive[] {
+		return recents.slice().reverse().slice(0, count);
+	}
+
+	/**
+	 * Gets archive path from the provided filepath and then loads
+	 * @param event Button event with `data-path` attached to target
+	 */
+	function listLoadArchive(event: any) {
+		const filepath = event.target.getAttribute('data-path');
+		loadArchive(filepath);
 	}
 </script>
 
 <div class="list">
-	{#each getArchives() as archive}
-		<a href={archive.getUrl()} class="item invis">
-			<p class="name">{archive.getName()}</p>
-		</a>
+	{#each getArchives($yarkStore.recents) as archive}
+		<button on:click={listLoadArchive} data-path={archive.path}>{archive.path}</button>
 	{/each}
 </div>
 
 <style lang="scss">
 	.list {
-		margin-top: 1.25rem;
 		margin-bottom: 1.25rem;
+		display: flex;
+		flex-direction: column;
 	}
 
-	.item {
-		$margin-v: 0.5rem;
+	button {
+		$margin-v: 0.35rem;
 		$padding-h: 0.75rem;
 
 		background: rgb(255, 255, 255);
@@ -40,9 +48,7 @@
 		padding-left: $padding-h;
 		padding-right: $padding-h;
 		border-radius: 7.5px;
-	}
-
-	p {
-		margin: 0;
+		border: 0;
+		background-color: transparent;
 	}
 </style>

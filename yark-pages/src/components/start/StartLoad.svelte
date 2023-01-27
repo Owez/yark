@@ -3,12 +3,17 @@
 	import StartCard from './StartCard.svelte';
 </script>
 
-<a href="/load" class="invis">
-	<StartCard
-		title="Load Existing"
-		description="Manage/view an existing archive that you’ve already created"
-		ballKind={1}
-	>
-		<LoadList />
-	</StartCard>
-</a>
+<StartCard
+	title="Load Existing"
+	description="Manage/view an existing archive that you've already created"
+	link="/load"
+	ballKind={1}
+>
+	<div class="list"><LoadList /></div>
+</StartCard>
+
+<style lang="scss">
+	.list {
+		margin-top: 1.25rem;
+	}
+</style>

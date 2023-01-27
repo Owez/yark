@@ -23,7 +23,7 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
-    const initialValue: YarkStore = { recents: [] }
+    const initialValue: YarkStore = { recents: [], openedArchive: null }
     if (browser) {
         const foundString = window.localStorage.getItem("yarkStore")
         if (foundString != null) {
@@ -41,4 +41,8 @@ export interface YarkStore {
      * Recent archives which where previously opened
      */
     recents: Archive[]
+    /**
+     * Currently-opened archive user is using
+     */
+    openedArchive: Archive | null
 }

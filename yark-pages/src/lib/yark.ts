@@ -1,5 +1,6 @@
 /** Connector to the official Yark REST API for interfacing */
 
+import { goto } from "$app/navigation";
 import { yarkStore } from "./store";
 
 /**
@@ -22,23 +23,34 @@ export class Archive {
     }
 
     /**
-     * Gets the pages archive path
-     * @returns Relative URL to archive
+     * Set this archive as the currently-opened one, also adds to recent archives
      */
-    getUrl(): string {
-        return `/archive/?path=${encodeURIComponent(this.path)}`
-    }
-
-    /**
-     * Adds current archive to the recent list
-     */
-    setRecent() {
+    setCurrent() {
         yarkStore.update(value => {
+            // Set opened archive to this
+            value.openedArchive = this
+
+            // Add to recent list
             if (value.recents.length >= 10) {
                 value.recents.shift()
             }
             value.recents.push(this)
+
+            // Return updated value
             return value
         })
     }
+}
+
+/**
+ * Loads up an archive and sets it as the currently-active one, then redirects to the dashboard
+ * @param filepath Filepath to load archive from
+ */
+export function loadArchive(filepath: string) {
+    if (filepath == undefined) {
+        return;
+    }
+    const archive = new Archive(filepath);
+    archive.setCurrent();
+    goto('/archive');
 }
