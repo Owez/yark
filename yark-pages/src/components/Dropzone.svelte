@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { loadArchive } from '$lib/yark';
 	import { open } from '@tauri-apps/api/dialog';
+	import { listen } from '@tauri-apps/api/event';
 
 	export let path: string;
 
@@ -16,9 +18,19 @@
 			path = gotPath;
 		}
 	}
+
+	// Listen for drops anywhere onto the screen
+	// NOTE: this is what you need to do because of a bad tauri implementation
+	// 		 see #2768 <https://github.com/tauri-apps/tauri/issues/2768>
+	//       see #4736 <https://github.com/tauri-apps/tauri/discussions/4736>
+	listen('tauri://file-drop', (event) => {
+		const payload = event.payload as string[];
+		const path = payload[0];
+		loadArchive(path);
+	});
 </script>
 
-<button on:click={async () => await getFile()}>Drop/Browse</button>
+<button on:click={getFile}>Drop/Browse</button>
 
 <style lang="scss">
 	button {

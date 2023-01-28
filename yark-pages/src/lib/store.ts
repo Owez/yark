@@ -4,7 +4,6 @@
 
 import { writable } from "svelte/store";
 import { Archive, type ArchivePojo } from "./yark";
-import { browser } from "$app/environment";
 
 /**
  * Core store interface which automatically saves into `localStorage` if browser is present
