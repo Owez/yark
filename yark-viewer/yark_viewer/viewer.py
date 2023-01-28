@@ -12,15 +12,15 @@ from flask import (
     Blueprint,
 )
 import logging
-from .errors import (
+from yark.errors import (
     ArchiveNotFoundException,
     NoteNotFoundException,
     VideoNotFoundException,
     TimestampException,
 )
-from .archiver.archive import Archive
-from .archiver.video.note import Note
-from .archiver.video.video import Video
+from yark.archiver.archive import Archive
+from yark.archiver.video.note import Note
+from yark.archiver.video.video import Video
 
 routes = Blueprint("routes", __name__)
 
