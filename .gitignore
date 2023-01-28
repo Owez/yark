@@ -5,3 +5,7 @@ foobar/
 build/
 dist/
 __pycache__/
+
+
+# JetBrains IDEA configuration folder
+.idea/
