@@ -1,5 +1,5 @@
 from typing import Any
-from yark.archiver.config import DownloadLogger
+from yark.yark.archiver.config import DownloadLogger
 
 
 class DownloadProgressLogger(DownloadLogger):

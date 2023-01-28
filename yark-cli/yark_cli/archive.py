@@ -5,10 +5,10 @@ from pathlib import Path
 # Local Imports
 
 # External Imports
-from yark.yark_lib.archiver.archive import Archive
-from yark.yark_lib.archiver.config import Config
-from yark.yark_lib.errors import ArchiveNotFoundException
-from yark.yark_lib.utils import _log_err
+from yark.yark import Archive
+from yark.yark import Config
+from yark.yark import ArchiveNotFoundException
+from yark.yark import _log_err
 
 
 def refresh(config: Config, path: Path):

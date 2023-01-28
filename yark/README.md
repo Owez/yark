@@ -33,7 +33,7 @@ $ yark refresh foobar
 
 Once everything has been downloaded, Yark will automatically give you a status report of what's changed since the last refresh:
 
-<p><img src="examples/images/cli_dark.png" alt="Report Demo" title="Report Demo" width="600" /></p>
+<p><img src="../examples/images/cli_dark.png" alt="Report Demo" title="Report Demo" width="600" /></p>
 
 ## Viewing your Archive
 

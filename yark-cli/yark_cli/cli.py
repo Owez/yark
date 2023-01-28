@@ -8,12 +8,12 @@ import archive
 
 # External Imports
 from yark.yark import logger
-from yark.yark.archiver import archive
-from yark.yark.archiver.config import Config
-from yark.yark.archiver.archive import Archive
-from yark.yark.versioning import pypi
-from yark.yark.versioning.pypi import err_archive_not_found
-from yark.archiver.logger import DownloadProgressLogger
+from yark.yark import archive
+from yark.yark import Config
+from yark.yark import Archive
+from yark.yark import pypi
+from yark.yark import err_archive_not_found
+from yark.yark.archiver.logger import DownloadProgressLogger
 
 from colorama import Style
 
