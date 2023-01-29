@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { yarkStore } from '$lib/store';
-	import { loadArchive, type Archive } from '$lib/yark';
+	import type { Archive } from '$lib/yark';
+	import LoadListArchive from './LoadListArchive.svelte';
 
 	export let count: number = 4;
 
@@ -14,7 +15,7 @@
 
 <div class="list">
 	{#each getArchives($yarkStore.recents) as archive}
-		<button on:click={() => loadArchive(archive.path)}>{archive.getName()}</button>
+		<LoadListArchive {archive} />
 	{/each}
 </div>
 
@@ -23,23 +24,5 @@
 		margin-bottom: 1.25rem;
 		display: flex;
 		flex-direction: column;
-	}
-
-	button {
-		$margin-v: 0.35rem;
-		$padding-h: 0.75rem;
-
-		background: rgb(255, 255, 255);
-		background: linear-gradient(142deg, rgb(247, 247, 247) 0%, rgba(244, 244, 244, 1) 100%);
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		margin-top: $margin-v;
-		margin-bottom: $margin-v;
-		padding-left: $padding-h;
-		padding-right: $padding-h;
-		border-radius: 7.5px;
-		border: 0;
-		background-color: transparent;
 	}
 </style>
