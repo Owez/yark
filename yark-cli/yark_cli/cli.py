@@ -7,19 +7,14 @@ from pathlib import Path
 import archive
 
 # External Imports
-from yark.yark import logger
-from yark.yark import archive
-from yark.yark import Config
-from yark.yark import Archive
-from yark.yark import pypi
-from yark.yark import err_archive_not_found
+from yark.yark.archiver.archive import Archive
+from yark.yark.archiver.config import Config
 from yark.yark.archiver.logger import DownloadProgressLogger
-
-from colorama import Style
+from yark.yark.versioning import pypi
 
 
 def new(args):
-    Archive.new(Path(args.name), args.url)
+    Archive(Path(args.name), args.url)
 
 
 def refresh(args):
@@ -46,11 +41,15 @@ def view(args):
         path = Path(args.name)
 
         if not path.exists():
-            err_archive_not_found()
+            archive._err_archive_not_found()
 
-        browser.open_with_archive(args.name)
+    # TODO: Browser opening segment is possibly to be removed due to yark-pages introduction,
+    #       ponder if CLI should be a entrypoint
+    """
+       browser.open_with_archive(args.name)
     else:
-        browser.open_general()
+       browser.open_general()
+    """
 
 
 def report(args):
@@ -107,6 +106,8 @@ def entry(args):
     try:
         pypi.check_version_upstream()
     except Exception as err:
+        # TODO: Address logging uniformization and replace here with the right usage
+        """
         logger.err_msg(
             f"Error: Failed to check for new Yark version, info:\n"
             + Style.NORMAL
@@ -114,6 +115,9 @@ def entry(args):
             + Style.BRIGHT,
             True,
         )
+        """
+
+        pass
 
     # Parse CLI args and take actions
     args = parse_args(args)
