@@ -3,7 +3,7 @@
 	import type { Archive } from '$lib/archive';
 	import LoadListArchive from './LoadListArchive.svelte';
 
-	export let count: number = 4;
+	export let count: number = 5;
 
 	/**
 	 * Gets most recent archives up to the count

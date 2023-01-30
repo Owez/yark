@@ -13,7 +13,6 @@
 		title="Load Existing"
 		description="Manage/view an existing archive that you've already created"
 		ballKind={1}
-		width={`${18 * 2 + 6 + 0.1}rem`}
 	>
 		<h2>Archive Folder</h2>
 		<Dropzone bind:path />

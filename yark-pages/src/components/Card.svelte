@@ -1,40 +1,37 @@
 <script lang="ts">
-	export let overflow: boolean = false;
-	export let startCard: boolean = true;
-	export let startCardHalf: boolean = true;
+	import { StartCardState } from '$lib/components';
+
+	export let margin: string = '0 0 0 0';
+	export let startCard: StartCardState = StartCardState.None;
 </script>
 
-<div class="card" class:overflow class:start-card={startCard} class:start-card-half={startCardHalf}>
+<div
+	style:margin
+	class="card"
+	class:start-card-full={startCard == StartCardState.Full}
+	class:start-card-half={startCard == StartCardState.Half}
+>
 	<slot />
 </div>
 
 <style lang="scss">
-	$start-card-height-full: 70vh;
-	$margin: 1.5rem;
-
 	.card {
-		margin: $margin;
 		border: 1px solid rgba($color: #000000, $alpha: 0.12);
 		border-radius: 15px;
 		padding: 1.5rem;
 		padding-bottom: 0;
+		box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 	}
 
-	.overflow {
-		overflow-y: auto;
-	}
-
-	.default {
-		width: 10rem;
-		height: 10rem;
-	}
-
-	.start-card {
+	@mixin start-card {
 		width: 18rem;
-		height: $start-card-height-full;
+	}
+
+	.start-card-full {
+		@include start-card();
 	}
 
 	.start-card-half {
-		height: calc($start-card-height-full / 2 - $margin);
+		@include start-card();
 	}
 </style>
