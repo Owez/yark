@@ -2,7 +2,7 @@
 Yark
 ====
 
-YouTube archiving made simple.
+YouTube archiving made simple (Library)
 
-Beware that using Yark as a library is currently experimental and breaking changes here are not tracked!
+TODO: talk about difference between library and main
 """
