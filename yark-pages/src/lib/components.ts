@@ -1,4 +1,6 @@
-/** Component states and configuration used inside of Svelte guts */
+/**
+ * Component states and configuration used inside of Svelte guts
+ */
 
 /**
  * Status of if a card should be a start card

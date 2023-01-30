@@ -1,15 +1,35 @@
-/** Connector to the official Yark REST API for interfacing */
+/**
+ * Connector to the official Yark REST API for interfacing
+ */
 
 import { goto } from "$app/navigation";
+import type { FederatedBaseUrl } from "./federated";
 import { yarkStore } from "./store";
+
+/**
+ * Type alias for archive paths
+ * 
+ * - Includes full `/x/y/z` if local
+ * - Includes only archive name (or local path) if federated
+ */
+export type ArchivePath = string;
 
 /**
  * Archive with contains data about a playlist/channel
  */
 export class Archive {
-    path: string;
+    /**
+     * Base URL of this archive, if this is null it's a local archive
+     */
+    base: FederatedBaseUrl | null;
+    /**
+     * Path to this archive, see {@link ArchivePath}
+     */
+    path: ArchivePath;
+    // TODO: heartbeat
 
-    constructor(path: string) {
+    constructor(path: ArchivePath, base?: FederatedBaseUrl) {
+        this.base = base ?? null;
         this.path = path;
     }
 
