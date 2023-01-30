@@ -1,0 +1,20 @@
+// Basic global styling properties
+
+// Font settings for all
+:root {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+// Variable inter font (if supported)
+@supports (font-variation-settings: normal) {
+    :root {
+        font-family: 'Inter var', sans-serif;
+    }
+}
+
+// Optional invisible links
+a.invis {
+    text-decoration: none;
+    color: inherit;
+}
