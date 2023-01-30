@@ -7,6 +7,7 @@
 
 	/**
 	 * Gets most recent archives up to the count
+	 * @param recents Archive list to use in computation
 	 */
 	function getArchives(recents: Archive[]): Archive[] {
 		return recents.slice().reverse().slice(0, count);

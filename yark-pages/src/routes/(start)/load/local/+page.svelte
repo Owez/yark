@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { loadArchive } from '$lib/archive';
-	import Dropzone from '../../../components/Dropzone.svelte';
-	import LoadList from '../../../components/start/LoadList.svelte';
-	import StartCard from '../../../components/start/StartCard.svelte';
+	import Dropzone from '../../../../components/Dropzone.svelte';
+	import LoadList from '../../../../components/start/LoadList.svelte';
+	import StartCard from '../../../../components/start/StartCard.svelte';
 
 	let path: string;
 	$: loadArchive(path);

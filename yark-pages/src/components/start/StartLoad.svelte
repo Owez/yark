@@ -6,7 +6,7 @@
 <StartCard
 	title="Load Existing"
 	description="Manage/view an existing archive that you've already created"
-	link="/load"
+	href="/load/local"
 	ballKind={1}
 >
 	<div class="list"><LoadList /></div>

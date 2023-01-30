@@ -5,8 +5,9 @@
 <StartCard
 	title="Create Local"
 	description="Create an archive from scratch to save your channels + playlists"
-	link="/create/local"
+	href="/create/local"
 	ballKind={0}
+	half
 >
 	<p class="update">Stay tuned for more..</p>
 </StartCard>

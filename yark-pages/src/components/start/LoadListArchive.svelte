@@ -31,7 +31,7 @@
 </script>
 
 <button on:click={() => loadArchive(archive.path)}>
-	<p>{archive.getName()}</p>
+	<p class="archive-name">{archive.getName()}</p>
 	{#await checkArchiveExists(archive) then exists}
 		{#if !exists}
 			<p title="This isn't a valid archive">❌</p>
@@ -58,5 +58,12 @@
 		background-color: transparent;
 		display: flex;
 		justify-content: space-between;
+	}
+
+	.archive-name {
+		max-width: 15rem;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 </style>
