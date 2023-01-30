@@ -3,6 +3,7 @@
 from pathlib import Path
 from colorama import Style, Fore
 import sys
+import os
 import threading
 import webbrowser
 from .errors import ArchiveNotFoundException
@@ -205,35 +206,95 @@ def _cli() -> None:
 
     # View
     elif args[0] == "view":
+        archive_name: Optional[str]
+        archive_name = None
 
-        def launch() -> None:
+        def launch(config: Config) -> None:
             """Launches viewer"""
             app = viewer()
-            threading.Thread(target=lambda: app.run(port=7667)).run()
+            threading.Thread(target=lambda: app.run(port=config.bind_port, host=config.bind_host)).run()
 
         # More help
         if len(args) == 2 and args[1] == "--help":
-            _err_no_help()
+            print(
+                f"yark view [name] [args?]\n\n  Launches offline archive viewer website, optionally opening a webbrowser\n  to view a specific archive.\n\nArguments:\n  --disable-webbrowser  Disabled the automatic opening of a web browser\n  --host=[host/ip]      Bind to specific IP or hostname\n  --port=[port number]  Bind to a different port number than the default 7667\n\n Example:\n  $ yark view\n  $ yark view demo\n  $ yark view demo --disable-webbrowser --host=0.0.0.0 --port=8080"
+            )
+            sys.exit(0)
 
-        # Start on archive name
+        # Figure out configuration
+        config = Config()
         if len(args) > 1:
-            # Get name
-            archive_name = args[1]
 
-            # Jank archive check
-            if not Path(archive_name).exists():
-                _err_archive_not_found()
+            def parse_value(config_arg: str) -> str:
+                return config_arg.split("=")[1]
 
-            # Launch and start browser
-            print(f"Starting viewer for {archive_name}..")
-            webbrowser.open(f"http://127.0.0.1:7667/archive/{archive_name}/videos")
-            launch()
+            def parse_port_int(config_arg: str) -> int:
+                """Tries to parse a port number input"""
+                port = parse_value(config_arg)
+                try:
+                    portInt = int(port)
+                    if portInt < 1 or portInt > 65535:
+                        raise Exception("invalid port number")
+                    return portInt
+                except Exception:
+                    print(HELP, file=sys.stderr)
+                    _log_err(
+                        f"\nError: The value '{port}' isn't a valid port number"
+                    )
+                    sys.exit(1)
 
-        # Start on archive finder
-        else:
-            print("Starting viewer..")
-            webbrowser.open("http://127.0.0.1:7667/")
-            launch()
+            # Go through each configuration argument
+            for config_idx in range(1, len(args)):
+                config_arg = args[config_idx]
+
+                # Custom bind host
+                if config_arg.startswith("--host="):
+                    config.bind_host = parse_value(config_arg)
+
+                # Custom bind port
+                elif config_arg.startswith("--port="):
+                    config.bind_port = parse_port_int(config_arg)
+
+                # Disable open in webbrowser behaviour
+                elif config_arg.startswith("--disable-webbrowser"):
+                    config.open_in_webbrowser = False
+
+                # Unknown argument
+                else:
+                    # if config_idx is 1 (first parameter could be name of archive)
+                    if config_idx == 1:
+                        archive_name = config_arg
+                    else:
+                        print(HELP, file=sys.stderr)
+                        _log_err(
+                            f"\nError: Unknown configuration '{config_arg}' provided for archive view"
+                        )
+                        sys.exit(1)
+
+        # Submit config settings
+        config.submit()
+
+        if config.open_in_webbrowser:
+            if archive_name is not None:
+                try:
+                    if not Path(archive_name).exists():
+                        raise ArchiveNotFoundException("Archive doesn't exist, please make sure you typed it's name correctly!")
+
+                    url = config.browser_url(archive_name)
+
+                    print(f"Starting viewer for {url}..")
+                    webbrowser.open(url)
+
+                except ArchiveNotFoundException as exception:
+                    _log_err(exception)
+                    sys.exit(1)
+            else:
+                url = config.browser_url(archive_name)
+
+                print(f"Starting viewer for {url}..")
+                webbrowser.open(url)
+
+        launch(config)
 
     # Report
     elif args[0] == "report":
