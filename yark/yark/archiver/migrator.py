@@ -1,7 +1,7 @@
 """Migrator for old versions of archives to new ones"""
 
 from pathlib import Path
-from colorama import Fore, Style
+from colorama import Style
 import sys
 from .converter import Converter
 from typing import Any

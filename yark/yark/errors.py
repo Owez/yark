@@ -1,7 +1,5 @@
 """Exceptions and error functions"""
 
-from colorama import Style, Fore
-import sys
 from pathlib import Path
 
 

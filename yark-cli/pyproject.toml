@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "yark-cli"
+version = "0.1.0"
+description = "YouTube archiving made simple (Command-line)"
+authors = ["Owen Griffiths <root@ogriffiths.com>"]
+maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"] # TODO: fix email, giving regex error
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/owez/yark"
+classifiers = [
+    "Private :: Do not Upload",
+] # NOTE: work around for poetry #1537 <https://github.com/python-poetry/poetry/issues/1537>
+packages = [{ include = "yark_cli" }] # TODO: check if this is needed
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+yark = { path = "../yark/" }
+colorama = "^0.4.6"
+yt-dlp = "^2023.1.2"
+requests = "^2.28.1"
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^0.991"
+poethepoet = "^0.17.1"
+types-urllib3 = "^1.26.25.4"
+types-colorama = "^0.4.15.4"
+types-requests = "^2.28.11.7"
+black = "^22.12.0"
+
+[tool.poetry.scripts]
+yark = "yark_cli:cli"
+
+[tool.poe.tasks]
+lint = { shell = "set -e && mypy yark --strict && pylint yark" }
+fmt = "black yark"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
