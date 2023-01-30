@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { loadArchive } from '$lib/yark';
+	import { loadArchive } from '$lib/archive';
 	import Dropzone from '../../../components/Dropzone.svelte';
 	import LoadList from '../../../components/start/LoadList.svelte';
 	import StartCard from '../../../components/start/StartCard.svelte';

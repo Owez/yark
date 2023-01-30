@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { yarkStore } from '$lib/store';
-	import type { Archive } from '$lib/yark';
+	import type { Archive } from '$lib/archive';
 	import LoadListArchive from './LoadListArchive.svelte';
 
 	export let count: number = 4;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { loadArchive } from '$lib/yark';
+	import { loadArchive } from '$lib/archive';
 	import { open } from '@tauri-apps/api/dialog';
 	import { listen } from '@tauri-apps/api/event';
 

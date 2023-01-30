@@ -3,7 +3,7 @@
  */
 
 import { writable } from "svelte/store";
-import { Archive, type ArchivePojo } from "./yark";
+import { Archive, type ArchivePojo } from "./archive";
 
 /**
  * Core store interface which automatically saves into `localStorage` if browser is present

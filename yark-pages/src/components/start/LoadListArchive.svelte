@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { loadArchive, type Archive } from '$lib/yark';
+	import { loadArchive, type Archive } from '$lib/archive';
 	import { readDir } from '@tauri-apps/api/fs';
 
 	export let archive: Archive;

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Ball from '../Ball.svelte';
 	import Card from '../Card.svelte';
 	import StartCardHeader from './StartCardHeader.svelte';
 
