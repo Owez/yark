@@ -1,4 +1,5 @@
 """Specification file for building Yark using PyInstaller"""
+# TODO: fix spec file, currently links to launcher
 
 block_cipher = None
 

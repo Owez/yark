@@ -3,14 +3,14 @@ name = "yark-cli"
 version = "0.1.0"
 description = "YouTube archiving made simple (Command-line)"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
-maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"]
+maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"] # TODO: fix email, giving regex error
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/owez/yark"
 classifiers = [
     "Private :: Do not Upload",
 ] # NOTE: work around for poetry #1537 <https://github.com/python-poetry/poetry/issues/1537>
-packages = [{ include = "yark_cli" }]
+packages = [{ include = "yark_cli" }] # TODO: check if this is needed
 
 
 [tool.poetry.dependencies]
