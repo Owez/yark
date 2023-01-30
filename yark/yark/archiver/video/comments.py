@@ -2,8 +2,6 @@
 # TODO: check new parent system works
 
 from __future__ import annotations
-import multiprocessing
-from functools import partial
 from typing import Optional, Any, TYPE_CHECKING
 from ..comment_author import CommentAuthor
 from ..element import Element

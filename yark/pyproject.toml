@@ -3,6 +3,7 @@ name = "yark"
 version = "1.2.4"
 description = "YouTube archiving made simple (Library)"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
+maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/owez/yark"
@@ -21,9 +22,6 @@ types-colorama = "^0.4.15.4"
 types-requests = "^2.28.11.8"
 black = "^22.12.0"
 pylint = "^2.15.10"
-
-[tool.poetry.scripts]
-yark = "yark.cli:_cli"
 
 [tool.poe.tasks]
 lint = { shell = "set -e && mypy yark --strict && pylint yark" }

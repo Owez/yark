@@ -1,7 +1,6 @@
 from __future__ import annotations
 from .element import Element
 from .video.image import Image
-from ..utils import IMAGE_AUTHOR_ICON
 from typing import TYPE_CHECKING, Any
 from dataclasses import dataclass
 from .video.image import image_element_from_archive
