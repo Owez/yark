@@ -45,6 +45,10 @@ export class FederateServer {
     }
 }
 
+/**
+ * Finds federated servers by contacting the remote discovery system
+ * @returns Federated servers which have been discovered
+ */
 export async function findFederated(): Promise<FederateServer[]> {
     fetch("http://127.0.0.1:7666/federated").then(resp => resp.json()).then((data) => {
         console.log(data)

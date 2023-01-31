@@ -24,22 +24,12 @@
 		description="Manage/view an existing archive that you've already created"
 		ballKind={1}
 		state={StartCardState.Max}
-		margin="1.5rem 0 3rem 0"
 	>
-		<h2>Import Folder</h2>
+		<h2 class="card-heading">Import Folder</h2>
 		<Dropzone bind:path />
 		{#if anyRecents($yarkStore)}
-			<h2>Recent</h2>
+			<h2 class="card-heading">Recent</h2>
 			<LoadList count={10} />
 		{/if}
 	</StartCard>
 </div>
-
-<style lang="scss">
-	h2 {
-		margin: 0;
-		font-size: small;
-		font-weight: 400;
-		color: rgb(99, 99, 99);
-	}
-</style>

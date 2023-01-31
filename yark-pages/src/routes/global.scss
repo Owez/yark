@@ -24,3 +24,11 @@ a.invis {
     display: flex;
     justify-content: center;
 }
+
+// Small heading to designate a section within a card component
+.card-heading {
+    margin: 0;
+    font-size: small;
+    font-weight: 400;
+    color: rgb(99, 99, 99);
+}

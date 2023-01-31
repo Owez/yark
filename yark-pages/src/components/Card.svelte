@@ -3,6 +3,11 @@
 
 	export let margin: string = '0 0 0 0';
 	export let startCard: StartCardState = StartCardState.None;
+
+	// Set the typical start card max margin automatically
+	if (startCard == StartCardState.Max) {
+		margin = '1.5rem 0 3rem 0';
+	}
 </script>
 
 <div
