@@ -8,7 +8,7 @@
 <div
 	style:margin
 	class="card"
-	class:start-card={startCard == StartCardState.Enabled}
+	class:start-card-normal={startCard == StartCardState.Enabled}
 	class:start-card-max={startCard == StartCardState.Max}
 >
 	<slot />
@@ -26,11 +26,19 @@
 		box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 	}
 
-	.start-card {
+	@mixin start-card {
+		flex-shrink: 0;
+	}
+
+	.start-card-normal {
+		@include start-card();
+
 		width: $start-card-width;
 	}
 
 	.start-card-max {
+		@include start-card();
+
 		$bodge: 2px;
 		$padding: $start-card-margin * 2;
 		width: calc($start-card-width * 2 + $start-card-margin + $padding + $bodge);

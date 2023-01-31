@@ -31,6 +31,7 @@ function yarkStoreInitial(): YarkStore {
         interface YarkStorePojo {
             recents: ArchivePojo[],
             openedArchive: ArchivePojo | null
+            federatedAccept: boolean
         }
 
         // Parse the stringified JSON into the Yark store pojo
@@ -39,12 +40,13 @@ function yarkStoreInitial(): YarkStore {
         // Parse into final value and return
         return {
             recents: yarkStorePojo.recents.map(archivePojo => Archive.fromPojo(archivePojo)),
-            openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null
+            openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null,
+            federatedAccept: yarkStorePojo.federatedAccept
         }
     }
 
     // Return the default value if we couldn't get and decode an existing one
-    return { recents: [], openedArchive: null }
+    return { recents: [], openedArchive: null, federatedAccept: false }
 }
 
 /**
@@ -59,4 +61,8 @@ export interface YarkStore {
      * Currently-opened archive user is using
      */
     openedArchive: Archive | null
+    /**
+     * If the user accepted to view the potentially bad content on the federated listings
+     */
+    federatedAccept: boolean
 }
