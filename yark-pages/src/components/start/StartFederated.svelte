@@ -6,8 +6,8 @@
 <StartCard
 	title="Connect"
 	description="View someone else's federated archive server"
-	href="/load/connect"
+	href="/load/federated"
 	ballKind={2}
-	state={StartCardState.Half}
+	state={StartCardState.Enabled}
 	margin="1.5rem 0 0 0"
 />

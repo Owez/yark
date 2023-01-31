@@ -18,3 +18,9 @@ a.invis {
     text-decoration: none;
     color: inherit;
 }
+
+// Centre element horizontally on the page
+.centre-h {
+    display: flex;
+    justify-content: center;
+}

@@ -9,12 +9,13 @@
 	$: loadArchive(path);
 </script>
 
-<div class="container">
+<div class="centre-h">
 	<StartCard
 		title="Load Existing"
 		description="Manage/view an existing archive that you've already created"
 		ballKind={1}
 		state={StartCardState.Max}
+		margin="1.5rem 0 3rem 0"
 	>
 		<h2>Archive Folder</h2>
 		<Dropzone bind:path />
@@ -24,15 +25,6 @@
 </div>
 
 <style lang="scss">
-	.container {
-		$margin-v: 1.5rem;
-
-		display: flex;
-		justify-content: center;
-		margin-top: $margin-v;
-		margin-bottom: $margin-v * 2;
-	}
-
 	h2 {
 		margin: 0;
 		font-size: small;
