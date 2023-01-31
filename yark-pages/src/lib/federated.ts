@@ -21,11 +21,19 @@ export class FederateServer {
      * Archive paths that this server advertises
      */
     archives: ArchivePath[];
-    // TODO: heartbeat
+    /**
+     * Last known activity from this server
+     */
+    heartbeat: Date;
 
-    constructor(base: FederatedBaseUrl, archives: ArchivePath[]) {
+    constructor(base: FederatedBaseUrl, archives: ArchivePath[], heartbeat: Date | string) {
         this.base = base;
         this.archives = archives;
+        if (typeof heartbeat == "string") {
+            this.heartbeat = new Date(heartbeat);
+        } else {
+            this.heartbeat = heartbeat;
+        }
     }
 
     /**

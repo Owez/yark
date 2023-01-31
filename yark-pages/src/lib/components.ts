@@ -11,11 +11,11 @@ export enum StartCardState {
      */
     None,
     /**
-     * It should be a full-size start card
+     * It should be a typical start card
      */
-    Full,
+    Enabled,
     /**
-     * It should be a half-height start card
+     * It should be a maximized card with a sizable view-width
      */
-    Half
+    Max
 }

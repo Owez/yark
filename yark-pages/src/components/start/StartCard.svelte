@@ -8,7 +8,7 @@
 		'This is an example of a start card which is part of the Yark design';
 	export let href: string = '/';
 	export let ballKind: number;
-	export let state: StartCardState = StartCardState.Full;
+	export let state: StartCardState = StartCardState.Enabled;
 	export let margin: string | undefined = undefined;
 </script>
 
