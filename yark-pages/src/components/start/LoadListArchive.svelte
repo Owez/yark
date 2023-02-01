@@ -58,6 +58,7 @@
 		background-color: transparent;
 		display: flex;
 		justify-content: space-between;
+		cursor: pointer;
 	}
 
 	.archive-name {

@@ -6,7 +6,7 @@
 <StartCard
 	title="Create"
 	description="Create an archive from scratch to save your channels + playlists"
-	href="/create/local"
+	href="/create"
 	ballKind={0}
-	state={StartCardState.Half}
+	state={StartCardState.Enabled}
 />
