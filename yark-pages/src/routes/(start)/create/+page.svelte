@@ -3,7 +3,12 @@
 	import StartCard from '../../../components/start/StartCard.svelte';
 
 	let url: string | undefined;
+	let name: string | undefined;
+
 	let urlCompletelyInvalid: boolean = false;
+	let nameCompletelyInvalid: boolean = false;
+	let urlExpand: boolean = false;
+	let saveDirectory: string | null = null;
 
 	/**
 	 * Checks if the input url is currently a channel
@@ -72,8 +77,19 @@
 	}
 
 	function checkUrlValidity(url: string | undefined): [string | undefined, boolean] {
+		// Contract the url checks and return if its undefined
+		if (url == undefined || url == '') {
+			urlExpand = false;
+			return [undefined, true];
+		}
+
+		// Fix the url up before we check
 		const fixedUrl = fixUrl(url);
+
+		// Check if it's incorrect
 		let isIncorrect = !(urlIsChannel(fixedUrl) || urlIsPlaylist(fixedUrl));
+
+		// Return
 		return [fixedUrl, isIncorrect];
 	}
 </script>
@@ -85,6 +101,24 @@
 		ballKind={0}
 		state={StartCardState.Max}
 	>
+		<h2 class="card-heading">Destination</h2>
+		<button class="bright">
+			{#if saveDirectory == null}
+				Choose Folder
+			{:else}
+				{saveDirectory}
+			{/if}
+		</button>
+		<span class="slash-indicator">/</span>
+		<input
+			type="text"
+			name="create-name"
+			placeholder="e.g. foobar"
+			class="mini"
+			bind:value={name}
+			on:focusout={() => (nameCompletelyInvalid = name == undefined || name == '')}
+			class:invalid={nameCompletelyInvalid}
+		/>
 		<h2 class="card-heading">YouTube URL</h2>
 		<input
 			type="text"
@@ -94,14 +128,17 @@
 			bind:value={url}
 			on:keydown={() => (urlCompletelyInvalid = false)}
 			on:focusout={() => ([url, urlCompletelyInvalid] = checkUrlValidity(url))}
+			on:focusin={() => (urlExpand = true)}
 			class:invalid={urlCompletelyInvalid}
 		/>
-		<div class="url-types">
-			<button class="url-type" class:active={urlIsChannel(url)}>Channel</button>
-			<button class="url-type" class:active={urlIsPlaylist(url)}>Playlist</button>
-		</div>
-		<h2 class="card-heading">Save To</h2>
-		<!-- TODO -->
+		{#if urlExpand}
+			<div class="url-types">
+				<div class="url-type" class:active={urlIsChannel(url)}>Channel</div>
+				<div class="url-type" class:active={urlIsPlaylist(url)}>Playlist</div>
+			</div>
+		{/if}
+		<h2 class="card-heading">Continue</h2>
+		<button class="bright bottom-element">Start Download</button>
 	</StartCard>
 </div>
 
@@ -114,6 +151,7 @@
 
 	.url-types {
 		display: flex;
+		margin-bottom: 1rem;
 	}
 
 	.url-type {
@@ -121,11 +159,14 @@
 
 		width: calc($full-width / 2 + 4.5px);
 		height: 1.8rem;
-		background-color: transparent;
 		border: 1px solid rgba($color: #000000, $alpha: 0.12);
 		border-radius: 5px;
 		margin-right: $spacing;
 		color: gray;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		font-size: 0.7rem;
 	}
 
 	.active {
@@ -137,5 +178,9 @@
 
 	.invalid {
 		border: 1px solid rgb(217, 89, 89);
+	}
+
+	.bottom-element {
+		margin-bottom: 1.5rem;
 	}
 </style>

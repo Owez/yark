@@ -9,7 +9,7 @@
 	 * Gets file from tauri dialog and pipes into the path prop
 	 */
 	async function getFile() {
-		const gotPath = await open();
+		const gotPath = await open({ directory: true });
 		if (gotPath == null) {
 			return;
 		} else if (Array.isArray(gotPath)) {

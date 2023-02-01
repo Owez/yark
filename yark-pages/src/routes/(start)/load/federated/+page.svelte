@@ -31,7 +31,7 @@
 			placeholder="URL"
 			bind:value={base}
 		/>
-		<span class="direct-url-slash"> / </span>
+		<span class="slash-indicator">/</span>
 		<input
 			type="text"
 			name="direct-name"
@@ -49,10 +49,6 @@
 </div>
 
 <style lang="scss">
-	.direct-url-slash {
-		color: rgb(133, 133, 133);
-	}
-
 	.bottom-element {
 		margin-bottom: 1.5rem;
 	}
