@@ -60,6 +60,11 @@ input[type=text] {
     @include input();
 
     min-width: 15rem;
+
+    &.mini {
+        min-width: unset;
+        width: 5rem;
+    }
 }
 
 // Major continue button

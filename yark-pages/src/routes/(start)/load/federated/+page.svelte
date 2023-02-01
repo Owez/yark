@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { loadArchive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import StartCard from '../../../../components/start/StartCard.svelte';
 
@@ -10,6 +11,9 @@
 	// function shouldShowConsent(store: YarkStore): boolean {
 	// 	return !store.federatedAccept;
 	// }
+
+	let base: string;
+	let name: string;
 </script>
 
 <div class="centre-h">
@@ -20,8 +24,23 @@
 		state={StartCardState.Max}
 	>
 		<h2 class="card-heading">Direct Connect</h2>
-		<input type="text" name="direct-url" id="direct-url" placeholder="e.g. https://example.com" />
-		<button class="bright bottom-element">Connect</button>
+		<input
+			type="text"
+			name="direct-url"
+			id="direct-url"
+			placeholder="Server URL"
+			bind:value={base}
+		/>
+		<span class="direct-url-slash"> / </span>
+		<input
+			type="text"
+			name="direct-name"
+			id="direct-name"
+			class="mini"
+			placeholder="Name"
+			bind:value={name}
+		/>
+		<button class="bright bottom-element" on:click={() => loadArchive(name, base)}>Connect</button>
 		<!-- NOTE: uncomment if discovery is implemented -->
 		<!-- {#if shouldShowConsent($yarkStore)}
 		{:else}
@@ -30,6 +49,10 @@
 </div>
 
 <style lang="scss">
+	.direct-url-slash {
+		color: rgb(132, 132, 132);
+	}
+
 	.bottom-element {
 		margin-bottom: 1.5rem;
 	}
