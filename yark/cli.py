@@ -217,7 +217,7 @@ def _cli() -> None:
         # More help
         if len(args) == 2 and args[1] == "--help":
             print(
-                f"yark view [name] [args?]\n\n  Launches offline archive viewer website, optionally opening a webbrowser\n  to view a specific archive.\n\nArguments:\n  --disable-webbrowser  Disabled the automatic opening of a web browser\n  --host=[host/ip]      Bind to specific IP or hostname\n  --port=[port number]  Bind to a different port number than the default 7667\n\n Example:\n  $ yark view\n  $ yark view demo\n  $ yark view demo --disable-webbrowser --host=0.0.0.0 --port=8080"
+                f"yark view [name] [args?]\n\n  Launches offline archive viewer website, optionally opening a webbrowser\n  to view a specific archive.\n\nArguments:\n  --headless            Disabled the automatic opening of a web browser\n  --host=[host/ip]      Bind to specific IP or hostname\n  --port=[port number]  Bind to a different port number than the default 7667\n\n Example:\n  $ yark view\n  $ yark view demo\n  $ yark view demo --headless --host=0.0.0.0 --port=8080"
             )
             sys.exit(0)
 
@@ -256,14 +256,17 @@ def _cli() -> None:
                     config.bind_port = parse_port_int(config_arg)
 
                 # Disable open in webbrowser behaviour
-                elif config_arg.startswith("--disable-webbrowser"):
-                    config.open_in_webbrowser = False
+                elif config_arg.startswith("--headless"):
+                    config.headless = True
 
                 # Unknown argument
                 else:
-                    # if config_idx is 1 (first parameter could be name of archive)
+                    # If config_idx is 1 (first parameter could be name of archive)
                     if config_idx == 1:
                         archive_name = config_arg
+                    
+                    # If config_idx is not 1 
+                    # (not the first parameter, wasn't parsed earlier, must be an invalid parameter)
                     else:
                         print(HELP, file=sys.stderr)
                         _log_err(
@@ -274,26 +277,19 @@ def _cli() -> None:
         # Submit config settings
         config.submit()
 
-        if config.open_in_webbrowser:
-            if archive_name is not None:
-                try:
-                    if not Path(archive_name).exists():
-                        raise ArchiveNotFoundException("Archive doesn't exist, please make sure you typed it's name correctly!")
+        # Check if running headless, if not then we open a webbrowser for the user
+        if not config.headless:
+            # If the archive_name was specified
+            if archive_name is not None and not Path(archive_name).exists():
+                _log_err(
+                    f"\nError: Archive doesn't exist '{archive_name}', please make sure you typed it's name correctly"
+                )
+                sys.exit(1)
 
-                    url = config.browser_url(archive_name)
+            # Open the webbrowser to the specified archive (or main page if no archive is specified)
+            config.open_webbrowser(archive_name)
 
-                    print(f"Starting viewer for {url}..")
-                    webbrowser.open(url)
-
-                except ArchiveNotFoundException as exception:
-                    _log_err(exception)
-                    sys.exit(1)
-            else:
-                url = config.browser_url(archive_name)
-
-                print(f"Starting viewer for {url}..")
-                webbrowser.open(url)
-
+        # Launch HTTP server and block until finished
         launch(config)
 
     # Report
