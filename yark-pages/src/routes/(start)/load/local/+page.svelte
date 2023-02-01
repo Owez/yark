@@ -21,7 +21,7 @@
 <div class="centre-h">
 	<StartCard
 		title="Load Existing"
-		description="Manage/view an existing archive that you've already created"
+		description="Manage or view an archive that's already been made"
 		ballKind={1}
 		state={StartCardState.Max}
 	>

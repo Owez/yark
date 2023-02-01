@@ -23,6 +23,7 @@
 	// NOTE: this is what you need to do because of a bad tauri implementation
 	// 		 see #2768 <https://github.com/tauri-apps/tauri/issues/2768>
 	//       see #4736 <https://github.com/tauri-apps/tauri/discussions/4736>
+	// TODO: fix error where it loads like 5 times
 	listen('tauri://file-drop', (event) => {
 		const payload = event.payload as string[];
 		const path = payload[0];

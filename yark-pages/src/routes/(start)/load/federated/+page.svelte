@@ -19,16 +19,16 @@
 <div class="centre-h">
 	<StartCard
 		title="Connect"
-		description="View someone else's federated archive server"
+		description="Connect to a remote federated archive server"
 		ballKind={2}
 		state={StartCardState.Max}
 	>
-		<h2 class="card-heading">Direct Connect</h2>
+		<h2 class="card-heading">Remote Server</h2>
 		<input
 			type="text"
 			name="direct-url"
 			id="direct-url"
-			placeholder="Server URL"
+			placeholder="URL"
 			bind:value={base}
 		/>
 		<span class="direct-url-slash"> / </span>
@@ -50,7 +50,7 @@
 
 <style lang="scss">
 	.direct-url-slash {
-		color: rgb(132, 132, 132);
+		color: rgb(133, 133, 133);
 	}
 
 	.bottom-element {

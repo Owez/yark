@@ -4,8 +4,8 @@
 </script>
 
 <StartCard
-	title="Create"
-	description="Create an archive from scratch to save your channels + playlists"
+	title="Create Local"
+	description="Create an archive from scratch to save channels/playlists"
 	href="/create"
 	ballKind={0}
 	state={StartCardState.Enabled}

@@ -5,7 +5,7 @@
 
 <StartCard
 	title="Connect"
-	description="View someone else's federated archive server"
+	description="Connect to a remote federated archive server"
 	href="/load/federated"
 	ballKind={2}
 	state={StartCardState.Enabled}
