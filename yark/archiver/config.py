@@ -123,10 +123,14 @@ class Config:
 
     def browser_url(self, archive_name: Optional[str]) -> str:
         """Returns the URL to be passed to the browser based on the host/port from the configuration"""
+        # Default URL returns 127.0.0.1 as the host
         bind_host = "127.0.0.1"
+
+        # If the bind_host config is set then change it from "127.0.0.1"
         if self.bind_host is not None:
             bind_host = self.bind_host
 
+        # If the archive_name is not set, then add it to the URL
         if archive_name is not None:
             return f"http://{bind_host}:{self.bind_port}/archive/{archive_name}/videos"
 
