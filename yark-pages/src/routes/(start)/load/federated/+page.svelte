@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { StartCardState } from '$lib/components';
-	import { yarkStore, type YarkStore } from '$lib/store';
 	import StartCard from '../../../../components/start/StartCard.svelte';
 
-	/**
-	 * Returns if the consent dialog should be shown to the user
-	 * @param store Yark store to check if it's been asked before
-	 */
-	function shouldShowConsent(store: YarkStore): boolean {
-		return !store.federatedAccept;
-	}
+	// NOTE: uncomment if discovery is implemented
+	// /**
+	//  * Returns if the consent dialog should be shown to the user
+	//  * @param store Yark store to check if it's been asked before
+	//  */
+	// function shouldShowConsent(store: YarkStore): boolean {
+	// 	return !store.federatedAccept;
+	// }
 </script>
 
 <div class="centre-h">
@@ -20,13 +20,17 @@
 		state={StartCardState.Max}
 	>
 		<h2 class="card-heading">Direct Connect</h2>
-		<input type="text" name="direct-url" id="direct-url" />
-		<button>Connect</button>
-		<h2 class="card-heading">Discover</h2>
-		{#if shouldShowConsent($yarkStore)}
-			<!-- TODO: consent -->
+		<input type="text" name="direct-url" id="direct-url" placeholder="e.g. https://example.com" />
+		<button class="bright bottom-element">Connect</button>
+		<!-- NOTE: uncomment if discovery is implemented -->
+		<!-- {#if shouldShowConsent($yarkStore)}
 		{:else}
-			<!-- TODO: discover listing -->
-		{/if}
+		{/if} -->
 	</StartCard>
 </div>
+
+<style lang="scss">
+	.bottom-element {
+		margin-bottom: 1.5rem;
+	}
+</style>

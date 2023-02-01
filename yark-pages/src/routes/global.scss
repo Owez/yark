@@ -3,7 +3,6 @@
 // Font settings for all
 :root {
     font-family: 'Inter', sans-serif;
-    line-height: 1.5;
 }
 
 // Variable inter font (if supported)
@@ -11,6 +10,11 @@
     :root {
         font-family: 'Inter var', sans-serif;
     }
+}
+
+// Overrule the reset css for line height
+body {
+    line-height: 1.5 !important;
 }
 
 // Optional invisible links
@@ -28,7 +32,49 @@ a.invis {
 // Small heading to designate a section within a card component
 .card-heading {
     margin: 0;
+    margin-top:0.5rem;
     font-size: small;
     font-weight: 400;
-    color: rgb(99, 99, 99);
+    color: rgb(79, 79, 79);
+}
+
+@mixin input {
+    $margin-v: 0.5rem;
+    $padding-h: 0.5rem;
+
+    height: 1.75rem;
+    border: 1px solid rgba(27, 31, 35, 0.15);
+    border-radius: 5px;
+    margin: 0;
+    margin-top: $margin-v;
+    margin-bottom: $margin-v;
+    padding: 0;
+    padding-left: $padding-h;
+    padding-right: $padding-h;
+    font-size: 0.8rem;
+    color: rgb(56, 56, 56);
+}
+
+// Input text styling
+input[type=text] {
+    @include input();
+
+    min-width: 15rem;
+}
+
+// Major continue button
+.bright {
+    @include input();
+
+    $padding-h: 0.65rem;
+
+    background-color: #FAFBFC;
+    box-shadow: rgba(27, 31, 35, 0.04) 0 1px 0, rgba(255, 255, 255, 0.25) 0 1px 0 inset;
+    padding-left: $padding-h;
+    padding-right: $padding-h;
+
+    &:hover {
+        background-color: #F3F4F6;
+        transition-duration: 0.1s;
+    }
 }
