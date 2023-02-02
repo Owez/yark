@@ -5,7 +5,7 @@ description = "YouTube archiving made simple (Library)"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"]
 license = "MIT"
-readme = "README.md"
+readme = "../README.md"
 repository = "https://github.com/owez/yark"
 
 [tool.poetry.dependencies]
