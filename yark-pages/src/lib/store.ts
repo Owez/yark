@@ -2,15 +2,21 @@
  * Store/LS utility types and functions
  */
 
-import { writable } from "svelte/store";
+import { readable, writable } from "svelte/store";
 import { Archive, type ArchivePojo } from "./archive";
+import { invoke } from "@tauri-apps/api";
 
 /**
- * Core store interface which automatically saves into `localStorage` if browser is present
+ * Main store interface which automatically saves into `localStorage` if browser is present
  */
 export const yarkStore = writable<YarkStore>(yarkStoreInitial())
 
-// Save all changes to the store into window
+/**
+ * Read-only store which contains the local secret to access the local API with
+ */
+export const localSecret = readable(getLocalSecret()); // TODO: make this work
+
+// Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
     window.localStorage.setItem("yarkStore", JSON.stringify(value))
 })
@@ -50,7 +56,7 @@ function yarkStoreInitial(): YarkStore {
 }
 
 /**
- * Complete map of the local store state which are expected for all sessions
+ * Main store containing everything that should be stored in `localStorage`
  */
 export interface YarkStore {
     /**
@@ -65,4 +71,12 @@ export interface YarkStore {
      * If the user accepted to view the potentially bad content on the federated listings
      */
     federatedAccept: boolean
+}
+
+/**
+ * Gets the local secret token for use inside of the API from the environment
+ * @returns Local secret token
+ */
+export function getLocalSecret(): Promise<string> {
+    return invoke("get_environment_variable", { name: "YARK_LOCAL_SECRET" })
 }
