@@ -3,7 +3,6 @@
 	import StartCard from '../../../components/start/StartCard.svelte';
 	import { open } from '@tauri-apps/api/dialog';
 	import { exists } from '@tauri-apps/api/fs';
-	import { fail } from '@sveltejs/kit';
 	import { truncate } from '$lib/utils';
 
 	let url: string | undefined;
@@ -150,11 +149,13 @@
 
 		// Get first path if multiple are selected
 		else if (Array.isArray(gotPath)) {
+			pathCompletelyInvalid = false;
 			path = gotPath[0];
 		}
 
 		// Get path if one is selected
 		else {
+			pathCompletelyInvalid = false;
 			path = gotPath;
 		}
 	}
