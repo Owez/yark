@@ -126,8 +126,8 @@
 	 * Validates all form elements
 	 * @returns If the form is valid or not
 	 */
-	function validate(): boolean {
-		const failed = !checkUrlValidity() || !checkPathValidity() || !checkNameValidity();
+	async function validate(): Promise<boolean> {
+		const failed = !checkUrlValidity() || !(await checkPathValidity()) || !checkNameValidity();
 		return !failed;
 	}
 
