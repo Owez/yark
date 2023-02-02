@@ -110,7 +110,7 @@
 	 * Checks that the path prop is valid
 	 */
 	async function checkPathValidity(): Promise<boolean> {
-		pathCompletelyInvalid = path == undefined || !(await exists(path));
+		pathCompletelyInvalid = path == undefined || path == '' || !(await exists(path));
 		return !pathCompletelyInvalid;
 	}
 
@@ -118,7 +118,7 @@
 	 * Checks that the name prop is valid
 	 */
 	function checkNameValidity(): boolean {
-		nameCompletelyInvalid = name == undefined;
+		nameCompletelyInvalid = name == undefined || name == '';
 		return !nameCompletelyInvalid;
 	}
 
