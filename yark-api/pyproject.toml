@@ -1,19 +1,16 @@
 [tool.poetry]
-name = "yark"
-version = "1.2.4"
-description = "YouTube archiving made simple (Library)"
+name = "yark-api"
+version = "0.1.0"
+description = "Official REST API for Yark archive management"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
-maintainers = ["NewWars <15692866+OriDevTeam@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/owez/yark"
+packages = [{ include = "yark_api" }]
 
 [tool.poetry.dependencies]
 python = "~3.11"
-requests = "^2.28.2"
-yt-dlp = "^2023.1.6"
-progress = "^1.6"
-colorama = "^0.4.6"
+click = "^8.1.3"
+aiohttp = "^3.8.3"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
@@ -28,5 +25,5 @@ lint = { shell = "set -e && mypy yark --strict && pylint yark" }
 fmt = "black yark"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
