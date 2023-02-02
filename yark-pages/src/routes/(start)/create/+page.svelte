@@ -47,7 +47,7 @@
 		}
 
 		// Check
-		return url.includes('?list=');
+		return url.includes('?list=') || url.includes('&list=');
 	}
 
 	/**
@@ -82,7 +82,7 @@
 	}
 
 	/**
-	 * Checks that the url is valid
+	 * Checks that the url prop is valid
 	 */
 	function checkUrlValidity(): boolean {
 		// Contract the url checks and return if its undefined
@@ -96,7 +96,7 @@
 		const fixedUrl = fixUrl(url);
 
 		// Check if it's incorrect
-		let isIncorrect = !(urlIsChannel(fixedUrl) || urlIsPlaylist(fixedUrl));
+		let isIncorrect = !(urlIsChannel(url) || urlIsPlaylist(url));
 
 		// Set values
 		url = fixedUrl;
@@ -107,28 +107,33 @@
 	}
 
 	/**
-	 * Checks that the path is valid
+	 * Checks that the path prop is valid
 	 */
 	async function checkPathValidity(): Promise<boolean> {
-		pathCompletelyInvalid = path != undefined && (await exists(path));
-		return pathCompletelyInvalid;
+		pathCompletelyInvalid = path == undefined || !(await exists(path));
+		return !pathCompletelyInvalid;
 	}
 
 	/**
-	 * Checks that the name is valid
+	 * Checks that the name prop is valid
 	 */
 	function checkNameValidity(): boolean {
-		nameCompletelyInvalid = name != undefined;
-		return nameCompletelyInvalid;
+		nameCompletelyInvalid = name == undefined;
+		return !nameCompletelyInvalid;
 	}
 
 	/**
-	 * Validates all form elements
+	 * Validates all relevant props
 	 * @returns If the form is valid or not
 	 */
 	async function validate(): Promise<boolean> {
-		const failed = !checkUrlValidity() || !(await checkPathValidity()) || !checkNameValidity();
-		return !failed;
+		// Check validity beforehand so or doesn't cancel it out
+		const urlValid = checkUrlValidity();
+		const pathValid = await checkPathValidity();
+		const nameValid = checkNameValidity();
+
+		// Return if they're all valid
+		return urlValid && pathValid && nameValid;
 	}
 
 	/**
@@ -157,9 +162,9 @@
 	/**
 	 * Uses the information provided in the inputs to try to create a new archive
 	 */
-	function createArchive() {
+	async function createArchive() {
 		// Validate the form
-		if (!validate()) {
+		if (!(await validate())) {
 			return;
 		}
 
