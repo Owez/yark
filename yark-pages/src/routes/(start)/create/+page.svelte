@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { StartCardState } from '$lib/components';
 	import StartCard from '../../../components/start/StartCard.svelte';
+	import { open } from '@tauri-apps/api/dialog';
+	import { exists } from '@tauri-apps/api/fs';
+	import { loadArchive } from '$lib/archive';
 
 	let url: string | undefined;
 	let name: string | undefined;
+	let path: string | undefined;
 
 	let urlCompletelyInvalid: boolean = false;
 	let nameCompletelyInvalid: boolean = false;
+	let pathCompletelyInvalid: boolean = false;
 	let urlExpand: boolean = false;
-	let saveDirectory: string | null = null;
 
 	/**
 	 * Checks if the input url is currently a channel
@@ -76,11 +80,16 @@
 		return newUrl;
 	}
 
-	function checkUrlValidity(url: string | undefined): [string | undefined, boolean] {
+	/**
+	 * Checks that the url is valid
+	 * @param url URL to check and change
+	 */
+	function checkUrlValidity() {
 		// Contract the url checks and return if its undefined
 		if (url == undefined || url == '') {
 			urlExpand = false;
-			return [undefined, true];
+			urlCompletelyInvalid = true;
+			return;
 		}
 
 		// Fix the url up before we check
@@ -89,8 +98,57 @@
 		// Check if it's incorrect
 		let isIncorrect = !(urlIsChannel(fixedUrl) || urlIsPlaylist(fixedUrl));
 
-		// Return
-		return [fixedUrl, isIncorrect];
+		// Set values
+		url = fixedUrl;
+		urlCompletelyInvalid = isIncorrect;
+	}
+
+	/**
+	 * Gets directory from tauri dialog and pipes into the path prop
+	 */
+	async function getDir() {
+		// Get path from tauri
+		const gotPath = await open({ directory: true });
+
+		// Invalid path
+		if (gotPath == null) {
+			pathCompletelyInvalid = true;
+		}
+
+		// Get first path if multiple are selected
+		else if (Array.isArray(gotPath)) {
+			path = gotPath[0];
+		}
+
+		// Get path if one is selected
+		else {
+			path = gotPath;
+		}
+	}
+
+	/**
+	 * Uses the information provided in the inputs to try to create a new archive
+	 */
+	function createArchive() {
+		// Check URL
+		checkUrlValidity();
+
+		// Check path
+		if (path == undefined) {
+			pathCompletelyInvalid = true;
+			return;
+		}
+
+		// Check name
+		else if (name == undefined) {
+			nameCompletelyInvalid = true;
+			return;
+		}
+
+		// TODO: send create request
+
+		// Load newly-created path
+		// TODO
 	}
 </script>
 
@@ -102,11 +160,11 @@
 		state={StartCardState.Max}
 	>
 		<h2 class="card-heading">Destination</h2>
-		<button class="bright">
-			{#if saveDirectory == null}
+		<button class="bright" on:click={getDir} class:invalid={pathCompletelyInvalid}>
+			{#if path == undefined}
 				Choose Folder
 			{:else}
-				{saveDirectory}
+				{path}
 			{/if}
 		</button>
 		<span class="slash-indicator">/</span>
@@ -127,7 +185,7 @@
 			placeholder="e.g. https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
 			bind:value={url}
 			on:keydown={() => (urlCompletelyInvalid = false)}
-			on:focusout={() => ([url, urlCompletelyInvalid] = checkUrlValidity(url))}
+			on:focusout={checkUrlValidity}
 			on:focusin={() => (urlExpand = true)}
 			class:invalid={urlCompletelyInvalid}
 		/>
@@ -138,7 +196,7 @@
 			</div>
 		{/if}
 		<h2 class="card-heading">Continue</h2>
-		<button class="bright bottom-element">Start Download</button>
+		<button class="bright bottom-element" on:click={createArchive}>Create Archive</button>
 	</StartCard>
 </div>
 

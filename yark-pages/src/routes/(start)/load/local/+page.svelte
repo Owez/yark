@@ -6,7 +6,7 @@
 	import LoadList from '../../../../components/start/LoadList.svelte';
 	import StartCard from '../../../../components/start/StartCard.svelte';
 
-	let path: string;
+	let path: string|undefined;
 	$: loadArchive(path);
 
 	/**

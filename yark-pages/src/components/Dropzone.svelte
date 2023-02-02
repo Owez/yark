@@ -3,12 +3,12 @@
 	import { open } from '@tauri-apps/api/dialog';
 	import { listen } from '@tauri-apps/api/event';
 
-	export let path: string;
+	export let path: string | undefined;
 
 	/**
-	 * Gets file from tauri dialog and pipes into the path prop
+	 * Gets directory from tauri dialog and pipes into the path prop
 	 */
-	async function getFile() {
+	async function getDir() {
 		const gotPath = await open({ directory: true });
 		if (gotPath == null) {
 			return;
@@ -31,7 +31,7 @@
 	});
 </script>
 
-<button on:click={getFile}>Drop/Browse</button>
+<button on:click={getDir}>Drop/Browse</button>
 
 <style lang="scss">
 	button {
