@@ -3,7 +3,8 @@
 	import StartCard from '../../../components/start/StartCard.svelte';
 	import { open } from '@tauri-apps/api/dialog';
 	import { exists } from '@tauri-apps/api/fs';
-	import { loadArchive } from '$lib/archive';
+	import { fail } from '@sveltejs/kit';
+	import { truncate } from '$lib/utils';
 
 	let url: string | undefined;
 	let name: string | undefined;
@@ -82,14 +83,13 @@
 
 	/**
 	 * Checks that the url is valid
-	 * @param url URL to check and change
 	 */
 	function checkUrlValidity(): boolean {
 		// Contract the url checks and return if its undefined
 		if (url == undefined || url == '') {
 			urlExpand = false;
 			urlCompletelyInvalid = true;
-			return true;
+			return false;
 		}
 
 		// Fix the url up before we check
@@ -103,7 +103,32 @@
 		urlCompletelyInvalid = isIncorrect;
 
 		// Return if it's invalid or not
-		return urlCompletelyInvalid;
+		return !isIncorrect;
+	}
+
+	/**
+	 * Checks that the path is valid
+	 */
+	async function checkPathValidity(): Promise<boolean> {
+		pathCompletelyInvalid = path != undefined && (await exists(path));
+		return pathCompletelyInvalid;
+	}
+
+	/**
+	 * Checks that the name is valid
+	 */
+	function checkNameValidity(): boolean {
+		nameCompletelyInvalid = name != undefined;
+		return nameCompletelyInvalid;
+	}
+
+	/**
+	 * Validates all form elements
+	 * @returns If the form is valid or not
+	 */
+	function validate(): boolean {
+		const failed = !checkUrlValidity() || !checkPathValidity() || !checkNameValidity();
+		return !failed;
 	}
 
 	/**
@@ -113,7 +138,7 @@
 		// Get path from tauri
 		const gotPath = await open({ directory: true });
 
-		// Invalid path
+		// They clicked out of the menu without giving a path
 		if (gotPath == null) {
 			pathCompletelyInvalid = true;
 		}
@@ -130,33 +155,6 @@
 	}
 
 	/**
-	 * Validates all form elements
-	 * @returns If the form is valid or not
-	 */
-	function validate(): boolean {
-		// Marker to fail if one is invalid
-		let failed = false;
-
-		// Check URL
-		failed = checkUrlValidity();
-
-		// Check path
-		if (path == undefined) {
-			pathCompletelyInvalid = true;
-			failed = true;
-		}
-
-		// Check name
-		if (name == undefined) {
-			nameCompletelyInvalid = true;
-			failed = true;
-		}
-
-		// Return if this was a success or not
-		return !failed;
-	}
-
-	/**
 	 * Uses the information provided in the inputs to try to create a new archive
 	 */
 	function createArchive() {
@@ -165,7 +163,9 @@
 			return;
 		}
 
+		// Send create request
 		// TODO: send create request
+
 		// Load newly-created path
 		// TODO
 	}
@@ -183,7 +183,7 @@
 			{#if path == undefined}
 				Choose Folder
 			{:else}
-				{path}
+				{truncate(path, 50)}
 			{/if}
 		</button>
 		<span class="slash-indicator">/</span>
