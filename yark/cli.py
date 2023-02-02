@@ -289,6 +289,12 @@ def _cli() -> None:
             # Open the webbrowser to the specified archive (or main page if no archive is specified)
             config.open_webbrowser(archive_name)
 
+        url = config.browser_url(archive_name)
+        if archive_name is not None:
+            print(f"Starting server at {url} for {archive_name}")
+        else:
+            print(f"Starting server at {url}")
+
         # Launch HTTP server and block until finished
         launch(config)
 
