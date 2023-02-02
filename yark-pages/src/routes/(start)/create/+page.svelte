@@ -84,12 +84,12 @@
 	 * Checks that the url is valid
 	 * @param url URL to check and change
 	 */
-	function checkUrlValidity() {
+	function checkUrlValidity(): boolean {
 		// Contract the url checks and return if its undefined
 		if (url == undefined || url == '') {
 			urlExpand = false;
 			urlCompletelyInvalid = true;
-			return;
+			return true;
 		}
 
 		// Fix the url up before we check
@@ -101,6 +101,9 @@
 		// Set values
 		url = fixedUrl;
 		urlCompletelyInvalid = isIncorrect;
+
+		// Return if it's invalid or not
+		return urlCompletelyInvalid;
 	}
 
 	/**
@@ -127,26 +130,42 @@
 	}
 
 	/**
-	 * Uses the information provided in the inputs to try to create a new archive
+	 * Validates all form elements
+	 * @returns If the form is valid or not
 	 */
-	function createArchive() {
+	function validate(): boolean {
+		// Marker to fail if one is invalid
+		let failed = false;
+
 		// Check URL
-		checkUrlValidity();
+		failed = checkUrlValidity();
 
 		// Check path
 		if (path == undefined) {
 			pathCompletelyInvalid = true;
-			return;
+			failed = true;
 		}
 
 		// Check name
-		else if (name == undefined) {
+		if (name == undefined) {
 			nameCompletelyInvalid = true;
+			failed = true;
+		}
+
+		// Return if this was a success or not
+		return !failed;
+	}
+
+	/**
+	 * Uses the information provided in the inputs to try to create a new archive
+	 */
+	function createArchive() {
+		// Validate the form
+		if (!validate()) {
 			return;
 		}
 
 		// TODO: send create request
-
 		// Load newly-created path
 		// TODO
 	}
