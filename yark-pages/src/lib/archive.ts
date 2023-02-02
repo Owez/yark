@@ -33,6 +33,17 @@ export class Archive {
         this.path = path;
     }
 
+
+    /**
+     * Creates a new local archive and returns
+     * @param basePath Base path of where to save this local archive to
+     * @param name Name of this new local archive
+     * @param target Target URL of the playlist/channel
+     */
+    static createLocal(basePath: string, name: string, target: string): Archive {
+        // TODO
+    }
+
     /**
      * Converts a pojo being deserialized into a full archive class
      * @param pojo Pojo version of an archive to convert
