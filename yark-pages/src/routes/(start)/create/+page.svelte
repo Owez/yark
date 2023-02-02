@@ -113,7 +113,7 @@
 		<input
 			type="text"
 			name="create-name"
-			placeholder="e.g. foobar"
+			placeholder="Name"
 			class="mini"
 			bind:value={name}
 			on:focusout={() => (nameCompletelyInvalid = name == undefined || name == '')}
