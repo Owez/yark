@@ -19,18 +19,22 @@ export type ArchivePath = string;
  */
 export class Archive {
     /**
-     * Base URL of this archive, if this is null it's a local archive
-     */
-    base: FederatedBaseUrl | null;
-    /**
      * Path to this archive, see {@link ArchivePath}
      */
     path: ArchivePath;
-    // TODO: heartbeat
+    /**
+     * Human-readable alias provided for this archive
+     */
+    alias: string;
+    /**
+     * Base URL of this archive, if this is null it's a local archive
+     */
+    base?: FederatedBaseUrl;
 
-    constructor(path: ArchivePath, base?: FederatedBaseUrl) {
-        this.base = base ?? null;
+    constructor(path: ArchivePath, alias?: string, base?: FederatedBaseUrl) {
         this.path = path;
+        this.alias = alias; // TODO: fix the alias
+        this.base = base;
     }
 
 
@@ -41,7 +45,7 @@ export class Archive {
      * @param target Target URL of the playlist/channel
      */
     static createLocal(basePath: string, name: string, target: string): Archive {
-        // TODO
+        return new Archive("/x/y/z") // TODO
     }
 
     /**
@@ -50,7 +54,7 @@ export class Archive {
      * @returns The archive from it's pojo form
      */
     static fromPojo(pojo: ArchivePojo): Archive {
-        return new Archive(pojo.path)
+        return new Archive(pojo.path, pojo.alias, pojo.base)
     }
 
     /**
@@ -80,12 +84,46 @@ export class Archive {
             return value
         })
     }
+
+    async getVideosInfo(): Promise<ArchiveBriefVideo[]> {
+        // TODO
+    }
+
+    async getLivestreamsInfo(): Promise<ArchiveBriefVideo[]> {
+        // TODO
+    }
+
+    async getShortsInfo(): Promise<ArchiveBriefVideo[]> {
+        // TODO
+    }
 }
 
 /**
  * Pojo interface for deserializing archives
  */
-export interface ArchivePojo { path: string }
+export interface ArchivePojo { path: string, alias: string, base?: FederatedBaseUrl }
+
+/**
+ * Short information on a video, intended to be displayed on a long list
+ */
+export interface ArchiveBriefVideo {
+    /**
+     * Video identifier to open to learn more about the video
+     */
+    id: string,
+    /**
+     * Current human-readable name of the video
+     */
+    name: string,
+    /**
+     * Date it was uploaded to display/sort using
+     */
+    uploaded: Date,
+    /**
+     * Current thumbnail identifier of the video to display
+     */
+    thumbnail: string
+}
 
 /**
  * Loads up an archive and sets it as the currently-active one, then redirects to the dashboard
