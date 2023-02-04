@@ -17,6 +17,7 @@ flask = "^2.2.2"
 flask-restful = "^0.3.9"
 marshmallow = "^3.19.0"
 flask-sqlalchemy = "^3.0.3"
+python-dotenv = "^0.21.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
@@ -27,8 +28,9 @@ black = "^22.12.0"
 pylint = "^2.16.1"
 
 [tool.poe.tasks]
-lint = { shell = "set -e && mypy yark --strict && pylint yark" }
-fmt = "black yark"
+lint = { shell = "set -e && mypy yark_api --strict && pylint yark_api" }
+fmt = "black yark_api"
+dev = "flask --app yark_api run"
 
 [build-system]
 requires = ["poetry-core"]

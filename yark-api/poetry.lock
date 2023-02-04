@@ -915,6 +915,21 @@ spelling = ["pyenchant (>=3.2,<4.0)"]
 testutils = ["gitpython (>3)"]
 
 [[package]]
+name = "python-dotenv"
+version = "0.21.1"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
+    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
+]
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "pytz"
 version = "2022.7.1"
 description = "World timezone definitions, modern and historical"
@@ -1344,4 +1359,4 @@ websockets = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "2375872d41386bc0770a314f29d3337c5ef78fa92aea20fce357ef853e44440e"
+content-hash = "1dbe9c14cc8120620cd4f5eb5076a1a18520b42157e5bb0430cb58b130f4c23a"
