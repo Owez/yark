@@ -2,11 +2,14 @@
 
 from .extensions import db
 
+ARCHIVE_MAX_SLUG = 32
+ARCHIVE_MAX_PATH = 4096
+
 
 class Archive(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    alias = db.Column(db.String(32), unique=True, nullable=False)
-    path = db.Column(db.String, nullable=False)
+    slug = db.Column(db.String(ARCHIVE_MAX_SLUG), unique=True, nullable=False)
+    path = db.Column(db.String(ARCHIVE_MAX_PATH), nullable=False)
     metadata_queue = db.relationship("MetadataQueue", backref="archive")
     download_queue = db.relationship("DownloadQueue", backref="archive")
 
