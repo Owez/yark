@@ -201,6 +201,18 @@ files = [
 cffi = ">=1.0.0"
 
 [[package]]
+name = "cachelib"
+version = "0.9.0"
+description = "A collection of cache libraries in the same API interface."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cachelib-0.9.0-py3-none-any.whl", hash = "sha256:811ceeb1209d2fe51cd2b62810bd1eccf70feba5c52641532498be5c675493b3"},
+    {file = "cachelib-0.9.0.tar.gz", hash = "sha256:38222cc7c1b79a23606de5c2607f4925779e37cdcea1c2ad21b8bae94b5425a5"},
+]
+
+[[package]]
 name = "certifi"
 version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -367,6 +379,46 @@ Werkzeug = ">=2.2.2"
 [package.extras]
 async = ["asgiref (>=3.2)"]
 dotenv = ["python-dotenv"]
+
+[[package]]
+name = "flask-caching"
+version = "2.0.2"
+description = "Adds caching support to Flask applications."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "Flask-Caching-2.0.2.tar.gz", hash = "sha256:24b60c552d59a9605cc1b6a42c56cdb39a82a28dab4532bbedb9222ae54ecb4e"},
+    {file = "Flask_Caching-2.0.2-py3-none-any.whl", hash = "sha256:19571f2570e9b8dd9dd9d2f49d7cbee69c14ebe8cc001100b1eb98c379dd80ad"},
+]
+
+[package.dependencies]
+cachelib = ">=0.9.0,<0.10.0"
+Flask = "<3"
+
+[[package]]
+name = "flask-marshmallow"
+version = "0.14.0"
+description = "Flask + marshmallow for beautiful APIs"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "flask-marshmallow-0.14.0.tar.gz", hash = "sha256:bd01a6372cbe50e36f205cfff0fc5dab0b7b662c4c8b2c4fc06a3151b2950950"},
+    {file = "flask_marshmallow-0.14.0-py2.py3-none-any.whl", hash = "sha256:2adcd782b5a4a6c5ae3c96701f320d8ca6997995a52b2661093c56cc3ed24754"},
+]
+
+[package.dependencies]
+Flask = "*"
+marshmallow = ">=2.0.0"
+six = ">=1.9.0"
+
+[package.extras]
+dev = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pre-commit (>=2.4,<3.0)", "pytest", "tox"]
+docs = ["Sphinx (==3.2.1)", "marshmallow-sqlalchemy (>=0.13.0)", "sphinx-issues (==1.2.0)"]
+lint = ["flake8 (==3.8.3)", "flake8-bugbear (==20.1.4)", "pre-commit (>=2.4,<3.0)"]
+sqlalchemy = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)"]
+tests = ["flask-sqlalchemy", "marshmallow-sqlalchemy (>=0.13.0)", "marshmallow-sqlalchemy (>=0.13.0,<0.19.0)", "mock", "pytest"]
 
 [[package]]
 name = "flask-restful"
@@ -665,6 +717,29 @@ dev = ["flake8 (==5.0.4)", "flake8-bugbear (==22.10.25)", "mypy (==0.990)", "pre
 docs = ["alabaster (==0.7.12)", "autodocsumm (==0.2.9)", "sphinx (==5.3.0)", "sphinx-issues (==3.0.1)", "sphinx-version-warning (==1.1.2)"]
 lint = ["flake8 (==5.0.4)", "flake8-bugbear (==22.10.25)", "mypy (==0.990)", "pre-commit (>=2.4,<3.0)"]
 tests = ["pytest", "pytz", "simplejson"]
+
+[[package]]
+name = "marshmallow-sqlalchemy"
+version = "0.28.1"
+description = "SQLAlchemy integration with the marshmallow (de)serialization library"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "marshmallow-sqlalchemy-0.28.1.tar.gz", hash = "sha256:aa376747296780a56355e3067b9c8bf43a2a1c44ff985de82b3a5d9e161ca2b8"},
+    {file = "marshmallow_sqlalchemy-0.28.1-py2.py3-none-any.whl", hash = "sha256:dbb061c19375eca3a7d18358d2ca8bbaee825fc3000a3f114e2698282362b536"},
+]
+
+[package.dependencies]
+marshmallow = ">=3.0.0"
+packaging = ">=21.3"
+SQLAlchemy = ">=1.3.0"
+
+[package.extras]
+dev = ["flake8 (==4.0.1)", "flake8-bugbear (==22.7.1)", "pre-commit (>=2.0,<3.0)", "pytest", "pytest-lazy-fixture (>=0.6.2)", "tox"]
+docs = ["alabaster (==0.7.12)", "sphinx (==4.4.0)", "sphinx-issues (==3.0.1)"]
+lint = ["flake8 (==4.0.1)", "flake8-bugbear (==22.7.1)", "pre-commit (>=2.0,<3.0)"]
+tests = ["pytest", "pytest-lazy-fixture (>=0.6.2)"]
 
 [[package]]
 name = "mccabe"
@@ -1359,4 +1434,4 @@ websockets = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "1dbe9c14cc8120620cd4f5eb5076a1a18520b42157e5bb0430cb58b130f4c23a"
+content-hash = "a1d4bd67ce2290d3a7cc5366de852cec189573e9be3fe580872afa1144b8f93b"

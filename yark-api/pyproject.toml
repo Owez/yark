@@ -15,9 +15,11 @@ python = "~3.11"
 yark = { path = "../yark" }
 flask = "^2.2.2"
 flask-restful = "^0.3.9"
-marshmallow = "^3.19.0"
 flask-sqlalchemy = "^3.0.3"
 python-dotenv = "^0.21.1"
+flask-caching = "^2.0.2"
+marshmallow-sqlalchemy = "^0.28.1"
+flask-marshmallow = "^0.14.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"

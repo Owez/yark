@@ -23,6 +23,7 @@ def create_app() -> Flask:
     # Integrate extensions
     extensions.db.init_app(app)
     extensions.api.init_app(app)
+    extensions.cache.init_app(app)
 
     # Hand app over
     return app
