@@ -8,6 +8,7 @@ Official REST API for Yark archive management
 from flask import Flask
 from . import extensions
 from . import config
+from .routes.archive import ArchiveResource
 
 
 def create_app() -> Flask:
@@ -16,8 +17,12 @@ def create_app() -> Flask:
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config.Config())
 
+    # Add resources to routes
+    extensions.api.add_resource(ArchiveResource, "/archive")
+
     # Integrate extensions
     extensions.db.init_app(app)
+    extensions.api.init_app(app)
 
     # Hand app over
     return app
