@@ -16,6 +16,8 @@ from typing import Any
 from . import utils
 import slugify
 
+# TODO: move these schemas to another file
+
 
 class ArchivePostKind(Enum):
     """Kind of creation request which is being made"""
@@ -88,7 +90,7 @@ class ArchiveGetQuerySchema(Schema):
 class ArchiveResource(Resource):
     """Archive CRUD"""
 
-    def post(self) -> Response:
+    def post(self) -> Response:  # TODO: auth
         """Creates a new archive if the API owner requests to"""
         # Decode query arg to figure out intent
         try:
@@ -132,7 +134,8 @@ class ArchiveResource(Resource):
 
         # Serialize videos of requested kind
         videos = schema_query["kind"].get_list(archive)
-        return videos  # TODO: serialize class Video to json properly
+
+        # TODO: return json videos
 
 
 def create_new_archive() -> Response:
@@ -160,7 +163,9 @@ def create_new_archive() -> Response:
     extensions.db.session.add(archive_info)
     extensions.db.session.commit()
 
+    # TODO: return json archive_info
+
 
 def create_existing_archive() -> Response:
     """Attempts to create an existing archive by importing it, then returns it's information"""
-    pass  # TODO
+    pass  # TODO: all of this, copy from create_new_archive a bit
