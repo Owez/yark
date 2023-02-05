@@ -139,7 +139,5 @@ class Config:
     def open_webbrowser(self, archive_name: Optional[str]):
         """Opens the webbrowser to optional archive_name or to the main page if not specified"""
         url = self.browser_url(archive_name)
-        
-        print(f"Opening viewer at {url}..")
-        
+
         webbrowser.open(url)

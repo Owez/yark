@@ -209,8 +209,15 @@ def _cli() -> None:
         archive_name: Optional[str]
         archive_name = None
 
-        def launch(config: Config) -> None:
+        def launch(config: Config, archive_name: Optional[str]) -> None:
             """Launches viewer"""
+            url = config.browser_url(archive_name)
+            msg = f"Starting archive at {url} address"
+            if archive_name is not None:
+                msg += f" for {archive_name} archive"
+            
+            print(msg)
+            
             app = viewer()
             threading.Thread(target=lambda: app.run(port=config.bind_port, host=config.bind_host)).run()
 
@@ -289,14 +296,8 @@ def _cli() -> None:
             # Open the webbrowser to the specified archive (or main page if no archive is specified)
             config.open_webbrowser(archive_name)
 
-        url = config.browser_url(archive_name)
-        if archive_name is not None:
-            print(f"Starting server at {url} for {archive_name}")
-        else:
-            print(f"Starting server at {url}")
-
         # Launch HTTP server and block until finished
-        launch(config)
+        launch(config, archive_name)
 
     # Report
     elif args[0] == "report":
