@@ -10,6 +10,7 @@ from . import extensions
 from . import config
 from .routes.archive import ArchiveResource
 from .routes.misc import IndexResource
+from .routes.thumbnail import ThumbnailResource
 import logging
 
 
@@ -24,6 +25,7 @@ def create_app() -> Flask:
     # Add resources to routes
     extensions.api.add_resource(IndexResource, "/")
     extensions.api.add_resource(ArchiveResource, "/archive")
+    extensions.api.add_resource(ThumbnailResource, "/thumbnail")
 
     # Integrate extensions
     extensions.db.init_app(app)

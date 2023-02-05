@@ -25,6 +25,9 @@ class ArchiveResource(Resource):
         # Decode query arg to figure out intent
         try:
             schema_query = archive_post.ArchivePostQuerySchema().load(request.args)
+            logging.info(
+                "Creating new archive with intent #" + str(schema_query["intent"])
+            )
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
@@ -99,8 +102,8 @@ def create_new_archive() -> Response:
     except IntegrityError as e:
         return utils.error_response("Slug already exists", str(e), 400)
 
-    # Provide id to hook onto later
-    return {"id": archive_info.id}
+    # Say that it's been created successfully
+    return "Archive created"
 
 
 def create_existing_archive() -> Response:
@@ -131,5 +134,5 @@ def create_existing_archive() -> Response:
     except IntegrityError as e:
         return utils.error_response("Slug already exists", str(e), 400)
 
-    # Provide id to hook onto later
-    return {"id": archive_info.id}
+    # Say that it's been created successfully
+    return "Archive created"
