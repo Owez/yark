@@ -1,13 +1,11 @@
 <script lang="ts">
-	import { loadArchive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import { yarkStore, type YarkStore } from '$lib/store';
 	import Dropzone from '../../../../components/Dropzone.svelte';
 	import LoadList from '../../../../components/start/LoadList.svelte';
 	import StartCard from '../../../../components/start/StartCard.svelte';
 
-	let path: string|undefined;
-	$: loadArchive(path);
+	let path: string | undefined;
 
 	/**
 	 * Checks if there are any recent archives
