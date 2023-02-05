@@ -32,7 +32,7 @@ a.invis {
 // Small heading to designate a section within a card component
 .card-heading {
     margin: 0;
-    margin-top:0.5rem;
+    margin-top: 0.5rem;
     font-size: small;
     font-weight: 400;
     color: rgb(79, 79, 79);
@@ -47,7 +47,7 @@ a.invis {
     border-radius: 5px;
     margin: 0;
     margin-top: 0.35rem;
-    margin-bottom:0.5rem;
+    margin-bottom: 0.5rem;
     padding: 0;
     padding-left: $padding-h;
     padding-right: $padding-h;
@@ -87,4 +87,9 @@ input[type=text] {
 // Small directory slash indicator between two components
 .slash-indicator {
     color: rgb(133, 133, 133);
+}
+
+// Invalid ring typically around an entry element
+.invalid {
+    border: 1px solid rgb(217, 89, 89) !important;
 }

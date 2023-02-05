@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { StartCardState } from '$lib/components';
 	import StartCard from '../../../components/start/StartCard.svelte';
-	import { open } from '@tauri-apps/api/dialog';
 	import { exists } from '@tauri-apps/api/fs';
-	import { truncate } from '$lib/utils';
 	import { Archive } from '$lib/archive';
+	import DirSelect from '../../../components/entries/DirSelect.svelte';
+	import { LOCAL_SERVER } from '$lib/utils';
+	import Name from '../../../components/entries/Name.svelte';
 
-	let url: string | undefined;
-	let name: string | undefined;
-	let path: string | undefined;
+	let url: string;
+	let name: string;
+	let path: string;
 
 	let urlCompletelyInvalid: boolean = false;
 	let nameCompletelyInvalid: boolean = false;
@@ -54,12 +55,7 @@
 	 * Fixes up the url so its a valid one to pull from
 	 * @param url URL to fix up
 	 */
-	function fixUrl(url?: string): string | undefined {
-		// Make sure it isn't undefined
-		if (url == undefined) {
-			return undefined;
-		}
-
+	function fixUrl(url: string): string {
 		// Make a new url store to save changes
 		let newUrl = url;
 
@@ -85,6 +81,7 @@
 	 * Checks that the url prop is valid
 	 */
 	function checkUrlValidity(): boolean {
+		// TODO: merge validation
 		// Contract the url checks and return if its undefined
 		if (url == undefined || url == '') {
 			urlExpand = false;
@@ -110,6 +107,7 @@
 	 * Checks that the path prop is valid
 	 */
 	async function checkPathValidity(): Promise<boolean> {
+		// TODO: merge validation
 		pathCompletelyInvalid = path == undefined || path == '' || !(await exists(path));
 		return !pathCompletelyInvalid;
 	}
@@ -118,13 +116,14 @@
 	 * Checks that the name prop is valid
 	 */
 	function checkNameValidity(): boolean {
+		// TODO: merge validation
 		nameCompletelyInvalid = name == undefined || name == '';
 		return !nameCompletelyInvalid;
 	}
 
 	/**
 	 * Validates all relevant props
-	 * @returns If the form is valid or not
+	 * @returns If the inputs are valid or not
 	 */
 	async function validate(): Promise<boolean> {
 		// Check validity beforehand so or doesn't cancel it out
@@ -137,47 +136,23 @@
 	}
 
 	/**
-	 * Gets directory from tauri dialog and pipes into the path prop
-	 */
-	async function getDir() {
-		// Get path from tauri
-		const gotPath = await open({ directory: true });
-
-		// They clicked out of the menu without giving a path
-		if (gotPath == null) {
-			pathCompletelyInvalid = true;
-		}
-
-		// Get first path if multiple are selected
-		else if (Array.isArray(gotPath)) {
-			pathCompletelyInvalid = false;
-			path = gotPath[0];
-		}
-
-		// Get path if one is selected
-		else {
-			pathCompletelyInvalid = false;
-			path = gotPath;
-		}
-	}
-
-	/**
 	 * Uses the information provided in the inputs to try to create a new archive
 	 */
 	async function createArchive() {
-		// Validate the form
+		// Validate the inputs
 		if (!(await validate())) {
 			return;
 		}
 
 		// Skip if anything is missing
+		// NOTE: only for getting rid of incorrect typing errors, can delete
 		if (path == undefined || name == undefined || url == undefined) {
 			return;
 		}
 
 		// Create a new archive
 		// TODO: append the name onto the path so it creates properly!!
-		const newArchive = await Archive.createNew('http://127.0.0.1:7666', name, path, url);
+		const newArchive = await Archive.createNew(LOCAL_SERVER, name, path, url);
 		newArchive.setAsCurrent();
 	}
 </script>
@@ -190,24 +165,11 @@
 		state={StartCardState.Max}
 	>
 		<h2 class="card-heading">Destination</h2>
-		<button class="bright" on:click={getDir} class:invalid={pathCompletelyInvalid}>
-			{#if path == undefined}
-				Choose Folder
-			{:else}
-				{truncate(path, 50)}
-			{/if}
-		</button>
+		<DirSelect bind:path bind:pathCompletelyInvalid />
 		<span class="slash-indicator">/</span>
-		<input
-			type="text"
-			name="create-name"
-			placeholder="Name"
-			class="mini"
-			bind:value={name}
-			on:focusout={() => (nameCompletelyInvalid = name == undefined || name == '')}
-			class:invalid={nameCompletelyInvalid}
-		/>
+		<Name bind:name bind:nameCompletelyInvalid />
 		<h2 class="card-heading">YouTube URL</h2>
+		<!-- TODO: move to entry -->
 		<input
 			type="text"
 			name="create-url"
@@ -262,10 +224,6 @@
 		border: 1px solid white;
 		color: white;
 		font-weight: 500;
-	}
-
-	.invalid {
-		border: 1px solid rgb(217, 89, 89);
 	}
 
 	.bottom-element {

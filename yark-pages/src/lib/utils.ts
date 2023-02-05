@@ -3,6 +3,11 @@
  */
 
 /**
+ * URL to the locally-running API server instance
+ */
+export const LOCAL_SERVER = "http://127.0.0.1:7666";
+
+/**
  * Truncates a string to a given length, adding ellipsis if it's over
  * @param input String to truncate
  * @param to Number of characters to truncate to

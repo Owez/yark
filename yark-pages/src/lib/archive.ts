@@ -29,11 +29,29 @@ export class Archive {
      * @param slug Unique slug for the new archive
      * @param path Path to save the new archive to (including final directory name)
      * @param target The URL to target, e.g., playlist or channel
+     * @returns Newly-created archive
      */
     static async createNew(server: string, slug: string, path: string, target: string): Promise<Archive> {
         const payload = { slug: slug, path: path, target: target };
-        await fetch(server + "/archive?intent=create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-        return new Archive(server, slug)
+        return await fetch(server + "/archive?intent=create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
+            const slug = resp_json.slug;
+            return new Archive(server, slug)
+        })
+    }
+
+    /**
+     * Imports an existing archive already saved to a file location
+     * @param server Server URL to connect to
+     * @param slug Unique slug for the new archive
+     * @param path Path to save the new archive to (including final directory name)
+     * @returns Newly-imported archive
+     */
+    static async createExisting(server: string, slug: string, path: string): Promise<Archive> {
+        const payload = { slug: slug, path: path };
+        return await fetch(server + "/archive?intent=existing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
+            const slug = resp_json.slug;
+            return new Archive(server, slug)
+        })
     }
 
     /**

@@ -1,42 +1,12 @@
 <script lang="ts">
-	import type{  Archive } from '$lib/archive';
-	import { readDir } from '@tauri-apps/api/fs';
+	import type { Archive } from '$lib/archive';
 
 	export let archive: Archive;
-
-	/**
-	 * Checks if the provided archive exists at it's current path
-	 */
-	async function checkArchiveExists(archive: Archive): Promise<boolean> {
-		// Try to get directory and then check if the archive file is present
-		try {
-			// Try to get the directory
-			const fileList = await readDir(archive.path);
-
-			// Return true if the archive file is present
-			for (let ind = 0; ind < fileList.length; ind++) {
-				const file = fileList[ind];
-				if (file.name == 'yark.json') {
-					return true;
-				}
-			}
-
-			// Nothing was found
-			return false;
-		} catch (error) {
-			// Filesystem error of some kind
-			return false;
-		}
-	}
 </script>
 
 <button on:click={() => archive.setAsCurrent()}>
 	<p class="archive-name">{archive.slug}</p>
-	{#await checkArchiveExists(archive) then exists}
-		{#if !exists}
-			<p title="This isn't a valid archive">❌</p>
-		{/if}
-	{/await}
+	<!-- Maybe add an ❌ indicator here in the future -->
 </button>
 
 <style lang="scss">

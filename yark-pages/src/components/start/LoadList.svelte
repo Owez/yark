@@ -14,6 +14,7 @@
 	}
 </script>
 
+<h2 class="card-heading">Recents</h2>
 <div class="list">
 	{#each getArchives($yarkStore.recents) as archive}
 		<LoadListArchive {archive} />

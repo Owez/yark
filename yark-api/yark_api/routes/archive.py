@@ -103,7 +103,7 @@ def create_new_archive() -> Response:
         return utils.error_response("Slug already exists", str(e), 400)
 
     # Say that it's been created successfully
-    return {"message": "Archive created"}
+    return {"message": "Archive created", "slug": archive_slug}
 
 
 def create_existing_archive() -> Response:
@@ -135,4 +135,4 @@ def create_existing_archive() -> Response:
         return utils.error_response("Slug already exists", str(e), 400)
 
     # Say that it's been created successfully
-    return {"message": "Archive created"}
+    return {"message": "Archive created", "slug": archive_slug}
