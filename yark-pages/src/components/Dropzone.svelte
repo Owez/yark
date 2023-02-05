@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { loadArchive } from '$lib/archive';
 	import { open } from '@tauri-apps/api/dialog';
 	import { listen } from '@tauri-apps/api/event';
 
@@ -27,7 +26,7 @@
 	listen('tauri://file-drop', (event) => {
 		const payload = event.payload as string[];
 		const path = payload[0];
-		loadArchive(path);
+		// TODO: load archive via path by importing it
 	});
 </script>
 

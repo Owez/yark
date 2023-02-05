@@ -21,6 +21,7 @@ flask-sqlalchemy = "^3.0.3"
 marshmallow = "^3.19.0"
 python-slugify = "^8.0.0"
 marshmallow-enum = "^1.5.1"
+flask-cors = "^3.0.10"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
@@ -34,7 +35,7 @@ types-python-slugify = "^8.0.0.0"
 [tool.poe.tasks]
 lint = { shell = "set -e && mypy yark_api --strict && pylint yark_api" }
 fmt = "black yark_api"
-dev = "flask --app yark_api run --port=7666"
+dev = "flask --app yark_api --debug run --port=7666"
 
 [build-system]
 requires = ["poetry-core"]

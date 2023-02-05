@@ -4,7 +4,7 @@
 	import { open } from '@tauri-apps/api/dialog';
 	import { exists } from '@tauri-apps/api/fs';
 	import { truncate } from '$lib/utils';
-	import { Archive, loadArchive } from '$lib/archive';
+	import { Archive } from '$lib/archive';
 
 	let url: string | undefined;
 	let name: string | undefined;
@@ -170,14 +170,15 @@
 			return;
 		}
 
-		// Create local archive
+		// Skip if anything is missing
 		if (path == undefined || name == undefined || url == undefined) {
 			return;
 		}
-		const newArchive = Archive.createLocal(path, name, url);
 
-		// Load newly-created archive
-		loadArchive(newArchive.path, newArchive.base ?? undefined);
+		// Create a new archive
+		// TODO: append the name onto the path so it creates properly!!
+		const newArchive = await Archive.createNew('http://127.0.0.1:7666', name, path, url);
+		newArchive.setAsCurrent();
 	}
 </script>
 

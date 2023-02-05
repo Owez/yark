@@ -14,7 +14,9 @@
     "allowlist": {
       "all": true,
       "fs": {
-        "scope": ["**"]
+        "scope": [
+          "**"
+        ]
       }
     },
     "bundle": {
@@ -51,7 +53,7 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self' http://127.0.0.1:7666"
     },
     "updater": {
       "active": false

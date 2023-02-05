@@ -11,11 +11,6 @@ import { invoke } from "@tauri-apps/api";
  */
 export const yarkStore = writable<YarkStore>(yarkStoreInitial())
 
-/**
- * Read-only store which contains the local secret to access the local API with
- */
-export const localSecret = readable(getLocalSecret()); // TODO: make this work
-
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
     window.localStorage.setItem("yarkStore", JSON.stringify(value))

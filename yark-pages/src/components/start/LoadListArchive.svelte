@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { loadArchive, type Archive } from '$lib/archive';
+	import type{  Archive } from '$lib/archive';
 	import { readDir } from '@tauri-apps/api/fs';
 
 	export let archive: Archive;
@@ -30,8 +30,8 @@
 	}
 </script>
 
-<button on:click={() => loadArchive(archive.path)}>
-	<p class="archive-name">{archive.getName()}</p>
+<button on:click={() => archive.setAsCurrent()}>
+	<p class="archive-name">{archive.slug}</p>
 	{#await checkArchiveExists(archive) then exists}
 		{#if !exists}
 			<p title="This isn't a valid archive">❌</p>

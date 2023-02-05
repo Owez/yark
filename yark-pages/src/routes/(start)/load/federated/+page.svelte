@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { loadArchive } from '$lib/archive';
+	import { Archive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import StartCard from '../../../../components/start/StartCard.svelte';
 
@@ -12,8 +12,8 @@
 	// 	return !store.federatedAccept;
 	// }
 
-	let base: string;
-	let name: string;
+	let server: string;
+	let slug: string;
 </script>
 
 <div class="centre-h">
@@ -23,24 +23,19 @@
 		ballKind={2}
 		state={StartCardState.Max}
 	>
-		<h2 class="card-heading">Remote Server</h2>
-		<input
-			type="text"
-			name="direct-url"
-			id="direct-url"
-			placeholder="URL"
-			bind:value={base}
-		/>
-		<span class="slash-indicator">/</span>
+		<h2 class="card-heading">Direct</h2>
+		<input type="text" name="direct-url" id="direct-url" placeholder="URL" bind:value={server} />
 		<input
 			type="text"
 			name="direct-name"
 			id="direct-name"
 			class="mini"
 			placeholder="Name"
-			bind:value={name}
+			bind:value={slug}
 		/>
-		<button class="bright bottom-element" on:click={() => loadArchive(name, base)}>Connect</button>
+		<button class="bright bottom-element" on:click={() => new Archive(server, slug).setAsCurrent()}
+			>Connect</button
+		>
 		<!-- NOTE: uncomment if discovery is implemented -->
 		<!-- {#if shouldShowConsent($yarkStore)}
 		{:else}

@@ -18,34 +18,22 @@ export type ArchivePath = string;
  * Archive with contains data about a playlist/channel
  */
 export class Archive {
-    /**
-     * Path to this archive, see {@link ArchivePath}
-     */
-    path: ArchivePath;
-    /**
-     * Human-readable alias provided for this archive
-     */
-    alias: string;
-    /**
-     * Base URL of this archive, if this is null it's a local archive
-     */
-    base?: FederatedBaseUrl;
+    server: string;
+    slug: string;
 
-    constructor(path: ArchivePath, alias?: string, base?: FederatedBaseUrl) {
-        this.path = path;
-        this.alias = alias; // TODO: fix the alias
-        this.base = base;
-    }
-
+    constructor(server: string, slug: string) { this.server = server; this.slug = slug; }
 
     /**
-     * Creates a new local archive and returns
-     * @param basePath Base path of where to save this local archive to
-     * @param name Name of this new local archive
-     * @param target Target URL of the playlist/channel
+     * Creates and saves a brand new archive
+     * @param server Server URL to connect to
+     * @param slug Unique slug for the new archive
+     * @param path Path to save the new archive to (including final directory name)
+     * @param target The URL to target, e.g., playlist or channel
      */
-    static createLocal(basePath: string, name: string, target: string): Archive {
-        return new Archive("/x/y/z") // TODO
+    static async createNew(server: string, slug: string, path: string, target: string): Promise<Archive> {
+        const payload = { slug: slug, path: path, target: target };
+        await fetch(server + "/archive?intent=create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+        return new Archive(server, slug)
     }
 
     /**
@@ -54,16 +42,7 @@ export class Archive {
      * @returns The archive from it's pojo form
      */
     static fromPojo(pojo: ArchivePojo): Archive {
-        return new Archive(pojo.path, pojo.alias, pojo.base)
-    }
-
-    /**
-     * Parses the path value into a readable archive name
-     * @returns Name from path
-     */
-    getName(): string {
-        const splitted = this.path.split("/")
-        return splitted[splitted.length - 1]
+        return new Archive(pojo.server, pojo.slug)
     }
 
     /**
@@ -83,25 +62,14 @@ export class Archive {
             // Return updated value
             return value
         })
-    }
-
-    async getVideosInfo(): Promise<ArchiveBriefVideo[]> {
-        // TODO
-    }
-
-    async getLivestreamsInfo(): Promise<ArchiveBriefVideo[]> {
-        // TODO
-    }
-
-    async getShortsInfo(): Promise<ArchiveBriefVideo[]> {
-        // TODO
+        goto(`/archive/${this.slug}/videos`)
     }
 }
 
 /**
  * Pojo interface for deserializing archives
  */
-export interface ArchivePojo { path: string, alias: string, base?: FederatedBaseUrl }
+export interface ArchivePojo { server: string; slug: string; }
 
 /**
  * Short information on a video, intended to be displayed on a long list
@@ -123,17 +91,4 @@ export interface ArchiveBriefVideo {
      * Current thumbnail identifier of the video to display
      */
     thumbnail: string
-}
-
-/**
- * Loads up an archive and sets it as the currently-active one, then redirects to the dashboard
- * @param path Filepath to load archive from
- */
-export function loadArchive(path?: string, base?: string) {
-    if (path == undefined) {
-        return;
-    }
-    const archive = new Archive(path, base);
-    archive.setAsCurrent();
-    goto('/archive');
 }
