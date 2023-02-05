@@ -5,86 +5,16 @@ from flask_restful import Resource
 from flask import Response, request
 from .. import extensions
 from .. import models
-from marshmallow import Schema, fields, ValidationError, validate
-from enum import Enum
-from marshmallow_enum import EnumField
+from marshmallow import ValidationError
 from yark.archiver.archive import Archive
-from yark.archiver.video.video import Video
 from pathlib import Path
 import logging
 from typing import Any
 from . import utils
 import slugify
-
-# TODO: move these schemas to another file
-
-
-class ArchivePostKind(Enum):
-    """Kind of creation request which is being made"""
-
-    create = 1
-    existing = 2
-
-
-class ArchivePostQuerySchema(Schema):
-    """Schema for defining what to do on a POST request"""
-
-    intent = EnumField(ArchivePostKind, required=True)
-
-
-class ArchivePostJsonImportSchema(Schema):
-    """Schema for defining the specifics of importing an existing archive into the API"""
-
-    slug = fields.Str(
-        validate=validate.Length(min=1, max=models.ARCHIVE_MAX_SLUG), required=True
-    )
-    path = fields.Str(
-        validate=validate.Length(min=1, max=models.ARCHIVE_MAX_PATH), required=True
-    )
-
-
-class ArchivePostJsonNewSchema(Schema):
-    """Schema for defining the specifics of a brand new archive to create inside of JSON"""
-
-    slug = fields.Str(
-        validate=validate.Length(min=1, max=models.ARCHIVE_MAX_SLUG), required=True
-    )
-    path = fields.Str(
-        validate=validate.Length(min=1, max=models.ARCHIVE_MAX_PATH), required=True
-    )
-    target = fields.Str(validate=validate.Length(min=7, max=512), required=True)
-
-
-class ArchiveGetKind(Enum):
-    """Specific kind of top-level information to fetch for an archive"""
-
-    videos = 1
-    livestreams = 2
-    shorts = 3
-
-    def get_list(self, archive: Archive) -> list[Video]:
-        """Gets list of the videos from `archive` indicated by the current state"""
-        logging.debug(
-            f"Getting relevant videos list of kind {self.value} for {archive}"
-        )
-        match self.value:
-            case 1:
-                videos = archive.videos
-            case 2:
-                videos = archive.livestreams
-            case 3:
-                videos = archive.shorts
-            case unknown:
-                raise Exception(f"Unknown kind {unknown} for archive get kind")
-        videos_list: list[Video] = videos.inner.items()
-        return videos_list
-
-
-class ArchiveGetQuerySchema(Schema):
-    """Schema for defining which archive a user would like to retrieve"""
-
-    slug = fields.Str(required=True)
-    kind = EnumField(ArchiveGetKind, required=True)
+from ..schemas import archive_post, archive_get, video_brief
+from sqlalchemy.exc import IntegrityError
+from yark.archiver.video.video import Video
 
 
 class ArchiveResource(Resource):
@@ -94,7 +24,7 @@ class ArchiveResource(Resource):
         """Creates a new archive if the API owner requests to"""
         # Decode query arg to figure out intent
         try:
-            schema_query = ArchivePostQuerySchema().load(request.args)
+            schema_query = archive_post.ArchivePostQuerySchema().load(request.args)
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
@@ -112,7 +42,7 @@ class ArchiveResource(Resource):
         """Get archive information for the kind of information wanted; e.g. livestreams/videos"""
         # Decode query args
         try:
-            schema_query = ArchiveGetQuerySchema().load(request.args)
+            schema_query = archive_get.ArchiveGetQuerySchema().load(request.args)
             logging.info(
                 "Getting existing archive with slug '" + schema_query["slug"] + "'"
             )
@@ -132,10 +62,9 @@ class ArchiveResource(Resource):
         archive_path = Path(archive_info.path)
         archive = Archive.load(archive_path)
 
-        # Serialize videos of requested kind
-        videos = schema_query["kind"].get_list(archive)
-
-        # TODO: return json videos
+        # Serialize video list
+        videos: list[Video] = schema_query["kind"].get_list(archive)
+        return video_brief.VideoBriefSchema(many=True).dump(videos)
 
 
 def create_new_archive() -> Response:
@@ -145,7 +74,9 @@ def create_new_archive() -> Response:
         body: dict[Any, Any] | None = request.json
         if body is None:
             return utils.error_response("Invalid body", None, 400)
-        schema_body = ArchivePostJsonNewSchema().load(body)
+        schema_body = archive_post.ArchivePostJsonNewSchema().load(body)
+
+    # Invalid json body
     except ValidationError:
         return utils.error_response("Invalid body", None, 400)
 
@@ -159,13 +90,46 @@ def create_new_archive() -> Response:
     archive_slug = slugify.slugify(schema_body["slug"])
 
     # Add to database
-    archive_info = models.Archive(slug=archive_slug, path=schema_body["path"])
-    extensions.db.session.add(archive_info)
-    extensions.db.session.commit()
+    try:
+        archive_info = models.Archive(slug=archive_slug, path=schema_body["path"])
+        extensions.db.session.add(archive_info)
+        extensions.db.session.commit()
 
-    # TODO: return json archive_info
+    # Slug already exists
+    except IntegrityError as e:
+        return utils.error_response("Slug already exists", str(e), 400)
+
+    # Provide id to hook onto later
+    return {"id": archive_info.id}
 
 
 def create_existing_archive() -> Response:
     """Attempts to create an existing archive by importing it, then returns it's information"""
-    pass  # TODO: all of this, copy from create_new_archive a bit
+    # TODO: merge with create_new_archive logic throughout this function, theyre basically the same
+
+    # Decode json body containing specifics
+    try:
+        body: dict[Any, Any] | None = request.json
+        if body is None:
+            return utils.error_response("Invalid body", None, 400)
+        schema_body = archive_post.ArchivePostJsonImportSchema().load(body)
+
+    # Invalid json body
+    except ValidationError:
+        return utils.error_response("Invalid body", None, 400)
+
+    # Make the slug into a slug if it isn't already
+    archive_slug = slugify.slugify(schema_body["slug"])
+
+    # Add to database
+    try:
+        archive_info = models.Archive(slug=archive_slug, path=schema_body["path"])
+        extensions.db.session.add(archive_info)
+        extensions.db.session.commit()
+
+    # Slug already exists
+    except IntegrityError as e:
+        return utils.error_response("Slug already exists", str(e), 400)
+
+    # Provide id to hook onto later
+    return {"id": archive_info.id}
