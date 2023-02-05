@@ -8,6 +8,7 @@ from . import utils
 from .. import extensions, models
 from pathlib import Path
 from werkzeug.exceptions import NotFound
+import slugify
 
 
 class ThumbnailResource(Resource):
@@ -22,9 +23,12 @@ class ThumbnailResource(Resource):
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
+        # Make the slug into a slug if it isn't already
+        archive_slug = slugify.slugify(schema_query["archive_slug"])
+
         # Get archive info by the provided slug
         archive_info: models.Archive | None = models.Archive.query.filter_by(
-            slug=schema_query["archive_slug"]
+            slug=archive_slug
         ).first()
         if archive_info is None:
             return utils.error_response("Archive not found", None, 404)
