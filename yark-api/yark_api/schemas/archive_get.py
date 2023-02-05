@@ -29,7 +29,7 @@ class ArchiveGetKind(Enum):
                 videos = archive.shorts
             case unknown:
                 raise Exception(f"Unknown kind {unknown} for archive get kind")
-        videos_list: list[Video] = videos.inner.items()
+        videos_list: list[Video] = videos.inner.values()
         return videos_list
 
 
