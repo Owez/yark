@@ -82,7 +82,7 @@
 	 */
 	function checkUrlValidity(): boolean {
 		// TODO: merge validation
-		// Contract the url checks and return if its undefined
+		// Return if its simply undefined
 		if (url == undefined || url == '') {
 			urlExpand = false;
 			urlCompletelyInvalid = true;
@@ -169,10 +169,8 @@
 		<span class="slash-indicator">/</span>
 		<Name bind:name bind:nameCompletelyInvalid />
 		<h2 class="card-heading">YouTube URL</h2>
-		<!-- TODO: move to entry -->
 		<input
 			type="text"
-			name="create-url"
 			class="max"
 			placeholder="e.g. https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
 			bind:value={url}
