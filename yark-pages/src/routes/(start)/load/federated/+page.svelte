@@ -78,7 +78,7 @@
 			on:focusout={checkServerValidity}
 			class:invalid={serverCompletelyInvalid}
 		/>
-		<Name {name} {nameCompletelyInvalid} />
+		<Name bind:name bind:nameCompletelyInvalid />
 		<button class="bright" on:click={async () => connectArchive()}>Connect</button>
 		<h2 class="card-heading">Discover</h2>
 		<div class="coming-soon" />

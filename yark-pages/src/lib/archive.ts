@@ -3,7 +3,6 @@
  */
 
 import { goto } from "$app/navigation";
-import type { FederatedBaseUrl } from "./federated";
 import { yarkStore } from "./store";
 
 /**
@@ -80,7 +79,16 @@ export class Archive {
             // Return updated value
             return value
         })
-        goto(`/archive/${this.slug}/videos`)
+        goto(`/archive/videos`)
+    }
+
+    /**
+     * Fetches brief video information for an entire category/kind of videos
+     * @param kind Kind of video list to fetch (e.g., videos or livestreams)
+     * @returns Many brief pieces of video information
+     */
+    async fetchVideosBrief(kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
+        return await fetch(this.server + `/archive?slug=${this.slug}&kind=${archiveVideoKindToApiString(kind)}`).then(resp => resp.json())
     }
 }
 
@@ -88,6 +96,28 @@ export class Archive {
  * Pojo interface for deserializing archives
  */
 export interface ArchivePojo { server: string; slug: string; }
+
+/**
+ * Video list kind which can be got from an archive
+ */
+export enum ArchiveVideoKind {
+    Videos,
+    Livestreams,
+    Shorts
+}
+
+/**
+ * Converts a {@link ArchiveVideoKind} to an API-compatible query string
+ * @param kind Kind to convert to string
+ * @returns Stringified API-compatible version
+ */
+function archiveVideoKindToApiString(kind: ArchiveVideoKind): string {
+    switch (kind) {
+        case (ArchiveVideoKind.Videos): return "videos"
+        case (ArchiveVideoKind.Livestreams): return "livestreams"
+        case (ArchiveVideoKind.Shorts): return "shorts"
+    }
+}
 
 /**
  * Short information on a video, intended to be displayed on a long list

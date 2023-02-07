@@ -62,8 +62,18 @@ class ArchiveResource(Resource):
             return utils.error_response("Archive not found", None, 404)
 
         # Open archive
-        archive_path = Path(archive_info.path)
-        archive = Archive.load(archive_path)
+        try:
+            archive_path = Path(archive_info.path)
+            archive = Archive.load(archive_path)
+        except:
+            logging.error(
+                f"Archive directory for '" + schema_query["slug"] + "' not found!"
+            )
+            return utils.error_response(
+                "Archive seems to be deleted",
+                "Archive is known about but it's data could not be found. The archive directory/file might've been moved or deleted by accident. This isn't your fault if you're a user.",
+                404,
+            )
 
         # Serialize video list
         videos: list[Video] = schema_query["kind"].get_list(archive)
