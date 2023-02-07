@@ -5,6 +5,7 @@
 import { writable } from "svelte/store";
 import { Archive, type ArchivePojo } from "./archive";
 import { invoke } from "@tauri-apps/api";
+import { browser } from "$app/environment";
 
 /**
  * Main store interface which automatically saves into `localStorage` if browser is present
@@ -15,7 +16,7 @@ export const yarkStore = writable(yarkStoreInitial())
 
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
-    window.localStorage.setItem("yarkStore", JSON.stringify(value))
+    if(browser) window.localStorage.setItem("yarkStore", JSON.stringify(value))
 })
 
 /**
@@ -23,6 +24,9 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
+    // workaround for sveltekit ssr for some reason running during development
+    if(!browser) return { recents: [], openedArchive: null, federatedAccept: false }
+
     // Get the main storage container
     const foundString = window.localStorage.getItem("yarkStore")
 
