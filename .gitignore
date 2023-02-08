@@ -5,6 +5,7 @@
 # Yark archives
 demo/
 foobar/
+/.direnv
 
 # MacOS
 .DS*
