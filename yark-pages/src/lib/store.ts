@@ -11,8 +11,6 @@ import { browser } from "$app/environment";
  * Main store interface which automatically saves into `localStorage` if browser is present
  */
 export const yarkStore = writable(yarkStoreInitial())
-// TODO: figure out why sveltekit is fucking up here, doesnt seem like `window` is my fault if ive turned ssr completely off then its still ssr'ing??
-//       maybe its tauri? not sure. don't think so
 
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {

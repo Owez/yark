@@ -7,7 +7,6 @@ maintainers = [
     "NewWars <15692866+OriDevTeam@users.noreply.github.com>",
 ] # TODO: fix email, giving regex error
 license = "MIT"
-readme = "../README.md"
 repository = "https://github.com/owez/yark"
 classifiers = [
     "Private :: Do not Upload",

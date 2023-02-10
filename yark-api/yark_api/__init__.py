@@ -2,7 +2,9 @@
 Yark API
 ========
 
-Official REST API for Yark archive management
+YouTube archiving made simple (REST API)
+
+See https://github.com/Owez/yark/tree/master/yark-api for more information
 """
 
 from flask import Flask
