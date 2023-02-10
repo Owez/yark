@@ -10,8 +10,8 @@ def error_response(msg: str, info: str | None = None, code: int = 500) -> Respon
 
 def check_auth() -> Response | None:
     """Checks auth token provided to make sure it's the allowed admin one or returns an error response"""
-    auth = request.headers.get("Authorization").split(" ")[-1]
-    if auth is None or auth != Config().ADMIN_SECRET:
+    auth = request.headers.get("Authorization")
+    if auth is None or auth.split(" ")[-1] != Config().ADMIN_SECRET:
         return error_response("Invalid admin token", None, 401)
     return None
 
