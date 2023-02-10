@@ -1,5 +1,4 @@
 """Comments information and utilities"""
-# TODO: check new parent system works
 
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
