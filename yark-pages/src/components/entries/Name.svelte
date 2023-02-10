@@ -1,7 +1,7 @@
 <script lang="ts">
 	export let name: string;
-	export let nameCompletelyInvalid: boolean = false;
-	export let placeholder: string = 'Name';
+	export let nameCompletelyInvalid = false;
+	export let placeholder = 'Name';
 </script>
 
 <input

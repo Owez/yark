@@ -1,4 +1,4 @@
-import { ArchiveVideoKind } from "$lib/archive";
+import { ArchiveVideoKind, fetchVideosBrief } from "$lib/archive";
 import { get } from "svelte/store";
 import type { PageLoad, RouteParams } from "./$types";
 import { yarkStore } from "$lib/store";
@@ -11,10 +11,10 @@ export const load: PageLoad = async ({ params }) => {
     if (archive == null) { throw new Error("No current archive set") }
 
     // Fetch videos from current archive
-    const videos = await archive.fetchVideosBrief(kind)
+    const videos = await fetchVideosBrief(archive, kind)
 
     // Return the important information
-    return { kind: kind, videos: videos }
+    return { kind, videos }
 }
 
 /**

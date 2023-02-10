@@ -3,7 +3,7 @@
  */
 
 import { writable } from "svelte/store";
-import { Archive, type ArchivePojo } from "./archive";
+import { createFromPojo, type Archive, type ArchivePojo } from "./archive";
 import { invoke } from "@tauri-apps/api";
 import { browser } from "$app/environment";
 
@@ -14,7 +14,9 @@ export const yarkStore = writable(yarkStoreInitial())
 
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
-    if(browser) window.localStorage.setItem("yarkStore", JSON.stringify(value))
+    if(!browser) return;
+
+    window.localStorage.setItem("yarkStore", JSON.stringify(value))
 })
 
 /**
@@ -44,8 +46,8 @@ function yarkStoreInitial(): YarkStore {
 
         // Parse into final value and return
         return {
-            recents: yarkStorePojo.recents.map(archivePojo => Archive.fromPojo(archivePojo)),
-            openedArchive: yarkStorePojo.openedArchive ? Archive.fromPojo(yarkStorePojo.openedArchive) : null,
+            recents: yarkStorePojo.recents.map(createFromPojo),
+            openedArchive: yarkStorePojo.openedArchive ? createFromPojo(yarkStorePojo.openedArchive) : null,
             federatedAccept: yarkStorePojo.federatedAccept
         }
     }

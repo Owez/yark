@@ -3,7 +3,7 @@
 	import { open } from '@tauri-apps/api/dialog';
 
 	export let path: string;
-	export let pathCompletelyInvalid: boolean = false;
+	export let pathCompletelyInvalid = false;
 
 	/**
 	 * Gets directory from tauri dialog and pipes into the path prop

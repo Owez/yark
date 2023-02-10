@@ -7,95 +7,92 @@ import { yarkStore } from "./store";
 
 /**
  * Type alias for archive paths
- * 
+ *
  * - Includes full `/x/y/z` if local
  * - Includes only archive name (or local path) if federated
  */
 export type ArchivePath = string;
 
-/**
- * Archive with contains data about a playlist/channel
- */
-export class Archive {
+export interface CreateArchivePayload {
     server: string;
-    slug: string;
+    slug?: string;
+    path: string;
+    target: string;
+}
 
-    constructor(server: string, slug: string) { this.server = server; this.slug = slug; }
+export interface CreateExistingArchivePayload {
+    server: string;
+    slug?: string;
+    path: string;
+}
 
-    /**
-     * Creates and saves a brand new archive
-     * @param server Server URL to connect to
-     * @param slug Unique slug for the new archive
-     * @param path Path to save the new archive to (including final directory name)
-     * @param target The URL to target, e.g., playlist or channel
-     * @returns Newly-created archive
-     */
-    static async createNew(server: string, slug: string, path: string, target: string): Promise<Archive> {
-        const payload = { slug: slug, path: path, target: target };
-        return await fetch(server + "/archive?intent=create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
-            const slug = resp_json.slug;
-            return new Archive(server, slug)
-        })
-    }
+export interface Archive {
+    server: string;
+    slug?: string;
+}
 
-    /**
-     * Imports an existing archive already saved to a file location
-     * @param server Server URL to connect to
-     * @param slug Unique slug for the new archive
-     * @param path Path to save the new archive to (including final directory name)
-     * @returns Newly-imported archive
-     */
-    static async createExisting(server: string, slug: string, path: string): Promise<Archive> {
-        const payload = { slug: slug, path: path };
-        return await fetch(server + "/archive?intent=existing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
-            const slug = resp_json.slug;
-            return new Archive(server, slug)
-        })
-    }
+export function createArchive(server: string, slug?: string): Archive {
+    return { server, slug };
+}
 
-    /**
-     * Converts a pojo being deserialized into a full archive class
-     * @param pojo Pojo version of an archive to convert
-     * @returns The archive from it's pojo form
-     */
-    static fromPojo(pojo: ArchivePojo): Archive {
-        return new Archive(pojo.server, pojo.slug)
-    }
+export async function createNewRemote({ server, slug, path, target }: CreateArchivePayload): Promise<Archive> {
+    const payload = { slug, path, target };
+    const url = new URL(server);
 
-    /**
-     * Set this archive as the currently-opened one, also adds to recent archives
-     */
-    setAsCurrent() {
-        yarkStore.update(value => {
-            // Set opened archive to this
-            value.openedArchive = this
+    url.pathname = "/archive";
+    url.searchParams.set("intent", "create");
 
-            // Add to recent list
-            if (value.recents.length >= 10) {
-                value.recents.shift()
-            }
-            value.recents.push(this)
+    return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
+        const slug = resp_json.slug;
+        return createArchive(server, slug);
+    });
+}
 
-            // Return updated value
-            return value
-        })
-        goto(`/archive/videos`)
-    }
+export async function fromExistingRemote({ server, slug, path }: CreateExistingArchivePayload): Promise<Archive> {
+    const payload = { slug, path };
+    const url = new URL(server);
 
-    /**
-     * Fetches brief video information for an entire category/kind of videos
-     * @param kind Kind of video list to fetch (e.g., videos or livestreams)
-     * @returns Many brief pieces of video information
-     */
-    async fetchVideosBrief(kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
-        return await fetch(this.server + `/archive?slug=${this.slug}&kind=${archiveVideoKindToApiString(kind)}`).then(resp => resp.json())
-    }
+    url.pathname = "/archive";
+    url.searchParams.set("intent", "existing");
+
+    return await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(resp => resp.json()).then(resp_json => {
+        const slug = resp_json.slug;
+        return createArchive(server, slug);
+    });
+}
+
+export function createFromPojo(pojo: ArchivePojo): Archive {
+    return createArchive(pojo.server, pojo.slug);
+}
+
+export function setCurrentArchive(archive: Archive): void {
+    yarkStore.update(value => {
+        value.openedArchive = archive;
+
+        if (value.recents.length >= 10) {
+            value.recents.shift();
+        }
+
+        value.recents.push(archive);
+
+        return value;
+    });
+    goto(`/archive/videos`);
+}
+
+export async function fetchVideosBrief(archive: Archive, kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
+    const url = new URL(archive.server);
+    url.pathname = "/archive";
+    if (archive.slug) url.searchParams.set("slug", archive.slug);
+    url.searchParams.set("kind", archiveVideoKindToApiString(kind));
+
+    return await fetch(url).then(resp => resp.json());
 }
 
 /**
  * Pojo interface for deserializing archives
  */
-export interface ArchivePojo { server: string; slug: string; }
+export interface ArchivePojo { server: string; slug?: string; }
 
 /**
  * Video list kind which can be got from an archive

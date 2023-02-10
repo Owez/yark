@@ -5,7 +5,12 @@
 # Yark archives
 demo/
 foobar/
+
+# NixOS
 /.direnv
+
+# env
+.env
 
 # MacOS
 .DS*
