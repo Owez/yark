@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Official REST API for Yark archive management"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 license = "MIT"
-readme = "../README.md"
 classifiers = [
     "Private :: Do not Upload",
 ] # NOTE: work around for poetry #1537 <https://github.com/python-poetry/poetry/issues/1537>
