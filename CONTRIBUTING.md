@@ -78,10 +78,15 @@ Dependencies inside of the actual Yark code are a bit of a different story. If a
 Yark is separated into three areas of concern:
 
 1. The core `yark` library which contains the underlying archiving logic
-3. The `yark-pages` project which contains the typical GUI users use
-4. The `yark-cli` project which contains an alternate command-line interface
+   - *This needs Python + Poetry to develop on*
+2. The `yark-pages` project which contains the typical GUI users use
+   - *This needs NPM + Python + Poetry to develop on*
+3. The `yark-api` project which contains the behind-the-scenes API
+   - *This needs Python + Poetry to develop on*
+4. The `yark-cli` project which contains an old CLI interface
+   - *This needs Python + Poetry to develop on*
 
-When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains a [Falcon](https://falcon.readthedocs.io/en/stable/)-based API which these webpages connect to.
+When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains an API which these webpages connect to.
 
 ## Conventions
 
