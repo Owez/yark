@@ -24,17 +24,11 @@ flask-cors = "^3.0.10"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
-poethepoet = "^0.18.1"
 types-colorama = "^0.4.15.4"
 types-requests = "^2.28.11.8"
 black = "^22.12.0"
 pylint = "^2.16.1"
 types-python-slugify = "^8.0.0.0"
-
-[tool.poe.tasks]
-lint = { shell = "set -e && mypy yark_api --strict && pylint yark_api" }
-fmt = "black yark_api"
-dev = "flask --app yark_api --debug run --port=7666"
 
 [build-system]
 requires = ["poetry-core"]

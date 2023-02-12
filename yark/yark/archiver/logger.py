@@ -16,5 +16,3 @@ class DownloadProgressLogger(DownloadLogger):
 
 download_progress_percentage: float = 0.0
 """Percentage of the current video being downloaded from `DownloadProgressLogger` for use in progress reporting"""
-
-

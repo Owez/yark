@@ -61,5 +61,3 @@ def check_version_upstream() -> None:
             + "There's a major update for Yark ready to download, please update!"
             + Fore.RESET
         )
-
-

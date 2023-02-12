@@ -3,6 +3,7 @@
 from flask import Response, request
 from ..config import Config
 
+
 def error_response(msg: str, info: str | None = None, code: int = 500) -> Response:
     """Creates a standardized response for application-layer (our) errors"""
     return {"message": msg, "info": info}, code
@@ -14,4 +15,3 @@ def check_auth() -> Response | None:
     if auth is None or auth.split(" ")[-1] != Config().ADMIN_SECRET:
         return error_response("Invalid admin token", None, 401)
     return None
-
