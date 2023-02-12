@@ -2,10 +2,10 @@
 
 YouTube archiving made simple.
 
-If you're reading this, you're probably trying to download/use Yark via PyPI which has been decrepit. You can download a modern version of Yark [here](https://github.com/Owez/yark).
+<!-- TODO: uncomment when new gui is out -->
+<!-- If you're reading this, you're probably trying to download/use Yark via PyPI which has been removed in newer versions. You can download a modern version of Yark [here](https://github.com/Owez/yark).
 
-<p><img src="https://raw.githubusercontent.com/Owez/yark/1.2-support/examples/images/transition.png" alt="Version release transition" title="Version release transition" width="450" /></p>
-
+<p><img src="https://raw.githubusercontent.com/Owez/yark/1.2-support/examples/images/transition.png" alt="Version release transition" title="Version release transition" width="450" /></p> -->
 
 ## Installation
 

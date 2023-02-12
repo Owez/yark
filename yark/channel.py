@@ -220,6 +220,8 @@ class Channel:
             "logger": VideoLogger(),
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
+            # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
+            "concurrent_fragment_downloads": 8
         }
 
         # Get response and snip it
