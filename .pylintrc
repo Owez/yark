@@ -1,0 +1,9 @@
+[MAIN]
+
+[MESSAGES CONTROL]
+
+disable=
+    line-too-long,
+    f-string-without-interpolation,
+    broad-except,
+    wrong-import-order,

@@ -1,0 +1,72 @@
+name: "Docker Build"
+
+on:
+  push:
+    # Run on all v* version tags.
+    tags:
+      - 'v*'
+    # Also run on master
+    branches:
+      - 'master'
+  ## Eventually when unit testing is completed, PRs would be run against it.
+  # pull_request:
+  #   # Run on PRs
+  #   branches:
+  #     - 'master'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+
+      -
+        # Generate docker metadata for image
+        name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - 
+        # Add support for more platforms with QEMU (optional)
+        # https://github.com/docker/setup-qemu-action
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - 
+        # Creates and prepares buildx for docker build
+        # adding multi-platform images to the manifest
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - 
+        # add GitHub Container Registry login to docker if not running against a PR
+        name: Docker Login
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - 
+        # Build (and push if not a PR) the image to the GitHub Container Registry
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
