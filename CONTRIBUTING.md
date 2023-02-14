@@ -43,7 +43,7 @@ Setting up a full development enviroment for Yark is made easy thanks to Makefil
 - Python 3.11 ([Tutorial](https://www.python.org/downloads/); `apt install python3.11`)
 - Poetry ([Tutorial](https://python-poetry.org/docs/#installation); `pip3.11 install poetry`)
 
-If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop. Below is the list of the ways you can use to develop the sub-projects of Yark:
+If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop except for some setup for the API; please read it's guide. Once that's done, here is the list of the ways you can use to develop the sub-projects of Yark:
 
 1. To develop the GUI and API, or just the GUI: `make dev`
 2. To develop just the API: `cd yark-api && make dev`

@@ -13,3 +13,7 @@ lint: install
 dev: install
 	echo "Starting yark-api development server.."
 	poetry run flask --app yark_api --debug run --port=7666
+
+flask_shell: install
+	echo "Booting into the Flask interactive shell.."
+	poetry run flask --app yark_api shell

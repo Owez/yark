@@ -20,24 +20,22 @@ TODO: add docker and then make this guide
 
 ## Development
 
-To get this API setup, please first install Python 3.11 and make sure you've got Poetry installed. With these installed, you can download the dependencies for the API:
-
-```shell
-$ poetry install
-```
-
-Once you've got all of the dependencies installed, create a new `.env` file and put in some environment variables:
+To get this API setup, please make sure you've got the development dependencies from the contributing file installed. Once you've got these installed, please make a new `.env` file with whatever admin secret and database path you'd like:
 
 ```env
-YARK_DATABASE_URI=sqlite:///example.db
 YARK_SECRET=supersecure
+YARK_DATABASE_URI=sqlite:///dev.db
 ```
 
-You now have everything installed and you're not ready to develop! Switch your IDE to use the newly-created virtual environment. To run the API in debug mode, just run the following:
+With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type the following three commands:
 
-```shell
-$ poetry run poe dev
+```python
+>>> from yark_api.extensions import *
+>>> from yark_api.models import *
+>>> db.create_all()
 ```
+
+Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉
 
 ## Routes
 
