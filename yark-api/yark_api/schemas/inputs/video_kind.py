@@ -8,7 +8,7 @@ from marshmallow import Schema
 from marshmallow_enum import EnumField
 
 
-class ArchiveGetKind(Enum):
+class VideoGetKind(Enum):
     """Specific kind of top-level information to fetch for an archive"""
 
     videos = 1
@@ -32,8 +32,21 @@ class ArchiveGetKind(Enum):
         videos_list: list[Video] = videos.inner.values()
         return videos_list
 
+    def get_specific(self, archive: Archive, id: str) -> Video | None:
+        """Tries to get a specific video `id` from the provided `archive` or returns nothing"""
+        logging.debug(
+            f"Trying to get video {id} from {archive} in video category {self}"
+        )
+        match self.value:
+            case 1:
+                return archive.videos.inner.get(id)
+            case 2:
+                return archive.livestreams.inner.get(id)
+            case 3:
+                return archive.shorts.inner.get(id)
 
-class ArchiveGetQuerySchema(Schema):
+
+class VideoKindGetQuerySchema(Schema):
     """Schema for defining which archive a user would like to retrieve"""
 
-    kind = EnumField(ArchiveGetKind, required=True)
+    kind = EnumField(VideoGetKind, required=True)

@@ -1,13 +1,12 @@
 """Archive and archive-centric CRUD route handlers"""
 
 from __future__ import annotations
-from ..schemas.inputs import archive_get, archive_post
+from ..schemas.inputs import archive_post, video_kind
 from flask_restful import Resource
 from flask import Response, request
 from .. import extensions
 from .. import models
 from marshmallow import ValidationError
-from yark.archiver.archive import Archive
 from pathlib import Path
 import logging
 from typing import Any
@@ -16,6 +15,7 @@ import slugify
 from ..schemas.outputs import video_brief
 from sqlalchemy.exc import IntegrityError
 from yark.archiver.video.video import Video
+from yark.archiver.archive import Archive
 
 
 class ArchiveResource(Resource):
@@ -56,31 +56,13 @@ class SpecificArchiveResource(Resource):
 
         # Decode query args to get kind
         try:
-            schema_query = archive_get.ArchiveGetQuerySchema().load(request.args)
-
+            schema_query = video_kind.VideoKindGetQuerySchema().load(request.args)
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
-        # Get archive by slug
-        archive_info: models.Archive | None = models.Archive.query.filter_by(
-            slug=slug
-        ).first()
-
-        # Return 404 if it doesn't exist
-        if archive_info is None:
-            return utils.error_response("Archive not found", None, 404)
-
-        # Open archive
-        try:
-            archive_path = Path(archive_info.path)
-            archive = Archive.load(archive_path)
-        except:
-            logging.error(f"Archive directory for {slug} not found!")
-            return utils.error_response(
-                "Archive seems to be deleted",
-                "Archive is known about but it's data could not be found. The archive directory/file might've been moved or deleted by accident. This isn't your fault if you're a user.",
-                404,
-            )
+        # Get archive
+        if not isinstance((archive := utils.get_archive(slug)), Archive):
+            return archive
 
         # Serialize video list
         videos: list[Video] = schema_query["kind"].get_list(archive)
