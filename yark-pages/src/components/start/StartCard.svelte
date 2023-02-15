@@ -4,8 +4,7 @@
 	import StartCardHeader from './StartCardHeader.svelte';
 
 	export let title = 'Start Card';
-	export let description =
-		'This is an example of a start card which is part of the Yark design';
+	export let description = 'This is an example of a start card which is part of the Yark design';
 	export let href = '/';
 	export let ballKind: number;
 	export let state: StartCardState = StartCardState.Enabled;

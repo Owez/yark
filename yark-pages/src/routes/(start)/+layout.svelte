@@ -8,9 +8,9 @@
 	h1 {
 		font-weight: 600;
 		font-size: 20pt;
-		margin:0;
-		margin-top:1rem;
-		margin-bottom:0.25rem;
+		margin: 0;
+		margin-top: 1rem;
+		margin-bottom: 0.25rem;
 
 		span {
 			font-weight: normal;

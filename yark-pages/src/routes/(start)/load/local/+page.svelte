@@ -64,7 +64,7 @@
 			server: LOCAL_SERVER,
 			path: path,
 			slug: name
-		})
+		});
 		setCurrentArchive(importedArchive);
 	}
 </script>
