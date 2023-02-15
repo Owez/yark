@@ -1,6 +1,7 @@
-"""Archive CRUD route handlers"""
+"""Archive and archive-centric CRUD route handlers"""
 
 from __future__ import annotations
+from ..schemas.inputs import archive_get, archive_post
 from flask_restful import Resource
 from flask import Response, request
 from .. import extensions
@@ -12,13 +13,13 @@ import logging
 from typing import Any
 from . import utils
 import slugify
-from ..schemas import archive_post, archive_get, video_brief
+from ..schemas.outputs import video_brief
 from sqlalchemy.exc import IntegrityError
 from yark.archiver.video.video import Video
 
 
 class ArchiveResource(Resource):
-    """Archive CRUD"""
+    """General archive handler for a non-specific one"""
 
     def post(self) -> Response:  # TODO: auth
         """Creates a new archive if the API owner requests to"""
@@ -45,24 +46,24 @@ class ArchiveResource(Resource):
                 raise Exception(f"Unknown kind {unknown} for archive post intent")
 
 
-class ArchiveListResource(Resource):
-    """Archive list information"""
+class SpecificArchiveResource(Resource):
+    """Operations on a specific archive"""
 
     @extensions.cache.cached(timeout=60, query_string=True)
-    def get(self) -> Response:
+    def get(self, slug: str) -> Response:
         """Get archive information for the kind of information wanted; e.g. livestreams/videos"""
-        # Decode query args
+        logging.info(f"Getting existing archive with slug '{slug}'")
+
+        # Decode query args to get kind
         try:
             schema_query = archive_get.ArchiveGetQuerySchema().load(request.args)
-            logging.info(
-                "Getting existing archive with slug '" + schema_query["slug"] + "'"
-            )
+
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
         # Get archive by slug
         archive_info: models.Archive | None = models.Archive.query.filter_by(
-            slug=schema_query["slug"]
+            slug=slug
         ).first()
 
         # Return 404 if it doesn't exist
@@ -74,9 +75,7 @@ class ArchiveListResource(Resource):
             archive_path = Path(archive_info.path)
             archive = Archive.load(archive_path)
         except:
-            logging.error(
-                f"Archive directory for '" + schema_query["slug"] + "' not found!"
-            )
+            logging.error(f"Archive directory for {slug} not found!")
             return utils.error_response(
                 "Archive seems to be deleted",
                 "Archive is known about but it's data could not be found. The archive directory/file might've been moved or deleted by accident. This isn't your fault if you're a user.",

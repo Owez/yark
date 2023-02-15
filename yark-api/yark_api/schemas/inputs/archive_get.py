@@ -4,7 +4,7 @@ from enum import Enum
 from yark.archiver.archive import Archive
 from yark.archiver.video.video import Video
 import logging
-from marshmallow import Schema, fields
+from marshmallow import Schema
 from marshmallow_enum import EnumField
 
 
@@ -36,5 +36,4 @@ class ArchiveGetKind(Enum):
 class ArchiveGetQuerySchema(Schema):
     """Schema for defining which archive a user would like to retrieve"""
 
-    slug = fields.Str(required=True)
     kind = EnumField(ArchiveGetKind, required=True)

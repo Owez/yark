@@ -10,9 +10,10 @@ See https://github.com/Owez/yark/tree/master/yark-api for more information
 from flask import Flask
 from . import extensions
 from . import config
-from .routes.archive import ArchiveResource, ArchiveListResource
+from .routes.archive import ArchiveResource, SpecificArchiveResource
 from .routes.misc import IndexResource
-from .routes.thumbnail import ThumbnailResource
+from .routes.video import SpecificVideoResource
+from .routes.thumbnail import SpecificThumbnailResource
 import logging
 
 
@@ -27,8 +28,13 @@ def create_app() -> Flask:
     # Add resources to routes
     extensions.api.add_resource(IndexResource, "/")
     extensions.api.add_resource(ArchiveResource, "/archive")
-    extensions.api.add_resource(ArchiveListResource, "/archive/list")
-    extensions.api.add_resource(ThumbnailResource, "/thumbnail")
+    extensions.api.add_resource(SpecificArchiveResource, "/archive/<string:slug>")
+    extensions.api.add_resource(
+        SpecificVideoResource, "/archive/<string:slug>/video/<string:id>"
+    )
+    extensions.api.add_resource(
+        SpecificThumbnailResource, "/archive/<string:slug>/thumbnail/<string:id>"
+    )
 
     # Integrate extensions
     extensions.db.init_app(app)

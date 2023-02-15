@@ -3,7 +3,7 @@
 from enum import Enum
 from marshmallow import Schema, fields, validate
 from marshmallow_enum import EnumField
-from .. import models
+from ... import models
 
 
 class ArchivePostKind(Enum):
