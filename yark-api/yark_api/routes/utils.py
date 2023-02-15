@@ -31,7 +31,7 @@ def get_archive(slug: str) -> Archive | Response:
     # Return 404 if it doesn't exist
     if archive_info is None:
         return error_response("Archive not found", None, 404)
-    
+
     # Open archive
     try:
         archive_path = Path(archive_info.path)
