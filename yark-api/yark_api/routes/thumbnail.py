@@ -5,7 +5,7 @@ from flask import Response, request, send_from_directory
 from ..schemas import thumbnail_get
 from marshmallow import ValidationError
 from . import utils
-from .. import extensions, models
+from .. import models
 from pathlib import Path
 from werkzeug.exceptions import NotFound
 import slugify
@@ -14,9 +14,11 @@ import slugify
 class ThumbnailResource(Resource):
     """Thumbnail CRUD"""
 
-    @extensions.cache.cached(timeout=0, query_string=True)
     def get(self) -> Response:
         """Get a thumbnail by it's identifier"""
+        # NOTE: ideally there should be cache on this but it errors out because of the send_from_directory
+        #       see <https://github.com/pallets-eco/flask-caching/issues/167> for more about this
+
         # Decode query arg to get id
         try:
             schema_query = thumbnail_get.ThumbnailGetQuerySchema().load(request.args)
@@ -34,11 +36,13 @@ class ThumbnailResource(Resource):
             return utils.error_response("Archive not found", None, 404)
 
         # Build a path to the thumbnail
-        thumbnail_dir = Path(archive_info.path) / "thumbnails"
+        thumbnail_dir = Path(archive_info.path) / "images"
         thumbnail_filename = schema_query["id"] + ".webp"
 
         # Serve the thumbnail from directory
         try:
+            print(thumbnail_dir)
+            print(thumbnail_filename)
             return send_from_directory(thumbnail_dir, thumbnail_filename)
 
         # Thumbnail not found
