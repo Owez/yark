@@ -8,8 +8,8 @@ YouTube archiving made simple (REST API)
   - [Routes](#routes)
     - [GET `/`](#get-)
     - [POST `/archive?intent`](#post-archiveintent)
-    - [GET `/archive/list?slug&kind`](#get-archivelistslugkind)
-    - [GET `/thumbnail?archive_slug&id`](#get-thumbnailarchive_slugid)
+    - [GET `/archive/:id?kind`](#get-archiveidkind)
+    - [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
 
 
 ## End-user
@@ -74,7 +74,7 @@ This route also requires a bearer token containing admin credentials. Once all o
 }
 ```
 
-### GET `/archive/list?slug&kind`
+### GET `/archive/:id?kind`
 
 This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known slug of the archive you're trying to get from the API instance and the kind of video list you're trying to fetch:
 
@@ -103,6 +103,6 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 
 Each of the thumbnail identifiers provided back here can be used to [get](#get-thumbnailarchive_slugid) thumbnails which is used commonly to visualize a list of videos to a user.
 
-### GET `/thumbnail?archive_slug&id`
+### GET `/archive/:slug/thumbnail/:id`
 
 This route returns a thumbnail image for the provided archive slug identifier, as well as the thumbnail identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
