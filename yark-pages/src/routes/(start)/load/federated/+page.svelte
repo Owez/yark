@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createArchive, setCurrentArchive } from '$lib/archive';
+	import { setCurrentArchive, type Archive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import Name from '../../../../components/entries/Name.svelte';
 	import StartCard from '../../../../components/start/StartCard.svelte';
@@ -57,7 +57,7 @@
 		}
 
 		// Connect to remote archive
-		const remoteArchive = createArchive(server, name);
+		const remoteArchive: Archive = { server, slug: name };
 		setCurrentArchive(remoteArchive);
 	}
 </script>

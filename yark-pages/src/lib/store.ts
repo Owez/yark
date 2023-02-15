@@ -44,7 +44,7 @@ function yarkStoreInitial(): YarkStore {
  * @returns Empty version of a store
  */
 function createEmptyYarkStore(): YarkStore {
-	return { recents: [], openedArchive: null, federatedAccept: false };
+	return { recents: [], openedArchive: undefined, federatedAccept: false };
 }
 
 /**
@@ -58,7 +58,7 @@ export interface YarkStore {
 	/**
 	 * Currently-opened archive user is using
 	 */
-	openedArchive: Archive | null;
+	openedArchive?: Archive;
 	/**
 	 * If the user accepted to view the potentially bad content on the federated listings
 	 */
