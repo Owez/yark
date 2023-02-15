@@ -8,8 +8,9 @@ YouTube archiving made simple (REST API)
   - [Routes](#routes)
     - [GET `/`](#get-)
     - [POST `/archive?intent`](#post-archiveintent)
-    - [GET `/archive?slug&kind`](#get-archiveslugkind)
-    - [GET `/thumbnail?archive_slug&id`](#get-thumbnailarchive_slugid)
+    - [GET `/archive/:id?kind`](#get-archiveidkind)
+    - [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
+    - [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
 
 
 ## End-user
@@ -20,24 +21,22 @@ TODO: add docker and then make this guide
 
 ## Development
 
-To get this API setup, please first install Python 3.11 and make sure you've got Poetry installed. With these installed, you can download the dependencies for the API:
-
-```shell
-$ poetry install
-```
-
-Once you've got all of the dependencies installed, create a new `.env` file and put in some environment variables:
+To get this API setup, please make sure you've got the development dependencies from the contributing file installed. Once you've got these installed, please make a new `.env` file with whatever admin secret and database path you'd like:
 
 ```env
-YARK_DATABASE_URI=sqlite:///example.db
 YARK_SECRET=supersecure
+YARK_DATABASE_URI=sqlite:///dev.db
 ```
 
-You now have everything installed and you're not ready to develop! Switch your IDE to use the newly-created virtual environment. To run the API in debug mode, just run the following:
+With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type the following three commands:
 
-```shell
-$ poetry run poe dev
+```python
+>>> from yark_api.extensions import *
+>>> from yark_api.models import *
+>>> db.create_all()
 ```
+
+Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉
 
 ## Routes
 
@@ -76,7 +75,7 @@ This route also requires a bearer token containing admin credentials. Once all o
 }
 ```
 
-### GET `/archive?slug&kind`
+### GET `/archive/:id?kind`
 
 This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known slug of the archive you're trying to get from the API instance and the kind of video list you're trying to fetch:
 
@@ -105,6 +104,42 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 
 Each of the thumbnail identifiers provided back here can be used to [get](#get-thumbnailarchive_slugid) thumbnails which is used commonly to visualize a list of videos to a user.
 
-### GET `/thumbnail?archive_slug&id`
+### GET `/archive/:slug/thumbnail/:id`
 
 This route returns a thumbnail image for the provided archive slug identifier, as well as the thumbnail identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
+
+### GET `/archive/:slug/video/:id`
+
+This route gets information about a specific video, probably one that you found from a [video list](#get-archiveidkind). When you supply it with the archive slug identifier and the video's identifier, it'll return with the raw archive information about the video.
+
+This might change in the future, but as of now the raw JSON archive format has perfect compatibility with everything that needs to be displayed.
+
+A full example of a return looks like this:
+
+```json
+{
+	"uploaded": "2021-04-29T00:00:00",
+	"width": 1920,
+	"height": 1080,
+	"title": {
+		"2023-02-15T17:15:35.512302": "GLORY TO ARSTOZKA"
+	},
+	"description": {
+		"2023-02-15T17:15:35.512305": "quickly animated poster for graphics outcome"
+	},
+	"views": {
+		"2023-02-15T17:15:35.512307": 22
+	},
+	"likes": {
+		"2023-02-15T17:15:35.512308": null
+	},
+	"thumbnail": {
+		"2023-02-15T17:15:35.684134": "8706b76c30fd98551f9c5d246f7294ec173f1086"
+	},
+	"deleted": {
+		"2023-02-15T17:15:35.684152": false
+	},
+	"comments": {},
+	"notes": []
+}
+```

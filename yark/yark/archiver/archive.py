@@ -33,6 +33,7 @@ class Archive:
     shorts: Videos
     reporter: Reporter
     comment_authors: dict[str, CommentAuthor]
+    backup_lock: bool
 
     def __init__(
         self,
@@ -52,6 +53,7 @@ class Archive:
         self.shorts = Videos(self) if shorts is None else shorts
         self.reporter = Reporter(self)
         self.comment_authors = comment_authors
+        self.backup_lock = False
 
     @staticmethod
     def load(path: Path) -> Archive:
@@ -68,13 +70,22 @@ class Archive:
 
         # Check version before fully decoding and exit if wrong
         archive_version = encoded["version"]
-        if archive_version != ARCHIVE_COMPAT:
+        should_migrate = archive_version != ARCHIVE_COMPAT
+        if should_migrate:
             encoded = _migrate(
                 archive_version, ARCHIVE_COMPAT, encoded, path, archive_name
             )
 
-        # Decode and return
-        return Archive._from_archive_o(encoded, path)
+        # Decode the encoded archive
+        archive = Archive._from_archive_o(encoded, path)
+
+        # Commit immediately if we migrated, also stop future backups
+        if should_migrate:
+            archive.commit(True)
+            archive.backup_lock = True
+
+        # Return the new archive
+        return archive
 
     def metadata_download(self, config: Config) -> RawMetadata:
         """Downloads raw metadata for further parsing"""
@@ -334,7 +345,7 @@ class Archive:
     def commit(self, backup: bool = False) -> None:
         """Commits (saves) archive to path; do this once you've finished all of your transactions"""
         # Save backup if explicitly wanted
-        if backup:
+        if backup and not self.backup_lock:
             self._backup()
 
         # Directories

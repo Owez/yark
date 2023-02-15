@@ -5,6 +5,7 @@
   - [Don't know coding?](#dont-know-coding)
   - [Want to code?](#want-to-code)
 - [Internal Information](#internal-information)
+  - [Setting up development](#setting-up-development)
   - [Ideology](#ideology)
     - [Users](#users)
     - [KISS](#kiss)
@@ -33,6 +34,25 @@ Please make sure you describe the change so any developer could understand it â€
 
 This section goes through some of the more complex internal information which will be useful if your making changes inside of Yark in a PR.
 
+## Setting up development
+
+Setting up a full development enviroment for Yark is made easy thanks to Makefiles. To setup your development enviroment, first make sure these three packages are installed:
+
+- Make ([Tutorial](https://www.gnu.org/software/make/#download); `apt install make`)
+- NPM ([Tutorial](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/))
+- Python 3.11 ([Tutorial](https://www.python.org/downloads/); `apt install python3.11`)
+- Poetry ([Tutorial](https://python-poetry.org/docs/#installation); `pip3.11 install poetry`)
+
+If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop except for some setup for the API; please read it's guide. Once that's done, here is the list of the ways you can use to develop the sub-projects of Yark:
+
+1. To develop the GUI and API, or just the GUI: `make dev`
+2. To develop just the API: `cd yark-api && make dev`
+3. To develop the core library, you just need an IDE
+
+Basically the top-level directory has a Makefile in it, and each specific project also has it's own specific Makefile. These files install all dependencies for you and run a nice development server if `dev` is available for you to use.
+
+This is the section to link new developers to so that they can setup their machine.
+
 ## Ideology
 
 ### Users
@@ -58,10 +78,15 @@ Dependencies inside of the actual Yark code are a bit of a different story. If a
 Yark is separated into three areas of concern:
 
 1. The core `yark` library which contains the underlying archiving logic
-3. The `yark-pages` project which contains the typical GUI users use
-4. The `yark-cli` project which contains an alternate command-line interface
+   - *This needs Python + Poetry to develop on*
+2. The `yark-pages` project which contains the typical GUI users use
+   - *This needs NPM + Python + Poetry to develop on*
+3. The `yark-api` project which contains the behind-the-scenes API
+   - *This needs Python + Poetry to develop on*
+4. The `yark-cli` project which contains an old CLI interface
+   - *This needs Python + Poetry to develop on*
 
-When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains a [Falcon](https://falcon.readthedocs.io/en/stable/)-based API which these webpages connect to.
+When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains an API which these webpages connect to.
 
 ## Conventions
 
@@ -104,4 +129,4 @@ Whereas the `_b` and `_ib` ones would be used for a JSON child object which woul
 
 These two are used because the full objects (the first example) is easier to implement and are more self-contained, but we often need to select items by their ID straight from their parents.
 
-This system will be changed to dataclasses soon because it's not a good way to this. But for now this is what the archival conversion system looks like.
+This system will be changed to dataclasses soon (see [#107](https://github.com/Owez/yark/pull/107)) because it's not a good way to this. But for now this is what the archival conversion system looks like.

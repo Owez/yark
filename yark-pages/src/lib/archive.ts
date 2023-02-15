@@ -82,8 +82,7 @@ export function setCurrentArchive(archive: Archive): void {
 
 export async function fetchVideosBrief(archive: Archive, kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
     const url = new URL(archive.server);
-    url.pathname = "/archive";
-    if (archive.slug) url.searchParams.set("slug", archive.slug);
+    url.pathname = `/archive/${archive.slug}`;
     url.searchParams.set("kind", archiveVideoKindToApiString(kind));
 
     return await fetch(url).then(resp => resp.json());

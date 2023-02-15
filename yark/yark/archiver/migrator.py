@@ -36,7 +36,7 @@ def _migrate(
         f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {archive_name}/yark.bak"
     )
 
-    # Start recursion step
+    # Start recursion stepper
     return _step(expected_version, path, current_version, encoded, archive_name)
 
 
