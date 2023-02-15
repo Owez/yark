@@ -8,7 +8,7 @@ YouTube archiving made simple (REST API)
   - [Routes](#routes)
     - [GET `/`](#get-)
     - [POST `/archive?intent`](#post-archiveintent)
-    - [GET `/archive?slug&kind`](#get-archiveslugkind)
+    - [GET `/archive/list?slug&kind`](#get-archivelistslugkind)
     - [GET `/thumbnail?archive_slug&id`](#get-thumbnailarchive_slugid)
 
 
@@ -74,7 +74,7 @@ This route also requires a bearer token containing admin credentials. Once all o
 }
 ```
 
-### GET `/archive?slug&kind`
+### GET `/archive/list?slug&kind`
 
 This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known slug of the archive you're trying to get from the API instance and the kind of video list you're trying to fetch:
 

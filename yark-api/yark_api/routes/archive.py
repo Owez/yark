@@ -44,6 +44,10 @@ class ArchiveResource(Resource):
             case unknown:
                 raise Exception(f"Unknown kind {unknown} for archive post intent")
 
+
+class ArchiveListResource(Resource):
+    """Archive list information"""
+
     @extensions.cache.cached(timeout=60, query_string=True)
     def get(self) -> Response:
         """Get archive information for the kind of information wanted; e.g. livestreams/videos"""
