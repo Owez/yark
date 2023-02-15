@@ -10,6 +10,7 @@ YouTube archiving made simple (REST API)
     - [POST `/archive?intent`](#post-archiveintent)
     - [GET `/archive/:id?kind`](#get-archiveidkind)
     - [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
+    - [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
 
 
 ## End-user
@@ -106,3 +107,39 @@ Each of the thumbnail identifiers provided back here can be used to [get](#get-t
 ### GET `/archive/:slug/thumbnail/:id`
 
 This route returns a thumbnail image for the provided archive slug identifier, as well as the thumbnail identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
+
+### GET `/archive/:slug/video/:id`
+
+This route gets information about a specific video, probably one that you found from a [video list](#get-archiveidkind). When you supply it with the archive slug identifier and the video's identifier, it'll return with the raw archive information about the video.
+
+This might change in the future, but as of now the raw JSON archive format has perfect compatibility with everything that needs to be displayed.
+
+A full example of a return looks like this:
+
+```json
+{
+	"uploaded": "2021-04-29T00:00:00",
+	"width": 1920,
+	"height": 1080,
+	"title": {
+		"2023-02-15T17:15:35.512302": "GLORY TO ARSTOZKA"
+	},
+	"description": {
+		"2023-02-15T17:15:35.512305": "quickly animated poster for graphics outcome"
+	},
+	"views": {
+		"2023-02-15T17:15:35.512307": 22
+	},
+	"likes": {
+		"2023-02-15T17:15:35.512308": null
+	},
+	"thumbnail": {
+		"2023-02-15T17:15:35.684134": "8706b76c30fd98551f9c5d246f7294ec173f1086"
+	},
+	"deleted": {
+		"2023-02-15T17:15:35.684152": false
+	},
+	"comments": {},
+	"notes": []
+}
+```
