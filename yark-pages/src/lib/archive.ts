@@ -88,7 +88,7 @@ export class Archive {
      * @returns Many brief pieces of video information
      */
     async fetchVideosBrief(kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
-        return await fetch(this.server + `/archive/list?slug=${this.slug}&kind=${archiveVideoKindToApiString(kind)}`).then(resp => resp.json())
+        return await fetch(this.server + `/archive/${this.slug}&kind=${archiveVideoKindToApiString(kind)}`).then(resp => resp.json())
     }
 }
 
