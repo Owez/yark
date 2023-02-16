@@ -11,4 +11,9 @@ lint: install
 
 dev: install
 	echo "Starting yark-pages development server.."
+	$(MAKE) -C ../yark-api build
 	npm run tauri dev
+
+build: install
+	echo "Building production version of yark-api.."
+	$(MAKE) -C ../yark-api build
