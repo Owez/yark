@@ -6,12 +6,18 @@ import { goto } from '$app/navigation';
 import { yarkStore } from './store';
 
 /**
- * Type alias for archive paths
- *
- * - Includes full `/x/y/z` if local
- * - Includes only archive name (or local path) if federated
+ * Core archive representation used by various components
  */
-export type ArchivePath = string;
+export interface Archive {
+	/**
+	 * The base server url this archive can be found at
+	 */
+	server: string;
+	/**
+	 * The unique slug identifier of this archive
+	 */
+	slug: string;
+}
 
 /**
  * Payload for creating a brand new {@link Archive} using a server
@@ -51,20 +57,6 @@ export interface ImportArchiveRemotePayload {
 	 * The full path (from drive/root) on the server to the archive to import
 	 */
 	path: string;
-}
-
-/**
- * Core archive representation used by various components
- */
-export interface Archive {
-	/**
-	 * The base server url this archive can be found at
-	 */
-	server: string;
-	/**
-	 * The unique slug identifier of this archive
-	 */
-	slug: string;
 }
 
 /**
