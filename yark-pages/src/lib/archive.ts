@@ -91,6 +91,7 @@ export async function createNewRemote({
 
 /**
  * Imports an existing archive on the server, effectively making the server aware of this existing archive
+ * TODO: document auth once done
  * @param param0 Payload for importing
  * @returns Representation of the newly-imported archive
  */
@@ -99,6 +100,7 @@ export async function importNewRemote({
 	slug,
 	path
 }: ImportArchiveRemotePayload): Promise<Archive> {
+	// TODO: auth
 	const payload = { slug, path };
 	const url = new URL(server);
 
