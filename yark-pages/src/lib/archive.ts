@@ -13,30 +13,72 @@ import { yarkStore } from './store';
  */
 export type ArchivePath = string;
 
-export interface CreateArchivePayload {
+/**
+ * Payload for creating a brand new {@link Archive} using a server
+ */
+export interface CreateArchiveRemotePayload {
+	/**
+	 * See {@link Archive.server}
+	 */
 	server: string;
+	/**
+	 * See {@link Archive.slug}
+	 */
 	slug: string;
+	/**
+	 * The full path (from drive/root) on the server to save the new archive to, including the final directory name
+	 */
 	path: string;
+	/**
+	 * The YouTube target URL which the archive is intended to capture
+	 */
 	target: string;
 }
 
-export interface CreateExistingArchivePayload {
+/**
+ * Payload for importing an existing {@link Archive} into a server
+ */
+export interface ImportArchiveRemotePayload {
+	/**
+	 * See {@link Archive.server}
+	 */
 	server: string;
+	/**
+	 * See {@link Archive.slug}
+	 */
 	slug: string;
+	/**
+	 * The full path (from drive/root) on the server to the archive to import
+	 */
 	path: string;
 }
 
+/**
+ * Core archive representation used by various components
+ */
 export interface Archive {
+	/**
+	 * The base server url this archive can be found at
+	 */
 	server: string;
+	/**
+	 * The unique slug identifier of this archive
+	 */
 	slug: string;
 }
 
+/**
+ * Creates a brand new archive on the server, provided that the credentials are correct
+ * TODO: document auth once done
+ * @param param0 Payload for creation
+ * @returns Representation of the newly-created archive
+ */
 export async function createNewRemote({
 	server,
 	slug,
 	path,
 	target
-}: CreateArchivePayload): Promise<Archive> {
+}: CreateArchiveRemotePayload): Promise<Archive> { // TODO: auth
 	const payload = { slug, path, target };
 	const url = new URL(server);
 
@@ -54,11 +96,16 @@ export async function createNewRemote({
 		});
 }
 
-export async function fromExistingRemote({
+/**
+ * Imports an existing archive on the server, effectively making the server aware of this existing archive
+ * @param param0 Payload for importing
+ * @returns Representation of the newly-imported archive
+ */
+export async function importNewRemote({
 	server,
 	slug,
 	path
-}: CreateExistingArchivePayload): Promise<Archive> {
+}: ImportArchiveRemotePayload): Promise<Archive> {
 	const payload = { slug, path };
 	const url = new URL(server);
 
@@ -76,6 +123,10 @@ export async function fromExistingRemote({
 		});
 }
 
+/**
+ * Sets an archive to be the currently-operable archive in the app-wide store
+ * @param archive Archive to set as current
+ */
 export function setCurrentArchive(archive: Archive): void {
 	yarkStore.update((value) => {
 		value.openedArchive = archive;
@@ -91,6 +142,12 @@ export function setCurrentArchive(archive: Archive): void {
 	goto(`/archive/videos`);
 }
 
+/**
+ * Fetches information on a whole list of videos (e.g., livestreams) in the archive for display
+ * @param archive Archive to fetch videos inside of
+ * @param kind Kind of videos to fetch
+ * @returns Brief info about an entire list/category of videos on the archive
+ */
 export async function fetchVideosBrief(
 	archive: Archive,
 	kind: ArchiveVideoKind
