@@ -44,11 +44,11 @@ Setting up a full development enviroment for Yark is made easy thanks to Makefil
 - Python 3.11 ([Tutorial](https://www.python.org/downloads/); `apt install python3.11`)
 - Poetry ([Tutorial](https://python-poetry.org/docs/#installation); `pip3.11 install poetry`)
 
-If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop except for some setup for the API; please read it's guide. Once that's done, here is the list of the ways you can use to develop the sub-projects of Yark:
+If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop except for some setup for the API; please read it's guide. Once that's done, you can start the programs you want to develop for:
 
-1. To develop the GUI and API, or just the GUI: `make dev`[^extra]
-2. To develop just the API: `cd yark-api && make dev`
-3. To develop the core library, you just need an IDE
+- To develop the API, run: `cd yark-api && make dev`
+- To develop the GUI, run the API and then `cd yark-pages && make dev`
+- To develop the library you don't have to run anything!
 
 Basically the top-level directory has a Makefile in it, and each specific project also has it's own specific Makefile. These files install all dependencies for you and run a nice development server if `dev` is available for you to use.
 
@@ -97,13 +97,8 @@ When Yark is built into the app, it uses the `yark` library so all the logic wor
 
 Yark uses some pre-defined ports that we assume certain things to *probably* be running on. Everything ideally in development and production should be ran on the following ports:
 
-- Development API: `7665`
-- Production API: `7666`
-- GUI Application: `7667`
-
-We differentiate these because the application actually runs two APIs in development: a standalone development one and the one integrated as a [sidecar](https://tauri.app/v1/guides/building/sidecar) into the core application. In development mode we just ignore the one running as a sidecar because it's harder to debug and use the nice standalone one. In production only the sidecar API is used.
-
-TODO: ts check with https://discord.com/channels/616186924390023171/1072473736797765642/1072475213285040160 then run
+- API: `7666`
+- GUI: `7667`
 
 ### Branches
 
