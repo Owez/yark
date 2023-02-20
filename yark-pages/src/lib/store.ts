@@ -3,8 +3,9 @@
  */
 
 import { writable } from 'svelte/store';
-import { Archive, type ArchivePojo } from './archive';
+import type { Archive } from './archive';
 import { invoke } from '@tauri-apps/api';
+import { browser } from '$app/environment';
 
 /**
  * Main store interface which automatically saves into `localStorage` if browser is present
@@ -13,6 +14,10 @@ export const yarkStore = writable(yarkStoreInitial());
 
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
+	// Stops this function from being ran on the serverside in development mode; see <https://github.com/Owez/yark/pull/111>
+	if (!browser) return;
+
+	// Sets the store to the known local storage key
 	window.localStorage.setItem('yarkStore', JSON.stringify(value));
 });
 
@@ -21,35 +26,27 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
+	// Stops this function from being ran on the serverside in development mode; see <https://github.com/Owez/yark/pull/111>
+	if (!browser) return createEmptyYarkStore();
+
 	// Get the main storage container
 	const foundString = window.localStorage.getItem('yarkStore');
 
-	// Decode if it's present
+	// Decode and return if it's present
 	if (foundString != null) {
-		/**
-		 * Ad-hoc interface for decoding a Yark store
-		 */
-		interface YarkStorePojo {
-			recents: ArchivePojo[];
-			openedArchive: ArchivePojo | null;
-			federatedAccept: boolean;
-		}
-
-		// Parse the stringified JSON into the Yark store pojo
-		const yarkStorePojo: YarkStorePojo = JSON.parse(foundString);
-
-		// Parse into final value and return
-		return {
-			recents: yarkStorePojo.recents.map((archivePojo) => Archive.fromPojo(archivePojo)),
-			openedArchive: yarkStorePojo.openedArchive
-				? Archive.fromPojo(yarkStorePojo.openedArchive)
-				: null,
-			federatedAccept: yarkStorePojo.federatedAccept
-		};
+		return JSON.parse(foundString);
 	}
 
 	// Return the default value if we couldn't get and decode an existing one
-	return { recents: [], openedArchive: null, federatedAccept: false };
+	return createEmptyYarkStore();
+}
+
+/**
+ * Creates an empty store for use when we don't know what the store is, or when we need phantom data
+ * @returns Empty version of a store
+ */
+function createEmptyYarkStore(): YarkStore {
+	return { recents: [], openedArchive: undefined, federatedAccept: false };
 }
 
 /**
@@ -63,7 +60,7 @@ export interface YarkStore {
 	/**
 	 * Currently-opened archive user is using
 	 */
-	openedArchive: Archive | null;
+	openedArchive?: Archive;
 	/**
 	 * If the user accepted to view the potentially bad content on the federated listings
 	 */
@@ -75,5 +72,6 @@ export interface YarkStore {
  * @returns Local secret token
  */
 export function getLocalSecret(): Promise<string> {
+	// NOTE: could be done nicer, if theres a better way to do this then do it. perf isnt a concern here
 	return invoke('get_environment_variable', { name: 'YARK_LOCAL_SECRET' });
 }

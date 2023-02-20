@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Archive } from '$lib/archive';
+	import { setCurrentArchive, type Archive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import Name from '../../../../components/entries/Name.svelte';
 	import StartCard from '../../../../components/start/StartCard.svelte';
@@ -7,8 +7,8 @@
 	let server: string;
 	let name: string;
 
-	let serverCompletelyInvalid: boolean = false;
-	let nameCompletelyInvalid: boolean = false;
+	let serverCompletelyInvalid = false;
+	let nameCompletelyInvalid = false;
 
 	/**
 	 * Returns validity of the server prop and sets its invalid state it if is
@@ -57,8 +57,8 @@
 		}
 
 		// Connect to remote archive
-		const remoteArchive = new Archive(server, name);
-		remoteArchive.setAsCurrent();
+		const remoteArchive: Archive = { server, slug: name };
+		setCurrentArchive(remoteArchive);
 	}
 </script>
 

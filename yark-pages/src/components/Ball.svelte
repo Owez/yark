@@ -1,5 +1,5 @@
 <script lang="ts">
-	export let kind: number = 0;
+	export let kind = 0;
 
 	$: src = `/img/ball${kind + 1}.png`;
 </script>

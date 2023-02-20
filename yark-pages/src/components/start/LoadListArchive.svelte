@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { Archive } from '$lib/archive';
+	import { setCurrentArchive, type Archive } from '$lib/archive';
 
 	export let archive: Archive;
 </script>
 
-<button on:click={() => archive.setAsCurrent()}>
+<button on:click={() => setCurrentArchive(archive)}>
 	<p class="archive-name">{archive.slug}</p>
 	<!-- Maybe add an ❌ indicator here in the future -->
 </button>

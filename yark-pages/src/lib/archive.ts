@@ -6,120 +6,150 @@ import { goto } from '$app/navigation';
 import { yarkStore } from './store';
 
 /**
- * Type alias for archive paths
- *
- * - Includes full `/x/y/z` if local
- * - Includes only archive name (or local path) if federated
+ * Core archive representation used by various components
  */
-export type ArchivePath = string;
-
-/**
- * Archive with contains data about a playlist/channel
- */
-export class Archive {
+export interface Archive {
+	/**
+	 * The base server url this archive can be found at
+	 */
 	server: string;
+	/**
+	 * The unique slug identifier of this archive
+	 */
 	slug: string;
-
-	constructor(server: string, slug: string) {
-		this.server = server;
-		this.slug = slug;
-	}
-
-	/**
-	 * Creates and saves a brand new archive
-	 * @param server Server URL to connect to
-	 * @param slug Unique slug for the new archive
-	 * @param path Path to save the new archive to (including final directory name)
-	 * @param target The URL to target, e.g., playlist or channel
-	 * @returns Newly-created archive
-	 */
-	static async createNew(
-		server: string,
-		slug: string,
-		path: string,
-		target: string
-	): Promise<Archive> {
-		const payload = { slug: slug, path: path, target: target };
-		return await fetch(server + '/archive?intent=create', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
-		})
-			.then((resp) => resp.json())
-			.then((resp_json) => {
-				const slug = resp_json.slug;
-				return new Archive(server, slug);
-			});
-	}
-
-	/**
-	 * Imports an existing archive already saved to a file location
-	 * @param server Server URL to connect to
-	 * @param slug Unique slug for the new archive
-	 * @param path Path to save the new archive to (including final directory name)
-	 * @returns Newly-imported archive
-	 */
-	static async createExisting(server: string, slug: string, path: string): Promise<Archive> {
-		const payload = { slug: slug, path: path };
-		return await fetch(server + '/archive?intent=existing', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(payload)
-		})
-			.then((resp) => resp.json())
-			.then((resp_json) => {
-				const slug = resp_json.slug;
-				return new Archive(server, slug);
-			});
-	}
-
-	/**
-	 * Converts a pojo being deserialized into a full archive class
-	 * @param pojo Pojo version of an archive to convert
-	 * @returns The archive from it's pojo form
-	 */
-	static fromPojo(pojo: ArchivePojo): Archive {
-		return new Archive(pojo.server, pojo.slug);
-	}
-
-	/**
-	 * Set this archive as the currently-opened one, also adds to recent archives
-	 */
-	setAsCurrent() {
-		yarkStore.update((value) => {
-			// Set opened archive to this
-			value.openedArchive = this;
-
-			// Add to recent list
-			if (value.recents.length >= 10) {
-				value.recents.shift();
-			}
-			value.recents.push(this);
-
-			// Return updated value
-			return value;
-		});
-		goto(`/archive/videos`);
-	}
-
-	/**
-	 * Fetches brief video information for an entire category/kind of videos
-	 * @param kind Kind of video list to fetch (e.g., videos or livestreams)
-	 * @returns Many brief pieces of video information
-	 */
-	async fetchVideosBrief(kind: ArchiveVideoKind): Promise<ArchiveBriefVideo[]> {
-		return await fetch(
-			this.server + `/archive/${this.slug}&kind=${archiveVideoKindToApiString(kind)}`
-		).then((resp) => resp.json());
-	}
 }
 
 /**
- * Pojo interface for deserializing archives
+ * Payload for creating a brand new {@link Archive} using a server
  */
-export interface ArchivePojo {
+export interface CreateArchiveRemotePayload {
+	/**
+	 * See {@link Archive.server}
+	 */
 	server: string;
+	/**
+	 * See {@link Archive.slug}
+	 */
 	slug: string;
+	/**
+	 * The full path (from drive/root) on the server to save the new archive to, including the final directory name
+	 */
+	path: string;
+	/**
+	 * The YouTube target URL which the archive is intended to capture
+	 */
+	target: string;
+}
+
+/**
+ * Payload for importing an existing {@link Archive} into a server
+ */
+export interface ImportArchiveRemotePayload {
+	/**
+	 * See {@link Archive.server}
+	 */
+	server: string;
+	/**
+	 * See {@link Archive.slug}
+	 */
+	slug: string;
+	/**
+	 * The full path (from drive/root) on the server to the archive to import
+	 */
+	path: string;
+}
+
+/**
+ * Creates a brand new archive on the server, provided that the credentials are correct
+ * TODO: document auth once done
+ * @param param0 Payload for creation
+ * @returns Representation of the newly-created archive
+ */
+export async function createNewRemote({
+	server,
+	slug,
+	path,
+	target
+}: CreateArchiveRemotePayload): Promise<Archive> {
+	// TODO: auth
+	const payload = { slug, path, target };
+	const url = new URL(server);
+
+	url.pathname = '/archive';
+	url.searchParams.set('intent', 'create');
+
+	return await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload)
+	})
+		.then((resp) => resp.json())
+		.then((resp_json) => {
+			return { server, slug: resp_json.slug };
+		});
+}
+
+/**
+ * Imports an existing archive on the server, effectively making the server aware of this existing archive
+ * @param param0 Payload for importing
+ * @returns Representation of the newly-imported archive
+ */
+export async function importNewRemote({
+	server,
+	slug,
+	path
+}: ImportArchiveRemotePayload): Promise<Archive> {
+	const payload = { slug, path };
+	const url = new URL(server);
+
+	url.pathname = '/archive';
+	url.searchParams.set('intent', 'existing');
+
+	return await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload)
+	})
+		.then((resp) => resp.json())
+		.then((resp_json) => {
+			return { server, slug: resp_json.slug };
+		});
+}
+
+/**
+ * Sets an archive to be the currently-operable archive in the app-wide store
+ * @param archive Archive to set as current
+ */
+export function setCurrentArchive(archive: Archive): void {
+	yarkStore.update((value) => {
+		value.openedArchive = archive;
+
+		if (value.recents.length >= 10) {
+			value.recents.shift();
+		}
+
+		value.recents.push(archive);
+
+		return value;
+	});
+	goto(`/archive/videos`);
+}
+
+/**
+ * Fetches information on a whole list of videos (e.g., livestreams) in the archive for display
+ * @param archive Archive to fetch videos inside of
+ * @param kind Kind of videos to fetch
+ * @returns Brief info about an entire list/category of videos on the archive
+ */
+export async function fetchVideosBrief(
+	archive: Archive,
+	kind: ArchiveVideoKind
+): Promise<ArchiveBriefVideo[]> {
+	const url = new URL(archive.server);
+	url.pathname = `/archive/${archive.slug}`;
+	url.searchParams.set('kind', archiveVideoKindToApiString(kind));
+
+	return await fetch(url).then((resp) => resp.json());
 }
 
 /**
