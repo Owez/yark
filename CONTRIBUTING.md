@@ -45,13 +45,15 @@ Setting up a full development enviroment for Yark is made easy thanks to Makefil
 
 If you install what you don't have quickly, it should take about 5-10 mins. You now have everything you need to develop except for some setup for the API; please read it's guide. Once that's done, here is the list of the ways you can use to develop the sub-projects of Yark:
 
-1. To develop the GUI and API, or just the GUI: `make dev`
+1. To develop the GUI and API, or just the GUI: `make dev`[^extra]
 2. To develop just the API: `cd yark-api && make dev`
 3. To develop the core library, you just need an IDE
 
 Basically the top-level directory has a Makefile in it, and each specific project also has it's own specific Makefile. These files install all dependencies for you and run a nice development server if `dev` is available for you to use.
 
 This is the section to link new developers to so that they can setup their machine.
+
+[^extra]: You might need to run `cd yark-api && make build` beforehand to make sure an API build is ready
 
 ## Ideology
 
