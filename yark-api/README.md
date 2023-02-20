@@ -28,12 +28,13 @@ YARK_SECRET=supersecure
 YARK_DATABASE_URI=sqlite:///dev.db
 ```
 
-With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type the following three commands:
+With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type/copy-paste the following three commands:
 
 ```python
 >>> from yark_api.extensions import *
 >>> from yark_api.models import *
 >>> db.create_all()
+>>> exit()
 ```
 
 Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉

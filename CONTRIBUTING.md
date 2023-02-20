@@ -97,8 +97,10 @@ When Yark is built into the app, it uses the `yark` library so all the logic wor
 
 Yark uses some pre-defined ports that we assume certain things to *probably* be running on. Everything ideally in development and production should be ran on the following ports:
 
+- GUI development server: `5173`[^guidev]
 - API: `7666`
-- GUI: `7667`
+
+[^guidev]: This is SvelteKit's default port, this isn't used in production so it's fine
 
 ### Branches
 

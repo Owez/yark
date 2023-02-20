@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fromExistingRemote, setCurrentArchive } from '$lib/archive';
+	import { importNewRemote, setCurrentArchive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import { LOCAL_SERVER } from '$lib/utils';
 	import { exists } from '@tauri-apps/api/fs';
@@ -60,7 +60,7 @@
 		}
 
 		// Import the archive into the API
-		const importedArchive = await fromExistingRemote({
+		const importedArchive = await importNewRemote({
 			server: LOCAL_SERVER,
 			path: path,
 			slug: name
