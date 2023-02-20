@@ -70,7 +70,8 @@ export async function createNewRemote({
 	slug,
 	path,
 	target
-}: CreateArchiveRemotePayload): Promise<Archive> { // TODO: auth
+}: CreateArchiveRemotePayload): Promise<Archive> {
+	// TODO: auth
 	const payload = { slug, path, target };
 	const url = new URL(server);
 

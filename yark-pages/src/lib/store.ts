@@ -14,8 +14,10 @@ export const yarkStore = writable(yarkStoreInitial());
 
 // Save all changes to the main Yark store into the `localStorage` in the window
 yarkStore.subscribe((value) => {
+	// Stops this function from being ran on the serverside in development mode; see <https://github.com/Owez/yark/pull/111>
 	if (!browser) return;
 
+	// Sets the store to the known local storage key
 	window.localStorage.setItem('yarkStore', JSON.stringify(value));
 });
 
@@ -24,7 +26,7 @@ yarkStore.subscribe((value) => {
  * @returns Relevant initial Yark store
  */
 function yarkStoreInitial(): YarkStore {
-	// workaround for sveltekit ssr for some reason running during development
+	// Stops this function from being ran on the serverside in development mode; see <https://github.com/Owez/yark/pull/111>
 	if (!browser) return createEmptyYarkStore();
 
 	// Get the main storage container
@@ -70,5 +72,6 @@ export interface YarkStore {
  * @returns Local secret token
  */
 export function getLocalSecret(): Promise<string> {
+	// NOTE: could be done nicer, if theres a better way to do this then do it. perf isnt a concern here
 	return invoke('get_environment_variable', { name: 'YARK_LOCAL_SECRET' });
 }

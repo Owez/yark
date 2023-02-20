@@ -24,8 +24,8 @@ class ArchiveResource(Resource):
     def post(self) -> Response:  # TODO: auth
         """Creates a new archive if the API owner requests to"""
         # Authenticate
-        # if (err := utils.check_auth()) is not None:
-        #     return err
+        if (err := utils.check_auth()) is not None:
+            return err
 
         # Decode query arg to figure out intent
         try:
