@@ -1,4 +1,4 @@
-"""Launcher script for using the API in production; intended for use with pyinstaller"""
+"""Launcher script for using the API in production; intended for use with pyinstaller and not used for development"""
 
 from yark_api import create_app, config
 

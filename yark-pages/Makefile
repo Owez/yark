@@ -14,6 +14,7 @@ api_build:
 
 dev: install api_build
 	echo "Starting yark-pages development server.."
+	echo "Tip: You don't need to restart this if you make changes to the API, the built-in API isn't used for development!"
 	npm run tauri dev
 
 build: install api_build
