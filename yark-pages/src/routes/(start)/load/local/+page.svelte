@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Archive } from '$lib/archive';
+	import { fromExistingRemote, setCurrentArchive } from '$lib/archive';
 	import { StartCardState } from '$lib/components';
 	import { LOCAL_SERVER } from '$lib/utils';
 	import { exists } from '@tauri-apps/api/fs';
@@ -10,8 +10,8 @@
 
 	let path: string;
 	let name: string;
-	let pathCompletelyInvalid: boolean = false;
-	let nameCompletelyInvalid: boolean = false;
+	let pathCompletelyInvalid = false;
+	let nameCompletelyInvalid = false;
 
 	/**
 	 * Checks that the path prop is valid
@@ -60,8 +60,12 @@
 		}
 
 		// Import the archive into the API
-		const importedArchive = await Archive.createExisting(LOCAL_SERVER, name, path);
-		importedArchive.setAsCurrent();
+		const importedArchive = await fromExistingRemote({
+			server: LOCAL_SERVER,
+			path: path,
+			slug: name
+		});
+		setCurrentArchive(importedArchive);
 	}
 </script>
 

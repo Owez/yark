@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { StartCardState } from '$lib/components';
 
-	export let margin: string = '0 0 0 0';
+	export let margin = '0 0 0 0';
 	export let startCard: StartCardState = StartCardState.None;
 
 	// Set the typical start card max margin automatically
