@@ -12,6 +12,7 @@
     - [Dependencies](#dependencies)
   - [Structure](#structure)
   - [Conventions](#conventions)
+    - [Ports](#ports)
     - [Branches](#branches)
     - [To/from archives](#tofrom-archives)
 
@@ -91,6 +92,18 @@ Yark is separated into three areas of concern:
 When Yark is built into the app, it uses the `yark` library so all the logic works and builds the webpages from `yark-pages` for the [SvelteKit](https://kit.svelte.dev/)-based GUI. The app itself contains an API which these webpages connect to.
 
 ## Conventions
+
+### Ports
+
+Yark uses some pre-defined ports that we assume certain things to *probably* be running on. Everything ideally in development and production should be ran on the following ports:
+
+- Development API: `7665`
+- Production API: `7666`
+- GUI Application: `7667`
+
+We differentiate these because the application actually runs two APIs in development: a standalone development one and the one integrated as a [sidecar](https://tauri.app/v1/guides/building/sidecar) into the core application. In development mode we just ignore the one running as a sidecar because it's harder to debug and use the nice standalone one. In production only the sidecar API is used.
+
+TODO: ts check with https://discord.com/channels/616186924390023171/1072473736797765642/1072475213285040160 then run
 
 ### Branches
 

@@ -3,14 +3,14 @@
 YouTube archiving made simple (REST API)
 
 - [Yark API](#yark-api)
-  - [End-user](#end-user)
-  - [Development](#development)
-  - [Routes](#routes)
-    - [GET `/`](#get-)
-    - [POST `/archive?intent`](#post-archiveintent)
-    - [GET `/archive/:id?kind`](#get-archiveidkind)
-    - [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
-    - [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
+	- [End-user](#end-user)
+	- [Development](#development)
+	- [Routes](#routes)
+		- [GET `/`](#get-)
+		- [POST `/archive?intent`](#post-archiveintent)
+		- [GET `/archive/:id?kind`](#get-archiveidkind)
+		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
+		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
 
 
 ## End-user
@@ -21,7 +21,7 @@ TODO: add docker and then make this guide
 
 ## Development
 
-To get this API setup, please make sure you've got the development dependencies from the contributing file installed. Once you've got these installed, please make a new `.env` file with whatever admin secret and database path you'd like:
+To get this API setup, please make sure you've got the development dependencies from the contributing file installed. Once you've got these installed, please make a new `.env` file with whatever admin secret and database path you'd like:[^argsextra]
 
 ```env
 YARK_SECRET=supersecure
@@ -37,6 +37,8 @@ With these set, you need to migrate a new database for the API to use. To do thi
 ```
 
 Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉
+
+[^argsextra]: You can also set `--host=` and `--port=` as commands, or use the `YARK_HOST` and `YARK_PORT` environment variables
 
 ## Routes
 
