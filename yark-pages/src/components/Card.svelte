@@ -12,7 +12,7 @@
 
 <div
 	style:margin
-	class="card"
+	class="card card-border"
 	class:start-card-normal={startCard == StartCardState.Enabled}
 	class:start-card-max={startCard == StartCardState.Max}
 >
@@ -24,11 +24,9 @@
 	$start-card-margin: 1.5rem;
 
 	.card {
-		border: 1px solid rgba($color: #000000, $alpha: 0.12);
 		border-radius: 15px;
 		padding: $start-card-margin;
 		padding-bottom: 0;
-		box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
 	}
 
 	@mixin start-card {

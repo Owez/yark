@@ -29,6 +29,12 @@ a.invis {
 	justify-content: center;
 }
 
+// Border/shadows around cards, generalised for use in cards or other card-like items
+.card-border {
+	border: 1px solid rgba($color: #000000, $alpha: 0.12);
+	box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+
 // Small heading to designate a section within a card component
 .card-heading {
 	margin: 0;
@@ -38,6 +44,7 @@ a.invis {
 	color: rgb(79, 79, 79);
 }
 
+// Generalised input styling to use
 @mixin input {
 	$margin-v: 0.5rem;
 	$padding-h: 0.5rem;

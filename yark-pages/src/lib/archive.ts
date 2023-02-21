@@ -149,7 +149,7 @@ export async function fetchVideosBrief(
 ): Promise<ArchiveBriefVideo[]> {
 	const url = new URL(archive.server);
 	url.pathname = `/archive/${archive.slug}`;
-	url.searchParams.set('kind', archiveVideoKindToApiString(kind));
+	url.searchParams.set('kind', archiveVideoKindToString(kind));
 
 	return await fetch(url).then((resp) => resp.json());
 }
@@ -164,11 +164,11 @@ export enum ArchiveVideoKind {
 }
 
 /**
- * Converts a {@link ArchiveVideoKind} to an API-compatible query string
+ * Converts a {@link ArchiveVideoKind} to an API-compatible query string (e.g., `videos`)
  * @param kind Kind to convert to string
  * @returns Stringified API-compatible version
  */
-function archiveVideoKindToApiString(kind: ArchiveVideoKind): string {
+export function archiveVideoKindToString(kind: ArchiveVideoKind): string {
 	switch (kind) {
 		case ArchiveVideoKind.Videos:
 			return 'videos';
