@@ -18,6 +18,5 @@
 	.sidebar {
 		width: calc($fullwidth - $gap * 2);
 		height: calc($fullheight - $gap * 1.5);
-		border-radius: 7.5px;
 	}
 </style>

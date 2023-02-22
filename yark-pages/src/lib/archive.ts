@@ -3,6 +3,7 @@
  */
 
 import { goto } from '$app/navigation';
+import { get } from 'svelte/store';
 import { yarkStore } from './store';
 
 /**
@@ -65,7 +66,7 @@ export interface ImportArchiveRemotePayload {
  * @param param0 Payload for creation
  * @returns Representation of the newly-created archive
  */
-export async function createNewRemote({
+export async function createNewRemoteArchive({
 	server,
 	slug,
 	path,
@@ -95,7 +96,7 @@ export async function createNewRemote({
  * @param param0 Payload for importing
  * @returns Representation of the newly-imported archive
  */
-export async function importNewRemote({
+export async function importNewRemoteArchive({
 	server,
 	slug,
 	path
@@ -116,6 +117,35 @@ export async function importNewRemote({
 		.then((resp_json) => {
 			return { server, slug: resp_json.slug };
 		});
+}
+
+/**
+ * Generates a link to the currently opened archive inside of the store or raises an exception because there isn't any opened archive
+ * 
+ * This function is intended solely for use when an archive is known to be opened
+ * @returns Link to the currently opened archive
+ */
+function getOpenedArchiveLink(): string {
+	return getArchiveLink(getOpenedArchiveAlways())
+}
+
+/**
+ * Gets the currently-opened archive or throws an exception; intended solely for use when an archive is known to be opened
+ * @returns The currently-opened archive
+ */
+export function getOpenedArchiveAlways(): Archive {
+	const archive = get(yarkStore).openedArchive
+	if (archive == undefined) { throw new Error("Archive was expected to be open but it wasn't") }
+	return archive
+}
+
+/**
+ * Generates a link to the archive route to link to; doesn't include `/videos` or anything else like that on the end
+ * @param archive Archive to get link to
+ * @returns HTTP link to the archive
+ */
+function getArchiveLink(archive: Archive): string {
+	return `${archive.server}/archive/${archive.slug}`
 }
 
 /**
@@ -179,6 +209,7 @@ export function archiveVideoKindToString(kind: ArchiveVideoKind): string {
 	}
 }
 
+
 /**
  * Short information on a video, intended to be displayed on a long list
  */
@@ -188,9 +219,9 @@ export interface ArchiveBriefVideo {
 	 */
 	id: string;
 	/**
-	 * Current human-readable name of the video
+	 * Current human-readable title of the video
 	 */
-	name: string;
+	title: string;
 	/**
 	 * Date it was uploaded to display/sort using
 	 */
@@ -198,5 +229,14 @@ export interface ArchiveBriefVideo {
 	/**
 	 * Current thumbnail identifier of the video to display
 	 */
-	thumbnail: string;
+	thumbnail_id: string;
+}
+
+/**
+ * Gets the API link to the thumbnail; assumes that the video is part of the currently-opened archive
+ * @param video Video to get link for
+ * @returns API link to the thumbnail which will return as a file
+ */
+export function getVideoThumbnailLink(video: ArchiveBriefVideo): string {
+	return `${getOpenedArchiveLink()}/thumbnail/${video.thumbnail_id}`
 }

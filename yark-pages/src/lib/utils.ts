@@ -30,3 +30,11 @@ export function truncate(input: string, to?: number): string {
 	// Return with ellipsis
 	return `${cut}..`;
 }
+
+/**
+ * Capitalizes first letter of provided string; from https://stackoverflow.com/questions/1026069/how-do-i-make-the-first-letter-of-a-string-uppercase-in-javascript
+ * @param i String to capitalize
+ */
+export function capitalizeFirstLetter(i: string): string {
+	return i.charAt(0).toUpperCase() + i.slice(1);
+}

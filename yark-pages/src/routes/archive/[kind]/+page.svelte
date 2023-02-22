@@ -1,26 +1,63 @@
 <script lang="ts">
-	import { archiveVideoKindToString } from '$lib/archive';
-	import { yarkStore } from '$lib/store';
+	import { archiveVideoKindToString, getOpenedArchiveAlways } from '$lib/archive';
+	import { capitalizeFirstLetter } from '$lib/utils';
+	import VideoBrief from '../../../components/VideoBrief.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+
+	
 </script>
 
 <div class="container">
-	<h1>{$yarkStore.openedArchive?.slug}'s {archiveVideoKindToString(data.kind)}</h1>
-	{data.videos}
+	<div class="heading">
+		<h1>
+			{capitalizeFirstLetter(archiveVideoKindToString(data.kind))}
+			<p>{getOpenedArchiveAlways().slug}</p>
+		</h1>
+	</div>
+	<div class="videos">
+		{#each data.videos as video}
+			<VideoBrief {video} />
+		{/each}
+	</div>
 </div>
 
 <style lang="scss">
 	.container {
-		$margin-h: 1rem;
+		$gap: 1rem;
 
-		// No margin left because the sidebar has that
-		margin-right: $margin-h;
+		height: 100vh;
+		overflow-y: auto;
+		padding-left: $gap;
+		padding-right: $gap;
 	}
+
 	h1 {
-		margin-top: 10vh;
-		font-size: 2.25rem;
-		text-align: center;
+		font-size: 30px;
+		font-weight: 500;
+		margin-top: 3.5rem;
+		margin-bottom: 1.25rem;
+		display: flex;
+		align-items: flex-end;
+
+		p {
+			font-size: x-small;
+			font-weight: normal;
+			color: gray;
+			border: 0.5px solid gray;
+			border-radius: 7.5px;
+			padding: 3px;
+			padding-left: 6px;
+			padding-right: 6px;
+			height: 0.9rem;
+			margin-bottom: 0.5rem;
+			margin-left: 0.6rem;
+		}
+	}
+
+	.videos {
+		display: flex;
+		flex-wrap: wrap;
 	}
 </style>

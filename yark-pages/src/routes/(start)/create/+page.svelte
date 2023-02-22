@@ -2,7 +2,7 @@
 	import { StartCardState } from '$lib/components';
 	import StartCard from '../../../components/start/StartCard.svelte';
 	import { exists } from '@tauri-apps/api/fs';
-	import { createNewRemote, setCurrentArchive } from '$lib/archive';
+	import { createNewRemoteArchive, setCurrentArchive } from '$lib/archive';
 	import DirSelect from '../../../components/entries/DirSelect.svelte';
 	import { LOCAL_SERVER } from '$lib/utils';
 	import Name from '../../../components/entries/Name.svelte';
@@ -152,7 +152,7 @@
 
 		// Create a new archive
 		// TODO: append the name onto the path so it creates properly!!
-		const newArchive = await createNewRemote({
+		const newArchive = await createNewRemoteArchive({
 			server: LOCAL_SERVER,
 			slug: name,
 			path,
