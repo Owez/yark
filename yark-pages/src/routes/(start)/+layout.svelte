@@ -9,7 +9,7 @@
 		font-weight: 600;
 		font-size: 20pt;
 		margin: 0;
-		margin-top: 1rem;
+		margin-top: 1.5rem;
 		margin-bottom: 0.25rem;
 
 		span {
