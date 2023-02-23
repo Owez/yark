@@ -4,6 +4,7 @@
 		<div class="split"/>
 		<a href="/archive/videos"><img src="/img/btnvideos.svg" alt="Videos" class="video-button"></a>
 		<a href="/archive/livestreams"><img src="/img/btnlivestreams.svg" alt="Livestreams" class="video-button"></a>
+		<a href="/archive/shorts"><img src="/img/btnshorts.svg" alt="Short" class="video-button"></a>
 	</div>
 </nav>
 
