@@ -5,7 +5,7 @@
 </script>
 
 <a href={`/video/${video.id}`} class="video invis">
-	<div class="thumbnail shadow">
+	<div class="thumbnail">
 		<img src={getVideoThumbnailLink(video)} alt={video.title} class="card-border" />
 	</div>
 	<div class="info">

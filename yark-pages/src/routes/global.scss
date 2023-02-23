@@ -29,20 +29,8 @@ a.invis {
 	justify-content: center;
 }
 
-// Mixin for shadow, see .shadow for more information
-@mixin shadow {
-	box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
-}
-
-// Typical application-wide shadow
-.shadow {
-	@include shadow;
-}
-
-// Border/shadows around cards, generalised for use in cards or other card-like items
+// Border around cards, generalised for use in cards or other card-like items
 .card-border {
-	@include shadow;
-
 	border: 1px solid rgba($color: #000000, $alpha: 0.12);
 	border-radius: 7.5px;
 }

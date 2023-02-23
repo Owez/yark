@@ -36,8 +36,8 @@
 	h1 {
 		font-size: 30px;
 		font-weight: 500;
-		margin-top: 3.5rem;
-		margin-bottom: 1.25rem;
+		margin-top: 3rem;
+		margin-bottom: 1rem;
 		display: flex;
 		align-items: flex-end;
 
