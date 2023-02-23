@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { archiveVideoKindToString, getOpenedArchiveAlways } from '$lib/archive';
 	import { capitalizeFirstLetter } from '$lib/utils';
+	import Card from '../../../components/Card.svelte';
 	import VideoBrief from '../../../components/VideoBrief.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
-
-	
 </script>
 
 <div class="container">
@@ -16,11 +15,17 @@
 			<p>{getOpenedArchiveAlways().slug}</p>
 		</h1>
 	</div>
-	<div class="videos">
-		{#each data.videos as video}
-			<VideoBrief {video} />
-		{/each}
-	</div>
+	{#if data.videos.length > 1}
+		<div class="videos">
+			{#each data.videos as video}
+				<VideoBrief {video} />
+			{/each}
+		</div>
+	{:else}
+		<Card mini={true}>
+			<p>Sorry, there aren't any {archiveVideoKindToString(data.kind)} in this archive yet!</p>
+		</Card>
+	{/if}
 </div>
 
 <style lang="scss">

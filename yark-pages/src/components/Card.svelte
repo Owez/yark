@@ -3,6 +3,7 @@
 
 	export let margin = '0 0 0 0';
 	export let startCard: StartCardState = StartCardState.None;
+	export let mini = false;
 
 	// Set the typical start card max margin automatically
 	if (startCard == StartCardState.Max) {
@@ -15,6 +16,7 @@
 	class="card card-border"
 	class:start-card-normal={startCard == StartCardState.Enabled}
 	class:start-card-max={startCard == StartCardState.Max}
+	class:mini
 >
 	<slot />
 </div>
@@ -45,5 +47,13 @@
 		$bodge: 2px;
 		$padding: $start-card-margin * 2;
 		width: calc($start-card-width * 2 + $start-card-margin + $padding + $bodge);
+	}
+
+	.mini {
+		$padding-v: 1rem;
+
+		padding-top: $padding-v;
+		padding-bottom: $padding-v;
+		max-width: 30rem;
 	}
 </style>
