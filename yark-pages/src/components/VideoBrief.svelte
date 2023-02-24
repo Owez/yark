@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getVideoThumbnailLink, type ArchiveBriefVideo } from '$lib/archive';
+	import { getVideoThumbnailLink, type VideoBrief } from '$lib/archive';
 
-	export let video: ArchiveBriefVideo;
+	export let video: VideoBrief;
 </script>
 
-<a href={`/video/${video.id}`} class="video invis">
+<a href={`/archive/video/${video.id}`} class="video invis">
 	<div class="thumbnail">
 		<img src={getVideoThumbnailLink(video)} alt={video.title} class="card-border" />
 	</div>

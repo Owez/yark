@@ -176,12 +176,16 @@ export function setCurrentArchive(archive: Archive): void {
 export async function fetchVideosBrief(
 	archive: Archive,
 	kind: ArchiveVideoKind
-): Promise<ArchiveBriefVideo[]> {
+): Promise<VideoBrief[]> {
 	const url = new URL(archive.server);
 	url.pathname = `/archive/${archive.slug}`;
 	url.searchParams.set('kind', archiveVideoKindToString(kind));
 
 	return await fetch(url).then((resp) => resp.json());
+}
+
+export async function fetchVideoDetails(archive: Archive, id: string): Promise<VideoDetailed> {
+
 }
 
 /**
@@ -213,7 +217,7 @@ export function archiveVideoKindToString(kind: ArchiveVideoKind): string {
 /**
  * Short information on a video, intended to be displayed on a long list
  */
-export interface ArchiveBriefVideo {
+export interface VideoBrief {
 	/**
 	 * Video identifier to open to learn more about the video
 	 */
@@ -233,10 +237,21 @@ export interface ArchiveBriefVideo {
 }
 
 /**
+ * Detailed information on a specific video to use in a video information page; this interface reflects essentially the raw archive format
+ */
+export interface VideoDetailed {
+	/**
+	 * Video identifier to use
+	 */
+	id: string,
+	// TODO: more
+}
+
+/**
  * Gets the API link to the thumbnail; assumes that the video is part of the currently-opened archive
  * @param video Video to get link for
  * @returns API link to the thumbnail which will return as a file
  */
-export function getVideoThumbnailLink(video: ArchiveBriefVideo): string {
+export function getVideoThumbnailLink(video: VideoBrief): string {
 	return `${getOpenedArchiveLink()}/thumbnail/${video.thumbnail_id}`
 }
