@@ -13,7 +13,12 @@
 	}
 
 	.content {
+		$gap: 1rem;
+
 		width: 100%;
-        margin:0;
+		height: 100vh;
+		overflow-y: auto;
+		padding-left: $gap;
+		padding-right: $gap;
 	}
 </style>

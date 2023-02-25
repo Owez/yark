@@ -8,36 +8,23 @@
 	export let data: PageData;
 </script>
 
-<div class="container">
-	<div class="heading">
-		<h1>
-			{capitalizeFirstLetter(archiveVideoKindToString(data.kind))}
-			<p>{getOpenedArchiveAlways().slug}</p>
-		</h1>
+<h1>
+	{capitalizeFirstLetter(archiveVideoKindToString(data.kind))}
+	<p>{getOpenedArchiveAlways().slug}</p>
+</h1>
+{#if data.videos.length > 1}
+	<div class="videos">
+		{#each data.videos as video}
+			<VideoBrief {video} />
+		{/each}
 	</div>
-	{#if data.videos.length > 1}
-		<div class="videos">
-			{#each data.videos as video}
-				<VideoBrief {video} />
-			{/each}
-		</div>
-	{:else}
-		<Card mini={true}>
-			<p>Sorry, there aren't any {archiveVideoKindToString(data.kind)} in this archive yet!</p>
-		</Card>
-	{/if}
-</div>
+{:else}
+	<Card mini={true}>
+		<p>Sorry, there aren't any {archiveVideoKindToString(data.kind)} in this archive yet!</p>
+	</Card>
+{/if}
 
 <style lang="scss">
-	.container {
-		$gap: 1rem;
-
-		height: 100vh;
-		overflow-y: auto;
-		padding-left: $gap;
-		padding-right: $gap;
-	}
-
 	h1 {
 		font-size: 30px;
 		font-weight: 500;
