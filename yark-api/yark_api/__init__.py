@@ -14,6 +14,7 @@ from .routes.archive import ArchiveResource, SpecificArchiveResource
 from .routes.misc import IndexResource
 from .routes.video import SpecificVideoResource
 from .routes.thumbnail import SpecificThumbnailResource
+from .routes.video_file import SpecificVideoFileResource
 import logging
 
 
@@ -30,10 +31,13 @@ def create_app() -> Flask:
     extensions.api.add_resource(ArchiveResource, "/archive")
     extensions.api.add_resource(SpecificArchiveResource, "/archive/<string:slug>")
     extensions.api.add_resource(
+        SpecificThumbnailResource, "/archive/<string:slug>/thumbnail/<string:id>"
+    )
+    extensions.api.add_resource(
         SpecificVideoResource, "/archive/<string:slug>/video/<string:id>"
     )
     extensions.api.add_resource(
-        SpecificThumbnailResource, "/archive/<string:slug>/thumbnail/<string:id>"
+        SpecificVideoFileResource, "/archive/<string:slug>/video/<string:id>/file"
     )
 
     # Integrate extensions

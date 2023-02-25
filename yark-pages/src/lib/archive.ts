@@ -148,6 +148,24 @@ function getArchiveApiLink(archive: Archive): string {
 	return `${archive.server}/archive/${archive.slug}`
 }
 
+/**
+ * Gets the API link to the thumbnail; assumes that the video is part of the currently-opened archive
+ * @param video Video to get link for
+ * @returns API link to the thumbnail which will return as a file
+ */
+export function getVideoThumbnailApiLink(thumbnail_id: string): string {
+	return `${getOpenedArchiveApiLink()}/thumbnail/${thumbnail_id}`
+}
+
+/**
+ * Gets the API link to the raw video file which the archived video is actually referring to in the currently-opened archive
+ * @param video Video to get link for
+ * @returns API link to the raw video which will return as a file
+ */
+export function getVideoFileApiLink(video_id: string): string {
+	return `${getOpenedArchiveApiLink()}/video/${video_id}/file`
+}
+
 
 /**
  * Sets an archive to be the currently-operable archive in the app-wide store
@@ -290,11 +308,4 @@ export interface VideoDetailed {
 
 export type VideoDetailedElement = object; // TODO: actual kv object with generic
 
-/**
- * Gets the API link to the thumbnail; assumes that the video is part of the currently-opened archive
- * @param video Video to get link for
- * @returns API link to the thumbnail which will return as a file
- */
-export function getVideoThumbnailApiLink(video: VideoBrief): string {
-	return `${getOpenedArchiveApiLink()}/thumbnail/${video.thumbnail_id}`
-}
+

@@ -11,6 +11,7 @@ YouTube archiving made simple (REST API)
 		- [GET `/archive/:id?kind`](#get-archiveidkind)
 		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
 		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
+		- [GET `/archive/:slug/video/:id/file`](#get-archiveslugvideoidfile)
 
 
 ## End-user
@@ -144,3 +145,7 @@ A full example of a return looks like this:
 	"notes": []
 }
 ```
+
+### GET `/archive/:slug/video/:id/file`
+
+This route returns a raw video file for the provided archive slug identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives to actually view the video.
