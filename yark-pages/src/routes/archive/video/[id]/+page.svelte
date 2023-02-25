@@ -4,5 +4,4 @@
 	export let data: PageData;
 </script>
 
-TODO: connect this to archive.ts
-<h1>{data.video}</h1>
+<h1>DESCRIPTION!!!!<br>{data.video.description["2023-02-15T17:15:35.512305"]}</h1>

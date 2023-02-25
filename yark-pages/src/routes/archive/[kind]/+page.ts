@@ -1,13 +1,10 @@
-import { ArchiveVideoKind, fetchVideosBrief, getOpenedArchiveAlways } from '$lib/archive';
+import { ArchiveVideoKind, fetchVideosBrief } from '$lib/archive';
 import type { PageLoad, RouteParams } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
-	// Get video list kind and archive to use
-	const kind = getVideoKind(params);
-	const archive = getOpenedArchiveAlways()
-
 	// Fetch videos from current archive
-	const videos = await fetchVideosBrief(archive, kind);
+	const kind = getVideoKind(params);
+	const videos = await fetchVideosBrief(kind);
 
 	// Return the important information
 	return { kind, videos };

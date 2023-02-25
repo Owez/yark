@@ -1,14 +1,11 @@
 import type { PageLoad } from "./$types";
-import { fetchVideoDetails, getOpenedArchiveAlways } from "$lib/archive";
+import { fetchVideoDetails } from "$lib/archive";
 
 export const load: PageLoad = async ({ params }) => {
-    // Get video id and archive to use
-    const id = params.id;
-    const archive = getOpenedArchiveAlways()
-
     // Fetch detailed video information
-    const video = await fetchVideoDetails(archive, id)
+    const id = params.id;
+    const video = await fetchVideoDetails(id)
 
     // Return the video
-    return { video }
+    return { id, video }
 }

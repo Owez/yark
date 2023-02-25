@@ -120,16 +120,6 @@ export async function importNewRemoteArchive({
 }
 
 /**
- * Generates a link to the currently opened archive inside of the store or raises an exception because there isn't any opened archive
- * 
- * This function is intended solely for use when an archive is known to be opened
- * @returns Link to the currently opened archive
- */
-function getOpenedArchiveLink(): string {
-	return getArchiveLink(getOpenedArchiveAlways())
-}
-
-/**
  * Gets the currently-opened archive or throws an exception; intended solely for use when an archive is known to be opened
  * @returns The currently-opened archive
  */
@@ -140,13 +130,24 @@ export function getOpenedArchiveAlways(): Archive {
 }
 
 /**
+ * Generates a link to the currently opened archive inside of the store or raises an exception because there isn't any opened archive
+ * 
+ * This function is intended solely for use when an archive is known to be opened
+ * @returns Link to the currently opened archive
+ */
+function getOpenedArchiveApiLink(): string {
+	return getArchiveApiLink(getOpenedArchiveAlways())
+}
+
+/**
  * Generates a link to the archive route to link to; doesn't include `/videos` or anything else like that on the end
  * @param archive Archive to get link to
  * @returns HTTP link to the archive
  */
-function getArchiveLink(archive: Archive): string {
+function getArchiveApiLink(archive: Archive): string {
 	return `${archive.server}/archive/${archive.slug}`
 }
+
 
 /**
  * Sets an archive to be the currently-operable archive in the app-wide store
@@ -168,24 +169,29 @@ export function setCurrentArchive(archive: Archive): void {
 }
 
 /**
- * Fetches information on a whole list of videos (e.g., livestreams) in the archive for display
- * @param archive Archive to fetch videos inside of
+ * Fetches information on a whole list of videos (e.g., livestreams) in the currently-opened archive
  * @param kind Kind of videos to fetch
  * @returns Brief info about an entire list/category of videos on the archive
  */
 export async function fetchVideosBrief(
-	archive: Archive,
 	kind: ArchiveVideoKind
 ): Promise<VideoBrief[]> {
-	const url = new URL(archive.server);
-	url.pathname = `/archive/${archive.slug}`;
+	const url = new URL(getOpenedArchiveApiLink())
 	url.searchParams.set('kind', archiveVideoKindToString(kind));
 
 	return await fetch(url).then((resp) => resp.json());
 }
 
-export async function fetchVideoDetails(archive: Archive, id: string): Promise<VideoDetailed> {
+/**
+ * Fetches information on a specific video inside of the currently-opened archive
+ * @param id The identifier of the video to fetch
+ * @returns Detailed video interface promise
+ */
+export async function fetchVideoDetails(id: string): Promise<VideoDetailed> {
+	const url = new URL(getOpenedArchiveApiLink())
+	url.pathname += `/video/${id}`
 
+	return await fetch(url).then((resp) => resp.json());
 }
 
 /**
@@ -241,17 +247,54 @@ export interface VideoBrief {
  */
 export interface VideoDetailed {
 	/**
-	 * Video identifier to use
+	 * Date video was uploaded in ISO time
 	 */
-	id: string,
-	// TODO: more
+	uploaded: string;
+	/**
+	 * Numeric width of video
+	 */
+	width: number;
+	/**
+	 * Numeric height of video
+	 */
+	height: number;
+	/**
+	 * Title history of the video
+	 */
+	title: VideoDetailedElement;
+	/**
+	 * Description history of the video
+	 */
+	description: VideoDetailedElement;
+	/**
+	 * View count history of the video
+	 */
+	views: VideoDetailedElement;
+	/**
+	 * Like count history of the video
+	 */
+	likes: VideoDetailedElement;
+	/**
+	 * Thumbnail history of the video using thumbnail identifiers
+	 */
+	thumbnail: VideoDetailedElement;
+	/**
+	 * Deleted status history of the video
+	 */
+	deleted: VideoDetailedElement;
+	/**
+	 * Comment archive/history of the video
+	 */
+	comments: object // TODO: comments interface
 }
+
+export type VideoDetailedElement = object; // TODO: actual kv object with generic
 
 /**
  * Gets the API link to the thumbnail; assumes that the video is part of the currently-opened archive
  * @param video Video to get link for
  * @returns API link to the thumbnail which will return as a file
  */
-export function getVideoThumbnailLink(video: VideoBrief): string {
-	return `${getOpenedArchiveLink()}/thumbnail/${video.thumbnail_id}`
+export function getVideoThumbnailApiLink(video: VideoBrief): string {
+	return `${getOpenedArchiveApiLink()}/thumbnail/${video.thumbnail_id}`
 }
