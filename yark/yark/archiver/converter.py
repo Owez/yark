@@ -14,7 +14,7 @@ class Converter:
         self.path_videos = path_videos
 
     def run(self) -> None:
-        """Goes through the videos directory given and converts all videos we can, e.g. mkv to mp4"""
+        """Goes through the videos directory given and converts all videos we can to mp4, e.g. mkv to mp4"""
         # Convert mkv videos
         for path in self.path_videos.glob("*.mkv"):
             self._convert_copy_codec(path)
@@ -23,16 +23,21 @@ class Converter:
         for path in self.path_videos.glob("*.3gp"):
             self._convert_copy_codec(path)
 
+        # Convert webm videos, the most common kind
+        # NOTE: ideally we'd allow mp4 and webm but the tauri viewer dislikes webm on macos, see <https://github.com/tauri-apps/tauri/issues/5605>
+        for path in self.path_videos.glob("*.webm"):
+            self._convert_copy_codec(path)
+
     def _convert_copy_codec(self, path: Path) -> None:
         """Runs complete conversion process for ffmpeg commands which can copy codecs"""
         # Check everything exists
         self._ensure(path)
 
         # Generate/resolve paths
-        mkv_path, mp4_path = self._resolve(path, ".mp4")
+        in_path, mp4_path = self._resolve(path, ".mp4")
 
         # Tell ffmpeg to convert
-        _ffmpeg_run(["-y", "-i", mkv_path, "-codec", "copy", mp4_path])
+        _ffmpeg_run(["-y", "-i", in_path, "-codec", "copy", mp4_path])
 
         # Delete the original path
         path.unlink()
