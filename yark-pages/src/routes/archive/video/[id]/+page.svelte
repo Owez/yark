@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getVideoFileApiLink } from '$lib/archive';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -10,6 +11,11 @@
 		<span class="text">Back</span>
 	</a>
 </p>
+<!-- NOTE: workaround for <https://github.com/sveltejs/svelte/issues/5967> -->
+<!-- svelte-ignore a11y-media-has-caption -->
+<video width="320" height="240" controls>
+	<source src={getVideoFileApiLink(data.id)} type="video/webm"  />
+</video>
 
 <style lang="scss">
 	.back-button {
