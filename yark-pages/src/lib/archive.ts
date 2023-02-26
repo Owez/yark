@@ -5,6 +5,7 @@
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
 import { yarkStore } from './store';
+import type { Element } from './element';
 
 /**
  * Core archive representation used by various components
@@ -279,33 +280,30 @@ export interface VideoDetailed {
 	/**
 	 * Title history of the video
 	 */
-	title: VideoDetailedElement;
+	title: Element;
 	/**
 	 * Description history of the video
 	 */
-	description: VideoDetailedElement;
+	description: Element;
 	/**
 	 * View count history of the video
 	 */
-	views: VideoDetailedElement;
+	views: Element;
 	/**
 	 * Like count history of the video
 	 */
-	likes: VideoDetailedElement;
+	likes: Element;
 	/**
 	 * Thumbnail history of the video using thumbnail identifiers
 	 */
-	thumbnail: VideoDetailedElement;
+	thumbnail: Element;
 	/**
 	 * Deleted status history of the video
 	 */
-	deleted: VideoDetailedElement;
+	deleted: Element;
 	/**
 	 * Comment archive/history of the video
 	 */
 	comments: object // TODO: comments interface
 }
-
-export type VideoDetailedElement = object; // TODO: actual kv object with generic
-
 
