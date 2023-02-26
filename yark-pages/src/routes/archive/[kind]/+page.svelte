@@ -35,7 +35,7 @@
 
 		p {
 			font-size: x-small;
-			font-weight: normal;
+			font-weight: 500;
 			color: gray;
 			border: 0.5px solid gray;
 			border-radius: 7.5px;

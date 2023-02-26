@@ -18,3 +18,12 @@ export function getCurrentElement(element: Element): any | undefined {
     if (values.length == 0) { return undefined }
     return values[0]
 }
+
+/**
+ * Checks if the element has been updated to something other than it's initial value
+ * @param element Element to check
+ * @returns If the element has been updated
+ */
+export function elementWasUpdated(element: Element): boolean {
+    return Object.values(element).length > 1
+}

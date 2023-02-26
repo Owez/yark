@@ -5,7 +5,7 @@
 import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
 import { yarkStore } from './store';
-import type { Element } from './element';
+import { elementWasUpdated, type Element } from './element';
 
 /**
  * Core archive representation used by various components
@@ -307,3 +307,11 @@ export interface VideoDetailed {
 	comments: object // TODO: comments interface
 }
 
+/**
+ * Checks if a video has been updated (most likely by the user except for glitches) by checking major elements
+ * @param video Video to check
+ * @returns If the video was updated or not
+ */
+export function videoWasUpdated(video: VideoDetailed): boolean {
+	return elementWasUpdated(video.title) || elementWasUpdated(video.description) || elementWasUpdated(video.thumbnail)
+}
