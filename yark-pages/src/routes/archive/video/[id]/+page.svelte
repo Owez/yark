@@ -14,7 +14,7 @@
 <!-- NOTE: workaround for <https://github.com/sveltejs/svelte/issues/5967> -->
 <!-- svelte-ignore a11y-media-has-caption -->
 <video width="320" height="240" controls>
-	<source src={getVideoFileApiLink(data.id)} type="video/webm"  />
+	<source src={getVideoFileApiLink(data.id)} type="video/mp4"  />
 </video>
 
 <style lang="scss">

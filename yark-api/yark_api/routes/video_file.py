@@ -28,8 +28,6 @@ class SpecificVideoFileResource(Resource):
         # Build a path to the raw video file
         file_dir = Path(archive_info.path) / "videos"
         file_filename = id + ".mp4"
-        if not (file_dir / file_filename).exists():
-            file_filename = id + ".webm"
 
         # Serve the raw video file from directory
         try:
