@@ -1,9 +1,16 @@
 <script lang="ts">
 	import { getVideoFileApiLink, videoWasUpdated } from '$lib/archive';
-	import { getCurrentElement } from '$lib/element';
+	import { elementUpdateCount, getCurrentElement } from '$lib/element';
+	import { listen } from 'svelte/internal';
+	import HistoryItem from '../../../../components/HistoryItem.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+
+	let descriptionShowing = false;
+
+	$: titleEntries = Object.entries(data.video.title);
+	$: descriptionEntries = Object.entries(data.video.description);
 </script>
 
 <p class="back-button">
@@ -39,10 +46,48 @@
 		<a href={getVideoFileApiLink(data.id)} target="_blank" rel="noopener noreferrer" download>💾</a>
 	</p>
 </div>
+{#if getCurrentElement(data.video.description) != undefined}
+	<button
+		class="bright description-button"
+		on:click={() => (descriptionShowing = !descriptionShowing)}
+	>
+		{#if descriptionShowing}
+			Hide
+		{:else}
+			Show
+		{/if}
+		Description
+	</button>
+	{#if descriptionShowing}
+		<p class="description">
+			{#each getCurrentElement(data.video.description).split('\n') as line}
+				{line}<br />
+			{/each}
+		</p>
+	{/if}
+{/if}
+<h2>History</h2>
+<ul>
+	{#if titleEntries.length < 2}
+		<li>No title changes on record</li>
+	{:else}
+		{#each titleEntries as entry, ind}
+			<HistoryItem name="title" {entry} {ind} />
+		{/each}
+	{/if}
+	{#if descriptionEntries.length < 2}
+		<li>No description changes on record</li>
+	{:else}
+		{#each descriptionEntries as entry, ind}
+			<HistoryItem name="description" {entry} {ind} />
+		{/each}
+	{/if}
+</ul>
 
 <style lang="scss">
 	$medium: 765px;
 	$large: 1300px;
+	$grey: #7f7f7f;
 
 	.back-button {
 		$margin-v: 3rem;
@@ -68,22 +113,44 @@
 		aspect-ratio: 16/9;
 	}
 
+	h1,
+	h2 {
+		font-weight: 450;
+	}
+
 	h1 {
 		font-size: x-large;
-		font-weight: 450;
 		margin-top: 0.5rem;
 	}
 
+	h2 {
+		font-size: large;
+		margin-top: 0.75rem;
+	}
+
 	.info {
-		color: #7f7f7f;
+		color: $grey;
 		display: flex;
 		justify-content: space-between;
 		font-size: 0.925rem;
+		line-height: 1.25rem;
 
 		.spacer {
 			margin-left: 0.35rem;
 			margin-right: 0.35rem;
 		}
+	}
+
+	.description-button {
+		margin-top: 0.75rem;
+	}
+
+	.description {
+		color: $grey;
+		margin-left: 1rem;
+		margin-top: 0.25rem;
+		font-size: smaller;
+		line-height: 1.25rem;
 	}
 
 	@media (max-width: $medium) {
@@ -95,14 +162,16 @@
 
 	@media (min-width: $medium) and (max-width: $large) {
 		video,
-		.info {
+		.info,
+		.description {
 			width: 40rem;
 		}
 	}
 
 	@media (min-width: $large) {
 		video,
-		.info {
+		.info,
+		.description {
 			width: 55rem;
 		}
 	}

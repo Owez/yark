@@ -15,7 +15,7 @@ export type Element = Object;
  */
 export function getCurrentElement(element: Element): any | undefined {
     const values = Object.values(element)
-    if (values.length == 0) { return undefined }
+    if (values.length == 0 || values[0] == "") { return undefined }
     return values[0]
 }
 
@@ -25,5 +25,14 @@ export function getCurrentElement(element: Element): any | undefined {
  * @returns If the element has been updated
  */
 export function elementWasUpdated(element: Element): boolean {
-    return Object.values(element).length > 1
+    return elementUpdateCount(element) > 1
+}
+
+/**
+ * Gets update count of the provided element
+ * @param element Element to get count for
+ * @returns Times element was updated
+ */
+export function elementUpdateCount(element: Element): number {
+    return Object.values(element).length
 }

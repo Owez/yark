@@ -1,5 +1,6 @@
 import type { PageLoad } from "./$types";
 import { fetchVideoDetails } from "$lib/archive";
+import { getCurrentElement } from "$lib/element";
 
 export const load: PageLoad = async ({ params }) => {
     // Fetch detailed video information
