@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { capitalizeFirstLetter } from '$lib/utils';
+	import { capitalizeFirstLetter, humanDateFromIso } from '$lib/utils';
 
 	export let name: string;
 	export let entry: [string, string];
@@ -19,7 +19,7 @@
 		{#if showing}Hide{:else}Show{/if}
 		{nameCapitalized}
 	</button>
-	on the {date}
+	on {humanDateFromIso(date)}
 	{#if showing}
 		<br />
 		<span class="value">
@@ -33,7 +33,6 @@
 <style lang="scss">
 	.value {
 		color: #7f7f7f;
-		margin-left: 1rem;
 		margin-top: 0.25rem;
 		font-size: smaller;
 		line-height: 1.25rem;

@@ -38,3 +38,37 @@ export function truncate(input: string, to?: number): string {
 export function capitalizeFirstLetter(i: string): string {
 	return i.charAt(0).toUpperCase() + i.slice(1);
 }
+
+/**
+ * Converts a stringified ISO date into a human readable one
+ * @param iso ISO date to convert
+ * @returns Human-readable date with ordinal
+ */
+export function humanDateFromIso(iso: string): string {
+	const date = new Date(iso)
+	const options: Intl.DateTimeFormatOptions = {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	};
+	const fmt = new Intl.DateTimeFormat(undefined, options).format(date)
+	let splitted = fmt.split(" ")
+	const ordinal = getOrdinal(parseInt(splitted[0]))
+	splitted[0] += ordinal
+	return splitted.join(" ")
+}
+
+/**
+ * Gets ordinal for number
+ * @param i Number to get ordinal for
+ * @returns Ordinal string representation
+ */
+function getOrdinal(i: number): string {
+	if (i > 3 && i < 21) return 'th';
+	switch (i % 10) {
+		case 1: return "st";
+		case 2: return "nd";
+		case 3: return "rd";
+		default: return "th";
+	}
+}

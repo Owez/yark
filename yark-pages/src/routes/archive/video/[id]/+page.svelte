@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getVideoFileApiLink, videoWasUpdated } from '$lib/archive';
 	import { elementUpdateCount, getCurrentElement } from '$lib/element';
-	import { listen } from 'svelte/internal';
+	import { humanDateFromIso } from '$lib/utils';
 	import HistoryItem from '../../../../components/HistoryItem.svelte';
 	import type { PageData } from './$types';
 
@@ -29,7 +29,7 @@
 	<p>
 		<span>{getCurrentElement(data.video.views)} views</span>
 		<span class="spacer">•</span>
-		<span>{data.video.uploaded}</span>
+		<span>{humanDateFromIso(data.video.uploaded)}</span>
 		{#if videoWasUpdated(data.video)}
 			<span class="spacer">•</span>
 			<span>🌀</span>
@@ -90,7 +90,7 @@
 	$grey: #7f7f7f;
 
 	.back-button {
-		$margin-v: 3rem;
+		$margin-v: 3.35rem;
 		$padding-v: 1rem;
 
 		margin: 0;
@@ -125,7 +125,8 @@
 
 	h2 {
 		font-size: large;
-		margin-top: 0.75rem;
+		margin-top: 1rem;
+		margin-bottom: 0.25rem;
 	}
 
 	.info {
@@ -142,7 +143,7 @@
 	}
 
 	.description-button {
-		margin-top: 0.75rem;
+		margin-top: 1rem;
 	}
 
 	.description {
