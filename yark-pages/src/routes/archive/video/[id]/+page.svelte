@@ -2,6 +2,7 @@
 	import { getCurrentElement } from '$lib/element';
 	import BackButton from '../../../../components/video/BackButton.svelte';
 	import Description from '../../../../components/video/Description.svelte';
+	import Graph from '../../../../components/video/Graph.svelte';
 	import History from '../../../../components/video/History.svelte';
 	import Player from '../../../../components/video/Player.svelte';
 	import TopInfo from '../../../../components/video/TopInfo.svelte';
@@ -18,3 +19,4 @@
 <Description video={data.video} />
 <!-- ~Below page fold -->
 <History video={data.video} />
+<Graph trackedElement={data.video.views} />

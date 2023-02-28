@@ -7,7 +7,7 @@
  * 
  * This takes the form of a kv object with a string date and some generic value, e.g. `{"..": 1, "..": 2, "..": 3}`
  */
-export type Element = Object;
+export type Element = object;
 
 /**
  * Gets the current element value from a provided element

@@ -40,12 +40,20 @@ export function capitalizeFirstLetter(i: string): string {
 }
 
 /**
- * Converts a stringified ISO date into a human readable one
+ * Converts a stringified ISO date into a human readable one, alias for {@link humanDate}
  * @param iso ISO date to convert
  * @returns Human-readable date with ordinal
  */
 export function humanDateFromIso(iso: string): string {
-	const date = new Date(iso)
+	return humanDate(new Date(iso))
+}
+
+/**
+ * Converts a date object into a human readable one
+ * @param date Date object to convert
+ * @returns Human-readable date with ordinal
+ */
+export function humanDate(date: Date): string {
 	const options: Intl.DateTimeFormatOptions = {
 		year: "numeric",
 		month: "long",

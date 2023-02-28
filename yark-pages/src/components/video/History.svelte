@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { VideoDetailed } from '$lib/archive';
+	import { elementWasUpdated } from '$lib/element';
 	import HistoryItem from './HistoryItem.svelte';
 
 	export let video: VideoDetailed;
@@ -24,8 +25,13 @@
 			<HistoryItem name="description" {entry} {ind} />
 		{/each}
 	{/if}
+	{#if !elementWasUpdated(video.views)}
+		<li>No view count changes on record</li>
+	{/if}
+	{#if !elementWasUpdated(video.likes)}
+		<li>No like count changes on record</li>
+	{/if}
 </ul>
 
 <style lang="scss">
-
 </style>

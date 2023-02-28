@@ -37,6 +37,8 @@
 	"type": "module",
 	"dependencies": {
 		"@tauri-apps/api": "^1.2.0",
+		"@unovis/svelte": "^1.0.3",
+		"@unovis/ts": "^1.0.3",
 		"cookie": "^0.5.0",
 		"sass": "^1.57.1"
 	}
