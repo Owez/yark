@@ -32,7 +32,7 @@
 	$grey: #7f7f7f;
 
 	.description-button {
-		margin-top: 1rem;
+		margin-top: 0.65rem;
 	}
 
 	.description {

@@ -1,12 +1,11 @@
 import type { PageLoad } from "./$types";
 import { fetchVideoDetails } from "$lib/archive";
-import { getCurrentElement } from "$lib/element";
 
 export const load: PageLoad = async ({ params }) => {
     // Fetch detailed video information
-    const id = params.id;
-    const video = await fetchVideoDetails(id)
+    const video_id = params.id;
+    const video = await fetchVideoDetails(video_id)
 
     // Return the video
-    return { id, video }
+    return { video_id, video }
 }

@@ -8,6 +8,7 @@
 	$: descriptionEntries = Object.entries(video.description);
 </script>
 
+<h2 class="video">History</h2>
 <ul>
 	{#if titleEntries.length < 2}
 		<li>No title changes on record</li>

@@ -116,3 +116,22 @@ li {
 		margin-bottom: $margin-v;
 	}
 }
+
+// Shared heading style for video details
+h1.video,
+h2.video {
+	font-weight: 450;
+}
+
+// Heading 1 for video details
+h1.video {
+	font-size: x-large;
+	margin-top: 0.75rem;
+}
+
+// Heading 2 for video details
+h2.video {
+	font-size: large;
+	margin-top: 1rem;
+	margin-bottom: 0.25rem;
+}
