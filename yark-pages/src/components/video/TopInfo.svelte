@@ -3,12 +3,12 @@
 	import { getCurrentElement } from '$lib/element';
 	import { humanDate } from '$lib/utils';
 
-	export let video_id: string;
+	export let videoId: string;
 	export let video: VideoDetailed;
 
 	$: views = getCurrentElement(video.views);
 	$: uploaded = humanDate(new Date(video.uploaded));
-	$: file_link = getVideoFileApiLink(video_id);
+	$: file_link = getVideoFileApiLink(videoId);
 </script>
 
 <div class="info">
@@ -23,7 +23,7 @@
 	</p>
 	<p>
 		<a
-			href={`https://www.youtube.com/watch?v=${video_id}`}
+			href={`https://www.youtube.com/watch?v=${videoId}`}
 			target="_blank"
 			rel="noopener noreferrer"
 			class="invis">🔗</a

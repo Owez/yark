@@ -10,6 +10,7 @@
 </script>
 
 <h2 class="video">History</h2>
+<p class="video" style="margin-bottom:0.35rem;">Author's changes</p>
 <ul>
 	{#if titleEntries.length < 2}
 		<li>No title changes on record</li>

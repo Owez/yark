@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getCurrentElement } from '$lib/element';
+	import ArchiveCode from '../../../../components/video/ArchiveCode.svelte';
 	import BackButton from '../../../../components/video/BackButton.svelte';
 	import Description from '../../../../components/video/Description.svelte';
 	import Graph from '../../../../components/video/Graph.svelte';
@@ -13,18 +14,19 @@
 
 <!-- Core content -->
 <BackButton />
-<Player video_id={data.video_id} />
+<Player videoId={data.videoId} />
 <h1 class="video">{getCurrentElement(data.video.title)}</h1>
-<TopInfo video_id={data.video_id} video={data.video} />
+<TopInfo videoId={data.videoId} video={data.video} />
 <Description video={data.video} />
 <!-- ~Below page fold -->
 <History video={data.video} />
 <Graph name="views" trackedElement={data.video.views} />
 <Graph name="likes" trackedElement={data.video.likes} colour={1} />
-<div class="spacer"></div>
+<ArchiveCode videoRawArchive={data.videoRawArchive} />
+<div class="spacer" />
 
 <style lang="scss">
 	.spacer {
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 	}
 </style>

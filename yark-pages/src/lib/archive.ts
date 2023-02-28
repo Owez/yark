@@ -163,8 +163,8 @@ export function getVideoThumbnailApiLink(thumbnail_id: string): string {
  * @param video Video to get link for
  * @returns API link to the raw video which will return as a file
  */
-export function getVideoFileApiLink(video_id: string): string {
-	return `${getOpenedArchiveApiLink()}/video/${video_id}/file`
+export function getVideoFileApiLink(videoId: string): string {
+	return `${getOpenedArchiveApiLink()}/video/${videoId}/file`
 }
 
 
@@ -204,13 +204,17 @@ export async function fetchVideosBrief(
 /**
  * Fetches information on a specific video inside of the currently-opened archive
  * @param id The identifier of the video to fetch
- * @returns Detailed video interface promise
+ * @returns Detailed video interface promise and the raw JSON response
  */
-export async function fetchVideoDetails(id: string): Promise<VideoDetailed> {
+export async function fetchVideoDetails(id: string): Promise<[VideoDetailed, string]> {
 	const url = new URL(getOpenedArchiveApiLink())
 	url.pathname += `/video/${id}`
 
-	return await fetch(url).then((resp) => resp.json());
+	return await fetch(url).then(async (resp) => {
+		const rawArchive = await resp.text()
+		const json = JSON.parse(rawArchive)
+		return [json, rawArchive]
+	})
 }
 
 /**

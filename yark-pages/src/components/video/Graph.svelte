@@ -8,6 +8,8 @@
 	export let trackedElement: Element;
 	export let colour: number = 0;
 
+	let initialWidth = window.innerWidth;
+
 	// Date tick formatting, containing an array of human times corresponding to ticks generated
 	let dateTicks: string[] = [];
 
@@ -34,11 +36,11 @@
 		return Math.max(0, dateTicks.length - idealBars());
 	}
 
-		/**
+	/**
 	 * Calculates how many ticks there will be once {@link xDomainMin} is calculated
 	 * @param dateTicks
 	 */
-	 function ticksInXDomain(dateTicks: string[]): number {
+	function ticksInXDomain(dateTicks: string[]): number {
 		return Math.min(dateTicks.length, idealBars());
 	}
 
@@ -73,21 +75,29 @@
 	const tickFormat = (tick: number) => dateTicks[tick];
 
 	$: graphData = elementToGraphRecord(trackedElement);
+	$: innerWidth = 0;
 </script>
 
-<!-- TODO: refresh domain stuff on window change -->
+<!-- TODO: refresh domain stuff on window change instead of this bodgejob to let users know -->
+<svelte:window bind:innerWidth />
+
 {#if elementWasUpdated(trackedElement)}
 	<h2 class="video">{capitalizeFirstLetter(name)} over time</h2>
+	<p class="video">
+		Showing latest {ticksInXDomain(dateTicks)} out of {dateTicks.length} bars
+		{#if innerWidth != initialWidth}
+			– Refresh to update
+		{/if}
+	</p>
 	<div class="graph">
-		<VisXYContainer data={graphData} xDomain={[xDomainMin(dateTicks), dateTicks.length - 1]} >
-			<VisStackedBar {x} {y} color={getColour(colour)} roundedCorners={5}/>
+		<VisXYContainer data={graphData} xDomain={[xDomainMin(dateTicks), dateTicks.length - 1]}>
+			<VisStackedBar {x} {y} color={getColour(colour)} roundedCorners={5} />
 			<VisAxis
 				type="x"
 				{tickFormat}
 				numTicks={ticksInXDomain(dateTicks)}
 				tickTextFontSize="8.5px"
 				tickTextWidth={10}
-				
 			/>
 			<VisAxis type="y" />
 		</VisXYContainer>

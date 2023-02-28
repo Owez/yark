@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { getVideoFileApiLink } from '$lib/archive';
 
-	export let video_id: string;
+	export let videoId: string;
 </script>
 
 <!-- NOTE: the ignore is a workaround for <https://github.com/sveltejs/svelte/issues/5967> -->
 <!-- svelte-ignore a11y-media-has-caption -->
 <video controls autoplay>
-	<source src={getVideoFileApiLink(video_id)} type="video/mp4" />
+	<source src={getVideoFileApiLink(videoId)} type="video/mp4" />
 </video>
 
 <style lang="scss">

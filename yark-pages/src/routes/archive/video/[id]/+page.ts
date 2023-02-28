@@ -3,9 +3,9 @@ import { fetchVideoDetails } from "$lib/archive";
 
 export const load: PageLoad = async ({ params }) => {
     // Fetch detailed video information
-    const video_id = params.id;
-    const video = await fetchVideoDetails(video_id)
+    const videoId = params.id;
+    const [video, videoRawArchive] = await fetchVideoDetails(videoId)
 
     // Return the video
-    return { video_id, video }
+    return { videoId, video, videoRawArchive }
 }
