@@ -82,14 +82,16 @@ def create_new_archive() -> Response:
     except ValidationError:
         return utils.error_response("Invalid body", None, 400)
 
-    # Create new archive and save it
-    try:
-        Archive(Path(schema_body["path"]), schema_body["target"]).commit()
-    except Exception as e:
-        return utils.error_response("Failed to create archive", str(e))
-
     # Make the slug into a slug if it isn't already
     archive_slug = slugify.slugify(schema_body["slug"])
+
+    # Create new archive and save it
+    try:
+        Archive(
+            Path(schema_body["path"]) / archive_slug, schema_body["target"]
+        ).commit()
+    except Exception as e:
+        return utils.error_response("Failed to create archive", str(e))
 
     # Add to database
     try:
