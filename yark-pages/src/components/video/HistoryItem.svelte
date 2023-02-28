@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { capitalizeFirstLetter, humanDateFromIso } from '$lib/utils';
+	import { capitalizeFirstLetter, humanDate } from '$lib/utils';
 
 	export let name: string;
-	export let entry: [string, string];
+	export let entry: [string, any];
 	export let ind: number;
 
 	let showing = false;
 
 	$: nameCapitalized = capitalizeFirstLetter(name);
-	$: date = entry[0];
+	$: isoString = entry[0];
 	$: value = entry[1];
 </script>
 
@@ -19,7 +19,7 @@
 		{#if showing}Hide{:else}Show{/if}
 		{nameCapitalized}
 	</button>
-	on {humanDateFromIso(date)}
+	on {humanDate(new Date(isoString))}
 	{#if showing}
 		<br />
 		<div class="value">
@@ -34,7 +34,7 @@
 	.value {
 		color: #7f7f7f;
 		margin-bottom: 0.35rem;
-		margin-left:0.5rem;
+		margin-left: 0.5rem;
 		font-size: smaller;
 		line-height: 1.25rem;
 		width: 30rem;

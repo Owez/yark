@@ -40,15 +40,6 @@ export function capitalizeFirstLetter(i: string): string {
 }
 
 /**
- * Converts a stringified ISO date into a human readable one, alias for {@link humanDate}
- * @param iso ISO date to convert
- * @returns Human-readable date with ordinal
- */
-export function humanDateFromIso(iso: string): string {
-	return humanDate(new Date(iso))
-}
-
-/**
  * Converts a date object into a human readable one
  * @param date Date object to convert
  * @returns Human-readable date with ordinal
@@ -64,6 +55,21 @@ export function humanDate(date: Date): string {
 	const ordinal = getOrdinal(parseInt(splitted[0]))
 	splitted[0] += ordinal
 	return splitted.join(" ")
+}
+
+/**
+ * Converts a date object into a compact, but readable, string
+ * @param date Date to stringify
+ */
+export function compactDate(date: Date): string {
+	const options: Intl.DateTimeFormatOptions = {
+		weekday: "short",
+		month: "numeric",
+		day: "numeric",
+		hour: "numeric",
+		minute: "numeric",
+	}
+	return new Intl.DateTimeFormat(undefined, options).format(date).replace(",", "")
 }
 
 /**

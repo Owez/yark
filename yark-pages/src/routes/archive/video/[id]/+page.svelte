@@ -19,4 +19,12 @@
 <Description video={data.video} />
 <!-- ~Below page fold -->
 <History video={data.video} />
-<Graph trackedElement={data.video.views} />
+<Graph name="views" trackedElement={data.video.views} />
+<Graph name="likes" trackedElement={data.video.likes} colour={1} />
+<div class="spacer"></div>
+
+<style lang="scss">
+	.spacer {
+		margin-bottom: 1.5rem;
+	}
+</style>

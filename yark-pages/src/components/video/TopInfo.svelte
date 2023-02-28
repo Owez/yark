@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { getVideoFileApiLink, videoWasUpdated, type VideoDetailed } from '$lib/archive';
 	import { getCurrentElement } from '$lib/element';
-	import { humanDateFromIso } from '$lib/utils';
+	import { humanDate } from '$lib/utils';
 
 	export let video_id: string;
 	export let video: VideoDetailed;
 
 	$: views = getCurrentElement(video.views);
-	$: uploaded = humanDateFromIso(video.uploaded);
+	$: uploaded = humanDate(new Date(video.uploaded));
 	$: file_link = getVideoFileApiLink(video_id);
 </script>
 
