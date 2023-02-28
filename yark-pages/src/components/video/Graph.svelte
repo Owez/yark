@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { VisXYContainer, VisStackedBar, VisAxis } from '@unovis/svelte';
 	import { elementWasUpdated, type Element } from '$lib/element';
+	import { humanDateFromIso } from '$lib/utils';
 
 	export let trackedElement: Element;
 
+	// Date tick formatting, containing an array of human times corresponding to ticks generated
+	let dateTicks: string[] = [];
+
 	/**
-	 * Record of a single graph point
+	 * Record of a single graph point with x being ticks from 0 to x, and y being the value
 	 */
 	type GraphRecord = {
-		x: Date;
-		y: number;
+		x: number;
+		y: any;
 	};
 
 	/**
@@ -18,17 +22,21 @@
 	 */
 	function elementToGraphRecord(element: Element): GraphRecord[] {
 		let records: GraphRecord[] = [];
-		Object.entries(element).forEach((entry) => {
-			const [isoString, value] = entry;
-			const date = new Date(isoString);
-			records.push({ x: date, y: value });
-		});
-		console.log(records);
+		const entries = Object.entries(element);
+		for (let index = 0; index < entries.length; index++) {
+			const [isoString, value] = entries[index];
+			dateTicks.push(humanDateFromIso(isoString));
+			records.push({ x: index, y: value });
+		}
 		return records;
 	}
 
-	const x = (d: GraphRecord) => d.x.getTime();
+	// Conversion of graph record to ticks
+	const x = (d: GraphRecord) => d.x;
 	const y = (d: GraphRecord) => d.y;
+
+	// Tick formatting (x-axis labels)
+	const tickFormat = (tick: number) => dateTicks[tick];
 
 	$: graphData = elementToGraphRecord(trackedElement);
 </script>
@@ -37,8 +45,8 @@
 	<h2 class="video">Views over time</h2>
 	<div class="graph">
 		<VisXYContainer data={graphData}>
-			<VisStackedBar {x} {y} barWidth={10} />
-			<VisAxis type="x" />
+			<VisStackedBar {x} {y} />
+			<VisAxis type="x" {tickFormat} />
 			<VisAxis type="y" />
 		</VisXYContainer>
 	</div>
