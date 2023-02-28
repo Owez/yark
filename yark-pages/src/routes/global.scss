@@ -103,6 +103,16 @@ input[type='text'] {
 
 // Typical smaller list items
 li {
-	font-size: 0.925rem;
-	line-height: 1.65;
+	font-size: 0.9rem;
+	line-height: 2.25;
+
+	button.bright {
+		$padding-v: 0.25rem;
+		$margin-v: 0.2rem;
+
+		padding-top: $padding-v;
+		padding-bottom: $padding-v;
+		margin-top: $margin-v;
+		margin-bottom: $margin-v;
+	}
 }

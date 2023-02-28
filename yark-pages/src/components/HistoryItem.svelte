@@ -22,19 +22,21 @@
 	on {humanDateFromIso(date)}
 	{#if showing}
 		<br />
-		<span class="value">
+		<div class="value">
 			{#each value.split('\n') as line}
 				{line}
 			{/each}
-		</span>
+		</div>
 	{/if}
 </li>
 
 <style lang="scss">
 	.value {
 		color: #7f7f7f;
-		margin-top: 0.25rem;
+		margin-bottom: 0.35rem;
+		margin-left:0.5rem;
 		font-size: smaller;
 		line-height: 1.25rem;
+		width: 30rem;
 	}
 </style>
