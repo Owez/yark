@@ -15,8 +15,8 @@ export type Element = object;
  */
 export function getCurrentElement(element: Element): any | undefined {
     const values = Object.values(element)
-    if (values.length == 0 || values[0] == "") { return undefined }
-    return values[0]
+    if (values.length == 0 || (values.length == 1 && values[0] == "")) { return undefined }
+    return values.slice(-1)[0]
 }
 
 /**

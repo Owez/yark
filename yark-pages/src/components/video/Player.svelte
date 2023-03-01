@@ -7,7 +7,7 @@
 <!-- NOTE: the ignore is a workaround for <https://github.com/sveltejs/svelte/issues/5967> -->
 <!-- svelte-ignore a11y-media-has-caption -->
 <video controls autoplay>
-	<source src={getVideoFileApiLink(videoId)} type="video/mp4" />
+	<source src={getVideoFileApiLink(videoId)} />
 </video>
 
 <style lang="scss">

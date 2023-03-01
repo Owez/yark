@@ -8,17 +8,7 @@ import sys
 
 
 class Converter:
-    """
-    FFMPEG-based converter which transfers all video formats from YouTube into a standardized MP4 format
-    
-    The reasoning behind this is to:
-
-    1. Simplify the distribution of videos, and so you can rigidly assume an id of `x` would be at `videos/x.mp4`
-    2. There's no massive drawbacks as most formats can have their container copied straight into MP4s
-    3. The reason MP4s where picked over WEBMs is because of compat, see https://github.com/tauri-apps/tauri/issues/5605
-
-    There's pros and cons to this and originally we assumed it was either MP4 or WEBM, but having a single format to rule them all works out well
-    """
+    """FFMPEG-based converter which transfers all video formats from YouTube apart from MP4s into a standardized WEBM format"""
 
     path_videos: Path
 
@@ -33,11 +23,6 @@ class Converter:
 
         # Convert 3gp videos
         for path in self.path_videos.glob("*.3gp"):
-            self._convert_copy_codec(path)
-
-        # Convert webm videos, the most common kind
-        # NOTE: ideally we'd allow mp4 and webm but the tauri viewer dislikes webm on macos, see <https://github.com/tauri-apps/tauri/issues/5605>
-        for path in self.path_videos.glob("*.webm"):
             self._convert_copy_codec(path)
 
     def _convert_copy_codec(self, path: Path) -> None:

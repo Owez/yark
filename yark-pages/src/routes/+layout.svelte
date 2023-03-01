@@ -7,7 +7,7 @@
 	 * Sets minimum window size via tauri to prevent uglyness
 	 */
 	async function setWindowBounds() {
-		await appWindow.setMinSize(new PhysicalSize(475, 700));
+		await appWindow.setMinSize(new PhysicalSize(1250, 700));
 	}
 
 	// Set bounds for all pages

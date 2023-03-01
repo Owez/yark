@@ -4,6 +4,7 @@
 	export let name: string;
 	export let entry: [string, any];
 	export let ind: number;
+	export let lastEntry: number;
 
 	let showing = false;
 
@@ -14,7 +15,7 @@
 
 <li>
 	{nameCapitalized}
-	{#if ind == 0}was originally{:else}changed to{/if}
+	{#if ind == lastEntry}finally changed to{:else if ind == 0}was originally{:else}changed to{/if}
 	<button class="bright" on:click={() => (showing = !showing)}>
 		{#if showing}Hide{:else}Show{/if}
 		{nameCapitalized}

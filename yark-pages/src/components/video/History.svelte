@@ -7,6 +7,8 @@
 
 	$: titleEntries = Object.entries(video.title);
 	$: descriptionEntries = Object.entries(video.description);
+	$: lastTitleEntry = titleEntries.length-1
+	$: lastDescriptionEntry = descriptionEntries.length-1
 </script>
 
 <h2 class="video">History</h2>
@@ -16,14 +18,14 @@
 		<li>No title changes on record</li>
 	{:else}
 		{#each titleEntries as entry, ind}
-			<HistoryItem name="title" {entry} {ind} />
+			<HistoryItem name="title" {entry} {ind} lastEntry={lastTitleEntry} />
 		{/each}
 	{/if}
 	{#if descriptionEntries.length < 2}
 		<li>No description changes on record</li>
 	{:else}
 		{#each descriptionEntries as entry, ind}
-			<HistoryItem name="description" {entry} {ind} />
+			<HistoryItem name="description" {entry} {ind} lastEntry={lastDescriptionEntry} />
 		{/each}
 	{/if}
 	{#if !elementWasUpdated(video.views)}
