@@ -73,5 +73,5 @@ export interface YarkStore {
  */
 export function getLocalSecret(): Promise<string> {
 	// NOTE: could be done nicer, if theres a better way to do this then do it. perf isnt a concern here
-	return invoke('get_environment_variable', { name: 'YARK_LOCAL_SECRET' });
+	return invoke('get_environment_variable', { name: 'YARK_ADMIN_SECRET' });
 }

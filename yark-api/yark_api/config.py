@@ -40,7 +40,7 @@ class Config:
     CUSTOM_PORT: int | None = get_custom_port()
 
     # Admin secret
-    ADMIN_SECRET: str = get_env_ensure("YARK_SECRET")
+    ADMIN_SECRET: str = get_env_ensure("YARK_ADMIN_SECRET")
 
     # Flask
     SECRET_KEY: str | None = os.environ.get("YARK_SECRET_FLASK")
