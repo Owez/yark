@@ -969,8 +969,7 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "yt-dlp-2023.2.17.tar.gz", hash = "sha256:9af92de5effc193bdb51216d9ebf28874d96180d202fae752b0d9f2a63380f3a"},
-    {file = "yt_dlp-2023.2.17-py2.py3-none-any.whl", hash = "sha256:3b2df037c80922f0f83f63ee2f9253496b4a8668c0fe8d2a836ba9040f853b07"},
+    {file = "master.tar.gz", hash = "sha256:96c8d2c64d92cec68cdbecd6a1ed7b140edda346d917d5f3033ced176e0c4a79"},
 ]
 
 [package.dependencies]
@@ -981,7 +980,11 @@ mutagen = "*"
 pycryptodomex = "*"
 websockets = "*"
 
+[package.source]
+type = "url"
+url = "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz"
+
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "7234d952af1da0e2fffcb95b01afdd219488f9d660f35a20741218660d2b26b4"
+content-hash = "502fa35935c2067c46cdea63e5e88186005b7d15da2289b60dfc307d9e783b2e"
