@@ -36,19 +36,29 @@ class Config:
     """Configuration state for launching the Flask app"""
 
     # Host and port config
-    CUSTOM_HOST: str | None = os.environ.get("YARK_HOST")
-    CUSTOM_PORT: int | None = get_custom_port()
+    CUSTOM_HOST: str | None
+    CUSTOM_PORT: int | None
 
     # Admin secret
-    ADMIN_SECRET: str = get_env_ensure("YARK_ADMIN_SECRET")
+    ADMIN_SECRET: str
 
     # Flask
-    SECRET_KEY: str | None = os.environ.get("YARK_SECRET_FLASK")
+    SECRET_KEY: str | None
 
     # SqlAlchemy
-    SQLALCHEMY_DATABASE_URI: str | None = os.environ.get("YARK_DATABASE_URI")
-    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+    SQLALCHEMY_DATABASE_URI: str | None
+    SQLALCHEMY_TRACK_MODIFICATIONS: bool
 
     # Flask Caching
-    CACHE_TYPE: str = "SimpleCache"
-    CACHE_DEFAULT_TIMEOUT: int = 300
+    CACHE_TYPE: str
+    CACHE_DEFAULT_TIMEOUT: int
+
+    def __init__(self) -> None:
+        self.CUSTOM_HOST = os.environ.get("YARK_HOST")
+        self.CUSTOM_PORT = get_custom_port()
+        self.ADMIN_SECRET = get_env_ensure("YARK_ADMIN_SECRET")
+        self.SECRET_KEY = os.environ.get("YARK_SECRET_FLASK")
+        self.SQLALCHEMY_DATABASE_URI = os.environ.get("YARK_DATABASE_URI")
+        self.SQLALCHEMY_TRACK_MODIFICATIONS = False
+        self.CACHE_TYPE = "SimpleCache"
+        self.CACHE_DEFAULT_TIMEOUT = 300
