@@ -4,7 +4,6 @@
 
 import { writable } from 'svelte/store';
 import type { Archive } from './archive';
-import { invoke } from '@tauri-apps/api';
 import { browser } from '$app/environment';
 
 /**
@@ -67,11 +66,3 @@ export interface YarkStore {
 	federatedAccept: boolean;
 }
 
-/**
- * Gets the local secret token for use inside of the API from the environment
- * @returns Local secret token
- */
-export function getLocalSecret(): Promise<string> {
-	// NOTE: could be done nicer, if theres a better way to do this then do it. perf isnt a concern here
-	return invoke('get_environment_variable', { name: 'YARK_ADMIN_SECRET' });
-}

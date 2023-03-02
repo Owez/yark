@@ -25,7 +25,7 @@ TODO: add docker and then make this guide
 To get this API setup, please make sure you've got the development dependencies from the contributing file installed. Once you've got these installed, please make a new `.env` file with whatever admin secret and database path you'd like:
 
 ```env
-YARK_SECRET=supersecure
+YARK_ADMIN_SECRET=supersecure
 YARK_DATABASE_URI=sqlite:///dev.db
 ```
 

@@ -2,6 +2,8 @@
  * Utility functions and classes for project-wide ease of use
  */
 
+import { invoke } from "@tauri-apps/api";
+
 /**
  * URL to the locally-running API server instance
  */
@@ -85,4 +87,12 @@ function getOrdinal(i: number): string {
 		case 3: return "rd";
 		default: return "th";
 	}
+}
+
+/**
+ * Gets the admin secret token for use inside of the API from the environment
+ * @returns Admin's secret token for the API
+ */
+export function getAdminSecret(): Promise<string> {
+	return invoke('get_environment_variable', { name: 'YARK_ADMIN_SECRET' });
 }
