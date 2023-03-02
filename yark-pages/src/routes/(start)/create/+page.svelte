@@ -170,7 +170,7 @@
 		state={StartCardState.Max}
 	>
 		<h2 class="card-heading">Destination</h2>
-		<DirSelect bind:path bind:pathCompletelyInvalid />
+		<DirSelect bind:path bind:pathCompletelyInvalid bind:name />
 		<span class="slash-indicator">/</span>
 		<Name bind:name bind:nameCompletelyInvalid />
 		<h2 class="card-heading">YouTube URL</h2>
