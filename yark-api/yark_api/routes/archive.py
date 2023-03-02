@@ -24,8 +24,8 @@ class ArchiveResource(Resource):
     def post(self) -> Response:  # TODO: auth
         """Creates a new archive if the API owner requests to"""
         # Authenticate
-        # if (err := utils.check_auth()) is not None:
-        #     return err
+        if (err := utils.check_auth()) is not None:
+            return err
 
         # Decode query arg to figure out intent
         try:
@@ -82,20 +82,19 @@ def create_new_archive() -> Response:
     except ValidationError:
         return utils.error_response("Invalid body", None, 400)
 
-    # Make the slug into a slug if it isn't already
+    # Make the slug into a slug if it isn't already and make path using it
     archive_slug = slugify.slugify(schema_body["slug"])
+    archive_path = Path(schema_body["path"]) / archive_slug
 
     # Create new archive and save it
     try:
-        Archive(
-            Path(schema_body["path"]) / archive_slug, schema_body["target"]
-        ).commit()
+        Archive(archive_path, schema_body["target"]).commit()
     except Exception as e:
         return utils.error_response("Failed to create archive", str(e))
 
     # Add to database
     try:
-        archive_info = models.Archive(slug=archive_slug, path=schema_body["path"])
+        archive_info = models.Archive(slug=archive_slug, path=str(archive_path))
         extensions.db.session.add(archive_info)
         extensions.db.session.commit()
 

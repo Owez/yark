@@ -6,6 +6,7 @@ import { goto } from '$app/navigation';
 import { get } from 'svelte/store';
 import { yarkStore } from './store';
 import { elementWasUpdated, type Element } from './element';
+import { getAdminSecret } from './utils';
 
 /**
  * Core archive representation used by various components
@@ -82,7 +83,10 @@ export async function createNewRemoteArchive({
 
 	return await fetch(url, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: {
+			'Content-Type': 'application/json',
+			"Authentication": `Bearer ${await getAdminSecret()}`
+		},
 		body: JSON.stringify(payload)
 	})
 		.then((resp) => resp.json())
@@ -111,7 +115,10 @@ export async function importNewRemoteArchive({
 
 	return await fetch(url, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: {
+			'Content-Type': 'application/json',
+			"Authentication": `Bearer ${await getAdminSecret()}`
+		},
 		body: JSON.stringify(payload)
 	})
 		.then((resp) => resp.json())

@@ -14,9 +14,7 @@ fn main() {
         .take(30)
         .map(char::from)
         .collect();
-    env::set_var("YARK_ADMIN_SECRET", session_admin_secret);
-
-    println!("{}", env::var("YARK_ADMIN_SECRET").unwrap());
+    env::set_var("YARK_ADMIN_SECRET", session_admin_secret.clone());
 
     // Build and launch the app
     tauri::Builder::default()
