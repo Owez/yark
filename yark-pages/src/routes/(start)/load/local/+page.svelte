@@ -27,7 +27,7 @@
 	 */
 	function checkNameValidity(): boolean {
 		// TODO: merge validation
-		nameCompletelyInvalid = name == undefined || name == '';
+		nameCompletelyInvalid = name == undefined || name == '' || name.length < 2;
 		return !nameCompletelyInvalid;
 	}
 
@@ -47,7 +47,7 @@
 	/**
 	 * Loads archive from information provided, making sure it's all valid beforehand
 	 */
-	async function importArchive() {
+	async function importOldArchive() {
 		// Validate the inputs
 		if (!(await validate())) {
 			return;
@@ -67,6 +67,20 @@
 		});
 		setCurrentArchive(importedArchive);
 	}
+
+	/**
+	 * Imports archive which already exists in the API
+	 */
+	async function importExistingArchive() {
+		// Validate name only
+		if (name == undefined || nameCompletelyInvalid) {
+			return;
+		}
+
+		// Import the archive already in the API
+		const importedArchive = { server: LOCAL_SERVER, slug: name };
+		setCurrentArchive(importedArchive);
+	}
 </script>
 
 <div class="centre-h">
@@ -76,10 +90,13 @@
 		ballKind={1}
 		state={StartCardState.Max}
 	>
-		<h2 class="card-heading">Import Archive</h2>
+		<h2 class="card-heading">Import v1.2 Archive</h2>
 		<DirSelect bind:path bind:pathCompletelyInvalid />
 		<Name bind:name bind:nameCompletelyInvalid placeholder="New name" />
-		<button on:click={async () => importArchive()} class="bright">Import</button>
+		<button on:click={async () => importOldArchive()} class="bright">Import</button>
+		<h2 class="card-heading">Use Existing</h2>
+		<Name bind:name bind:nameCompletelyInvalid placeholder="Previously-saved archive name" mini={false} />
+		<button on:click={async () => importExistingArchive()} class="bright">Use</button>
 		<LoadList count={10} />
 	</StartCard>
 </div>

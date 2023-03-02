@@ -180,10 +180,11 @@ export function getVideoFileApiLink(videoId: string): string {
  * @param archive Archive to set as current
  */
 export function setCurrentArchive(archive: Archive): void {
+	const RECENTS_MAX = 30;
 	yarkStore.update((value) => {
 		value.openedArchive = archive;
 
-		if (value.recents.length >= 10) {
+		if (value.recents.length >= RECENTS_MAX) {
 			value.recents.shift();
 		}
 
