@@ -5,6 +5,7 @@
 	import Description from '../../../../components/video/Description.svelte';
 	import Graph from '../../../../components/video/Graph.svelte';
 	import History from '../../../../components/video/History.svelte';
+	import Notes from '../../../../components/video/Notes.svelte';
 	import Player from '../../../../components/video/Player.svelte';
 	import TopInfo from '../../../../components/video/TopInfo.svelte';
 	import type { PageData } from './$types';
@@ -22,6 +23,7 @@
 <History video={data.video} />
 <Graph name="views" trackedElement={data.video.views} />
 <Graph name="likes" trackedElement={data.video.likes} colour={1} />
+<Notes  video={data.video}/>
 <ArchiveCode videoRawArchive={data.videoRawArchive} />
 <div class="spacer" />
 

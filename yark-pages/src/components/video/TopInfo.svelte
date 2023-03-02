@@ -13,7 +13,7 @@
 
 <div class="info">
 	<p>
-		<span>{views} views</span>
+		<span>{views.toLocaleString()} views</span>
 		<span class="spacer">•</span>
 		<span>{uploaded}</span>
 		{#if videoWasUpdated(video)}

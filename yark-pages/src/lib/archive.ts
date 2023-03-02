@@ -314,9 +314,20 @@ export interface VideoDetailed {
 	 */
 	deleted: Element;
 	/**
+	 * User-created notes on this video
+	 */
+	notes: Note[];
+	/**
 	 * Comment archive/history of the video
 	 */
 	comments: object // TODO: comments interface
+}
+
+/**
+ * Note for a {@link VideoDetailed} with user-submitted information
+ */
+export interface Note {
+	// TODO
 }
 
 /**
