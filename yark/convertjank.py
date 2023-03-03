@@ -4,13 +4,11 @@
 # c.run()
 
 from yark.archiver.archive import Archive
-from yark.archiver.config import Config
+from yark.archiver.video.note import Note
 from pathlib import Path
 
-archive = Archive(
-    Path("demo"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-)
-archive.commit()
-md = archive.metadata_download(Config())
-archive.metadata_parse(Config(), md)
+archive = Archive.load(Path("../demo"))
+video = archive.videos.inner["Jlsxl-1zQJM"]
+video.notes.append(Note(video, 1, "My example note", "This is the note's body"))
+video.notes.append(Note(video, 60, "Second note", "This is the second note's body"))
 archive.commit()

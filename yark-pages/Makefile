@@ -22,3 +22,4 @@ dev: install api_build
 
 build: install api_clean api_build
 	echo "Building production version of yark-api.."
+	npm run tauri build

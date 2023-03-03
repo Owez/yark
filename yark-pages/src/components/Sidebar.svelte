@@ -1,16 +1,46 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+
+	/**
+	 * Checks if the name provided is the active archive route
+	 * @param name Video category name to check
+	 */
+	function isActive(name: string, url: string): boolean {
+		return url.endsWith(`/archive/${name}`);
+	}
+
+	/**
+	 * Gets the button filepath for video category buttons depending on active state
+	 * @param name Name of the button to get
+	 * @param active Active state of the button (if it should be blue or not)
+	 */
+	function getVideoButtonFile(name: string, url: string): string {
+		const prefix = `/img/btn${name}`;
+		const suffix = '.svg';
+		if (isActive(name, url)) {
+			return `${prefix}_active${suffix}`;
+		}
+		return prefix + suffix;
+	}
+
+	$: videosFile = getVideoButtonFile('videos', $page.url.pathname);
+	$: livestreamsFile = getVideoButtonFile('livestreams', $page.url.pathname);
+	$: shortsFile = getVideoButtonFile('shorts', $page.url.pathname);
+</script>
+
 <nav>
 	<div class="sidebar card-border">
 		<div class="sidebar-list">
 			<a href="/archive/videos" class="logo invis">Y</a>
 			<div class="split" />
 			<a href="/archive/videos">
-				<img src="/img/btnvideos.svg" alt="Videos" class="video-button" />
+				<img src={videosFile} alt="Videos" class="video-button" />
 			</a>
 			<a href="/archive/livestreams">
-				<img src="/img/btnlivestreams.svg" alt="Livestreams" class="video-button" />
+				<img src={livestreamsFile} alt="Livestreams" class="video-button" />
 			</a>
 			<a href="/archive/shorts">
-				<img src="/img/btnshorts.svg" alt="Short" class="video-button" />
+				<img src={shortsFile} alt="Short" class="video-button" />
 			</a>
 		</div>
 		<div class="sidebar-list">

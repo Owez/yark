@@ -327,7 +327,22 @@ export interface VideoDetailed {
  * Note for a {@link VideoDetailed} with user-submitted information
  */
 export interface Note {
-	// TODO
+	/**
+	 * Unique UUID identifier of the note
+	 */
+	id: string,
+	/**
+	 * Timestamp of where the note is relevant to
+	 */
+	timestamp: number,
+	/**
+	 * Big title of the note, required
+	 */
+	title: string,
+	/**
+	 * Main optional paragraph description of the note
+	 */
+	body: string
 }
 
 /**

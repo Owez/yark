@@ -26,13 +26,14 @@
 	$start-card-margin: 1.5rem;
 
 	.card {
-		border-radius: 15px;
+		border-radius: 7.5px;
 		padding: $start-card-margin;
 		padding-bottom: 0;
 	}
 
 	@mixin start-card {
 		flex-shrink: 0;
+		border-radius: 15px;
 	}
 
 	.start-card-normal {
