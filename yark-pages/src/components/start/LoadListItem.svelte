@@ -14,7 +14,6 @@
 		$margin-v: 0.35rem;
 		$padding-h: 0.75rem;
 
-		background: rgb(255, 255, 255);
 		background: linear-gradient(142deg, rgb(247, 247, 247) 0%, rgba(244, 244, 244, 1) 100%);
 		height: 2rem;
 		display: flex;

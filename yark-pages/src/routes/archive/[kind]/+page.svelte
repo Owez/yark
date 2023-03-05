@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { archiveVideoKindToString, getOpenedArchiveAlways } from '$lib/archive';
 	import { capitalizeFirstLetter } from '$lib/utils';
 	import Card from '../../../components/Card.svelte';
@@ -8,7 +9,7 @@
 	export let data: PageData;
 </script>
 
-<h1>
+<h1 class="title">
 	{capitalizeFirstLetter(archiveVideoKindToString(data.kind))}
 	<p>{getOpenedArchiveAlways().slug}</p>
 </h1>
@@ -19,17 +20,14 @@
 		{/each}
 	</div>
 {:else}
-	<Card mini={true}>
-		<p>Sorry, there aren't any {archiveVideoKindToString(data.kind)} in this archive yet!</p>
-	</Card>
+	<p>Sorry, there aren't any {archiveVideoKindToString(data.kind)} in this archive yet!</p>
+	<button class="bright refresh" on:click={() => goto('/archive/dashboard')}
+		>Go to dashboard?</button
+	>
 {/if}
 
 <style lang="scss">
 	h1 {
-		font-size: 30px;
-		font-weight: 500;
-		margin-top: 3rem;
-		margin-bottom: 1rem;
 		display: flex;
 		align-items: flex-end;
 
@@ -51,5 +49,9 @@
 	.videos {
 		display: flex;
 		flex-wrap: wrap;
+	}
+
+	button.refresh {
+		margin-top: 0.65rem;
 	}
 </style>

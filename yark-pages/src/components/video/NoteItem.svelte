@@ -6,7 +6,7 @@
 </script>
 
 <div class="note">
-	<Card mini={true}>
+	<Card mini alt>
 		<h3 class="video">{note.title}</h3>
 		<p class="video">{note.id}</p>
 		<p>{note.body}</p>
@@ -20,6 +20,4 @@
 		margin-top: $margin-v;
 		margin-bottom: $margin-v;
 	}
-
-	
 </style>

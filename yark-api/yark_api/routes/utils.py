@@ -17,7 +17,7 @@ def check_auth() -> Response | None:
     """Checks auth token provided to make sure it's the allowed admin one or returns an error response"""
     auth = request.headers.get("Authentication")
     secret = Config().ADMIN_SECRET
-    if secret == "dev" or auth is None or auth.split(" ")[-1] != secret:
+    if (auth is None or auth.split(" ")[-1] != secret) and secret != "dev":
         return error_response("Invalid admin token", None, 401)
     return None
 
