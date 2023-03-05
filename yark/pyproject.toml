@@ -12,7 +12,7 @@ python = "~3.11"
 requests = "^2.28.2"
 progress = "^1.6"
 colorama = "^0.4.6"
-yt-dlp = { url = "https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz" } # TODO: use march/april release when it comes out
+yt-dlp = "^2023.3.4"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"

@@ -45,8 +45,11 @@
 		</div>
 		<div class="sidebar-list">
 			<div class="split" />
+			<a href="/archive/dashboard">
+				<img src="/img/btndashboard.svg" alt="Dashboard" class="bottom-button">
+			</a>
 			<a href="/">
-				<img src="/img/btnexit.svg" alt="Exit to menu" class="exit-button" />
+				<img src="/img/btnexit.svg" alt="Exit to menu" class="bottom-button" />
 			</a>
 		</div>
 	</div>
@@ -118,7 +121,7 @@
 		margin-bottom: -0.25rem;
 	}
 
-	.exit-button {
+	.bottom-button {
 		@include button;
 
 		width: 20px;
