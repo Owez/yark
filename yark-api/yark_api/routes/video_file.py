@@ -11,7 +11,7 @@ from yark.archiver.archive import Archive
 class SpecificVideoFileResource(Resource):
     """Operations on a specific video file"""
 
-    def get(self, slug: str, id: str) -> Response:
+    def get(self, slug: str, video_id: str) -> Response:
         """Get a raw video file by the video's identifier"""
 
         # Get archive info
@@ -20,9 +20,9 @@ class SpecificVideoFileResource(Resource):
 
         # Build a path to the raw video file
         file_dir = Path(archive.path) / "videos"
-        file_filename = id + ".mp4"
+        file_filename = video_id + ".mp4"
         if not (file_dir / file_filename).exists():
-            file_filename = id + ".webm"
+            file_filename = video_id + ".webm"
 
         # Serve the raw video file from directory
         try:

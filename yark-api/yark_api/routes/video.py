@@ -13,16 +13,18 @@ class SpecificVideoResource(Resource):
     """Operations on a specific video"""
 
     @extensions.cache.cached(timeout=120)
-    def get(self, slug: str, id: str) -> Response:
+    def get(self, slug: str, video_id: str) -> Response:
         """Get specific information on a video"""
-        logging.info(f"Getting information on video {id} for archive '{slug}'")
+        logging.info(f"Getting information on video {video_id} for archive '{slug}'")
 
         # Get archive info
         if not isinstance((archive := utils.get_archive(slug)), Archive):
             return archive
 
         # Get the specific video
-        if not isinstance((video := utils.get_specific_video(archive, id)), Video):
+        if not isinstance(
+            (video := utils.get_specific_video(archive, video_id)), Video
+        ):
             return video
 
         # Serialize core video details

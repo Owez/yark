@@ -13,7 +13,7 @@ from marshmallow import ValidationError
 class NoteResource(Resource):
     """Operations on a general note inside of a video"""
 
-    def post(self, slug: str, id: str) -> Response:
+    def post(self, slug: str, video_id: str) -> Response:
         """Create a new thumbnail attached to a video"""
 
         # Validate the schema
@@ -27,7 +27,9 @@ class NoteResource(Resource):
             return archive
 
         # Get the specific video
-        if not isinstance((video := utils.get_specific_video(archive, id)), Video):
+        if not isinstance(
+            (video := utils.get_specific_video(archive, video_id)), Video
+        ):
             return video
 
         # Add new note to video and commit
@@ -40,3 +42,11 @@ class NoteResource(Resource):
 
         # Return the new note's identifier with message
         return {"message": "Note created", "id": new_note.id}
+
+
+class SpecificNoteResource(Resource):
+    """Operations on a specific note inside of a video"""
+
+    def delete(self, slug: str, video_id: str, note_id: str) -> Response:
+        """Delete a note attached to a video"""
+        # TODO

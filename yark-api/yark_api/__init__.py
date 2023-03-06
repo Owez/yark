@@ -32,16 +32,16 @@ def create_app() -> Flask:
     extensions.api.add_resource(ArchiveResource, "/archive")
     extensions.api.add_resource(SpecificArchiveResource, "/archive/<string:slug>")
     extensions.api.add_resource(
-        SpecificThumbnailResource, "/archive/<string:slug>/thumbnail/<string:id>"
+        SpecificThumbnailResource, "/archive/<string:slug>/thumbnail/<string:thumbnail_id>"
     )
     extensions.api.add_resource(
-        SpecificVideoResource, "/archive/<string:slug>/video/<string:id>"
+        SpecificVideoResource, "/archive/<string:slug>/video/<string:video_id>"
     )
     extensions.api.add_resource(
-        SpecificVideoFileResource, "/archive/<string:slug>/video/<string:id>/file"
+        SpecificVideoFileResource, "/archive/<string:slug>/video/<string:video_id>/file"
     )
     extensions.api.add_resource(
-        NoteResource, "/archive/<string:slug>/video/<string:id>/note"
+        NoteResource, "/archive/<string:slug>/video/<string:video_id>/note"
     )
 
     # Integrate extensions

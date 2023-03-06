@@ -63,7 +63,7 @@
 	}
 
 	.tiny {
-		width: 300px;
+		width: 275px;
 		padding: 15px;
 	}
 

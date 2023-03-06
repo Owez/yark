@@ -12,7 +12,7 @@ from yark.archiver.archive import Archive
 class SpecificThumbnailResource(Resource):
     """Operations on a specific thumbnail"""
 
-    def get(self, slug: str, id: str) -> Response:
+    def get(self, slug: str, thumbnail_id: str) -> Response:
         """Get a thumbnail by it's identifier"""
         # NOTE: ideally there should be cache on this but it errors out because of the send_from_directory
         #       see <https://github.com/pallets-eco/flask-caching/issues/167> for more about this
@@ -23,7 +23,7 @@ class SpecificThumbnailResource(Resource):
 
         # Build a path to the thumbnail
         thumbnail_dir = Path(archive.path) / "images"
-        thumbnail_filename = id + ".webp"
+        thumbnail_filename = thumbnail_id + ".webp"
 
         # Serve the thumbnail from directory
         try:

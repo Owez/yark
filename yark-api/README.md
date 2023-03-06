@@ -11,8 +11,9 @@ YouTube archiving made simple (REST API)
 		- [GET `/archive/:id?kind`](#get-archiveidkind)
 		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
 		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
-		- [GET `/archive/:slug/video/:id/file`](#get-archiveslugvideoidfile)
-		- [POST `/archive/:slug/video/:id/note`](#post-archiveslugvideoidnote)
+		- [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
+		- [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
+		- [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
 		- [Coming soon](#coming-soon)
 
 
@@ -148,11 +149,11 @@ A full example of a return looks like this:
 }
 ```
 
-### GET `/archive/:slug/video/:id/file`
+### GET `/archive/:slug/video/:video_id/file`
 
 This route returns a raw video file for the provided archive slug identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives to actually view the video.
 
-### POST `/archive/:slug/video/:id/note`
+### POST `/archive/:slug/video/:video_id/note`
 
 This route lets you add a new note to a video with all of it's required information filled out. You need to know at least the timestamp and the title of the note you'd like to put. You have to be authenticated to use this route. Here's an example of a full note's JSON body which you send as a request:
 
@@ -173,6 +174,16 @@ This will return a simple creation message with the ID to refer to in the future
 {
 	"message": "Note created",
 	"id": "uuid4"
+}
+```
+
+### DELETE `/archive/:slug/video/:video_id/note/:note_id`
+
+This route lets you delete an existing note, it just requires authentication and the note identifier in the url. Here's the response you should get if you made a successfully request:
+
+```json
+{
+	"message": "Note deleted"
 }
 ```
 

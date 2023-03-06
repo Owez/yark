@@ -6,10 +6,24 @@
 
 	let deleteCocked = false;
 
-	function tryDelete() {
+	/**
+	 * Cocks and then resets the cocked status after a little while
+	 */
+	function cockDelete() {
+		deleteCocked = true;
+		const seconds = 1.25;
+		setTimeout(function () {
+			deleteCocked = false;
+		}, seconds * 1000);
+	}
+
+	/**
+	 * Deletes or cocks the deletion status
+	 */
+	function doDelete() {
 		// Cock and stop if not
 		if (!deleteCocked) {
-			deleteCocked = true;
+			cockDelete();
 			return;
 		}
 	}
@@ -19,11 +33,13 @@
 	<Card tiny alt>
 		<h3 class="video">
 			<div>{note.title}</div>
-			<button on:click={tryDelete()}>
+			<button on:click={() => doDelete()}>
 				{#if deleteCocked}⛔️{:else}🗑{/if}
 			</button>
 		</h3>
-		<p>{note.body}</p>
+		<p>
+			{#if note.body}{note.body}{:else}No further information{/if}
+		</p>
 	</Card>
 </div>
 
@@ -46,11 +62,12 @@
 	button {
 		background: 0;
 		border: 0;
+		margin: 0;
 	}
 
 	p {
 		font-size: 12px;
-		margin-top: 3.5px;
+		margin-top: 5px;
 		overflow-y: auto;
 		max-height: 5.75rem;
 		color: #4a4a4a;
