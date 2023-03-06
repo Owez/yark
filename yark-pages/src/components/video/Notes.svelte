@@ -8,7 +8,16 @@
 {#if video.notes.length != 0}
 	<h2 class="video">Notes</h2>
 	<p class="video">Interesting information</p>
-	{#each video.notes as note}
-		<NoteItem {note} />
-	{/each}
+	<div class="notes">
+		{#each video.notes as note}
+			<NoteItem {note} />
+		{/each}
+	</div>
 {/if}
+
+<style lang="scss">
+	.notes {
+		display: flex;
+		flex-wrap: wrap;
+	}
+</style>

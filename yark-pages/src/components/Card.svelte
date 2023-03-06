@@ -4,6 +4,7 @@
 	export let margin = '0 0 0 0';
 	export let startCard: StartCardState = StartCardState.None;
 	export let mini = false;
+	export let tiny = false;
 	export let alt = false;
 
 	// Set the typical start card max margin automatically
@@ -18,6 +19,7 @@
 	class:start-card-normal={startCard == StartCardState.Enabled}
 	class:start-card-max={startCard == StartCardState.Max}
 	class:mini
+	class:tiny
 	class:alt
 >
 	<slot />
@@ -60,8 +62,13 @@
 		max-width: 30rem;
 	}
 
+	.tiny {
+		width: 300px;
+		padding: 15px;
+	}
+
 	.alt {
-		background: linear-gradient(142deg, rgb(247, 247, 247) 0%, rgba(244, 244, 244, 1) 100%);
+		background: linear-gradient(142deg, #fafafa 100%, #f6f6f6 100%);
 		border: none;
 	}
 </style>
