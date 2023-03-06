@@ -3,13 +3,25 @@
 	import Card from '../Card.svelte';
 
 	export let note: Note;
+
+	let deleteCocked = false;
+
+	function tryDelete() {
+		// Cock and stop if not
+		if (!deleteCocked) {
+			deleteCocked = true;
+			return;
+		}
+	}
 </script>
 
 <div class="note">
 	<Card tiny alt>
 		<h3 class="video">
 			<div>{note.title}</div>
-			<button>🗑</button>
+			<button on:click={tryDelete()}>
+				{#if deleteCocked}⛔️{:else}🗑{/if}
+			</button>
 		</h3>
 		<p>{note.body}</p>
 	</Card>
