@@ -5,6 +5,7 @@ from ..config import Config
 from pathlib import Path
 from .. import models
 from yark.archiver.archive import Archive
+from yark.archiver.video.video import Video
 import logging
 
 
@@ -24,7 +25,7 @@ def check_auth() -> Response | None:
 
 def get_archive(slug: str) -> Archive | Response:
     """Gets archive from database using it's slug or returns an error response"""
-    # Get archive by slug
+    # Get archive info by slug
     archive_info: models.Archive | None = models.Archive.query.filter_by(
         slug=slug
     ).first()
@@ -42,5 +43,24 @@ def get_archive(slug: str) -> Archive | Response:
         return error_response(
             "Archive seems to be deleted",
             "Archive is known about but it's data could not be found. The archive directory/file might've been moved or deleted by accident. This isn't your fault if you're a user.",
+            404,
+        )
+
+
+def get_specific_video(archive: Archive, id: str) -> Video | Response:
+    """Gets a specific video from archive or returns an error response, abstracts over kinds"""
+    # NOTE: if the archive format was relational we wouldn't have to do this;
+    #       the API shouldn't be crap with `kind` because we cant search for
+    #       just any video inside of the format
+    if (video := archive.videos.inner.get(id)) is not None:
+        return video
+    elif (video := archive.livestreams.inner.get(id)) is not None:
+        return video
+    elif (video := archive.shorts.inner.get(id)) is not None:
+        return video
+    else:
+        return error_response(
+            "Video not found",
+            f"Archive {archive} does not contain video of id {id}",
             404,
         )

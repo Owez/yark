@@ -56,11 +56,13 @@ class SpecificArchiveResource(Resource):
 
         # Decode query args to get kind
         try:
-            schema_query = video_kind.VideoKindGetQuerySchema().load(request.args)
+            schema_query: video_kind.VideoKindGetQuerySchema = (
+                video_kind.VideoKindGetQuerySchema().load(request.args)
+            )
         except ValidationError:
             return utils.error_response("Invalid query schema", None, 400)
 
-        # Get archive
+        # Get archive info
         if not isinstance((archive := utils.get_archive(slug)), Archive):
             return archive
 

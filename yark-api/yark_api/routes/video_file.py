@@ -3,10 +3,9 @@
 from flask_restful import Resource
 from flask import Response, send_from_directory
 from . import utils
-from .. import models
-import slugify
 from pathlib import Path
 from werkzeug.exceptions import NotFound
+from yark.archiver.archive import Archive
 
 
 class SpecificVideoFileResource(Resource):
@@ -15,18 +14,12 @@ class SpecificVideoFileResource(Resource):
     def get(self, slug: str, id: str) -> Response:
         """Get a raw video file by the video's identifier"""
 
-        # Make the slug into a slug if it isn't already
-        archive_slug = slugify.slugify(slug)
-
-        # Get archive info by the provided slug
-        archive_info: models.Archive | None = models.Archive.query.filter_by(
-            slug=archive_slug
-        ).first()
-        if archive_info is None:
-            return utils.error_response("Archive not found", None, 404)
+        # Get archive info
+        if not isinstance((archive := utils.get_archive(slug)), Archive):
+            return archive
 
         # Build a path to the raw video file
-        file_dir = Path(archive_info.path) / "videos"
+        file_dir = Path(archive.path) / "videos"
         file_filename = id + ".mp4"
         if not (file_dir / file_filename).exists():
             file_filename = id + ".webm"

@@ -167,7 +167,7 @@ This route lets you add a new note to a video with all of it's required informat
 }
 ```
 
-This will return a simple creation message with the ID to refer to in the future to delete notes (to get notes just get the full video):
+This will return a simple creation message with the ID to refer to in the future to delete notes (to get notes [get](#get-archiveslugvideoid) the full video):
 
 ```json
 {
@@ -178,4 +178,5 @@ This will return a simple creation message with the ID to refer to in the future
 
 ### Coming soon
 
-- `DELETE` note
+- Implement note adding
+- Implement note deletion

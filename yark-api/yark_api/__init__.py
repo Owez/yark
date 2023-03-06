@@ -15,6 +15,7 @@ from .routes.misc import IndexResource
 from .routes.video import SpecificVideoResource
 from .routes.thumbnail import SpecificThumbnailResource
 from .routes.video_file import SpecificVideoFileResource
+from .routes.note import NoteResource
 import logging
 
 
@@ -38,6 +39,9 @@ def create_app() -> Flask:
     )
     extensions.api.add_resource(
         SpecificVideoFileResource, "/archive/<string:slug>/video/<string:id>/file"
+    )
+    extensions.api.add_resource(
+        NoteResource, "/archive/<string:slug>/video/<string:id>/note"
     )
 
     # Integrate extensions
