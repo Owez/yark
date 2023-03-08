@@ -13,6 +13,7 @@ YouTube archiving made simple (REST API)
 		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
 		- [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
 		- [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
+		- [PATCH `/archive/:slug/video/:video_id/note/:note_id`](#patch-archiveslugvideovideo_idnotenote_id)
 		- [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
 
 
@@ -173,6 +174,29 @@ This will return a simple creation message with the ID to refer to in the future
 {
 	"message": "Note created",
 	"id": "uuid4"
+}
+```
+
+### PATCH `/archive/:slug/video/:video_id/note/:note_id`
+
+This route lets you update an existing note, it requires authentication and a JSON body of what to update. Here's the complete request to update every item possible (to not update an item, just remove the line):
+
+```json
+{
+	// Main title
+	"title": "New title for the note",
+    // Video timestamp in seconds
+	"timestamp": 30,
+	// Optional description
+	"body": "New big paragraph body for the note",
+}
+```
+
+If this is sent to the API, the note will be updated and a simple message will be returned providing the status:
+
+```json
+{
+	"message": "Note edited"
 }
 ```
 

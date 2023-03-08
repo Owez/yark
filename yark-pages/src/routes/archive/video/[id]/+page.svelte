@@ -23,7 +23,7 @@
 <History video={data.video} />
 <Graph name="views" trackedElement={data.video.views} />
 <Graph name="likes" trackedElement={data.video.likes} colour={1} />
-<Notes  video={data.video}/>
+<Notes videoId={data.videoId} video={data.video} />
 <ArchiveCode videoRawArchive={data.videoRawArchive} />
 <div class="spacer" />
 

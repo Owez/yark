@@ -324,6 +324,16 @@ export interface VideoDetailed {
 }
 
 /**
+ * Checks if a video has been updated (most likely by the user except for glitches) by checking major elements
+ * @param video Video to check
+ * @returns If the video was updated or not
+ */
+export function videoWasUpdated(video: VideoDetailed): boolean {
+	return elementWasUpdated(video.title) || elementWasUpdated(video.description) || elementWasUpdated(video.thumbnail)
+}
+
+
+/**
  * Note for a {@link VideoDetailed} with user-submitted information
  */
 export interface Note {
@@ -346,10 +356,15 @@ export interface Note {
 }
 
 /**
- * Checks if a video has been updated (most likely by the user except for glitches) by checking major elements
- * @param video Video to check
- * @returns If the video was updated or not
+ * Deletes a note from a provided video if it exists
+ * @param video_id Video identifier note is attached to
+ * @param note Note object to delete
  */
-export function videoWasUpdated(video: VideoDetailed): boolean {
-	return elementWasUpdated(video.title) || elementWasUpdated(video.description) || elementWasUpdated(video.thumbnail)
+export async function deleteNote(video_id: string, note: Note) {
+	const url = new URL(getOpenedArchiveApiLink())
+	url.pathname += `/video/${video_id}/note/${note.id}`
+
+	await fetch(url, {
+		method: "DELETE"
+	})
 }

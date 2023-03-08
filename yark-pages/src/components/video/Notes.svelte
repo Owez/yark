@@ -2,6 +2,7 @@
 	import type { VideoDetailed } from '$lib/archive';
 	import NoteItem from './NoteItem.svelte';
 
+	export let videoId: string;
 	export let video: VideoDetailed;
 </script>
 
@@ -10,7 +11,7 @@
 	<p class="video">Interesting information</p>
 	<div class="notes">
 		{#each video.notes as note}
-			<NoteItem {note} />
+			<NoteItem {videoId} bind:videoNotes={video.notes} {note} />
 		{/each}
 	</div>
 {/if}

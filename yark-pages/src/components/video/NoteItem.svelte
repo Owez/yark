@@ -1,7 +1,9 @@
 <script lang="ts">
-	import type { Note } from '$lib/archive';
+	import { deleteNote, type Note } from '$lib/archive';
 	import Card from '../Card.svelte';
 
+	export let videoId: string;
+	export let videoNotes: Note[];
 	export let note: Note;
 
 	let deleteCocked = false;
@@ -20,12 +22,19 @@
 	/**
 	 * Deletes or cocks the deletion status
 	 */
-	function doDelete() {
+	async function doDelete() {
 		// Cock and stop if not
 		if (!deleteCocked) {
 			cockDelete();
 			return;
 		}
+
+		// Delete the note from the API
+		await deleteNote(videoId, note);
+
+		// Filter the note out from the list
+		const keptNotes = videoNotes.filter((n) => n.id != note.id);
+		videoNotes = keptNotes;
 	}
 </script>
 
