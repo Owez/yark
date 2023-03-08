@@ -360,11 +360,39 @@ export interface Note {
  * @param video_id Video identifier note is attached to
  * @param note Note object to delete
  */
-export async function deleteNote(video_id: string, note: Note) {
+export async function deleteNote(videoId: string, note: Note) {
 	const url = new URL(getOpenedArchiveApiLink())
-	url.pathname += `/video/${video_id}/note/${note.id}`
+	url.pathname += `/video/${videoId}/note/${note.id}`
 
 	await fetch(url, {
 		method: "DELETE"
+	})
+}
+
+/**
+ * Schema for using {@link editNote}, includes all possible values to edit
+ */
+export interface NoteUpdate {
+	title?: string,
+	timestamp?: number,
+	body?: string
+}
+
+/**
+ * Updates an existing note with one or more new values
+ * @param videoId Video which note is a part of
+ * @param noteId Unique identifier of the note
+ * @param payload Note update payload/schema to use to update with
+ */
+export async function editNote(videoId: string, noteId: string, payload: NoteUpdate) {
+	const url = new URL(getOpenedArchiveApiLink())
+	url.pathname += `/video/${videoId}/note/${noteId}`
+
+	await fetch(url, {
+		method: "PATCH",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(payload)
 	})
 }

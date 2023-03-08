@@ -1,12 +1,17 @@
 <script lang="ts">
-	import { deleteNote, type Note } from '$lib/archive';
+	import { deleteNote, editNote, type Note, type NoteUpdate } from '$lib/archive';
 	import Card from '../Card.svelte';
 
 	export let videoId: string;
 	export let videoNotes: Note[];
 	export let note: Note;
+	export let editable = false;
+	export let deletable = false;
 
 	let deleteCocked = false;
+	let userDefinedTitle: string;
+	let userDefinedTimestamp: number = note.timestamp; // TODO
+	let userDefinedBody: string;
 
 	/**
 	 * Cocks and then resets the cocked status after a little while
@@ -36,19 +41,53 @@
 		const keptNotes = videoNotes.filter((n) => n.id != note.id);
 		videoNotes = keptNotes;
 	}
+
+	/**
+	 * Edits the note to be what they are defined as
+	 */
+	async function doEditNote() {
+		const payload: NoteUpdate = {
+			title: userDefinedTitle,
+			body: userDefinedBody,
+			timestamp: userDefinedTimestamp
+		};
+		await editNote(videoId, note.id, payload);
+	}
 </script>
 
 <div class="note">
 	<Card tiny alt>
 		<h3 class="video">
-			<div>{note.title}</div>
-			<button on:click={() => doDelete()}>
-				{#if deleteCocked}⛔️{:else}🗑{/if}
-			</button>
+			{#if editable}
+				<div
+					contenteditable="true"
+					on:focusout={async () => doEditNote()}
+					bind:textContent={userDefinedTitle}
+				>
+					{note.title}
+				</div>
+			{:else}
+				<div>{note.title}</div>
+			{/if}
+			{#if deletable}
+				<button on:click={() => doDelete()}>
+					{#if deleteCocked}⛔️{:else}🗑{/if}
+				</button>
+			{/if}
 		</h3>
-		<p>
-			{#if note.body}{note.body}{:else}No further information{/if}
-		</p>
+		{#if editable}
+			<p
+				contenteditable="true"
+				on:focusout={async () => doEditNote()}
+				bind:textContent={userDefinedBody}
+			>
+				{#if note.body}{note.body}{:else}No further information{/if}
+			</p>
+		{:else}
+			<p>
+				{#if note.body}{note.body}{:else}No further information{/if}
+			</p>
+		{/if}
 	</Card>
 </div>
 
@@ -62,7 +101,7 @@
 	}
 
 	h3 {
-		width: 100%;
+		min-width: 100px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;

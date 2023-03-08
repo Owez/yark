@@ -11,7 +11,7 @@
 	<p class="video">Interesting information</p>
 	<div class="notes">
 		{#each video.notes as note}
-			<NoteItem {videoId} bind:videoNotes={video.notes} {note} />
+			<NoteItem {videoId} bind:videoNotes={video.notes} {note} deletable editable />
 		{/each}
 	</div>
 {/if}
