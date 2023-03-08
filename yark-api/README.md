@@ -14,7 +14,6 @@ YouTube archiving made simple (REST API)
 		- [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
 		- [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
 		- [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
-		- [Coming soon](#coming-soon)
 
 
 ## End-user
@@ -186,8 +185,3 @@ This route lets you delete an existing note, it just requires authentication and
 	"message": "Note deleted"
 }
 ```
-
-### Coming soon
-
-- Implement note adding
-- Implement note deletion

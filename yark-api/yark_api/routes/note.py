@@ -16,6 +16,10 @@ class NoteResource(Resource):
     def post(self, slug: str, video_id: str) -> Response:
         """Create a new thumbnail attached to a video"""
 
+        # Authenticate
+        if (err := utils.check_auth()) is not None:
+            return err
+
         # Validate the schema
         try:
             schema_body: NotePostJsonSchema = NotePostJsonSchema().load(request.json)
@@ -49,4 +53,25 @@ class SpecificNoteResource(Resource):
 
     def delete(self, slug: str, video_id: str, note_id: str) -> Response:
         """Delete a note attached to a video"""
-        # TODO
+
+        # Authenticate
+        if (err := utils.check_auth()) is not None:
+            return err
+
+        # Get archive info
+        if not isinstance((archive := utils.get_archive(slug)), Archive):
+            return archive
+
+        # Get the specific video
+        if not isinstance(
+            (video := utils.get_specific_video(archive, video_id)), Video
+        ):
+            return video
+
+        # Delete note if it exists and commit
+        kept_notes = list(filter(lambda n: n.id != note_id, video.notes))
+        video.notes = kept_notes
+        archive.commit()
+
+        # Return a message saying it's been deleted
+        return {"message": "Note deleted"}
