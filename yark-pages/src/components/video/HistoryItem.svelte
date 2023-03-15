@@ -8,18 +8,25 @@
 
 	let showing = false;
 
-	$: nameCapitalized = capitalizeFirstLetter(name);
+	function generateButtonName(): string {
+		let prefix = 'Show';
+		if (showing) {
+			prefix = 'Hide';
+		}
+		return `${prefix} ${capitalizeFirstLetter(name)}`;
+	}
+
 	$: isoString = entry[0];
 	$: value = entry[1];
+	$: buttonName = generateButtonName();
 </script>
 
 <li>
-	{nameCapitalized}
+	{capitalizeFirstLetter(name)}
 	{#if ind == lastEntry}finally changed to{:else if ind == 0}was originally{:else}changed to{/if}
-	<button class="bright" on:click={() => (showing = !showing)}>
-		{#if showing}Hide{:else}Show{/if}
-		{nameCapitalized}
-	</button>
+	<button class="bright" on:click={() => (showing = !showing)} title={buttonName}
+		>{buttonName}</button
+	>
 	on {humanDate(new Date(isoString))}
 	{#if showing}
 		<br />

@@ -102,7 +102,7 @@
 	}
 </script>
 
-<div class="note">
+<div class="note" title={`Note '${note.title}'`}>
 	<Card tiny alt>
 		<h3 class="video">
 			{#if editable}
@@ -112,14 +112,15 @@
 					on:focusout={async () => doEditNote()}
 					bind:textContent={userDefinedTitle}
 					class:invalid={userDefinedTitleInvalid}
+					title="Note's title"
 				>
 					{note.title}
 				</div>
 			{:else}
-				<div class="title">{note.title}</div>
+				<div class="title" title="Note's title">{note.title}</div>
 			{/if}
 			{#if deletable}
-				<button on:click={() => doDelete()}>
+				<button on:click={() => doDelete()} title="Delete note">
 					{#if deleteCocked}⛔️{:else}🗑{/if}
 				</button>
 			{/if}
@@ -129,6 +130,7 @@
 				contenteditable="true"
 				on:focusout={async () => doEditNote()}
 				bind:textContent={userDefinedBody}
+				title="Note's optional description"
 			>
 				{#if note.body == undefined}
 					{bodyPlaceholder}
@@ -137,7 +139,7 @@
 				{/if}
 			</p>
 		{:else}
-			<p>
+			<p title="Note's optional description">
 				{#if note.body == undefined}
 					{bodyPlaceholder}
 				{:else}

@@ -13,12 +13,12 @@
 
 <div class="info">
 	<p>
-		<span>{views.toLocaleString()} views</span>
+		<span title="Number of videos on this video">{views.toLocaleString()} views</span>
 		<span class="spacer">•</span>
-		<span>{uploaded}</span>
+		<span title="Date this video was uploaded">{uploaded}</span>
 		{#if videoWasUpdated(video)}
 			<span class="spacer">•</span>
-			<span>🌀</span>
+			<span title="Video has had a major update (e.g., title/description)">🌀</span>
 		{/if}
 	</p>
 	<p>
@@ -26,10 +26,17 @@
 			href={`https://www.youtube.com/watch?v=${videoId}`}
 			target="_blank"
 			rel="noopener noreferrer"
-			class="invis">🔗</a
+			class="invis"
+			title="YouTube link of this video">🔗</a
 		>
 		<span class="spacer">•</span>
-		<a href={file_link} target="_blank" rel="noopener noreferrer" download>💾</a>
+		<a
+			href={file_link}
+			target="_blank"
+			rel="noopener noreferrer"
+			download
+			title="Download the raw file for this video">💾</a
+		>
 	</p>
 </div>
 
