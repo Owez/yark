@@ -375,7 +375,7 @@ export async function deleteNote(videoId: string, note: Note) {
 export interface NoteUpdate {
 	title?: string,
 	timestamp?: number,
-	body?: string
+	body?: string | null
 }
 
 /**

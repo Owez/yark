@@ -1,6 +1,7 @@
 """Note schemas and accessory classes"""
 
 from marshmallow import Schema, fields, validate
+from typing import Any
 
 
 class NotePostJsonSchema(Schema):
@@ -18,6 +19,9 @@ class NotePatchJsonSchema(Schema):
     timestamp = fields.Integer()
     body = fields.Str(validate=validate.Length(min=1, max=4000))
 
-    def is_empty(self) -> bool:
+    @staticmethod
+    def is_empty(schema: dict[str, Any]) -> bool:
         """Checks if this schema is empty, when it needs to have at least one value in it"""
-        return "title" not in self and "timestamp" not in self and "body" not in self
+        return (
+            "title" not in schema and "timestamp" not in schema and "body" not in schema
+        )

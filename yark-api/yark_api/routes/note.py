@@ -8,6 +8,7 @@ from yark.archiver.video.video import Video
 from yark.archiver.video.note import Note
 from ..schemas.inputs.note import NotePostJsonSchema, NotePatchJsonSchema
 from marshmallow import ValidationError
+from typing import Any
 
 
 class NoteResource(Resource):
@@ -61,8 +62,8 @@ class SpecificNoteResource(Resource):
         # Validate the schema
         try:
             schema_body: NotePatchJsonSchema = NotePatchJsonSchema().load(request.json)
-            if schema_body.is_empty():
-                raise ValidationError()
+            if NotePatchJsonSchema.is_empty(schema_body):
+                raise ValidationError("Missing required update field")
         except ValidationError:
             return utils.error_response("Invalid body schema", None, 400)
 
@@ -81,8 +82,12 @@ class SpecificNoteResource(Resource):
         if note is None:
             return {"message": "Note not found"}, 404
 
-        # Update note with new info
-        print("TODO")
+        # Update note with new info and commit
+        update_note_with_schema(note, schema_body)
+        archive.commit()
+
+        # Return a message saying it's been updated
+        return {"message": "Note updated"}
 
     def delete(self, slug: str, video_id: str, note_id: str) -> Response:
         """Delete a note attached to a video"""
@@ -108,3 +113,13 @@ class SpecificNoteResource(Resource):
 
         # Return a message saying it's been deleted
         return {"message": "Note deleted"}
+
+
+def update_note_with_schema(note: Note, schema_body: dict[str, Any]) -> None:
+    """Updates note object with new information provided from schema"""
+    if "title" in schema_body:
+        note.title = schema_body["title"]
+    if "timestamp" in schema_body:
+        note.timestamp = schema_body["timestamp"]
+    if "body" in schema_body:
+        note.body = schema_body["body"]
