@@ -98,7 +98,7 @@ def _cli() -> None:
         if len(args) > 2:
 
             def parse_value(config_arg: str) -> str:
-                return config_arg.split("=")[1]
+                return config_arg.split("=", 1)[1]
 
             def parse_maximum_int(config_arg: str) -> int:
                 """Tries to parse a maximum integer input"""
