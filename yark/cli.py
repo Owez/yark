@@ -146,6 +146,9 @@ def _cli() -> None:
                 elif config_arg.startswith("--proxy="):
                     config.proxy = parse_value(config_arg)
 
+                elif config_arg.startswith("--cookies="):
+                    config.cookies = parse_value(config_arg)
+
                 # Unknown argument
                 else:
                     print(HELP, file=sys.stderr)
@@ -215,9 +218,9 @@ def _cli() -> None:
             msg = f"Starting archive at {url} address"
             if archive_name is not None:
                 msg += f" for {archive_name} archive"
-            
+
             print(msg)
-            
+
             app = viewer()
             threading.Thread(target=lambda: app.run(port=config.bind_port, host=config.bind_host)).run()
 
@@ -271,8 +274,8 @@ def _cli() -> None:
                     # If config_idx is 1 (first parameter could be name of archive)
                     if config_idx == 1:
                         archive_name = config_arg
-                    
-                    # If config_idx is not 1 
+
+                    # If config_idx is not 1
                     # (not the first parameter, wasn't parsed earlier, must be an invalid parameter)
                     else:
                         print(HELP, file=sys.stderr)
