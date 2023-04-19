@@ -46,6 +46,7 @@ class Config:
     comments: bool = False
     format: Optional[str] = None
     proxy: Optional[str] = None
+    cookies: Optional[str] = None
     bind_host: Optional[str] = None
     bind_port: int = 7667
     headless: bool = False
@@ -99,6 +100,10 @@ class Config:
         if self.proxy is not None:
             settings["proxy"] = self.proxy
 
+        # Cookies file to allow, for example, archiving private playlists
+        if self.cookies is not None:
+            settings["cookiefile"] = self.cookies
+
         # Return
         return settings
 
@@ -117,6 +122,10 @@ class Config:
         # Custom yt-dlp proxy
         if self.proxy is not None:
             settings["proxy"] = self.proxy
+
+        # Cookies file to allow, for example, archiving private playlists
+        if self.cookies is not None:
+            settings["cookiefile"] = self.cookies
 
         # Return
         return settings
