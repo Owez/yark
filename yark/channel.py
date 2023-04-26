@@ -3,7 +3,6 @@
 from __future__ import annotations
 from datetime import datetime
 import json
-import os
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
@@ -17,7 +16,6 @@ import time
 from progress.spinner import PieSpinner
 from concurrent.futures import ThreadPoolExecutor
 import time
-import concurrent.futures.thread
 
 ARCHIVE_COMPAT = 3
 """
@@ -203,11 +201,11 @@ class Channel:
             res = future.result()
 
         # Uncomment for saving big dumps for testing
-        # with open("demo/dump.json", "w+") as file:
+        # with open(self.path / "dump.json", "w+") as file:
         #     json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
-        # res = json.load(open("demo/dump.json", "r"))
+        # res = json.load(open(self.path / "dump.json", "r"))
 
         # Parse downloaded metadata
         self._parse_metadata(res)
