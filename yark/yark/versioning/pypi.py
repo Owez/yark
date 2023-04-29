@@ -2,7 +2,7 @@
 from typing import Any
 
 # Local Imports
-from yark.yark.utils import PYPI_VERSION, _log_err
+from yark.utils import PYPI_VERSION, _log_err
 
 # External Imports
 import requests

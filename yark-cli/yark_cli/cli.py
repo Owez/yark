@@ -4,13 +4,10 @@ import sys
 from pathlib import Path
 
 # Local Imports
-import archive
+from . import archiver, reporter, viewer, checker
 
 # External Imports
-from yark.yark.archiver.archive import Archive
-from yark.yark.archiver.config import Config
-from yark.yark.archiver.logger import DownloadProgressLogger
-from yark.yark.versioning import pypi
+from yark.archiver.archive import Archive
 
 
 def new(args):
@@ -18,43 +15,18 @@ def new(args):
 
 
 def refresh(args):
-    config = Config()
-    config.hook_logger = DownloadProgressLogger
-    config.hook_download = DownloadProgressLogger.downloading
-
-    config.comments = args.comments
-    config.skip_metadata = args.skip_metadata
-    config.skip_download = args.skip_download
-    config.max_videos = args.videos
-    config.max_livestreams = args.livestreams
-    config.max_shorts = args.shorts
-    config.format = args.format
-    config.proxy = args.proxy
-
-    config.submit()
-
-    archive.refresh(config, args[1])
+    archiver.refresh(
+        args.name, args.videos, args.livestreams, args.shorts, args.comments,
+        args.format_, args.proxy, args.skip_downloads, args.skip_metadata
+    )
 
 
 def view(args):
-    if args.name:
-        path = Path(args.name)
-
-        if not path.exists():
-            archive._err_archive_not_found()
-
-    # TODO: Browser opening segment is possibly to be removed due to yark-pages introduction,
-    #       ponder if CLI should be a entrypoint
-    """
-       browser.open_with_archive(args.name)
-    else:
-       browser.open_general()
-    """
+    viewer.view(args.name)
 
 
 def report(args):
-    report_archive = Archive.load(Path(args.name))
-    report_archive.reporter.interesting_changes()
+    reporter.report(args.name)
 
 
 def parse_args(args):
@@ -102,28 +74,18 @@ def parse_args(args):
 
 
 def entry(args):
-    # Version announcements before going further
-    try:
-        pypi.check_version_upstream()
-    except Exception as err:
-        # TODO: Address logging uniformization and replace here with the right usage
-        """
-        logger.err_msg(
-            f"Error: Failed to check for new Yark version, info:\n"
-            + Style.NORMAL
-            + str(err)
-            + Style.BRIGHT,
-            True,
-        )
-        """
-
-        pass
+    if not checker.check_version:
+        return
 
     # Parse CLI args and take actions
     args = parse_args(args)
     args.func(args)
 
 
-if __name__ == '__main__':
+def main():
     entry(sys.argv[1:])
-    # entry(['-h'])
+
+
+if __name__ == '__main__':
+    main()
+

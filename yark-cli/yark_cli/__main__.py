@@ -1,6 +1,12 @@
-"""Main runner for those using `python3 -m yark_lib` instead of the proper `yark_lib` script poetry provides"""
-
+"""Main runner for those using `python3 -m yark` instead of the proper `yark` script poetry provides"""
+# Standard Imports
 import sys
-from PyInstaller.lib.modulegraph.modulegraph import entry
 
-entry(sys.argv[1:])
+# Local Imports
+import cli
+
+# External Imports
+
+
+cli.entry(sys.argv[1:])
+

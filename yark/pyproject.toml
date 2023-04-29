@@ -9,19 +9,19 @@ readme = "README.md"
 repository = "https://github.com/owez/yark"
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = ">=3.11,<3.12"
 requests = "^2.28.2"
-yt-dlp = "^2023.1.6"
+yt-dlp = "^2023.3.4"
 progress = "^1.6"
 colorama = "^0.4.6"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
 poethepoet = "^0.18.1"
-types-colorama = "^0.4.15.4"
-types-requests = "^2.28.11.8"
+types-colorama = "^0.4.15.8"
+types-requests = "^2.28.11.15"
 black = "^22.12.0"
-pylint = "^2.15.10"
+pylint = "^2.16.3"
 
 [tool.poe.tasks]
 lint = { shell = "set -e && mypy yark --strict && pylint yark" }
