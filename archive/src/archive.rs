@@ -1,13 +1,12 @@
+//! Archival core containing the top-level [Archive] structure
+
 use crate::{
     errors::{Error, Result},
-    video::Video,
+    video::Videos,
 };
 use serde::{Deserialize, Serialize};
+use std::fs::{self, File};
 use std::path::PathBuf;
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Archive {
@@ -18,11 +17,11 @@ pub struct Archive {
     pub version: u32,
     /// URL of the YouTube channel or playlist this archive tracks
     pub url: String,
-    /// Videos known to this archive; see [Videos] and [Video]
+    /// Videos known to this archive; see [Videos] and [Video](crate::video::Video)
     pub videos: Videos,
-    /// Livestreams known to this archive; see [Videos] and [Video]
+    /// Livestreams known to this archive; see [Videos] and [Video](crate::video::Video)
     pub livestreams: Videos,
-    /// Shorts known to this archive; see [Videos] and [Video]
+    /// Shorts known to this archive; see [Videos] and [Video](crate::video::Video)
     pub shorts: Videos,
 }
 
@@ -67,7 +66,7 @@ impl Archive {
 
     /// Loads an archive from it's raw data and ties to the `path` provided for future use
     ///
-    /// This is a helper function intended for advanced use. If you can, consider using [load] instead.
+    /// This is a helper function intended for advanced use. If you can, consider using [Self::load] instead.
     pub fn from_archive_str(path: PathBuf, archive_data: &str) -> Result<Self> {
         let mut archive: Self =
             serde_json::from_str(archive_data).map_err(|err| Error::ArchiveLoad(err))?;
@@ -77,7 +76,7 @@ impl Archive {
 
     /// Returns the raw archive data as a JSON string
     ///
-    /// This is a helper function intended for advanced use. If you can, consider using [save] instead.
+    /// This is a helper function intended for advanced use. If you can, consider using [Self::save] instead.
     pub fn to_archive_str(&self) -> Result<String> {
         serde_json::to_string(self).map_err(|err| Error::ArchiveSave(err))
     }
@@ -99,70 +98,22 @@ fn try_backup(archive_file_path: &PathBuf) {
     fs::rename(archive_file_path, backup).ok();
 }
 
-/// List of [Video] items which can be queried as a [HashMap]
-#[derive(Debug, PartialEq)]
-
-pub struct Videos(pub HashMap<String, Video>);
-
-impl Videos {
-    pub fn get(&self, id: &str) -> Option<&Video> {
-        self.0.get(id)
-    }
-
-    pub fn get_mut(&mut self, id: &str) -> Option<&mut Video> {
-        self.0.get_mut(id)
-    }
-
-    pub fn insert(&mut self, video: Video) {
-        self.0.insert(video.id.clone(), video);
-    }
-}
-
-impl Default for Videos {
-    fn default() -> Self {
-        Self(HashMap::default())
-    }
-}
-
-impl Serialize for Videos {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let vec = self.0.values().cloned().collect::<Vec<_>>();
-        vec.serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for Videos {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let vec = Vec::<Video>::deserialize(deserializer)?;
-        let mut map = HashMap::new();
-        for video in vec {
-            map.insert(video.id.clone(), video);
-        }
-        Ok(Videos(map))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{elements::Elements, video::Thumbnails};
+    use crate::{elements::Elements, video::{Thumbnails, Video}};
     use chrono::prelude::*;
 
     const OWEZ_DATA: &str = r#"{"version":3,"url":"https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA","videos":[{"id":"Jlsxl-1zQJM","uploaded":"2021-07-28T00:00:00","width":1280,"height":720,"title":{"2023-05-03T11:35:50.993963":"ArmA 3 replay 2021 07 28 13 58"},"description":{"2023-05-03T11:35:50.993966":""},"views":{"2023-05-03T11:35:50.993974":34},"likes":{"2023-05-03T11:35:50.993975":0},"thumbnail":{"2023-05-03T11:35:54.782905":"38552fc160089251e638457762f45dbff573c520"},"deleted":{"2023-05-03T11:35:54.782920":false},"notes":[]},{"id":"z6y0mx2flRY","uploaded":"2021-04-29T00:00:00","width":1920,"height":1080,"title":{"2023-05-03T11:35:54.783019":"GLORY TO ARSTOZKA"},"description":{"2023-05-03T11:35:54.783021":"quickly animated poster for graphics outcome"},"views":{"2023-05-03T11:35:54.783023":24},"likes":{"2023-05-03T11:35:54.783025":null},"thumbnail":{"2023-05-03T11:35:55.193654":"8706b76c30fd98551f9c5d246f7294ec173f1086"},"deleted":{"2023-05-03T11:35:55.193668":false},"notes":[]},{"id":"annp92OPZgQ","uploaded":"2021-01-04T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:55.193818":"psychedelica."},"description":{"2023-05-03T11:35:55.193823":"trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested."},"views":{"2023-05-03T11:35:55.193824":91},"likes":{"2023-05-03T11:35:55.193827":1},"thumbnail":{"2023-05-03T11:35:59.093903":"6a5c95513799671d51f22776e648c56c24789402"},"deleted":{"2023-05-03T11:35:59.093915":false},"notes":[]},{"id":"Sl3XgtKYq4E","uploaded":"2021-01-02T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:59.094000":"one more time."},"description":{"2023-05-03T11:35:59.094003":"another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright"},"views":{"2023-05-03T11:35:59.094005":51},"likes":{"2023-05-03T11:35:59.094007":3},"thumbnail":{"2023-05-03T11:35:59.483710":"3fe5be5ceacde668310ddcf4311d10fb72d54e11"},"deleted":{"2023-05-03T11:35:59.483724":false},"notes":[]},{"id":"iWJbkSCMQlg","uploaded":"2018-06-03T00:00:00","width":1152,"height":720,"title":{"2023-05-03T11:35:59.483813":"thank you gmod"},"description":{"2023-05-03T11:35:59.483815":"Just a normal day with a joop from hell."},"views":{"2023-05-03T11:35:59.483817":39},"likes":{"2023-05-03T11:35:59.483819":1},"thumbnail":{"2023-05-03T11:35:59.847311":"7658b9da282cec122cb03af02ac676442df58e34"},"deleted":{"2023-05-03T11:35:59.847323":false},"notes":[]}],"livestreams":[],"shorts":[]}"#;
-    const OWEZ_VIDEOS_DATA: &str = r#"[{"id":"Jlsxl-1zQJM","uploaded":"2021-07-28T00:00:00","width":1280,"height":720,"title":{"2023-05-03T11:35:50.993963":"ArmA 3 replay 2021 07 28 13 58"},"description":{"2023-05-03T11:35:50.993966":""},"views":{"2023-05-03T11:35:50.993974":34},"likes":{"2023-05-03T11:35:50.993975":0},"thumbnail":{"2023-05-03T11:35:54.782905":"38552fc160089251e638457762f45dbff573c520"},"deleted":{"2023-05-03T11:35:54.782920":false},"notes":[]},{"id":"z6y0mx2flRY","uploaded":"2021-04-29T00:00:00","width":1920,"height":1080,"title":{"2023-05-03T11:35:54.783019":"GLORY TO ARSTOZKA"},"description":{"2023-05-03T11:35:54.783021":"quickly animated poster for graphics outcome"},"views":{"2023-05-03T11:35:54.783023":24},"likes":{"2023-05-03T11:35:54.783025":null},"thumbnail":{"2023-05-03T11:35:55.193654":"8706b76c30fd98551f9c5d246f7294ec173f1086"},"deleted":{"2023-05-03T11:35:55.193668":false},"notes":[]},{"id":"annp92OPZgQ","uploaded":"2021-01-04T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:55.193818":"psychedelica."},"description":{"2023-05-03T11:35:55.193823":"trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested."},"views":{"2023-05-03T11:35:55.193824":91},"likes":{"2023-05-03T11:35:55.193827":1},"thumbnail":{"2023-05-03T11:35:59.093903":"6a5c95513799671d51f22776e648c56c24789402"},"deleted":{"2023-05-03T11:35:59.093915":false},"notes":[]},{"id":"Sl3XgtKYq4E","uploaded":"2021-01-02T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:59.094000":"one more time."},"description":{"2023-05-03T11:35:59.094003":"another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright"},"views":{"2023-05-03T11:35:59.094005":51},"likes":{"2023-05-03T11:35:59.094007":3},"thumbnail":{"2023-05-03T11:35:59.483710":"3fe5be5ceacde668310ddcf4311d10fb72d54e11"},"deleted":{"2023-05-03T11:35:59.483724":false},"notes":[]},{"id":"iWJbkSCMQlg","uploaded":"2018-06-03T00:00:00","width":1152,"height":720,"title":{"2023-05-03T11:35:59.483813":"thank you gmod"},"description":{"2023-05-03T11:35:59.483815":"Just a normal day with a joop from hell."},"views":{"2023-05-03T11:35:59.483817":39},"likes":{"2023-05-03T11:35:59.483819":1},"thumbnail":{"2023-05-03T11:35:59.847311":"7658b9da282cec122cb03af02ac676442df58e34"},"deleted":{"2023-05-03T11:35:59.847323":false},"notes":[]}]"#;
 
+    // TODO: merge with `video.rs` test
     fn elements_new_existing<T>(dt: DateTime<Utc>, value: T) -> Elements<T> {
         let mut elements = Elements::default();
         elements.insert(dt, value);
         elements
     }
 
+    // TODO: merge with `video.rs` test
     #[allow(deprecated)]
     fn owez_exp(path: PathBuf) -> Archive {
         let mut exp = Archive::new(
@@ -369,21 +320,5 @@ mod tests {
         let back = Archive::from_archive_str(dummy_path, &serialized)
             .expect("Failed to convert back to archive");
         assert_eq!(archive, back);
-    }
-
-    #[test]
-    fn videos_full_serde() {
-        let videos = owez_exp(PathBuf::default()).videos;
-        let converted = serde_json::to_string(&videos).expect("JSON conversion failed");
-        let back: Videos = serde_json::from_str(&converted).expect("Videos back-into didn't work");
-        assert_eq!(back, videos)
-    }
-
-    #[test]
-    fn videos_deserializing() {
-        let exp = owez_exp(PathBuf::default()).videos;
-        let converted: Videos =
-            serde_json::from_str(OWEZ_VIDEOS_DATA).expect("JSON conversion failed");
-        assert_eq!(exp, converted);
     }
 }

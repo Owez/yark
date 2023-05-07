@@ -1,3 +1,5 @@
+//! Element collection logic for timestamped values; see [Elements] for more info
+
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

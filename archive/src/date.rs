@@ -1,3 +1,5 @@
+//! Date utilities for UTC assuming; see [YarkDate] for more info 
+
 use chrono::prelude::*;
 use serde::{Deserialize, Deserializer, Serialize};
 

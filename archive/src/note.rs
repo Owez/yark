@@ -1,3 +1,5 @@
+//! Note/journalling logic; see [Note] for more info
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

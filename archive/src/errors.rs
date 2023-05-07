@@ -1,6 +1,8 @@
+//! Crate-focused error and utility types such as the [Error] enum
+
 use std::io;
 
-/// Type cover for a result with an archive-focused [Error] type
+/// Type cover for a result with an archive-focused [Error] enum
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// Enumeration covering the possible errors which could occur during archive operations
