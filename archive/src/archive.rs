@@ -11,16 +11,23 @@ use std::{
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Archive {
+    /// Path of the directory where this archive exists and will [save](Self::save) to
     #[serde(skip)]
     pub path: PathBuf,
+    /// Major version of this archive which indicates compatibility
     pub version: u32,
+    /// URL of the YouTube channel or playlist this archive tracks
     pub url: String,
+    /// Videos known to this archive; see [Videos] and [Video]
     pub videos: Videos,
+    /// Livestreams known to this archive; see [Videos] and [Video]
     pub livestreams: Videos,
+    /// Shorts known to this archive; see [Videos] and [Video]
     pub shorts: Videos,
 }
 
 impl Archive {
+    /// Creates a new in-memory archive tied to the `path` provided
     pub fn new(path: PathBuf, url: String) -> Self {
         Self {
             path,
@@ -32,6 +39,7 @@ impl Archive {
         }
     }
 
+    /// Loads an existing archive from the `path` provided
     pub fn load(path: PathBuf) -> Result<Self> {
         // Get and check archive path
         let (archive_file_path, archive_file_path_exists) = archive_file_path(&path);
@@ -45,6 +53,7 @@ impl Archive {
         Self::from_archive_str(path, &archive_data)
     }
 
+    /// Saves the current archive to the [Self::path] directory
     pub fn save(&self) -> Result<()> {
         // Get file path and backup old if present
         let (archive_file_path, archive_file_path_exists) = archive_file_path(&self.path);
@@ -56,6 +65,9 @@ impl Archive {
         serde_json::to_writer(&writer, self).map_err(|err| Error::ArchiveSave(err))
     }
 
+    /// Loads an archive from it's raw data and ties to the `path` provided for future use
+    ///
+    /// This is a helper function intended for advanced use. If you can, consider using [load] instead.
     pub fn from_archive_str(path: PathBuf, archive_data: &str) -> Result<Self> {
         let mut archive: Self =
             serde_json::from_str(archive_data).map_err(|err| Error::ArchiveLoad(err))?;
@@ -63,6 +75,9 @@ impl Archive {
         Ok(archive)
     }
 
+    /// Returns the raw archive data as a JSON string
+    ///
+    /// This is a helper function intended for advanced use. If you can, consider using [save] instead.
     pub fn to_archive_str(&self) -> Result<String> {
         serde_json::to_string(self).map_err(|err| Error::ArchiveSave(err))
     }
@@ -84,6 +99,7 @@ fn try_backup(archive_file_path: &PathBuf) {
     fs::rename(archive_file_path, backup).ok();
 }
 
+/// List of [Video] items which can be queried as a [HashMap]
 #[derive(Debug, PartialEq)]
 
 pub struct Videos(pub HashMap<String, Video>);
@@ -141,6 +157,12 @@ mod tests {
     const OWEZ_DATA: &str = r#"{"version":3,"url":"https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA","videos":[{"id":"Jlsxl-1zQJM","uploaded":"2021-07-28T00:00:00","width":1280,"height":720,"title":{"2023-05-03T11:35:50.993963":"ArmA 3 replay 2021 07 28 13 58"},"description":{"2023-05-03T11:35:50.993966":""},"views":{"2023-05-03T11:35:50.993974":34},"likes":{"2023-05-03T11:35:50.993975":0},"thumbnail":{"2023-05-03T11:35:54.782905":"38552fc160089251e638457762f45dbff573c520"},"deleted":{"2023-05-03T11:35:54.782920":false},"notes":[]},{"id":"z6y0mx2flRY","uploaded":"2021-04-29T00:00:00","width":1920,"height":1080,"title":{"2023-05-03T11:35:54.783019":"GLORY TO ARSTOZKA"},"description":{"2023-05-03T11:35:54.783021":"quickly animated poster for graphics outcome"},"views":{"2023-05-03T11:35:54.783023":24},"likes":{"2023-05-03T11:35:54.783025":null},"thumbnail":{"2023-05-03T11:35:55.193654":"8706b76c30fd98551f9c5d246f7294ec173f1086"},"deleted":{"2023-05-03T11:35:55.193668":false},"notes":[]},{"id":"annp92OPZgQ","uploaded":"2021-01-04T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:55.193818":"psychedelica."},"description":{"2023-05-03T11:35:55.193823":"trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested."},"views":{"2023-05-03T11:35:55.193824":91},"likes":{"2023-05-03T11:35:55.193827":1},"thumbnail":{"2023-05-03T11:35:59.093903":"6a5c95513799671d51f22776e648c56c24789402"},"deleted":{"2023-05-03T11:35:59.093915":false},"notes":[]},{"id":"Sl3XgtKYq4E","uploaded":"2021-01-02T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:59.094000":"one more time."},"description":{"2023-05-03T11:35:59.094003":"another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright"},"views":{"2023-05-03T11:35:59.094005":51},"likes":{"2023-05-03T11:35:59.094007":3},"thumbnail":{"2023-05-03T11:35:59.483710":"3fe5be5ceacde668310ddcf4311d10fb72d54e11"},"deleted":{"2023-05-03T11:35:59.483724":false},"notes":[]},{"id":"iWJbkSCMQlg","uploaded":"2018-06-03T00:00:00","width":1152,"height":720,"title":{"2023-05-03T11:35:59.483813":"thank you gmod"},"description":{"2023-05-03T11:35:59.483815":"Just a normal day with a joop from hell."},"views":{"2023-05-03T11:35:59.483817":39},"likes":{"2023-05-03T11:35:59.483819":1},"thumbnail":{"2023-05-03T11:35:59.847311":"7658b9da282cec122cb03af02ac676442df58e34"},"deleted":{"2023-05-03T11:35:59.847323":false},"notes":[]}],"livestreams":[],"shorts":[]}"#;
     const OWEZ_VIDEOS_DATA: &str = r#"[{"id":"Jlsxl-1zQJM","uploaded":"2021-07-28T00:00:00","width":1280,"height":720,"title":{"2023-05-03T11:35:50.993963":"ArmA 3 replay 2021 07 28 13 58"},"description":{"2023-05-03T11:35:50.993966":""},"views":{"2023-05-03T11:35:50.993974":34},"likes":{"2023-05-03T11:35:50.993975":0},"thumbnail":{"2023-05-03T11:35:54.782905":"38552fc160089251e638457762f45dbff573c520"},"deleted":{"2023-05-03T11:35:54.782920":false},"notes":[]},{"id":"z6y0mx2flRY","uploaded":"2021-04-29T00:00:00","width":1920,"height":1080,"title":{"2023-05-03T11:35:54.783019":"GLORY TO ARSTOZKA"},"description":{"2023-05-03T11:35:54.783021":"quickly animated poster for graphics outcome"},"views":{"2023-05-03T11:35:54.783023":24},"likes":{"2023-05-03T11:35:54.783025":null},"thumbnail":{"2023-05-03T11:35:55.193654":"8706b76c30fd98551f9c5d246f7294ec173f1086"},"deleted":{"2023-05-03T11:35:55.193668":false},"notes":[]},{"id":"annp92OPZgQ","uploaded":"2021-01-04T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:55.193818":"psychedelica."},"description":{"2023-05-03T11:35:55.193823":"trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested."},"views":{"2023-05-03T11:35:55.193824":91},"likes":{"2023-05-03T11:35:55.193827":1},"thumbnail":{"2023-05-03T11:35:59.093903":"6a5c95513799671d51f22776e648c56c24789402"},"deleted":{"2023-05-03T11:35:59.093915":false},"notes":[]},{"id":"Sl3XgtKYq4E","uploaded":"2021-01-02T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:59.094000":"one more time."},"description":{"2023-05-03T11:35:59.094003":"another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright"},"views":{"2023-05-03T11:35:59.094005":51},"likes":{"2023-05-03T11:35:59.094007":3},"thumbnail":{"2023-05-03T11:35:59.483710":"3fe5be5ceacde668310ddcf4311d10fb72d54e11"},"deleted":{"2023-05-03T11:35:59.483724":false},"notes":[]},{"id":"iWJbkSCMQlg","uploaded":"2018-06-03T00:00:00","width":1152,"height":720,"title":{"2023-05-03T11:35:59.483813":"thank you gmod"},"description":{"2023-05-03T11:35:59.483815":"Just a normal day with a joop from hell."},"views":{"2023-05-03T11:35:59.483817":39},"likes":{"2023-05-03T11:35:59.483819":1},"thumbnail":{"2023-05-03T11:35:59.847311":"7658b9da282cec122cb03af02ac676442df58e34"},"deleted":{"2023-05-03T11:35:59.847323":false},"notes":[]}]"#;
 
+    fn elements_new_existing<T>(dt: DateTime<Utc>, value: T) -> Elements<T> {
+        let mut elements = Elements::default();
+        elements.insert(dt, value);
+        elements
+    }
+
     #[allow(deprecated)]
     fn owez_exp(path: PathBuf) -> Archive {
         let mut exp = Archive::new(
@@ -154,27 +176,27 @@ mod tests {
                 .into(),
             width: 1280,
             height: 720,
-            title: Elements::new_existing(
+            title: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993963+00:00").unwrap(),
                 "ArmA 3 replay 2021 07 28 13 58".to_string(),
             ),
-            description: Elements::new_existing(
+            description: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993966+00:00").unwrap(),
                 String::new(),
             ),
-            views: Elements::new_existing(
+            views: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993974+00:00").unwrap(),
                 Some(34),
             ),
-            likes: Elements::new_existing(
+            likes: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993975+00:00").unwrap(),
                 Some(0),
             ),
-            thumbnail: Thumbnails(Elements::new_existing(
+            thumbnail: Thumbnails(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782905+00:00").unwrap(),
                 "38552fc160089251e638457762f45dbff573c520".to_string(),
             )),
-            deleted: Elements::new_existing(
+            deleted: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782920+00:00").unwrap(),
                 false,
             ),
@@ -187,27 +209,27 @@ mod tests {
                 .into(),
             width: 1920,
             height: 1080,
-            title: Elements::new_existing(
+            title: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783019+00:00").unwrap(),
                 "GLORY TO ARSTOZKA".to_string(),
             ),
-            description: Elements::new_existing(
+            description: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783021+00:00").unwrap(),
                 "quickly animated poster for graphics outcome".to_string(),
             ),
-            views: Elements::new_existing(
+            views: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783023+00:00").unwrap(),
                 Some(24),
             ),
-            likes: Elements::new_existing(
+            likes: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783025+00:00").unwrap(),
                 None,
             ),
-            thumbnail: Thumbnails(Elements::new_existing(
+            thumbnail: Thumbnails(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193654+00:00").unwrap(),
                 "8706b76c30fd98551f9c5d246f7294ec173f1086".to_string(),
             )),
-            deleted: Elements::new_existing(
+            deleted: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193668+00:00").unwrap(),
                 false,
             ),
@@ -220,27 +242,27 @@ mod tests {
                 .into(),
                 width: 2560,
                 height:1440,
-            title: Elements::new_existing(
+            title: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193818+00:00").unwrap(),
                 "psychedelica.".to_string(),
             ),
-            description: Elements::new_existing(
+            description: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193823+00:00").unwrap(),
                 "trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested.".to_string(),
             ),
-            views: Elements::new_existing(
+            views: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193824+00:00").unwrap(),
                 Some(91),
             ),
-            likes: Elements::new_existing(
+            likes: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193827+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(Elements::new_existing(
+            thumbnail: Thumbnails(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093903+00:00").unwrap(),
                 "6a5c95513799671d51f22776e648c56c24789402".to_string(),
             )),
-            deleted: Elements::new_existing(
+            deleted: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093915+00:00").unwrap(),
                 false,
             ),
@@ -255,27 +277,27 @@ mod tests {
                 .into(),
                 width: 2560,
                 height:1440,
-            title: Elements::new_existing(
+            title: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094000+00:00").unwrap(),
                 "one more time.".to_string(),
             ),
-            description: Elements::new_existing(
+            description: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094003+00:00").unwrap(),
                 "another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright".to_string(),
             ),
-            views: Elements::new_existing(
+            views: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094005+00:00").unwrap(),
                 Some(51),
             ),
-            likes: Elements::new_existing(
+            likes: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094007+00:00").unwrap(),
                 Some(3),
             ),
-            thumbnail: Thumbnails(Elements::new_existing(
+            thumbnail: Thumbnails(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483710+00:00").unwrap(),
                 "3fe5be5ceacde668310ddcf4311d10fb72d54e11".to_string(),
             )),
-            deleted: Elements::new_existing(
+            deleted: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483724+00:00").unwrap(),
                 false,
             ),
@@ -289,27 +311,27 @@ mod tests {
                 .into(),
             width: 1152,
             height: 720,
-            title: Elements::new_existing(
+            title: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483813+00:00").unwrap(),
                 "thank you gmod".to_string(),
             ),
-            description: Elements::new_existing(
+            description: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483815+00:00").unwrap(),
                 "Just a normal day with a joop from hell.".to_string(),
             ),
-            views: Elements::new_existing(
+            views: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483817+00:00").unwrap(),
                 Some(39),
             ),
-            likes: Elements::new_existing(
+            likes: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483819+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(Elements::new_existing(
+            thumbnail: Thumbnails(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847311+00:00").unwrap(),
                 "7658b9da282cec122cb03af02ac676442df58e34".to_string(),
             )),
-            deleted: Elements::new_existing(
+            deleted: elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847323+00:00").unwrap(),
                 false,
             ),
