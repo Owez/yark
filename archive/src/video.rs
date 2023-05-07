@@ -1,9 +1,8 @@
 //! Video metadata logic containing the [Video] structure
 
-use std::collections::HashMap;
-
 use crate::{date::YarkDate, elements::Elements, note::Note};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Single video inside of an archive which tracks a video's entire metadata history
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -13,10 +12,16 @@ pub struct Video {
     /// Date this video was uploaded (typically to the nearest day)
     pub uploaded: YarkDate,
     /// Width hint (in pixels) of the potentially downloaded video
-    #[deprecated(since = "3.1.0-beta.1", note = "Will be removed in v4")]
+    #[deprecated(
+        since = "3.1.0-beta.1",
+        note = "Sunsetting; no plan for removal yet (v5?)"
+    )]
     pub width: u32,
     /// Height hint (in pixels) of the potentially downloaded video
-    #[deprecated(since = "3.1.0-beta.1", note = "Will be removed in v4")]
+    #[deprecated(
+        since = "3.1.0-beta.1",
+        note = "Sunsetting; no plan for removal yet (v5?)"
+    )]
     pub height: u32,
     /// Known titles which the video has had
     pub title: Elements<String>,
@@ -38,26 +43,26 @@ impl Video {
     /// Creates a new video with all values provided to be known about just now (i.e. values have just been found out)
     #[allow(deprecated)]
     pub fn new(
-        id: String,
-        uploaded: YarkDate,
+        id: impl Into<String>,
+        uploaded: impl Into<YarkDate>,
         width: u32,
         height: u32,
-        title: String,
-        description: String,
-        views: Option<u32>,
-        likes: Option<u32>,
-        thumbnail: String,
+        title: impl Into<String>,
+        description: impl Into<String>,
+        views: impl Into<Option<u32>>,
+        likes: impl Into<Option<u32>>,
+        thumbnail: impl Into<String>,
     ) -> Self {
         Self {
-            id,
-            uploaded,
+            id: id.into(),
+            uploaded: uploaded.into(),
             width,
             height,
-            title: Elements::new_now(title),
-            description: Elements::new_now(description),
+            title: Elements::new_now(title.into()),
+            description: Elements::new_now(description.into()),
             views: Elements::new_now(views.into()),
             likes: Elements::new_now(likes.into()),
-            thumbnail: Thumbnails::new_now(thumbnail),
+            thumbnail: Thumbnails::new_now(thumbnail.into()),
             deleted: Elements::new_now(false),
             notes: vec![],
         }

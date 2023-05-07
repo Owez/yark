@@ -8,7 +8,7 @@ use uuid::Uuid;
 pub struct Note {
     /// Unique queryable identifier of this note
     pub id: Uuid,
-    /// Timestamp (in seconds) that this note refers to; see [Self::to_timestamp_str]
+    /// Timestamp (in seconds) that this note refers to
     pub timestamp: u32,
     /// Title of this note which the user has wrote
     pub title: String,
