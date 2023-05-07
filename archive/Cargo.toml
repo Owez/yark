@@ -1,10 +1,11 @@
 [package]
 name = "yark-archive"
-version = "0.1.0"
+description = "Archiving core & utilities for the Yark archive format"
+version = "3.1.0-beta.1"
 edition = "2021"
 
 [dependencies]
 serde_json = "1.0"
 uuid = { version = "1", features = ["v4", "serde"] }
 serde = { version = "1.0", features = ["derive"] }
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { git = "https://github.com/chronotope/chrono", features = ["serde"] }

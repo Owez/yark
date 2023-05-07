@@ -1,11 +1,14 @@
-use crate::{elements::Elements, note::Note};
-use chrono::prelude::*;
+use crate::{date::YarkDate, elements::Elements, note::Note};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Video {
     pub id: String,
-    pub uploaded: DateTime<Utc>,
+    pub uploaded: YarkDate,
+    #[deprecated(since = "3.1.0", note = "Will be removed in v4")]
+    pub width: u32,
+    #[deprecated(since = "3.1.0", note = "Will be removed in v4")]
+    pub height: u32,
     pub title: Elements<String>,
     pub description: Elements<String>,
     pub views: Elements<Option<u32>>,
@@ -16,9 +19,12 @@ pub struct Video {
 }
 
 impl Video {
+    #[allow(deprecated)]
     pub fn new(
         id: String,
-        uploaded: DateTime<Utc>,
+        uploaded: YarkDate,
+        width: u32,
+        height: u32,
         title: String,
         description: String,
         views: Option<u32>,
@@ -28,6 +34,8 @@ impl Video {
         Self {
             id,
             uploaded,
+            width,
+            height,
             title: Elements::new_now(title),
             description: Elements::new_now(description),
             views: Elements::new_now(views.into()),
@@ -51,8 +59,8 @@ impl Thumbnails {
         self.0.insert_now(hash)
     }
 
-    pub fn insert(&mut self, date: DateTime<Utc>, hash: String) {
-        self.0.insert(date, hash);
+    pub fn insert(&mut self, dt: YarkDate, hash: String) {
+        self.0.insert(dt, hash);
     }
 }
 
