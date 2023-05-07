@@ -55,11 +55,7 @@ Light and dark modes are both available and automatically apply based on the sys
 
 ## Roadmap
 
-Here's the general roadmap for Yark going a few months into the future for the upcoming features and changes:
-
-1. Yark 1.3 (Expected late March): New GUI simplifying Yark a ton + Viewer tabs + Comments
-2. Yark 1.4 (Expected June-July): Promised features after GUI (playlists, etc.)
-4. Onwards: Not sure yet, [create an issue](https://github.com/Owez/yark/issues/new) to help out :) 
+Yark is currently going through a slow and steady rewrite for improved code quality, with a [new GUI](https://github.com/Owez/yark/pull/105) also in the works. It will be a while until any new features come through, as the new GUI is blocked by an [external](https://github.com/tauri-apps/tauri/issues/6226) issue and the rewrite needs time for polish.
 
 ## Details
 
