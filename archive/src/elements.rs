@@ -1,9 +1,9 @@
 //! Element collection logic for timestamped values; see [Elements] for more info
 
+use crate::date::YarkDate;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use crate::date::YarkDate;
 
 /// Collection of timestamped values to mark changes to history
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

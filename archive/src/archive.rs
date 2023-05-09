@@ -8,6 +8,38 @@ use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::path::PathBuf;
 
+/// Representation of a Yark archive and its included videos/metadata
+///
+/// This is the main entrypoint of the `yark-archive` crate and it's the go-to for general top-level archive management, as well as a context/parent struct. For example, data structures such as [Video](crate::video::Video) or [Note](crate::note::Note) may require this struct to be used as a parent.
+///
+/// # Examples
+///
+/// Creating and saving an archive:
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use yark_archive::prelude::*;
+///
+/// // Create archive
+/// let archive_path = PathBuf::from("/path/to/archive");
+/// let youtube_url = "https://www.youtube.com/channel/.."
+/// let archive = Archive::new(archive_path, youtube_url);
+///
+/// // Save archive
+/// archive.save.unwrap();
+/// println!("Archive saved to {}", archive_path);
+/// ```
+///
+/// Loading an existing archive:
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use yark_archive::prelude::*;
+///
+/// // Load archive
+/// let archive_path = PathBuf::from("/path/to/archive");
+/// let archive = Archive::load(archive_path)?;
+/// ```
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Archive {
     /// Path of the directory where this archive exists and will [save](Self::save) to
@@ -27,11 +59,11 @@ pub struct Archive {
 
 impl Archive {
     /// Creates a new in-memory archive tied to the `path` provided
-    pub fn new(path: PathBuf, url: String) -> Self {
+    pub fn new(path: impl Into<PathBuf>, url: impl Into<String>) -> Self {
         Self {
-            path,
+            path: path.into(),
             version: 3,
-            url,
+            url: url.into(),
             videos: Videos::default(),
             livestreams: Videos::default(),
             shorts: Videos::default(),
@@ -84,8 +116,7 @@ impl Archive {
 
 /// Gets the `yark.json` from path given and says if it exists
 fn archive_file_path(path: &PathBuf) -> (PathBuf, bool) {
-    let mut archive_file_path = path.clone();
-    archive_file_path.push("/yark.json");
+    let archive_file_path = path.join("yark.json");
     let exists = archive_file_path.exists();
     (archive_file_path, exists)
 }
@@ -106,6 +137,7 @@ mod tests {
         video::{Thumbnails, Video},
     };
     use chrono::prelude::*;
+    use tempfile::{self, tempdir};
 
     const OWEZ_DATA: &str = r#"{"version":3,"url":"https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA","videos":[{"id":"Jlsxl-1zQJM","uploaded":"2021-07-28T00:00:00","width":1280,"height":720,"title":{"2023-05-03T11:35:50.993963":"ArmA 3 replay 2021 07 28 13 58"},"description":{"2023-05-03T11:35:50.993966":""},"views":{"2023-05-03T11:35:50.993974":34},"likes":{"2023-05-03T11:35:50.993975":0},"thumbnail":{"2023-05-03T11:35:54.782905":"38552fc160089251e638457762f45dbff573c520"},"deleted":{"2023-05-03T11:35:54.782920":false},"notes":[]},{"id":"z6y0mx2flRY","uploaded":"2021-04-29T00:00:00","width":1920,"height":1080,"title":{"2023-05-03T11:35:54.783019":"GLORY TO ARSTOZKA"},"description":{"2023-05-03T11:35:54.783021":"quickly animated poster for graphics outcome"},"views":{"2023-05-03T11:35:54.783023":24},"likes":{"2023-05-03T11:35:54.783025":null},"thumbnail":{"2023-05-03T11:35:55.193654":"8706b76c30fd98551f9c5d246f7294ec173f1086"},"deleted":{"2023-05-03T11:35:55.193668":false},"notes":[]},{"id":"annp92OPZgQ","uploaded":"2021-01-04T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:55.193818":"psychedelica."},"description":{"2023-05-03T11:35:55.193823":"trippy.\n\n\n\n\nmade with my https://github.com/owez/mkplay program. all revenue goes to artists if requested."},"views":{"2023-05-03T11:35:55.193824":91},"likes":{"2023-05-03T11:35:55.193827":1},"thumbnail":{"2023-05-03T11:35:59.093903":"6a5c95513799671d51f22776e648c56c24789402"},"deleted":{"2023-05-03T11:35:59.093915":false},"notes":[]},{"id":"Sl3XgtKYq4E","uploaded":"2021-01-02T00:00:00","width":2560,"height":1440,"title":{"2023-05-03T11:35:59.094000":"one more time."},"description":{"2023-05-03T11:35:59.094003":"another one.\n\n\n\n\nmade with https://github.com/owez/mkplay, all ad revenue goes to the creators when requested/took through copyright"},"views":{"2023-05-03T11:35:59.094005":51},"likes":{"2023-05-03T11:35:59.094007":3},"thumbnail":{"2023-05-03T11:35:59.483710":"3fe5be5ceacde668310ddcf4311d10fb72d54e11"},"deleted":{"2023-05-03T11:35:59.483724":false},"notes":[]},{"id":"iWJbkSCMQlg","uploaded":"2018-06-03T00:00:00","width":1152,"height":720,"title":{"2023-05-03T11:35:59.483813":"thank you gmod"},"description":{"2023-05-03T11:35:59.483815":"Just a normal day with a joop from hell."},"views":{"2023-05-03T11:35:59.483817":39},"likes":{"2023-05-03T11:35:59.483819":1},"thumbnail":{"2023-05-03T11:35:59.847311":"7658b9da282cec122cb03af02ac676442df58e34"},"deleted":{"2023-05-03T11:35:59.847323":false},"notes":[]}],"livestreams":[],"shorts":[]}"#;
 
@@ -323,5 +355,53 @@ mod tests {
         let back = Archive::from_archive_str(dummy_path, &serialized)
             .expect("Failed to convert back to archive");
         assert_eq!(archive, back);
+    }
+
+    #[test]
+    fn correct_archive_file_path() {
+        // Create temporary test directory
+        let temp = tempdir().unwrap();
+        let temp_archive_file_exp = temp.path().join("yark.json");
+
+        // Try without a yark.json
+        let (archive_file, exists) = archive_file_path(&temp.path().to_owned());
+        assert_eq!(archive_file, temp_archive_file_exp);
+        assert_eq!(exists, false);
+
+        // Try with a yark.json
+        File::create(temp_archive_file_exp.clone()).unwrap();
+        let (archive_file, exists) = archive_file_path(&temp.path().to_owned());
+        assert_eq!(archive_file, temp_archive_file_exp);
+        assert_eq!(exists, true);
+    }
+
+    #[test]
+    fn try_backup_archive() {
+        // Create temporary test directory
+        let temp = tempdir().unwrap();
+        let archive_file_path = temp.path().join("yark.json");
+
+        // Call try_backup function and assert that it doesn't panic or return an error
+        try_backup(&archive_file_path);
+
+        // Assert that the backup file doesn't exist
+        let backup_file_path = temp.path().join("yark.bak");
+        assert!(!backup_file_path.exists());
+
+        // Save an archive and check it doesn't exist
+        let archive = Archive::new(
+            temp.path().to_owned(),
+            "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
+        );
+        archive.save().unwrap();
+        assert!(!backup_file_path.exists());
+
+        // Try backup and then ensure it exists
+        try_backup(&archive_file_path);
+        assert!(backup_file_path.exists());
+
+        // Check backup is what we expect it to be
+        let bak = fs::read_to_string(temp.path().join("yark.bak")).unwrap();
+        assert_eq!(archive.to_archive_str().unwrap(), bak)
     }
 }
