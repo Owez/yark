@@ -14,7 +14,7 @@ pub struct Note {
     pub title: String,
     /// Optional description of this note with extra content; assumed to be plaintext
     #[deprecated(
-        since = "3.1.0-beta.1",
+        since = "0.1.0+spec.3",
         note = "Will be superseded in v4 by Note::body"
     )]
     pub description: Option<String>,

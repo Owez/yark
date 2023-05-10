@@ -70,13 +70,16 @@ pub type ArchiveVersion = u32;
 /// Version of the [ArchiveVersion] this version of the crate is compatible with
 pub const VERSION_COMPAT: ArchiveVersion = 3;
 
-/// API for the archive & manager which enables loading and saving
+/// API for the [Archive](crate::archive::Archive)/[Manager](crate::manager::Manager) which enables loading and saving
 pub trait DataSaveLoad<'a>: Sized + Serialize + Deserialize<'a> {
     /// Loads an instance from the `path` provided
     fn load(path: PathBuf) -> Result<Self>;
 
     /// Saves the current instance to data store permanently
     fn save(&self) -> Result<()>;
+
+    /// Sets path to save/load to (required due to lack of trait fields)
+    fn set_path(&mut self, path: PathBuf);
 
     /// Loads from raw data and ties to the `path` provided for future use
     ///
@@ -94,7 +97,4 @@ pub trait DataSaveLoad<'a>: Sized + Serialize + Deserialize<'a> {
     fn to_data_str(&self) -> Result<String> {
         serde_json::to_string(self).map_err(|err| Error::DataSave(err))
     }
-
-    /// Sets path to save/load to (required due to lack of trait fields)
-    fn set_path(&mut self, path: PathBuf);
 }

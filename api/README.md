@@ -1,27 +1,20 @@
 # Yark API
 
-YouTube archiving made simple (REST API)
+REST API for web-based Yark instances
 
 - [Yark API](#yark-api)
-  - [End-user](#end-user)
-  - [Development](#development)
-  - [Routes](#routes)
-    - [GET `/`](#get-)
-    - [POST `/archive?intent`](#post-archiveintent)
-    - [GET `/archive/:id?kind`](#get-archiveidkind)
-    - [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
-    - [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
-    - [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
-    - [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
-    - [PATCH `/archive/:slug/video/:video_id/note/:note_id`](#patch-archiveslugvideovideo_idnotenote_id)
-    - [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
+	- [Development](#development)
+	- [Routes](#routes)
+		- [GET `/`](#get-)
+		- [POST `/archive?intent`](#post-archiveintent)
+		- [GET `/archive/:id?kind`](#get-archiveidkind)
+		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
+		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
+		- [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
+		- [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
+		- [PATCH `/archive/:slug/video/:video_id/note/:note_id`](#patch-archiveslugvideovideo_idnotenote_id)
+		- [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
 
-
-## End-user
-
-Want to deploy your own federated Yark instance to connect to? You can do it using Yark API + Docker ✨
-
-TODO: add docker and then make this guide
 
 ## Development
 
@@ -29,19 +22,21 @@ To get this API setup, please make sure you've got the development dependencies 
 
 ```env
 YARK_ADMIN_SECRET=dev
-YARK_DATABASE_URI=sqlite:///dev.db
+YARK_MANAGER_PATH=manager.json
 ```
 
-With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type/copy-paste the following three commands:
+<!-- NOTE: not needed for rust rewrite -->
+<!-- With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type/copy-paste the following three commands:
 
 ```python
 >>> from yark_api.extensions import *
 >>> from yark_api.models import *
 >>> db.create_all()
 >>> exit()
-```
+``` -->
 
-Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉
+<!-- Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉 -->
+Now that that's all been setup, you can run your brand new development server with `make dev` now 🎉
 
 ## Routes
 

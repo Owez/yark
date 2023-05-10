@@ -1,8 +1,9 @@
 [package]
 name = "yark-archive"
 description = "Archiving core & utilities for the Yark archive format"
-version = "3.1.0-beta.1"
+version = "0.1.0+spec.3"
 edition = "2021"
+readme = "README.md"
 
 [dependencies]
 serde_json = "1"

@@ -13,13 +13,13 @@ pub struct Video {
     pub uploaded: YarkDate,
     /// Width hint (in pixels) of the potentially downloaded video
     #[deprecated(
-        since = "3.1.0-beta.1",
+        since = "0.1.0+spec.3",
         note = "Sunsetting; no plan for removal yet (v5?)"
     )]
     pub width: u32,
     /// Height hint (in pixels) of the potentially downloaded video
     #[deprecated(
-        since = "3.1.0-beta.1",
+        since = "0.1.0+spec.3",
         note = "Sunsetting; no plan for removal yet (v5?)"
     )]
     pub height: u32,

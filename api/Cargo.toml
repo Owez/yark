@@ -1,0 +1,11 @@
+[package]
+name = "yark-api"
+description = "REST API for web-based Yark instances"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+
+[dependencies]
+axum = "0.6"
+yark-archive = { path = "../archive" }
+tokio = { version = "1", features = ["full"] }

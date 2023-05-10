@@ -1,4 +1,4 @@
-//! Simple multi-archive manager, see [Manager] for more info
+//! Simple multi-archive manager; see [Manager] for more info
 
 use crate::{
     archive::Archive,
@@ -15,6 +15,8 @@ use uuid::Uuid;
 
 /// Collection of many opened archives which can be easily & quickly queried
 ///
+/// # Explanation
+///
 /// The intended use-case for this manager is to:
 ///
 /// 1. Store archives in the manager
@@ -23,6 +25,36 @@ use uuid::Uuid;
 /// 4. Keep using the archives in the manager
 ///
 /// This data structure acts as a *permanent* curator of multiple archives and attaches a unique identifier for every archive stored. Under the hood, this manager is a [HashMap] containing the identifier as a key and the archive as the value.
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use yark_archive::prelude::*;
+///
+/// // Create a few archives
+/// let archive_path = PathBuf::from("/path/to/archive");
+/// let youtube_url = "https://www.youtube.com/channel/.."
+/// let archive_alpha = Archive::new(archive_path.clone(), youtube_url.clone());
+/// let archive_bravo = Archive::new(archive_path.clone(), youtube_url.clone());
+/// let archive_charlie = Archive::new(archive_path, youtube_url);
+///
+/// // Create a manager & add new archives
+/// let mut manager = Manager::default();
+/// let alpha_id = manager.insert_new(archive_alpha);
+/// let bravo_id = manager.insert_new(archive_bravo);
+///
+/// // Query for alpha
+/// let alpha_query = manager.get(&alpha_id);
+/// assert!(alpha_query.is_some()); // Some(&Archive)
+///
+/// // Delete bravo
+/// manager.remove(&bravo_id);
+///
+/// // Query for deleted bravo
+/// let bravo_query = manager.get(&bravo_id);
+/// assert!(bravo_query.is_none()); // None
+/// ```
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Manager {
     /// Path of the file to [save](Self::save) this manager to
@@ -36,8 +68,10 @@ pub struct Manager {
 
 impl Manager {
     /// Inserts a brand new archive into the manager not previously known
-    pub fn insert_new(&mut self, archive: Archive) {
-        self.insert_existing(Uuid::new_v4(), archive)
+    pub fn insert_new(&mut self, archive: Archive) -> Uuid {
+        let id = Uuid::new_v4();
+        self.insert_existing(id.clone(), archive);
+        id
     }
 
     /// Inserts an existing archive with a prior identifier into the manager
@@ -73,6 +107,7 @@ impl Manager {
 
 impl<'a> DataSaveLoad<'a> for Manager {
     fn load(path: PathBuf) -> Result<Self> {
+        unimplemented!("custom deserialize to make archives into just paths as they SHOULD be");
         // Check path
         if !path.exists() {
             return Err(Error::ManagerNotFound);
@@ -85,6 +120,7 @@ impl<'a> DataSaveLoad<'a> for Manager {
     }
 
     fn save(&self) -> Result<()> {
+        unimplemented!("custom serialize to make archives into just paths as they SHOULD be");
         let writer = File::create(self.path.clone()).map_err(|err| Error::DataPath(err))?;
         serde_json::to_writer(&writer, self).map_err(|err| Error::DataSave(err))
     }
