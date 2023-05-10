@@ -41,7 +41,7 @@ use std::path::PathBuf;
 /// let archive_path = PathBuf::from("/path/to/archive");
 /// let archive = Archive::load(archive_path)?;
 /// ```
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Archive {
     /// Path of the directory where this archive exists and will [save](Self::save) to
     #[serde(skip)]
@@ -83,7 +83,7 @@ impl<'a> DataSaveLoad<'a> for Archive {
 
         // Load up archive file/data
         let archive_data =
-            fs::read_to_string(archive_file_path).map_err(|err| Error::DataCorrupted(err))?;
+            fs::read_to_string(archive_file_path).map_err(|err| Error::DataPath(err))?;
         Self::from_data_str(path, &archive_data)
     }
 

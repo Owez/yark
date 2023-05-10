@@ -6,6 +6,10 @@ edition = "2021"
 readme = "README.md"
 
 [dependencies]
+log = "0.4"
 axum = "0.6"
-yark-archive = { path = "../archive" }
+hyper = "0.14"
+uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+yark-archive = { path = "../archive" }

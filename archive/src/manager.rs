@@ -114,8 +114,7 @@ impl<'a> DataSaveLoad<'a> for Manager {
         }
 
         // Load up manager file
-        let manager_data =
-            fs::read_to_string(path.clone()).map_err(|err| Error::DataCorrupted(err))?;
+        let manager_data = fs::read_to_string(path.clone()).map_err(|err| Error::DataPath(err))?;
         Self::from_data_str(path, &manager_data)
     }
 

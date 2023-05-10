@@ -1,7 +1,9 @@
-//! Configuration context logic/utilities; see [Config] for more info
+//! Configuration and state logic/utilities; see [Config]/[AppState] for more info
 
 use crate::errors::{Error, Result};
+use log::debug;
 use std::{env, net::SocketAddr, path::PathBuf, str::FromStr};
+use yark_archive::prelude::*;
 
 /// Configuration context for the API
 pub struct Config {
@@ -18,6 +20,7 @@ pub struct Config {
 impl Config {
     /// Generates a new config from [env::var] if valid
     pub fn from_vars() -> Result<Self> {
+        debug!("Collecting configuration information");
         Ok(Self {
             host: get_var("HOST")?,
             port: get_var("PORT")?,
@@ -29,7 +32,7 @@ impl Config {
     /// Converts host and port to a usable socket address
     pub fn to_addr(&self) -> Result<SocketAddr> {
         let addr_str = format!("{}:{}", self.host, self.port);
-        addr_str.parse().map_err(|err| Error::InvalidAddress(err))
+        Ok(addr_str.parse()?)
     }
 }
 
@@ -44,4 +47,9 @@ fn get_var<T: FromStr>(name: &str) -> Result<T> {
 /// Gets environment variable's name from root `name` provided
 fn gen_env_var_name(name: &str) -> String {
     format!("YARK_{}", name)
+}
+
+pub struct AppState {
+    pub config: Config,
+    pub manager: Manager,
 }

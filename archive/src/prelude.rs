@@ -6,3 +6,4 @@ pub use crate::elements::Elements;
 pub use crate::manager::Manager;
 pub use crate::note::Note;
 pub use crate::video::{Thumbnails, Video, Videos};
+pub use crate::DataSaveLoad;

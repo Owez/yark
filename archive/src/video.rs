@@ -13,13 +13,13 @@ pub struct Video {
     pub uploaded: YarkDate,
     /// Width hint (in pixels) of the potentially downloaded video
     #[deprecated(
-        since = "0.1.0+spec.3",
+        since = "0.1.0+arcspec.3",
         note = "Sunsetting; no plan for removal yet (v5?)"
     )]
     pub width: u32,
     /// Height hint (in pixels) of the potentially downloaded video
     #[deprecated(
-        since = "0.1.0+spec.3",
+        since = "0.1.0+arcspec.3",
         note = "Sunsetting; no plan for removal yet (v5?)"
     )]
     pub height: u32,
@@ -101,7 +101,7 @@ impl Default for Thumbnails {
 }
 
 /// List of [Video] items which can be queried as a [HashMap]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 
 pub struct Videos(pub HashMap<String, Video>);
 

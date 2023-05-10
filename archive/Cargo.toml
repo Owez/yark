@@ -1,7 +1,7 @@
 [package]
 name = "yark-archive"
 description = "Archiving core & utilities for the Yark archive format"
-version = "0.1.0+spec.3"
+version = "0.1.0+arcspec.3"
 edition = "2021"
 readme = "README.md"
 

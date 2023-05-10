@@ -1,27 +1,30 @@
 //! REST API for web-based Yark instances
 
-pub mod config;
 pub mod errors;
 pub mod routes;
+pub mod state;
 
-use crate::config::Config;
-use crate::errors::{Error, Result};
-use axum::routing::get;
+use crate::errors::Result;
+use crate::state::Config;
+use axum::routing::{get, post};
 use axum::{Router, Server};
+use log::info;
+use state::AppState;
 use std::fmt;
 use std::process::exit;
+use std::sync::{Arc, Mutex};
+use yark_archive::prelude::Manager;
+use yark_archive::DataSaveLoad;
 
+/// Main function which [launches](launch) the application
 #[tokio::main]
 async fn main() {
+    info!("Starting Yark API");
     match launch().await {
+        // All good and shutdown
         Ok(()) => (),
-        Err(Error::EnvVarMissing(var)) => {
-            err_exit(format!("Missing '{}' environment variable", var))
-        }
-        Err(Error::EnvVarInvalid(var)) => {
-            err_exit(format!("Invalid '{}' environment variable", var))
-        }
-        Err(Error::InvalidAddress(_)) => err_exit("Invalid address provided for host/port"),
+        // Startup errors
+        Err(err) => err_exit(err),
     }
 }
 
@@ -33,8 +36,23 @@ fn err_exit(msg: impl fmt::Display) -> ! {
 
 /// Launches axum web server or fatally errors during the process
 async fn launch() -> Result<()> {
+    // Get required preamble
     let config = Config::from_vars()?;
-    let app = Router::new().route("/", get(routes::misc::index));
-    Server::bind(&config.to_addr()?).serve(app.into_make_service());
-    Ok(())
+    let manager = Manager::load(config.manager_path.clone())?;
+    let addr = config.to_addr()?;
+
+    // Log to user
+    info!(
+        "Launching at http://{}:{} address",
+        config.host, config.port
+    );
+
+    // Configure & launch
+    let state = Arc::new(Mutex::new(AppState { config, manager }));
+    let app = Router::new()
+        .route("/", get(routes::misc::index))
+        .route("/archive", post(routes::archive::create))
+        .route("/archive/:archive_id", get(routes::archive::get))
+        .with_state(state);
+    Ok(Server::bind(&addr).serve(app.into_make_service()).await?)
 }

@@ -4,9 +4,9 @@ REST API for web-based Yark instances
 
 - [Yark API](#yark-api)
 	- [Development](#development)
-	- [Routes](#routes)
+	- [Specification](#specification)
 		- [GET `/`](#get-)
-		- [POST `/archive?intent`](#post-archiveintent)
+		- [POST `/archive`](#post-archive)
 		- [GET `/archive/:id?kind`](#get-archiveidkind)
 		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
 		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
@@ -38,71 +38,85 @@ YARK_MANAGER_PATH=manager.json
 <!-- Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉 -->
 Now that that's all been setup, you can run your brand new development server with `make dev` now 🎉
 
-## Routes
+## Specification
 
-This section is a guide of the routes inside of this API.
+*Draft of version 1 – Include it in semvar as `+apispec.1` if possible*
+
+This section is a friendly guide for all of the routes inside of this API and acts as an ad-hoc specification for the API which routes should be developed off of. It won't be perfect so it's best to contact someone if there's some ambiguity/wrongness.
 
 ### GET `/`
+<!-- SLUGGED -->
 
-This route will simply redirect to the GitHub repository page if a user accidentally lands here. Eventually this will redirect to the downloads page.
+This route will simply redirect to the GitHub repository page if a user accidentally lands here. Eventually this will redirect to the downloads page or a webapp page.
 
-### POST `/archive?intent`
+### POST `/archive`
+<!-- SLUGGED -->
 
-This route lets you create/import an archive if you're the admin of the API instance. To add an archive into the API, you must first give the intent in a query string:
-
-- `intent=create`: Create a new archive
-- `intent=existing`: Import an existing archive
-
-You also have to supply a JSON body to provide further details:
+This route lets you create/import an archive if you're the admin of the API instance. To add an archive into the API, you must supply a JSON body:
 
 ```jsonc
 {
-    // Unique slug identifier
-	"slug": "Cool Archive",
     // Local path to this archive
 	"path": "/Users/owen/Projects/MainArchive",
     // The URL this archive targets
-	"target": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+	"target": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
+	// Optional identifier to set for this archive (only put this to re-add)
+	"id": "existing-uuid"
 }
 ```
 
-This route also requires a bearer token containing admin credentials. Once all of this is given, the API will create the archive in it's database and return you with an adjusted slug you should use as the "true" slug:
+This route also requires a bearer token containing admin credentials. Once all of this is given, the API will create the archive and return you with an id reflecting the archive:
 
 ```jsonc
 {
 	"message": "Archive created",
-	"slug": "cool-archive"
+	"id": "uuid"
 }
 ```
 
 ### GET `/archive/:id?kind`
+<!-- SLUGGED -->
 
-This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known slug of the archive you're trying to get from the API instance and the kind of video list you're trying to fetch:
+This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
 
 - `kind=videos`: Get a list of all contentional videos
 - `kind=livestreams`: Gets a list of all livestreams
 - `kind=shorts`: Gets a list of all shorts
 
-With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not, you'll get something that looks like this:
+With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you'll get a videos list from the archive data, for example:
 
 ```jsonc
 [
-    {
-        "uploaded": "2005-07-28T00:00:00",
-        "thumbnail_id": "..",
-        "title": "Me at the zoo",
-        "id": "dQw4w9WgXcQ",
-    },
-    {
-        "uploaded": "2042-12-02T00:00:00",
-        "thumbnail_id": "👀",
-        "title": "Help me I'm stuck inside of this README",
-        "id": "helphelphelp",
-    },
+	{
+		"id": "Jlsxl-1zQJM",
+		"uploaded": "2021-07-28T00:00:00",
+		"width": 1280,
+		"height": 720,
+		"title": {
+			"2023-05-03T11:35:50.993963": "ArmA 3 replay 2021 07 28 13 58"
+		},
+		"description": {
+			"2023-05-03T11:35:50.993966": ""
+		},
+		// etc..
+	},
+	{
+		"id": "z6y0mx2flRY",
+		"uploaded": "2021-04-29T00:00:00",
+		"width": 1920,
+		"height": 1080,
+		"title": {
+			"2023-05-03T11:35:54.783019": "GLORY TO ARSTOZKA"
+		},
+		"description": {
+			"2023-05-03T11:35:54.783021": "quickly animated poster for graphics outcome"
+		},
+		// etc..
+	}
 ]
 ```
 
-Each of the thumbnail identifiers provided back here can be used to [get](#get-thumbnailarchive_slugid) thumbnails which is used commonly to visualize a list of videos to a user.
+Each of the thumbnail identifiers provided back can be used to [get](#get-thumbnailarchive_slugid) thumbnails as always.
 
 ### GET `/archive/:slug/thumbnail/:id`
 
