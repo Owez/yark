@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Single video inside of an archive which tracks a video's entire metadata history
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Video {
     /// YouTube-provided identifier of this video
     pub id: String,
@@ -74,7 +74,7 @@ impl Video {
 // TODO: move to thumbnail.rs
 // TODO: move String to Thumbnail
 /// Wrapper around [Elements] of thumbnail hashes; this structure can be used to pull the image files from the archive directory
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Thumbnails(pub Elements<String>);
 
 impl Thumbnails {
@@ -101,7 +101,7 @@ impl Default for Thumbnails {
 }
 
 /// List of [Video] items which can be queried as a [HashMap]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 
 pub struct Videos(pub HashMap<String, Video>);
 

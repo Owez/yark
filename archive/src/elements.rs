@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// Collection of timestamped values to mark changes to history
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Elements<T>(pub BTreeMap<YarkDate, T>);
 
 impl<T> Elements<T> {

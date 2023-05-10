@@ -3,6 +3,7 @@
 use crate::{
     errors::{Error, Result},
     video::Videos,
+    ArchiveVersion, DataSaveLoad, VERSION_COMPAT,
 };
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
@@ -26,7 +27,7 @@ use std::path::PathBuf;
 /// let archive = Archive::new(archive_path, youtube_url);
 ///
 /// // Save archive
-/// archive.save.unwrap();
+/// archive.save().unwrap();
 /// println!("Archive saved to {}", archive_path);
 /// ```
 ///
@@ -40,13 +41,13 @@ use std::path::PathBuf;
 /// let archive_path = PathBuf::from("/path/to/archive");
 /// let archive = Archive::load(archive_path)?;
 /// ```
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Archive {
     /// Path of the directory where this archive exists and will [save](Self::save) to
     #[serde(skip)]
     pub path: PathBuf,
     /// Major version of this archive which indicates compatibility
-    pub version: u32,
+    pub version: ArchiveVersion,
     /// URL of the YouTube channel or playlist this archive tracks
     pub url: String,
     /// Videos known to this archive; see [Videos] and [Video](crate::video::Video)
@@ -62,16 +63,18 @@ impl Archive {
     pub fn new(path: impl Into<PathBuf>, url: impl Into<String>) -> Self {
         Self {
             path: path.into(),
-            version: 3,
+            version: VERSION_COMPAT,
             url: url.into(),
             videos: Videos::default(),
             livestreams: Videos::default(),
             shorts: Videos::default(),
         }
     }
+}
 
+impl<'a> DataSaveLoad<'a> for Archive {
     /// Loads an existing archive from the `path` provided
-    pub fn load(path: PathBuf) -> Result<Self> {
+    fn load(path: PathBuf) -> Result<Self> {
         // Get and check archive path
         let (archive_file_path, archive_file_path_exists) = archive_file_path(&path);
         if !archive_file_path_exists {
@@ -80,37 +83,24 @@ impl Archive {
 
         // Load up archive file/data
         let archive_data =
-            fs::read_to_string(archive_file_path).map_err(|err| Error::ArchiveCorrupted(err))?;
-        Self::from_archive_str(path, &archive_data)
+            fs::read_to_string(archive_file_path).map_err(|err| Error::DataCorrupted(err))?;
+        Self::from_data_str(path, &archive_data)
     }
 
     /// Saves the current archive to the [Self::path] directory
-    pub fn save(&self) -> Result<()> {
+    fn save(&self) -> Result<()> {
         // Get file path and backup old if present
         let (archive_file_path, archive_file_path_exists) = archive_file_path(&self.path);
         if archive_file_path_exists {
             try_backup(&archive_file_path);
         }
 
-        let writer = File::create(archive_file_path).map_err(|err| Error::ArchivePath(err))?;
-        serde_json::to_writer(&writer, self).map_err(|err| Error::ArchiveSave(err))
+        let writer = File::create(archive_file_path).map_err(|err| Error::DataPath(err))?;
+        serde_json::to_writer(&writer, self).map_err(|err| Error::DataSave(err))
     }
 
-    /// Loads an archive from it's raw data and ties to the `path` provided for future use
-    ///
-    /// This is a helper function intended for advanced use. If you can, consider using [Self::load] instead.
-    pub fn from_archive_str(path: PathBuf, archive_data: &str) -> Result<Self> {
-        let mut archive: Self =
-            serde_json::from_str(archive_data).map_err(|err| Error::ArchiveLoad(err))?;
-        archive.path = path;
-        Ok(archive)
-    }
-
-    /// Returns the raw archive data as a JSON string
-    ///
-    /// This is a helper function intended for advanced use. If you can, consider using [Self::save] instead.
-    pub fn to_archive_str(&self) -> Result<String> {
-        serde_json::to_string(self).map_err(|err| Error::ArchiveSave(err))
+    fn set_path(&mut self, path: PathBuf) {
+        self.path = path
     }
 }
 
@@ -329,7 +319,7 @@ mod tests {
     #[test]
     fn load_data_owez() {
         let dummy_path = PathBuf::default();
-        match Archive::from_archive_str(dummy_path.clone(), OWEZ_DATA) {
+        match Archive::from_data_str(dummy_path.clone(), OWEZ_DATA) {
             Ok(archive) => assert_eq!(archive, owez_exp(dummy_path)),
             Err(err) => panic!("Error from code: {:?}", err),
         }
@@ -339,7 +329,7 @@ mod tests {
     fn load_data_owez_path() {
         let mut dummy_path = PathBuf::default();
         dummy_path.push("hello/world/this/is/a/test");
-        match Archive::from_archive_str(dummy_path.clone(), OWEZ_DATA) {
+        match Archive::from_data_str(dummy_path.clone(), OWEZ_DATA) {
             Ok(archive) => assert_eq!(archive, owez_exp(dummy_path)),
             Err(err) => panic!("Error from code: {:?}", err),
         }
@@ -349,10 +339,8 @@ mod tests {
     fn owez_full_serde() {
         let dummy_path = PathBuf::default();
         let archive = owez_exp(dummy_path.clone());
-        let serialized = archive
-            .to_archive_str()
-            .expect("Failed to convert to string");
-        let back = Archive::from_archive_str(dummy_path, &serialized)
+        let serialized = archive.to_data_str().expect("Failed to convert to string");
+        let back = Archive::from_data_str(dummy_path, &serialized)
             .expect("Failed to convert back to archive");
         assert_eq!(archive, back);
     }
@@ -402,6 +390,6 @@ mod tests {
 
         // Check backup is what we expect it to be
         let bak = fs::read_to_string(temp.path().join("yark.bak")).unwrap();
-        assert_eq!(archive.to_archive_str().unwrap(), bak)
+        assert_eq!(archive.to_data_str().unwrap(), bak)
     }
 }
