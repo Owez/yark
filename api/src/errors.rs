@@ -2,10 +2,10 @@
 
 use crate::state::AppState;
 use axum::http::StatusCode;
-use axum::response::IntoResponse;
-use std::fmt;
+use axum::response::{IntoResponse, Response};
 use std::net::AddrParseError;
 use std::sync::{MutexGuard, PoisonError};
+use std::{fmt, io};
 
 /// Type cover for results based in this crate
 pub type Result<T> = std::result::Result<T, Error>;
@@ -23,10 +23,14 @@ pub enum Error {
     Archive(yark_archive::errors::Error),
     /// Internal actual hyper server error, out of our control
     Server(hyper::Error),
-    /// Poison issue on a mutex lock for [AppState]
-    StatePoison,
     /// Couldn't find archive during query
     ArchiveNotFound,
+    /// Couldn't find video in archive during query
+    VideoNotFound,
+    /// Couldn't find image in archive during query
+    ImageNotFound,
+    /// Failed to share a file ([NamedFile](actix_files::NamedFile)) as a response
+    FileShare(io::Error),
 }
 
 impl Error {
@@ -38,8 +42,10 @@ impl Error {
             | Self::InvalidAddress(_)
             | Self::Archive(_)
             | Self::Server(_)
-            | Self::StatePoison => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::ArchiveNotFound => StatusCode::NOT_FOUND,
+            | Self::FileShare(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ArchiveNotFound | Self::VideoNotFound | Self::ImageNotFound => {
+                StatusCode::NOT_FOUND
+            }
         }
     }
 }
@@ -52,16 +58,16 @@ impl fmt::Display for Error {
             Self::InvalidAddress(_) => write!(f, "invalid host/port address provided"),
             Self::Archive(err) => write!(f, "archive error, {}", err),
             Self::Server(err) => write!(f, "hyper server error we can't control, {}", err),
-            Self::StatePoison => {
-                write!(f, "poison on a mutex lock for the app state")
-            }
             Self::ArchiveNotFound => write!(f, "couldn't find queried archive"),
+            Self::VideoNotFound => write!(f, "couldn't find queried video"),
+            Self::ImageNotFound => write!(f, "couldn't find queried image"),
+            Self::FileShare(err) => write!(f, "failed to share a file with user, {}", err),
         }
     }
 }
 
 impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         (self.status(), format!("{}", self)).into_response()
     }
 }
@@ -81,11 +87,5 @@ impl From<yark_archive::errors::Error> for Error {
 impl From<hyper::Error> for Error {
     fn from(err: hyper::Error) -> Self {
         Self::Server(err)
-    }
-}
-
-impl From<PoisonError<MutexGuard<'_, AppState>>> for Error {
-    fn from(_: PoisonError<MutexGuard<'_, AppState>>) -> Self {
-        Self::StatePoison
     }
 }

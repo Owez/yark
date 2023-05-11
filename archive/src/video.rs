@@ -1,6 +1,11 @@
 //! Video metadata logic containing the [Video] structure
 
-use crate::{date::YarkDate, elements::Elements, note::Note};
+use crate::{
+    date::YarkDate,
+    elements::Elements,
+    images::{ImageHash, Images},
+    note::Note,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -31,8 +36,8 @@ pub struct Video {
     pub views: Elements<Option<u32>>,
     /// Known like counts which the video has had
     pub likes: Elements<Option<u32>>,
-    /// Known thumbnails which the video has had; see [Thumbnails]
-    pub thumbnail: Thumbnails,
+    /// Known thumbnails which the video has had; see [Images]
+    pub thumbnail: Images,
     /// Status history of the video indicating the time(s) it's been removed from public consumption (privated/deleted)
     pub deleted: Elements<bool>,
     /// User-written notes attached to the video; see [Note]
@@ -51,7 +56,7 @@ impl Video {
         description: impl Into<String>,
         views: impl Into<Option<u32>>,
         likes: impl Into<Option<u32>>,
-        thumbnail: impl Into<String>,
+        thumbnail: impl Into<ImageHash>,
     ) -> Self {
         Self {
             id: id.into(),
@@ -62,41 +67,10 @@ impl Video {
             description: Elements::new_now(description.into()),
             views: Elements::new_now(views.into()),
             likes: Elements::new_now(likes.into()),
-            thumbnail: Thumbnails::new_now(thumbnail.into()),
+            thumbnail: Images::new_now(thumbnail.into()),
             deleted: Elements::new_now(false),
             notes: vec![],
         }
-    }
-
-    // TODO: path from archive
-}
-
-// TODO: move to thumbnail.rs
-// TODO: move String to Thumbnail
-/// Wrapper around [Elements] of thumbnail hashes; this structure can be used to pull the image files from the archive directory
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-pub struct Thumbnails(pub Elements<String>);
-
-impl Thumbnails {
-    /// Creates a new thumbnails tracker with the first hash assuming it's been found out about just now
-    pub fn new_now(hash: String) -> Self {
-        Self(Elements::new_now(hash))
-    }
-
-    /// Inserts a new hash which has been found out about just now
-    pub fn insert_now(&mut self, hash: String) {
-        self.0.insert_now(hash)
-    }
-
-    /// Inserts a new hash with a corresponding [YarkDate] for existing thumbnails
-    pub fn insert(&mut self, dt: YarkDate, hash: String) {
-        self.0.insert(dt, hash);
-    }
-}
-
-impl Default for Thumbnails {
-    fn default() -> Self {
-        Self(Elements::default())
     }
 }
 
@@ -195,7 +169,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993975+00:00").unwrap(),
                 Some(0),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782905+00:00").unwrap(),
                 "38552fc160089251e638457762f45dbff573c520".to_string(),
             )),
@@ -228,7 +202,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783025+00:00").unwrap(),
                 None,
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193654+00:00").unwrap(),
                 "8706b76c30fd98551f9c5d246f7294ec173f1086".to_string(),
             )),
@@ -261,7 +235,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193827+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093903+00:00").unwrap(),
                 "6a5c95513799671d51f22776e648c56c24789402".to_string(),
             )),
@@ -296,7 +270,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094007+00:00").unwrap(),
                 Some(3),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483710+00:00").unwrap(),
                 "3fe5be5ceacde668310ddcf4311d10fb72d54e11".to_string(),
             )),
@@ -330,7 +304,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483819+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847311+00:00").unwrap(),
                 "7658b9da282cec122cb03af02ac676442df58e34".to_string(),
             )),

@@ -2,7 +2,8 @@
 
 use crate::errors::{Error, Result};
 use log::debug;
-use std::{env, net::SocketAddr, path::PathBuf, str::FromStr};
+use std::{env, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
+use tokio::sync::Mutex;
 use yark_archive::prelude::*;
 
 /// Configuration context for the API
@@ -53,3 +54,5 @@ pub struct AppState {
     pub config: Config,
     pub manager: Manager,
 }
+
+pub type AppStateExtension = Arc<Mutex<AppState>>;

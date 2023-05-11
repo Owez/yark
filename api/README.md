@@ -8,12 +8,12 @@ REST API for web-based Yark instances
 		- [GET `/`](#get-)
 		- [POST `/archive`](#post-archive)
 		- [GET `/archive/:id?kind`](#get-archiveidkind)
-		- [GET `/archive/:slug/thumbnail/:id`](#get-archiveslugthumbnailid)
-		- [GET `/archive/:slug/video/:id`](#get-archiveslugvideoid)
-		- [GET `/archive/:slug/video/:video_id/file`](#get-archiveslugvideovideo_idfile)
-		- [POST `/archive/:slug/video/:video_id/note`](#post-archiveslugvideovideo_idnote)
-		- [PATCH `/archive/:slug/video/:video_id/note/:note_id`](#patch-archiveslugvideovideo_idnotenote_id)
-		- [DELETE `/archive/:slug/video/:video_id/note/:note_id`](#delete-archiveslugvideovideo_idnotenote_id)
+		- [GET `/archive/:id/image/:id/file`](#get-archiveidimageidfile)
+		- [GET `/archive/:id/video/:id`](#get-archiveidvideoid)
+		- [GET `/archive/:id/video/:id/file`](#get-archiveidvideoidfile)
+		- [POST `/archive/:id/video/:id/note`](#post-archiveidvideoidnote)
+		- [PATCH `/archive/:id/video/:id/note/:id`](#patch-archiveidvideoidnoteid)
+		- [DELETE `/archive/:id/video/:id/note/:id`](#delete-archiveidvideoidnoteid)
 
 
 ## Development
@@ -118,17 +118,15 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 
 Each of the thumbnail identifiers provided back can be used to [get](#get-thumbnailarchive_slugid) thumbnails as always.
 
-### GET `/archive/:slug/thumbnail/:id`
+### GET `/archive/:id/image/:id/file`
+<!-- TODO -->
 
-This route returns a thumbnail image for the provided archive slug identifier, as well as the thumbnail identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
+This route returns an image for the provided archive identifier, as well as the image identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
 
-### GET `/archive/:slug/video/:id`
+### GET `/archive/:id/video/:id`
+<!-- SLUGGED -->
 
-This route gets information about a specific video, probably one that you found from a [video list](#get-archiveidkind). When you supply it with the archive slug identifier and the video's identifier, it'll return with the raw archive information about the video.
-
-This might change in the future, but as of now the raw JSON archive format has perfect compatibility with everything that needs to be displayed.
-
-A full example of a return looks like this:
+This route gets information about a specific video, probably one that you found from a [video list](#get-archiveidkind). When you supply it with the archive identifier and the video's identifier, it'll return with archive information about the video. A full example of a return looks like this:
 
 ```json
 {
@@ -153,16 +151,17 @@ A full example of a return looks like this:
 	"deleted": {
 		"2023-02-15T17:15:35.684152": false
 	},
-	"comments": {},
 	"notes": []
 }
 ```
 
-### GET `/archive/:slug/video/:video_id/file`
+### GET `/archive/:id/video/:id/file`
+<!-- SLUGGED -->
 
 This route returns a raw video file for the provided archive slug identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives to actually view the video.
 
-### POST `/archive/:slug/video/:video_id/note`
+### POST `/archive/:id/video/:id/note`
+<!-- TODO -->
 
 This route lets you add a new note to a video with all of it's required information filled out. You need to know at least the timestamp and the title of the note you'd like to put. You have to be authenticated to use this route. Here's an example of a full note's JSON body which you send as a request:
 
@@ -186,7 +185,8 @@ This will return a simple creation message with the ID to refer to in the future
 }
 ```
 
-### PATCH `/archive/:slug/video/:video_id/note/:note_id`
+### PATCH `/archive/:id/video/:id/note/:id`
+<!-- TODO -->
 
 This route lets you update an existing note, it requires authentication and a JSON body of what to update. Here's the complete request to update every item possible (to not update an item, just remove the line):
 
@@ -209,7 +209,8 @@ If this is sent to the API, the note will be updated and a simple message will b
 }
 ```
 
-### DELETE `/archive/:slug/video/:video_id/note/:note_id`
+### DELETE `/archive/:id/video/:id/note/:id`
+<!-- TODO -->
 
 This route lets you delete an existing note, it just requires authentication and the note identifier in the url. Here's the response you should get if you made a successfully request:
 

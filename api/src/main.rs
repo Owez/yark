@@ -5,14 +5,15 @@ pub mod routes;
 pub mod state;
 
 use crate::errors::Result;
-use crate::state::Config;
+use crate::state::{AppStateExtension, Config};
 use axum::routing::{get, post};
 use axum::{Router, Server};
 use log::info;
 use state::AppState;
 use std::fmt;
 use std::process::exit;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use yark_archive::prelude::Manager;
 use yark_archive::DataSaveLoad;
 
@@ -48,11 +49,23 @@ async fn launch() -> Result<()> {
     );
 
     // Configure & launch
-    let state = Arc::new(Mutex::new(AppState { config, manager }));
+    let state: AppStateExtension = Arc::new(Mutex::new(AppState { config, manager }));
     let app = Router::new()
         .route("/", get(routes::misc::index))
         .route("/archive", post(routes::archive::create))
         .route("/archive/:archive_id", get(routes::archive::get))
+        .route(
+            "/archive/:archive_id/image/:image_hash/file",
+            get(routes::image::get_file),
+        )
+        .route(
+            "/archive/:archive_id/video/:video_id",
+            get(routes::video::get),
+        )
+        // .route(
+        //     "/archive/:archive_id/video/:video_id/file",
+        //     get(routes::video::get_file),
+        // )
         .with_state(state);
     Ok(Server::bind(&addr).serve(app.into_make_service()).await?)
 }

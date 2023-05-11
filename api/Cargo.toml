@@ -7,9 +7,10 @@ readme = "README.md"
 
 [dependencies]
 log = "0.4"
-axum = "0.6"
+axum = {version = "0.6", features = ["macros"]}
 hyper = "0.14"
 uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
+axum-extra = { version = "0.7", features = ["async-read-body"] }
 yark-archive = { path = "../archive" }

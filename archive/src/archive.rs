@@ -2,10 +2,11 @@
 
 use crate::{
     errors::{Error, Result},
-    video::Videos,
+    video::{Video, Videos},
     ArchiveVersion, DataSaveLoad, VERSION_COMPAT,
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use std::fs::{self, File};
 use std::path::PathBuf;
 
@@ -70,6 +71,39 @@ impl Archive {
             shorts: Videos::default(),
         }
     }
+
+    /// Gets a video from any list (videos/livestreams/shorts) by querying all 3
+    pub fn get_video(&self, id: &str) -> Option<&Video> {
+        self.videos
+            .get(id)
+            .or(self.livestreams.get(id))
+            .or(self.shorts.get(id))
+    }
+
+    /// Returns the expected filepath to a video with the `id` if it exists
+    pub fn path_video(&self, id: &Uuid) -> Option<PathBuf> {
+        let videos_path = self.path.join("/videos");
+        let videos_path_webm = videos_path.join(format!("{}.webm", id));
+        if videos_path_webm.exists() {
+            return Some(videos_path_webm);
+        }
+        let videos_path_mp4 = videos_path.join(format!("{}.mp4", id));
+        if videos_path_mp4.exists() {
+            Some(videos_path_mp4)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the expected filepath to an image with the `hash` if it exists
+    pub fn path_image(&self, hash: &str) -> Option<PathBuf> {
+        let image_path = self.path.join("/images").join(format!("{}.png", hash));
+        if image_path.exists() {
+            Some(image_path)
+        } else {
+            None
+        }
+    }
 }
 
 impl<'a> DataSaveLoad<'a> for Archive {
@@ -122,10 +156,7 @@ fn try_backup(archive_file_path: &PathBuf) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        elements::Elements,
-        video::{Thumbnails, Video},
-    };
+    use crate::{elements::Elements, images::Images, video::Video};
     use chrono::prelude::*;
     use tempfile::{self, tempdir};
 
@@ -168,7 +199,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:50.993975+00:00").unwrap(),
                 Some(0),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782905+00:00").unwrap(),
                 "38552fc160089251e638457762f45dbff573c520".to_string(),
             )),
@@ -201,7 +232,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.783025+00:00").unwrap(),
                 None,
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193654+00:00").unwrap(),
                 "8706b76c30fd98551f9c5d246f7294ec173f1086".to_string(),
             )),
@@ -234,7 +265,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193827+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093903+00:00").unwrap(),
                 "6a5c95513799671d51f22776e648c56c24789402".to_string(),
             )),
@@ -269,7 +300,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.094007+00:00").unwrap(),
                 Some(3),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483710+00:00").unwrap(),
                 "3fe5be5ceacde668310ddcf4311d10fb72d54e11".to_string(),
             )),
@@ -303,7 +334,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483819+00:00").unwrap(),
                 Some(1),
             ),
-            thumbnail: Thumbnails(elements_new_existing(
+            thumbnail: Images(elements_new_existing(
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847311+00:00").unwrap(),
                 "7658b9da282cec122cb03af02ac676442df58e34".to_string(),
             )),
