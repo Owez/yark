@@ -49,7 +49,7 @@
 //! 4. [Manager](crate::manager::Manager) – Simple permanent multi-archive management
 //! 4. [Error](crate::errors::Error) – The crate-wide error enumeration
 //!
-//! You can use the prelude (`use yark_archive::prelude::*`) to quickly import everything you need!
+//! You can use the [prelude] module (`use yark_archive::prelude::*`) to quickly import everything you need!
 
 pub mod archive;
 pub mod date;
@@ -60,6 +60,7 @@ pub mod manager;
 pub mod note;
 pub mod prelude;
 pub mod video;
+pub mod owner; 
 
 use errors::{Error, Result};
 use serde::{Deserialize, Serialize};

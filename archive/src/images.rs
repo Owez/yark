@@ -25,6 +25,11 @@ impl Images {
     pub fn insert(&mut self, dt: YarkDate, hash: ImageHash) {
         self.0.insert(dt, hash);
     }
+
+    /// Returns the most recent image hash in the collection
+    pub fn current(&self) -> Option<&ImageHash> {
+        self.0.current()
+    }
 }
 
 impl Default for Images {

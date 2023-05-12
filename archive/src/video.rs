@@ -36,7 +36,7 @@ pub struct Video {
     pub views: Elements<Option<u32>>,
     /// Known like counts which the video has had
     pub likes: Elements<Option<u32>>,
-    /// Known thumbnails which the video has had; see [Images]
+    /// Known thumbnails which the video has had
     pub thumbnail: Images,
     /// Status history of the video indicating the time(s) it's been removed from public consumption (privated/deleted)
     pub deleted: Elements<bool>,
