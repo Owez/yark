@@ -72,12 +72,20 @@ impl Archive {
         }
     }
 
-    /// Gets a video from any list (videos/livestreams/shorts) by querying all 3
+    /// Gets a reference to a video from any list (videos/livestreams/shorts) by querying all 3
     pub fn get_video(&self, id: &str) -> Option<&Video> {
         self.videos
             .get(id)
             .or(self.livestreams.get(id))
             .or(self.shorts.get(id))
+    }
+
+    /// Gets a mutable reference to a video from any list (videos/livestreams/shorts) by querying all 3
+    pub fn get_video_mut(&mut self, id: &str) -> Option<&mut Video> {
+        self.videos
+            .get_mut(id)
+            .or(self.livestreams.get_mut(id))
+            .or(self.shorts.get_mut(id))
     }
 
     /// Returns the expected filepath to a video with the `id` if it exists
@@ -156,7 +164,7 @@ fn try_backup(archive_file_path: &PathBuf) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{elements::Elements, images::Images, video::Video};
+    use crate::{elements::Elements, images::Images, note::Notes, video::Video};
     use chrono::prelude::*;
     use tempfile::{self, tempdir};
 
@@ -207,7 +215,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782920+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp.videos.insert(Video {
             id: "z6y0mx2flRY".to_string(),
@@ -240,7 +248,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193668+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp.videos.insert(Video {
             id: "annp92OPZgQ".to_string(),
@@ -273,7 +281,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093915+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes:Notes::default(),
         }
         );
         exp.videos.insert(
@@ -308,7 +316,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483724+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes:Notes::default(),
         }
         );
         exp.videos.insert(Video {
@@ -342,7 +350,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847323+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp
     }

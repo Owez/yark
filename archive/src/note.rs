@@ -1,5 +1,7 @@
 //! Note/journalling logic; see [Note] for more info
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -13,10 +15,6 @@ pub struct Note {
     /// Title of this note which the user has wrote
     pub title: String,
     /// Optional description of this note with extra content; assumed to be plaintext
-    #[deprecated(
-        since = "0.1.0+arcspec.3",
-        note = "Will be superseded in v4 by Note::body"
-    )]
     pub description: Option<String>,
 }
 
@@ -37,12 +35,64 @@ impl Note {
     }
 }
 
+/// List of [Note] items which can be queried as a [HashMap]
+#[derive(Debug, PartialEq, Eq, Clone)]
+
+pub struct Notes(pub HashMap<Uuid, Note>);
+
+impl Notes {
+    pub fn get(&self, id: &Uuid) -> Option<&Note> {
+        self.0.get(id)
+    }
+
+    pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut Note> {
+        self.0.get_mut(id)
+    }
+
+    pub fn insert(&mut self, note: Note) {
+        self.0.insert(note.id.clone(), note);
+    }
+
+    pub fn remove(&mut self, id: &Uuid) -> Option<Note> {
+        self.0.remove(id)
+    }
+}
+
+impl Default for Notes {
+    fn default() -> Self {
+        Self(HashMap::default())
+    }
+}
+
+impl Serialize for Notes {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let vec = self.0.values().cloned().collect::<Vec<_>>();
+        vec.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Notes {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let vec = Vec::<Note>::deserialize(deserializer)?;
+        let mut map = HashMap::new();
+        for note in vec {
+            map.insert(note.id.clone(), note);
+        }
+        Ok(Notes(map))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
     fn timestamp_to_str() {
         let note = Note {
             id: Uuid::new_v4(),
@@ -62,7 +112,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn note_serialization() {
         let note = Note {
             id: Uuid::new_v4(),

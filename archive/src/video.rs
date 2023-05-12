@@ -4,7 +4,7 @@ use crate::{
     date::YarkDate,
     elements::Elements,
     images::{ImageHash, Images},
-    note::Note,
+    note::Notes,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,8 +40,8 @@ pub struct Video {
     pub thumbnail: Images,
     /// Status history of the video indicating the time(s) it's been removed from public consumption (privated/deleted)
     pub deleted: Elements<bool>,
-    /// User-written notes attached to the video; see [Note]
-    pub notes: Vec<Note>,
+    /// User-written notes attached to the video; see [Notes] and [Note](crate::notes::Note)
+    pub notes: Notes,
 }
 
 impl Video {
@@ -69,7 +69,7 @@ impl Video {
             likes: Elements::new_now(likes.into()),
             thumbnail: Images::new_now(thumbnail.into()),
             deleted: Elements::new_now(false),
-            notes: vec![],
+            notes: Notes::default(),
         }
     }
 }
@@ -90,6 +90,10 @@ impl Videos {
 
     pub fn insert(&mut self, video: Video) {
         self.0.insert(video.id.clone(), video);
+    }
+
+    pub fn remove(&mut self, id: &String) -> Option<Video> {
+        self.0.remove(id)
     }
 }
 
@@ -177,7 +181,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:54.782920+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp.videos.insert(Video {
             id: "z6y0mx2flRY".to_string(),
@@ -210,7 +214,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:55.193668+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp.videos.insert(Video {
             id: "annp92OPZgQ".to_string(),
@@ -243,7 +247,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.093915+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes:Notes::default(),
         }
         );
         exp.videos.insert(
@@ -278,7 +282,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.483724+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes:Notes::default(),
         }
         );
         exp.videos.insert(Video {
@@ -312,7 +316,7 @@ mod tests {
                 DateTime::<Utc>::parse_from_rfc3339("2023-05-03T11:35:59.847323+00:00").unwrap(),
                 false,
             ),
-            notes: vec![],
+            notes: Notes::default(),
         });
         exp
     }

@@ -27,6 +27,8 @@ pub enum Error {
     VideoNotFound,
     /// Couldn't find image in archive during query
     ImageNotFound,
+    /// Couldn't find note in archive during query
+    NoteNotFound,
     /// Failed to share a file in a response
     FileShare(io::Error),
 }
@@ -41,7 +43,7 @@ impl Error {
             | Self::Archive(_)
             | Self::Server(_)
             | Self::FileShare(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::ArchiveNotFound | Self::VideoNotFound | Self::ImageNotFound => {
+            Self::ArchiveNotFound | Self::VideoNotFound | Self::ImageNotFound|Self::NoteNotFound => {
                 StatusCode::NOT_FOUND
             }
         }
@@ -59,6 +61,7 @@ impl fmt::Display for Error {
             Self::ArchiveNotFound => write!(f, "couldn't find queried archive"),
             Self::VideoNotFound => write!(f, "couldn't find queried video"),
             Self::ImageNotFound => write!(f, "couldn't find queried image"),
+            Self::NoteNotFound => write!(f, "couldn't find queried note"),
             Self::FileShare(err) => write!(f, "failed to share a file with user, {}", err),
         }
     }

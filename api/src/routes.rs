@@ -1,5 +1,21 @@
 //! Route file containing all axum routes needed
 
+use serde::Serialize;
+use uuid::Uuid;
+
+/// Generic response containing a simple message
+#[derive(Serialize)]
+pub struct MessageResponse {
+    pub message: &'static str,
+}
+
+/// Generic response containing a simple message and unique identifier
+#[derive(Serialize)]
+pub struct MessageIdResponse {
+    pub message: &'static str,
+    pub id: Uuid,
+}
+
 /// Other/common routes which don't fit into other categories
 pub mod misc {
     use axum::response::Redirect;
@@ -12,6 +28,7 @@ pub mod misc {
 
 /// Base-level archive management into the manager
 pub mod archive {
+    use super::MessageIdResponse;
     use crate::{
         errors::{Error, Result},
         state::AppStateExtension,
@@ -21,8 +38,8 @@ pub mod archive {
         Extension, Json,
     };
     use log::debug;
-    use serde::{Deserialize, Serialize};
-    use std::path::PathBuf;
+    use serde::Deserialize;
+    use std::{fmt, path::PathBuf};
     use uuid::Uuid;
     use yark_archive::prelude::*;
 
@@ -33,16 +50,10 @@ pub mod archive {
         id: Option<Uuid>,
     }
 
-    #[derive(Serialize)]
-    pub struct CreateResponse {
-        message: &'static str,
-        id: Uuid,
-    }
-
     pub async fn create(
         Extension(state): Extension<AppStateExtension>,
         Json(schema): Json<CreateJsonSchema>,
-    ) -> Result<Json<CreateResponse>> {
+    ) -> Result<Json<MessageIdResponse>> {
         debug!(
             "New archive creation request for '{}' channel at '{:?}' path",
             schema.target, schema.path
@@ -51,7 +62,7 @@ pub mod archive {
         archive.save()?;
         let id = schema.id.unwrap_or(Uuid::new_v4());
         state.lock().await.manager.insert_existing(id, archive);
-        Ok(Json(CreateResponse {
+        Ok(Json(MessageIdResponse {
             message: "Archive created",
             id,
         }))
@@ -72,15 +83,22 @@ pub mod archive {
         Shorts,
     }
 
+    impl fmt::Display for GetKind {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            match self {
+                Self::Videos => write!(f, "videos"),
+                Self::Livestreams => write!(f, "livestreams"),
+                Self::Shorts => write!(f, "shorts"),
+            }
+        }
+    }
+
     pub async fn get(
         Extension(state): Extension<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
         Query(GetQuerySchema { kind }): Query<GetQuerySchema>,
     ) -> Result<Json<Videos>> {
-        debug!(
-            "Getting a full list of videos for archive {} of kind TODO",
-            archive_id
-        );
+        debug!("Getting a full list of {} for archive {}", kind, archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
             .manager
@@ -91,6 +109,49 @@ pub mod archive {
             GetKind::Livestreams => archive.livestreams.clone(),
             GetKind::Shorts => archive.shorts.clone(),
         }))
+    }
+}
+
+/// Image file (e.g. thumbnails/profiles) sharing
+pub mod image {
+    use crate::{
+        errors::{Error, Result},
+        state::AppStateExtension,
+    };
+    use axum::{
+        extract::Path,
+        response::{IntoResponse, Response},
+        Extension,
+    };
+    use axum_extra::body::AsyncReadBody;
+    use hyper::header;
+    use log::debug;
+    use tokio::fs::File;
+    use uuid::Uuid;
+
+    pub async fn get_file(
+        Extension(state): Extension<AppStateExtension>,
+        Path((archive_id, image_hash)): Path<(Uuid, String)>,
+    ) -> Result<Response> {
+        debug!(
+            "Getting image {} file for archive {}",
+            image_hash, archive_id
+        );
+        let state_lock = state.lock().await;
+        let archive = state_lock
+            .manager
+            .get(&archive_id)
+            .ok_or(Error::ArchiveNotFound)?;
+        let path = archive
+            .path_image(&image_hash)
+            .ok_or(Error::ImageNotFound)?;
+        drop(state_lock);
+        let file = File::open(path.clone())
+            .await
+            .map_err(|err| Error::FileShare(err))?;
+        let headers = [(header::CONTENT_TYPE, "text/x-toml")]; // TODO: change
+        let body = AsyncReadBody::new(file);
+        Ok((headers, body).into_response())
     }
 }
 
@@ -154,47 +215,113 @@ pub mod video {
 }
 
 /// Note management as part of a parent note
-pub mod note {}
-
-/// Image file (e.g. thumbnails/profiles) sharing
-pub mod image {
+pub mod note {
+    use super::{MessageIdResponse, MessageResponse};
     use crate::{
         errors::{Error, Result},
         state::AppStateExtension,
     };
-    use axum::{
-        extract::Path,
-        response::{IntoResponse, Response},
-        Extension,
-    };
-    use axum_extra::body::AsyncReadBody;
-    use hyper::header;
+    use axum::{extract::Path, Extension, Json};
     use log::debug;
-    use tokio::fs::File;
+    use serde::{Deserialize, Serialize};
     use uuid::Uuid;
+    use yark_archive::prelude::Note;
 
-    pub async fn get_file(
+    #[derive(Deserialize)]
+    pub struct CreateJsonSchema {
+        timestamp: u32,
+        title: String,
+        description: Option<String>,
+    }
+
+    pub async fn create(
         Extension(state): Extension<AppStateExtension>,
-        Path((archive_id, image_hash)): Path<(Uuid, String)>,
-    ) -> Result<Response> {
+        Path((archive_id, video_id)): Path<(Uuid, String)>,
+        Json(schema): Json<CreateJsonSchema>,
+    ) -> Result<Json<MessageIdResponse>> {
+        let note_id = Uuid::new_v4();
         debug!(
-            "Getting image {} file for archive {}",
-            image_hash, archive_id
+            "Creating new note {} for video {} in archive {}",
+            note_id, video_id, archive_id
         );
-        let state_lock = state.lock().await;
+        let mut state_lock = state.lock().await;
         let archive = state_lock
             .manager
-            .get(&archive_id)
+            .get_mut(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        let path = archive
-            .path_image(&image_hash)
-            .ok_or(Error::ImageNotFound)?;
-        drop(state_lock);
-        let file = File::open(path.clone())
-            .await
-            .map_err(|err| Error::FileShare(err))?;
-        let headers = [(header::CONTENT_TYPE, "text/x-toml")]; // TODO: change
-        let body = AsyncReadBody::new(file);
-        Ok((headers, body).into_response())
+        let video = archive
+            .get_video_mut(&video_id)
+            .ok_or(Error::VideoNotFound)?;
+        video.notes.insert(Note {
+            id: note_id.clone(),
+            timestamp: schema.timestamp,
+            title: schema.title,
+            description: schema.description,
+        });
+        Ok(Json(MessageIdResponse {
+            message: "Note created",
+            id: note_id,
+        }))
+    }
+
+    #[derive(Deserialize)]
+    pub struct UpdateJsonSchema {
+        timestamp: Option<u32>,
+        title: Option<String>,
+        description: Option<Option<String>>,
+    }
+
+    pub async fn update(
+        Extension(state): Extension<AppStateExtension>,
+        Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
+        Json(schema): Json<UpdateJsonSchema>,
+    ) -> Result<Json<MessageResponse>> {
+        debug!(
+            "Updating existing note {} for video {} in archive {}",
+            note_id, video_id, archive_id
+        );
+        let mut state_lock = state.lock().await;
+        let archive = state_lock
+            .manager
+            .get_mut(&archive_id)
+            .ok_or(Error::ArchiveNotFound)?;
+        let video = archive
+            .get_video_mut(&video_id)
+            .ok_or(Error::VideoNotFound)?;
+        let note = video.notes.get_mut(&note_id).ok_or(Error::NoteNotFound)?;
+        if let Some(timestamp) = schema.timestamp {
+            note.timestamp = timestamp
+        }
+        if let Some(title) = schema.title {
+            note.title = title
+        }
+        if let Some(description) = schema.description {
+            note.description = description
+        }
+        Ok(Json(MessageResponse {
+            message: "Note updated",
+        }))
+    }
+
+    pub async fn delete(
+        Extension(state): Extension<AppStateExtension>,
+        Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
+    ) -> Result<Json<MessageResponse>> {
+        debug!(
+            "Deleting existing note {} for video {} in archive {}",
+            note_id, video_id, archive_id
+        );
+        let mut state_lock = state.lock().await;
+        let archive = state_lock
+            .manager
+            .get_mut(&archive_id)
+            .ok_or(Error::ArchiveNotFound)?;
+        let video = archive
+            .get_video_mut(&video_id)
+            .ok_or(Error::VideoNotFound)?;
+        video.notes.remove(&note_id).ok_or(Error::NoteNotFound)?;
+        Ok(Json(MessageResponse {
+            message: "Note deleted",
+        }))
     }
 }

@@ -116,12 +116,12 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 ]
 ```
 
-Each of the thumbnail identifiers provided back can be used to [get](#get-thumbnailarchive_slugid) thumbnails as always.
+Each of the thumbnail identifiers provided back can be used to [get](#get-archiveidimageidfile) thumbnails as always.
 
 ### GET `/archive/:id/image/:id/file`
-<!-- TODO -->
+<!-- SLUGGED -->
 
-This route returns an image for the provided archive identifier, as well as the image identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives.
+This route returns an image for the provided archive identifier, as well as the image identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives.
 
 ### GET `/archive/:id/video/:id`
 <!-- SLUGGED -->
@@ -158,10 +158,10 @@ This route gets information about a specific video, probably one that you found 
 ### GET `/archive/:id/video/:id/file`
 <!-- SLUGGED -->
 
-This route returns a raw video file for the provided archive slug identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveslugkind) archives to actually view the video.
+This route returns a raw video file for the provided archive identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
 
 ### POST `/archive/:id/video/:id/note`
-<!-- TODO -->
+<!-- SLUGGED -->
 
 This route lets you add a new note to a video with all of it's required information filled out. You need to know at least the timestamp and the title of the note you'd like to put. You have to be authenticated to use this route. Here's an example of a full note's JSON body which you send as a request:
 
@@ -176,7 +176,7 @@ This route lets you add a new note to a video with all of it's required informat
 }
 ```
 
-This will return a simple creation message with the ID to refer to in the future to delete notes (to get notes [get](#get-archiveslugvideoid) the full video):
+This will return a simple creation message with the ID to refer to in the future to delete notes (to get notes [get](#get-archiveidvideoid) the full video):
 
 ```json
 {
@@ -186,7 +186,7 @@ This will return a simple creation message with the ID to refer to in the future
 ```
 
 ### PATCH `/archive/:id/video/:id/note/:id`
-<!-- TODO -->
+<!-- SLUGGED -->
 
 This route lets you update an existing note, it requires authentication and a JSON body of what to update. Here's the complete request to update every item possible (to not update an item, just remove the line):
 
@@ -205,12 +205,12 @@ If this is sent to the API, the note will be updated and a simple message will b
 
 ```json
 {
-	"message": "Note edited"
+	"message": "Note updated"
 }
 ```
 
 ### DELETE `/archive/:id/video/:id/note/:id`
-<!-- TODO -->
+<!-- SLUGGED -->
 
 This route lets you delete an existing note, it just requires authentication and the note identifier in the url. Here's the response you should get if you made a successfully request:
 

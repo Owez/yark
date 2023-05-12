@@ -6,7 +6,7 @@ pub mod state;
 
 use crate::errors::Result;
 use crate::state::{AppStateExtension, Config};
-use axum::routing::{get, post};
+use axum::routing::{delete, get, patch, post};
 use axum::{Router, Server};
 use log::info;
 use state::AppState;
@@ -62,10 +62,22 @@ async fn launch() -> Result<()> {
             "/archive/:archive_id/video/:video_id",
             get(routes::video::get),
         )
-        // .route(
-        //     "/archive/:archive_id/video/:video_id/file",
-        //     get(routes::video::get_file),
-        // )
+        .route(
+            "/archive/:archive_id/video/:video_id/file",
+            get(routes::video::get_file),
+        )
+        .route(
+            "/archive/:archive_id/video/:video_id/note",
+            post(routes::note::create),
+        )
+        .route(
+            "/archive/:archive_id/video/:video_id/note/:note_id",
+            patch(routes::note::update),
+        )
+        .route(
+            "/archive/:archive_id/video/:video_id/note/:note_id",
+            delete(routes::note::delete),
+        )
         .with_state(state);
     Ok(Server::bind(&addr).serve(app.into_make_service()).await?)
 }
