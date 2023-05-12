@@ -55,11 +55,11 @@ pub mod archive;
 pub mod date;
 pub mod elements;
 pub mod errors;
+pub mod images;
 pub mod manager;
 pub mod note;
 pub mod prelude;
 pub mod video;
-pub mod images;
 
 use errors::{Error, Result};
 use serde::{Deserialize, Serialize};

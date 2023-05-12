@@ -24,23 +24,11 @@ To get this API setup, please make sure you've got the development dependencies 
 YARK_ADMIN_SECRET=dev
 YARK_MANAGER_PATH=manager.json
 ```
-
-<!-- NOTE: not needed for rust rewrite -->
-<!-- With these set, you need to migrate a new database for the API to use. To do this, launch the flask shell with `make flask_shell` and then type/copy-paste the following three commands:
-
-```python
->>> from yark_api.extensions import *
->>> from yark_api.models import *
->>> db.create_all()
->>> exit()
-``` -->
-
-<!-- Now that the database has been migrated, you can run your brand new development server with `make dev` now 🎉 -->
 Now that that's all been setup, you can run your brand new development server with `make dev` now 🎉
 
 ## Specification
 
-*Draft of version 1 – Include it in semvar as `+apispec.1` if possible*
+*Yark API Specification – Draft of version 1 – Include it in semvar as `+apispec.1` if possible*
 
 This section is a friendly guide for all of the routes inside of this API and acts as an ad-hoc specification for the API which routes should be developed off of. It won't be perfect so it's best to contact someone if there's some ambiguity/wrongness.
 

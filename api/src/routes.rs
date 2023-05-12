@@ -223,7 +223,7 @@ pub mod note {
     };
     use axum::{extract::Path, Extension, Json};
     use log::debug;
-    use serde::{Deserialize, Serialize};
+    use serde::Deserialize;
     use uuid::Uuid;
     use yark_archive::prelude::Note;
 

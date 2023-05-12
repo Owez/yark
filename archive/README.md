@@ -40,3 +40,9 @@ let new_archive = Archive::load(path).unwrap();
 assert_eq!(archive, new_archive);
 println!("Here it is: {:?}", new_archive);
 ```
+
+## Specification
+
+*Yark Archive Specification – Draft of version 1 – Include it in semvar as `+arcspec.1` if possible*
+
+COMING SOON.

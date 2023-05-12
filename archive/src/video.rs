@@ -40,7 +40,7 @@ pub struct Video {
     pub thumbnail: Images,
     /// Status history of the video indicating the time(s) it's been removed from public consumption (privated/deleted)
     pub deleted: Elements<bool>,
-    /// User-written notes attached to the video; see [Notes] and [Note](crate::notes::Note)
+    /// User-written notes attached to the video; see [Note](crate::note::Note)/[Notes]
     pub notes: Notes,
 }
 

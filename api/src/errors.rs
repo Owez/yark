@@ -43,9 +43,10 @@ impl Error {
             | Self::Archive(_)
             | Self::Server(_)
             | Self::FileShare(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Self::ArchiveNotFound | Self::VideoNotFound | Self::ImageNotFound|Self::NoteNotFound => {
-                StatusCode::NOT_FOUND
-            }
+            Self::ArchiveNotFound
+            | Self::VideoNotFound
+            | Self::ImageNotFound
+            | Self::NoteNotFound => StatusCode::NOT_FOUND,
         }
     }
 }
