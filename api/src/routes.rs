@@ -14,7 +14,7 @@ pub mod misc {
 pub mod archive {
     use crate::{
         errors::{Error, Result},
-        state::{AppState, AppStateExtension},
+        state::AppStateExtension,
     };
     use axum::{
         extract::{Path, Query},
@@ -22,10 +22,7 @@ pub mod archive {
     };
     use log::debug;
     use serde::{Deserialize, Serialize};
-    use std::{
-        path::PathBuf,
-        sync::{Arc, Mutex},
-    };
+    use std::path::PathBuf;
     use uuid::Uuid;
     use yark_archive::prelude::*;
 

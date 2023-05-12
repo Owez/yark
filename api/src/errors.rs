@@ -1,10 +1,8 @@
 //! Contains the [Error] and [Result] enum/type for easy management
 
-use crate::state::AppState;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use std::net::AddrParseError;
-use std::sync::{MutexGuard, PoisonError};
 use std::{fmt, io};
 
 /// Type cover for results based in this crate
@@ -29,7 +27,7 @@ pub enum Error {
     VideoNotFound,
     /// Couldn't find image in archive during query
     ImageNotFound,
-    /// Failed to share a file ([NamedFile](actix_files::NamedFile)) as a response
+    /// Failed to share a file in a response
     FileShare(io::Error),
 }
 

@@ -6,9 +6,9 @@ use crate::{
     ArchiveVersion, DataSaveLoad, VERSION_COMPAT,
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::fs::{self, File};
 use std::path::PathBuf;
+use uuid::Uuid;
 
 /// Representation of a Yark archive and its included videos/metadata
 ///

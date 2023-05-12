@@ -5,7 +5,7 @@ use crate::{
     errors::{Error, Result},
     ArchiveVersion, DataSaveLoad, VERSION_COMPAT,
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -63,6 +63,10 @@ pub struct Manager {
     /// Version of this manager; this aligns with the archive versions
     pub version: ArchiveVersion,
     /// Actual archive/identifier data
+    #[serde(
+        serialize_with = "serialize_data",
+        deserialize_with = "deserialize_data"
+    )]
     pub data: HashMap<Uuid, Archive>,
 }
 
@@ -107,7 +111,6 @@ impl Manager {
 
 impl<'a> DataSaveLoad<'a> for Manager {
     fn load(path: PathBuf) -> Result<Self> {
-        unimplemented!("custom deserialize to make archives into just paths as they SHOULD be");
         // Check path
         if !path.exists() {
             return Err(Error::ManagerNotFound);
@@ -119,7 +122,6 @@ impl<'a> DataSaveLoad<'a> for Manager {
     }
 
     fn save(&self) -> Result<()> {
-        unimplemented!("custom serialize to make archives into just paths as they SHOULD be");
         let writer = File::create(self.path.clone()).map_err(|err| Error::DataPath(err))?;
         serde_json::to_writer(&writer, self).map_err(|err| Error::DataSave(err))
     }
@@ -137,4 +139,35 @@ impl Default for Manager {
             data: HashMap::with_capacity(1),
         }
     }
+}
+
+/// Serializes [Manager] into data but with [Manager::data] having [PathBuf] instead of [Archive]
+fn serialize_data<S: Serializer>(
+    data: &HashMap<Uuid, Archive>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error> {
+    let mut serializable_data = HashMap::new();
+    for (uuid, archive) in data.iter() {
+        serializable_data.insert(uuid, &archive.path);
+    }
+    serializable_data.serialize(serializer)
+}
+
+/// Deserializes [Manager] from data by loading up archives from paths present
+fn deserialize_data<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<HashMap<Uuid, Archive>, D::Error> {
+    let mut deserialized_data: HashMap<Uuid, PathBuf> = Deserialize::deserialize(deserializer)?;
+    let mut data = HashMap::new();
+    for (uuid, path) in deserialized_data.drain() {
+        let archive = Archive::load(path.clone()).map_err(|err| {
+            serde::de::Error::custom(format!(
+                "failed to load '{}' archive, {}",
+                path.display(),
+                err
+            ))
+        })?;
+        data.insert(uuid, archive);
+    }
+    Ok(data)
 }
