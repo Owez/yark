@@ -60,7 +60,6 @@ pub mod manager;
 pub mod note;
 pub mod prelude;
 pub mod video;
-pub mod owner; 
 
 use errors::{Error, Result};
 use serde::{Deserialize, Serialize};

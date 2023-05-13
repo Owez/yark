@@ -80,20 +80,64 @@ impl Video {
 pub struct Videos(pub HashMap<String, Video>);
 
 impl Videos {
-    pub fn get(&self, id: &str) -> Option<&Video> {
-        self.0.get(id)
+    // Get a reference to the video associated with a given id
+    pub fn get(&self, key: &str) -> Option<&Video> {
+        self.0.get(key)
     }
 
-    pub fn get_mut(&mut self, id: &str) -> Option<&mut Video> {
-        self.0.get_mut(id)
+    // Get a mutable reference to the video associated with a given id
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Video> {
+        self.0.get_mut(key)
     }
 
-    pub fn insert(&mut self, video: Video) {
-        self.0.insert(video.id.clone(), video);
+    // Insert a video into the collection
+    pub fn insert(&mut self, video: Video) -> Option<Video> {
+        self.0.insert(video.id.clone(), video)
     }
 
-    pub fn remove(&mut self, id: &String) -> Option<Video> {
+    // Remove the video associated with a given id
+    pub fn remove(&mut self, id: &str) -> Option<Video> {
         self.0.remove(id)
+    }
+
+    // Check if the collection contains a video with the given id
+    pub fn contains_key(&self, id: &str) -> bool {
+        self.0.contains_key(id)
+    }
+
+    // Get the number of videos in the collection
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    // Check if the collection is empty
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    // Clear the collection, removing all videos
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
+
+    // Iterate over the video identifiers in the collection
+    pub fn keys(&self) -> impl Iterator<Item = &String> {
+        self.0.keys()
+    }
+
+    // Iterate over the videos in the collection
+    pub fn values(&self) -> impl Iterator<Item = &Video> {
+        self.0.values()
+    }
+
+    // Iterate over mutable references to the videos in the collection
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut Video> {
+        self.0.values_mut()
+    }
+
+    // Iterate over the videos identifiers and videos in the collection
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &Video)> {
+        self.0.iter()
     }
 }
 
