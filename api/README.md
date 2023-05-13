@@ -15,6 +15,7 @@ REST API for web-based Yark instances
 		- [POST 🔒 `/archive/:id/video/:id/note`](#post--archiveidvideoidnote)
 		- [PATCH 🔒 `/archive/:id/video/:id/note/:id`](#patch--archiveidvideoidnoteid)
 		- [DELETE 🔒 `/archive/:id/video/:id/note/:id`](#delete--archiveidvideoidnoteid)
+		- [GET 🔒 `/fs`](#get--fs)
 
 
 ## Development
@@ -208,4 +209,33 @@ This route lets you delete an existing note, it just requires authentication and
 {
 	"message": "Note deleted"
 }
+```
+
+### GET 🔒 `/fs`
+
+This route lets you explore content on the API instances local filesystem so that a web-based file explorer can be implemented. This route will open the directory and list all files/folders in the path provided as json content. There is no POST/DELETE/etc because the *only* other action any actor should be able to do on the filesystem is create new archives. 
+
+This route is protected by an admin secret and is probably the most sensitive route in the API, but it's needed due to (good) security restrictions on `<input type="file">` in modern browsers. Here's an example of the JSON body used to query for a path:
+
+```jsonc
+{
+	// Path to query for
+	"path": "/get/this/directory"
+}
+```
+
+This will return a response of either not found (if the directory doesn't exist or isn't a directory) or a list of all of the filenames and directories for the directory. You can then use this information to query deeper into the filesystem:
+
+```jsonc
+[
+	{
+		"path": "/get/this/directory/file.txt",
+		"directory": false
+	},
+	{
+		"path": "/get/this/directory/other",
+		"directory": true
+	},
+	// etc..
+]
 ```

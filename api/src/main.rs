@@ -4,6 +4,7 @@ pub mod auth;
 pub mod errors;
 pub mod routes;
 pub mod state;
+pub mod directory;
 
 use crate::errors::Result;
 use crate::state::{AppStateExtension, Config};

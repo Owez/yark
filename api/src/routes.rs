@@ -355,3 +355,27 @@ pub mod note {
         }))
     }
 }
+
+/// Sensitive filesystem routing for file exploration
+pub mod fs {
+    use crate::{auth, directory::Directory, errors::Result, state::AppStateExtension};
+    use axum::{Extension, Json};
+    use axum_auth::AuthBearer;
+    use serde::Deserialize;
+    use std::path::PathBuf;
+
+    #[derive(Deserialize)]
+    pub struct GetJsonSchema {
+        path: PathBuf,
+    }
+
+    pub async fn get(
+        Extension(state): Extension<AppStateExtension>,
+        auth: AuthBearer,
+        Json(schema): Json<GetJsonSchema>,
+    ) -> Result<Json<Directory>> {
+        let state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
+        Ok(Json(Directory::new(schema.path)?))
+    }
+}

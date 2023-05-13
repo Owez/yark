@@ -33,6 +33,10 @@ pub enum Error {
     FileShare(io::Error),
     /// Admin secret shared was invalid
     InvalidAdminSecret,
+    /// Directory path provided couldn't be queried due to fs error
+    DirectoryPath(io::Error),
+    /// Couldn't find directory during query
+    DirectoryNotFound,
 }
 
 impl Error {
@@ -44,11 +48,13 @@ impl Error {
             | Self::InvalidAddress(_)
             | Self::Archive(_)
             | Self::Server(_)
-            | Self::FileShare(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | Self::FileShare(_)
+            | Self::DirectoryPath(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ArchiveNotFound
             | Self::VideoNotFound
             | Self::ImageNotFound
-            | Self::NoteNotFound => StatusCode::NOT_FOUND,
+            | Self::NoteNotFound
+            | Self::DirectoryNotFound => StatusCode::NOT_FOUND,
             Self::InvalidAdminSecret => StatusCode::UNAUTHORIZED,
         }
     }
@@ -68,6 +74,10 @@ impl fmt::Display for Error {
             Self::NoteNotFound => write!(f, "couldn't find queried note"),
             Self::FileShare(err) => write!(f, "failed to share a file with user, {}", err),
             Self::InvalidAdminSecret => write!(f, "invalid admin secret provided"),
+            Self::DirectoryPath(err) => {
+                write!(f, "path to directory to query had an issue, {}", err)
+            }
+            Self::DirectoryNotFound => write!(f, "couldn't find queried directory"),
         }
     }
 }
