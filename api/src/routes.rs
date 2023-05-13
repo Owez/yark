@@ -28,8 +28,9 @@ pub mod misc {
 
 /// Base-level archive management into the manager
 pub mod archive {
-    use super::MessageIdResponse;
+    use super::{MessageIdResponse, MessageResponse};
     use crate::{
+        auth,
         errors::{Error, Result},
         state::AppStateExtension,
     };
@@ -37,6 +38,7 @@ pub mod archive {
         extract::{Path, Query},
         Extension, Json,
     };
+    use axum_auth::AuthBearer;
     use log::debug;
     use serde::Deserialize;
     use std::{fmt, path::PathBuf};
@@ -52,16 +54,19 @@ pub mod archive {
 
     pub async fn create(
         Extension(state): Extension<AppStateExtension>,
+        auth: AuthBearer,
         Json(schema): Json<CreateJsonSchema>,
     ) -> Result<Json<MessageIdResponse>> {
         debug!(
             "New archive creation request for '{}' channel at '{:?}' path",
             schema.target, schema.path
         );
+        let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
         let archive = Archive::new(schema.path, schema.target);
         archive.save()?;
         let id = schema.id.unwrap_or(Uuid::new_v4());
-        state.lock().await.manager.insert_existing(id, archive);
+        state_lock.manager.insert_existing(id, archive);
         Ok(Json(MessageIdResponse {
             message: "Archive created",
             id,
@@ -108,6 +113,23 @@ pub mod archive {
             GetKind::Videos => archive.videos.clone(),
             GetKind::Livestreams => archive.livestreams.clone(),
             GetKind::Shorts => archive.shorts.clone(),
+        }))
+    }
+
+    pub async fn delete(
+        Extension(state): Extension<AppStateExtension>,
+        Path(archive_id): Path<Uuid>,
+        auth: AuthBearer,
+    ) -> Result<Json<MessageResponse>> {
+        debug!("Deleting archive {}", archive_id);
+        let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
+        state_lock
+            .manager
+            .remove(&archive_id)
+            .ok_or(Error::ArchiveNotFound)?;
+        Ok(Json(MessageResponse {
+            message: "Archive deleted",
         }))
     }
 }
@@ -218,10 +240,12 @@ pub mod video {
 pub mod note {
     use super::{MessageIdResponse, MessageResponse};
     use crate::{
+        auth,
         errors::{Error, Result},
         state::AppStateExtension,
     };
     use axum::{extract::Path, Extension, Json};
+    use axum_auth::AuthBearer;
     use log::debug;
     use serde::Deserialize;
     use uuid::Uuid;
@@ -237,6 +261,7 @@ pub mod note {
     pub async fn create(
         Extension(state): Extension<AppStateExtension>,
         Path((archive_id, video_id)): Path<(Uuid, String)>,
+        auth: AuthBearer,
         Json(schema): Json<CreateJsonSchema>,
     ) -> Result<Json<MessageIdResponse>> {
         let note_id = Uuid::new_v4();
@@ -245,6 +270,7 @@ pub mod note {
             note_id, video_id, archive_id
         );
         let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
         let archive = state_lock
             .manager
             .get_mut(&archive_id)
@@ -274,6 +300,7 @@ pub mod note {
     pub async fn update(
         Extension(state): Extension<AppStateExtension>,
         Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
+        auth: AuthBearer,
         Json(schema): Json<UpdateJsonSchema>,
     ) -> Result<Json<MessageResponse>> {
         debug!(
@@ -281,6 +308,7 @@ pub mod note {
             note_id, video_id, archive_id
         );
         let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
         let archive = state_lock
             .manager
             .get_mut(&archive_id)
@@ -306,12 +334,14 @@ pub mod note {
     pub async fn delete(
         Extension(state): Extension<AppStateExtension>,
         Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
+        auth: AuthBearer,
     ) -> Result<Json<MessageResponse>> {
         debug!(
             "Deleting existing note {} for video {} in archive {}",
             note_id, video_id, archive_id
         );
         let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
         let archive = state_lock
             .manager
             .get_mut(&archive_id)

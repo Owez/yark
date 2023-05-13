@@ -1,5 +1,6 @@
 //! REST API for web-based Yark instances
 
+pub mod auth;
 pub mod errors;
 pub mod routes;
 pub mod state;
@@ -54,6 +55,7 @@ async fn launch() -> Result<()> {
         .route("/", get(routes::misc::index))
         .route("/archive", post(routes::archive::create))
         .route("/archive/:archive_id", get(routes::archive::get))
+        .route("/archive/:archive_id", delete(routes::archive::delete))
         .route(
             "/archive/:archive_id/image/:image_hash/file",
             get(routes::image::get_file),

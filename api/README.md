@@ -6,14 +6,15 @@ REST API for web-based Yark instances
 	- [Development](#development)
 	- [Specification](#specification)
 		- [GET `/`](#get-)
-		- [POST `/archive`](#post-archive)
+		- [POST 🔒 `/archive`](#post--archive)
 		- [GET `/archive/:id?kind`](#get-archiveidkind)
+		- [DELETE 🔒 `/archive/:id`](#delete--archiveid)
 		- [GET `/archive/:id/image/:id/file`](#get-archiveidimageidfile)
 		- [GET `/archive/:id/video/:id`](#get-archiveidvideoid)
 		- [GET `/archive/:id/video/:id/file`](#get-archiveidvideoidfile)
-		- [POST `/archive/:id/video/:id/note`](#post-archiveidvideoidnote)
-		- [PATCH `/archive/:id/video/:id/note/:id`](#patch-archiveidvideoidnoteid)
-		- [DELETE `/archive/:id/video/:id/note/:id`](#delete-archiveidvideoidnoteid)
+		- [POST 🔒 `/archive/:id/video/:id/note`](#post--archiveidvideoidnote)
+		- [PATCH 🔒 `/archive/:id/video/:id/note/:id`](#patch--archiveidvideoidnoteid)
+		- [DELETE 🔒 `/archive/:id/video/:id/note/:id`](#delete--archiveidvideoidnoteid)
 
 
 ## Development
@@ -33,12 +34,10 @@ Now that that's all been setup, you can run your brand new development server wi
 This section is a friendly guide for all of the routes inside of this API and acts as an ad-hoc specification for the API which routes should be developed off of. It won't be perfect so it's best to contact someone if there's some ambiguity/wrongness.
 
 ### GET `/`
-<!-- SLUGGED -->
 
 This route will simply redirect to the GitHub repository page if a user accidentally lands here. Eventually this will redirect to the downloads page or a webapp page.
 
-### POST `/archive`
-<!-- SLUGGED -->
+### POST 🔒 `/archive`
 
 This route lets you create/import an archive if you're the admin of the API instance. To add an archive into the API, you must supply a JSON body:
 
@@ -63,7 +62,6 @@ This route also requires a bearer token containing admin credentials. Once all o
 ```
 
 ### GET `/archive/:id?kind`
-<!-- SLUGGED -->
 
 This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
 
@@ -106,13 +104,21 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 
 Each of the thumbnail identifiers provided back can be used to [get](#get-archiveidimageidfile) thumbnails as always.
 
+### DELETE 🔒 `/archive/:id`
+
+This route allows you to delete an archive by it's previously-assigned identifier. This route requires admin credentials but doesn't need any extra JSON body, just send the request to the route and it should return with:
+
+```jsonc
+{
+	"message": "Archive deleted"
+}
+```
+
 ### GET `/archive/:id/image/:id/file`
-<!-- SLUGGED -->
 
 This route returns an image for the provided archive identifier, as well as the image identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives.
 
 ### GET `/archive/:id/video/:id`
-<!-- SLUGGED -->
 
 This route gets information about a specific video, probably one that you found from a [video list](#get-archiveidkind). When you supply it with the archive identifier and the video's identifier, it'll return with archive information about the video. A full example of a return looks like this:
 
@@ -144,12 +150,10 @@ This route gets information about a specific video, probably one that you found 
 ```
 
 ### GET `/archive/:id/video/:id/file`
-<!-- SLUGGED -->
 
 This route returns a raw video file for the provided archive identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
 
-### POST `/archive/:id/video/:id/note`
-<!-- SLUGGED -->
+### POST 🔒 `/archive/:id/video/:id/note`
 
 This route lets you add a new note to a video with all of it's required information filled out. You need to know at least the timestamp and the title of the note you'd like to put. You have to be authenticated to use this route. Here's an example of a full note's JSON body which you send as a request:
 
@@ -173,8 +177,7 @@ This will return a simple creation message with the ID to refer to in the future
 }
 ```
 
-### PATCH `/archive/:id/video/:id/note/:id`
-<!-- SLUGGED -->
+### PATCH 🔒 `/archive/:id/video/:id/note/:id`
 
 This route lets you update an existing note, it requires authentication and a JSON body of what to update. Here's the complete request to update every item possible (to not update an item, just remove the line):
 
@@ -197,8 +200,7 @@ If this is sent to the API, the note will be updated and a simple message will b
 }
 ```
 
-### DELETE `/archive/:id/video/:id/note/:id`
-<!-- SLUGGED -->
+### DELETE 🔒 `/archive/:id/video/:id/note/:id`
 
 This route lets you delete an existing note, it just requires authentication and the note identifier in the url. Here's the response you should get if you made a successfully request:
 

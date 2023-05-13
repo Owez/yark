@@ -31,6 +31,8 @@ pub enum Error {
     NoteNotFound,
     /// Failed to share a file in a response
     FileShare(io::Error),
+    /// Admin secret shared was invalid
+    InvalidAdminSecret,
 }
 
 impl Error {
@@ -47,6 +49,7 @@ impl Error {
             | Self::VideoNotFound
             | Self::ImageNotFound
             | Self::NoteNotFound => StatusCode::NOT_FOUND,
+            Self::InvalidAdminSecret => StatusCode::UNAUTHORIZED,
         }
     }
 }
@@ -64,6 +67,7 @@ impl fmt::Display for Error {
             Self::ImageNotFound => write!(f, "couldn't find queried image"),
             Self::NoteNotFound => write!(f, "couldn't find queried note"),
             Self::FileShare(err) => write!(f, "failed to share a file with user, {}", err),
+            Self::InvalidAdminSecret => write!(f, "invalid admin secret provided"),
         }
     }
 }
