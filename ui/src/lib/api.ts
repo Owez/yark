@@ -202,7 +202,15 @@ interface MessageIdResponse {
     id: string
 }
 
-
+/**
+ * Creates an archive with an existing ID in the given path and target
+ * @param path The path to the archive
+ * @param target The target of the archive
+ * @param id The ID of the archive
+ * @param adminSecret The admin secret for authentication
+ * @param base (Optional) The base URL for the API request
+ * @returns A promise that resolves when the archive is created
+ */
 export async function createExistingArchive(path: string, target: string, id: string, adminSecret: AdminSecret, base?: URL): Promise<void> {
     const payload = {
         path: path,
@@ -218,6 +226,14 @@ export async function createExistingArchive(path: string, target: string, id: st
     })
 }
 
+/**
+ * Creates a new archive in the given path and target
+ * @param path The path to the archive
+ * @param target The target of the archive
+ * @param adminSecret The admin secret for authentication
+ * @param base (Optional) The base URL for the API request
+ * @returns A promise that resolves with the ID of the created archive
+ */
 export async function createNewArchive(path: string, target: string, adminSecret: AdminSecret, base?: URL): Promise<string> {
     const payload = {
         path: path,
@@ -234,12 +250,22 @@ export async function createNewArchive(path: string, target: string, adminSecret
     return data.id
 }
 
+/**
+ * Different types of specific archives queries for different video lists
+ */
 export enum ArchiveKind {
     Videos = "videos",
     Livestreams = "livestreams",
     Shorts = "shorts",
 }
 
+/**
+ * Retrieves the videos from the archive with the given ID and kind
+ * @param id The ID of the archive
+ * @param kind The video list kind to get for the archive
+ * @param base (Optional) The base URL for the API request
+ * @returns A promise that resolves with an array of videos
+ */
 export async function getArchive(id: string, kind: ArchiveKind, base?: URL): Promise<Video[]> {
     const path = kind == undefined ? `/archive/${id}` : `/archive/${id}?kind=${kind}`
     const resp = await sendApiRequest({
@@ -250,6 +276,13 @@ export async function getArchive(id: string, kind: ArchiveKind, base?: URL): Pro
     return await resp.json()
 }
 
+/**
+ * Deletes an archive of the given ID
+ * @param id The ID of the archive to delete
+ * @param adminSecret The admin secret for authentication
+ * @param base (Optional) The base URL for the API request
+ * @returns A promise that resolves when the archive is deleted
+ */
 export async function deleteArchive(id: string, adminSecret: string, base?: URL): Promise<void> {
     await sendApiRequest({
         base: base,
@@ -261,6 +294,14 @@ export async function deleteArchive(id: string, adminSecret: string, base?: URL)
 
 // TODO: get image file
 
+
+/**
+ * Retrieves the video with the given video ID inside of the given archive ID
+ * @param archiveId The ID of the archive
+ * @param videoId The ID of the video
+ * @param base (Optional) The base URL for the API request
+ * @returns A promise that resolves with the queried video, if found
+ */
 export async function getVideo(archiveId: string, videoId: string, base?: URL): Promise<Video> {
     const resp = await sendApiRequest({
         base: base,
@@ -272,12 +313,24 @@ export async function getVideo(archiveId: string, videoId: string, base?: URL): 
 
 // TODO: get video file
 
+/**
+ * Information for items of a {@link Note} to be created with {@link createNote}
+ */
 export interface NoteCreate {
     title: string,
     timestamp: number,
     body: string | null
 }
 
+/**
+ * 
+ * @param archiveId 
+ * @param videoId 
+ * @param info 
+ * @param adminSecret 
+ * @param base 
+ * @returns 
+ */
 export async function createNote(archiveId: string, videoId: string, info: NoteCreate, adminSecret: string, base?: URL): Promise<string> {
     const resp = await sendApiRequest({
         base: base,
@@ -290,12 +343,24 @@ export async function createNote(archiveId: string, videoId: string, info: NoteC
     return data.id
 }
 
+/**
+ * 
+ */
 export interface NoteUpdate {
     title?: string,
     timestamp?: number,
     body?: string | null
 }
 
+/**
+ * 
+ * @param archiveId 
+ * @param videoId 
+ * @param noteId 
+ * @param info 
+ * @param adminSecret 
+ * @param base 
+ */
 export async function updateNote(archiveId: string, videoId: string, noteId: string, info: NoteUpdate, adminSecret: string, base?: URL): Promise<void> {
     await sendApiRequest({
         base: base,
@@ -306,6 +371,14 @@ export async function updateNote(archiveId: string, videoId: string, noteId: str
     })
 }
 
+/**
+ * 
+ * @param archiveId 
+ * @param videoId 
+ * @param noteId 
+ * @param adminSecret 
+ * @param base 
+ */
 export async function deleteNote(archiveId: string, videoId: string, noteId: string, adminSecret: string, base?: URL): Promise<void> {
     await sendApiRequest({
         base: base,
@@ -315,11 +388,21 @@ export async function deleteNote(archiveId: string, videoId: string, noteId: str
     })
 }
 
+/**
+ * 
+ */
 export interface DirectoryItem {
     path: string,
     directory: boolean
 }
 
+/**
+ * 
+ * @param path 
+ * @param adminSecret 
+ * @param base 
+ * @returns 
+ */
 export async function getDir(path: string, adminSecret: string, base?: URL): Promise<DirectoryItem[]> {
     const payload = { path: path }
     const resp = await sendApiRequest({
