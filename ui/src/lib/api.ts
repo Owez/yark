@@ -2,6 +2,8 @@
  * Connectivity wrapper for the Yark API
  */
 
+import type { Archive, Video } from "./archive";
+
 /**
  * Overarching custom exception for API errors
  */
@@ -63,7 +65,7 @@ export class Unauthorized extends ApiError {
 export type AdminSecret = string;
 
 /**
- * Method of request to send in an {@link apiRequest}
+ * Method of request to send in an {@link sendApiRequest}
  */
 export enum ApiRequestMethod {
     Post = 'POST',
@@ -73,7 +75,7 @@ export enum ApiRequestMethod {
 }
 
 /**
- * Parameters that make up an {@link apiRequest} action
+ * Parameters that make up an {@link sendApiRequest} action
  */
 export interface ApiRequest {
     /**
@@ -91,7 +93,7 @@ export interface ApiRequest {
     /**
      * Optional {@link AdminSecret} to unlock protected routes
      */
-    admin?: AdminSecret
+    adminSecret?: AdminSecret
     /**
      * Optional JSON body to provide more information
      */
@@ -103,7 +105,7 @@ export interface ApiRequest {
  * @param info Information for this request
  * @returns Response corresponding to {@link info} or an exception inherited from {@link ApiError}
  */
-async function apiRequest(info: ApiRequest): Promise<Response> {
+async function sendApiRequest(info: ApiRequest): Promise<Response> {
     const url = createUrl(info);
     const headers = createHeaders(info);
     const response = await fetch(url, {
@@ -116,7 +118,7 @@ async function apiRequest(info: ApiRequest): Promise<Response> {
 }
 
 /**
- * Creates the URL to use for an {@link apiRequest}
+ * Creates the URL to use for an {@link sendApiRequest}
  * @param info Info context to create the URL from
  * @returns URL which defaults to `localhost:7776` if no base is provided in {@link info}
  */
@@ -126,23 +128,23 @@ function createUrl(info: ApiRequest): string {
 }
 
 /**
- * Creates the headers to use for an {@link apiRequest}
+ * Creates the headers to use for an {@link sendApiRequest}
  * @param info Info context to use
- * @returns Headers to use for an {@link apiRequest}
+ * @returns Headers to use for an {@link sendApiRequest}
  */
 function createHeaders(info: ApiRequest): HeadersInit {
     const headers: HeadersInit = {};
     if (info.json !== undefined) {
         headers["Content-Type"] = "application/json";
     }
-    if (info.admin !== undefined) {
-        headers["Authorization"] = `Bearer ${info.admin}`;
+    if (info.adminSecret !== undefined) {
+        headers["Authorization"] = `Bearer ${info.adminSecret}`;
     }
     return headers;
 }
 
 /**
- * Handles a response (error checking via status code and body) for an {@link apiRequest}
+ * Handles a response (error checking via status code and body) for an {@link sendApiRequest}
  * @param response Response to handle
  */
 function handleResponse(response: Response): void {
@@ -183,4 +185,149 @@ async function handleNotFound(response: Response): Promise<void> {
     } catch {
         throw new NotFound();
     }
+}
+
+/**
+ * Response from API with a message saying what happened
+ */
+interface MessageResponse {
+    message: string
+}
+
+/**
+ * Response from API with a message saying what happened and an id of the related object
+ */
+interface MessageIdResponse {
+    message: string,
+    id: string
+}
+
+
+export async function createExistingArchive(path: string, target: string, id: string, adminSecret: AdminSecret, base?: URL): Promise<void> {
+    const payload = {
+        path: path,
+        target: target,
+        id: id
+    }
+    await sendApiRequest({
+        base: base,
+        path: "/archive",
+        method: ApiRequestMethod.Post,
+        adminSecret: adminSecret,
+        json: payload
+    })
+}
+
+export async function createNewArchive(path: string, target: string, adminSecret: AdminSecret, base?: URL): Promise<string> {
+    const payload = {
+        path: path,
+        target: target,
+    }
+    const resp = await sendApiRequest({
+        base: base,
+        path: "/archive",
+        method: ApiRequestMethod.Post,
+        adminSecret: adminSecret,
+        json: payload
+    })
+    const data: MessageIdResponse = await resp.json()
+    return data.id
+}
+
+export enum ArchiveKind {
+    Videos = "videos",
+    Livestreams = "livestreams",
+    Shorts = "shorts",
+}
+
+export async function getArchive(id: string, kind: ArchiveKind, base?: URL): Promise<Video[]> {
+    const path = kind == undefined ? `/archive/${id}` : `/archive/${id}?kind=${kind}`
+    const resp = await sendApiRequest({
+        base: base,
+        path: path,
+        method: ApiRequestMethod.Get,
+    })
+    return await resp.json()
+}
+
+export async function deleteArchive(id: string, adminSecret: string, base?: URL): Promise<void> {
+    await sendApiRequest({
+        base: base,
+        path: `/archive/${id}`,
+        method: ApiRequestMethod.Delete,
+        adminSecret: adminSecret,
+    })
+}
+
+// TODO: get image file
+
+export async function getVideo(archiveId: string, videoId: string, base?: URL): Promise<Video> {
+    const resp = await sendApiRequest({
+        base: base,
+        path: `/archive/${archiveId}/video/${videoId}`,
+        method: ApiRequestMethod.Get,
+    })
+    return await resp.json()
+}
+
+// TODO: get video file
+
+export interface NoteCreate {
+    title: string,
+    timestamp: number,
+    body: string | null
+}
+
+export async function createNote(archiveId: string, videoId: string, info: NoteCreate, adminSecret: string, base?: URL): Promise<string> {
+    const resp = await sendApiRequest({
+        base: base,
+        path: `/archive/${archiveId}/video/${videoId}/note`,
+        method: ApiRequestMethod.Post,
+        adminSecret: adminSecret,
+        json: info
+    })
+    const data: MessageIdResponse = await resp.json();
+    return data.id
+}
+
+export interface NoteUpdate {
+    title?: string,
+    timestamp?: number,
+    body?: string | null
+}
+
+export async function updateNote(archiveId: string, videoId: string, noteId: string, info: NoteUpdate, adminSecret: string, base?: URL): Promise<void> {
+    await sendApiRequest({
+        base: base,
+        path: `/archive/${archiveId}/video/${videoId}/note/${noteId}`,
+        method: ApiRequestMethod.Patch,
+        adminSecret: adminSecret,
+        json: info
+    })
+}
+
+export async function deleteNote(archiveId: string, videoId: string, noteId: string, adminSecret: string, base?: URL): Promise<void> {
+    await sendApiRequest({
+        base: base,
+        path: `/archive/${archiveId}/video/${videoId}/note/${noteId}`,
+        method: ApiRequestMethod.Delete,
+        adminSecret: adminSecret,
+    })
+}
+
+export interface DirectoryItem {
+    path: string,
+    directory: boolean
+}
+
+export async function getDir(path: string, adminSecret: string, base?: URL): Promise<DirectoryItem[]> {
+    const payload = { path: path }
+    const resp = await sendApiRequest({
+        base: base,
+        path: `/fs`,
+        method: ApiRequestMethod.Get,
+        adminSecret: adminSecret,
+        json: payload
+    })
+    return await resp.json()
 }
