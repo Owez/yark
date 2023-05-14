@@ -2,7 +2,7 @@
  * Connectivity wrapper for the Yark API
  */
 
-import type { Archive, Video } from "./archive";
+import type { Video } from "./archive";
 
 /**
  * Overarching custom exception for API errors
@@ -254,6 +254,7 @@ export async function createNewArchive(path: string, target: string, adminSecret
  * Different types of specific archives queries for different video lists
  */
 export enum ArchiveKind {
+    Meta = "meta",
     Videos = "videos",
     Livestreams = "livestreams",
     Shorts = "shorts",
@@ -266,7 +267,7 @@ export enum ArchiveKind {
  * @param base (Optional) The base URL for the API request
  * @returns A promise that resolves with an array of videos
  */
-export async function getArchive(id: string, kind: ArchiveKind, base?: URL): Promise<Video[]> {
+export async function getArchiveVideos(id: string, kind: ArchiveKind, base?: URL): Promise<Video[]> {
     const path = kind == undefined ? `/archive/${id}` : `/archive/${id}?kind=${kind}`
     const resp = await sendApiRequest({
         base: base,
@@ -274,6 +275,39 @@ export async function getArchive(id: string, kind: ArchiveKind, base?: URL): Pro
         method: ApiRequestMethod.Get,
     })
     return await resp.json()
+}
+
+/**
+ * Meta-information about an archive returned from {@link getArchiveMeta}; can be saved permanently
+ */
+export interface ArchiveMeta {
+    id: string,
+    version: number,
+    url: string
+}
+
+/**
+ * Gets meta-information about an archive
+ * @param id Identifier of the archive to get meta-information on
+ * @param base (Optional) The base URL for the API request
+ * @returns Meta-information about the archive to save permanently
+ */
+export async function getArchiveMeta(id: string, base?: URL): Promise<ArchiveMeta> {
+    const resp = await sendApiRequest({
+        base: base,
+        path: `/archive/${id}?kind=meta`,
+        method: ApiRequestMethod.Get,
+    })
+    interface ArchiveMetaRaw {
+        version: number,
+        url: string
+    }
+    const dataRaw: ArchiveMetaRaw = await resp.json();
+    return {
+        id: id,
+        version: dataRaw.version,
+        url: dataRaw.url
+    }
 }
 
 /**

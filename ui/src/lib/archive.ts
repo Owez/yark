@@ -1,15 +1,4 @@
 /**
- * Representation of a Yark archive and its included videos/metadata
- */
-export interface Archive {
-    version: number,
-    url: string,
-    videos: Video[],
-    livestreams: Video[],
-    shorts: Video[],
-}
-
-/**
  * Single video inside of an archive which tracks a video's entire metadata history
  */
 export interface Video {

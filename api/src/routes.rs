@@ -40,7 +40,7 @@ pub mod archive {
     };
     use axum_auth::AuthBearer;
     use log::debug;
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use std::{fmt, path::PathBuf};
     use uuid::Uuid;
     use yark_archive::prelude::*;
@@ -80,6 +80,8 @@ pub mod archive {
 
     #[derive(Deserialize)]
     enum GetKind {
+        #[serde(rename(deserialize = "meta"))]
+        Meta,
         #[serde(rename(deserialize = "videos"))]
         Videos,
         #[serde(rename(deserialize = "livestreams"))]
@@ -91,6 +93,7 @@ pub mod archive {
     impl fmt::Display for GetKind {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
+                Self::Meta => write!(f, "meta"),
                 Self::Videos => write!(f, "videos"),
                 Self::Livestreams => write!(f, "livestreams"),
                 Self::Shorts => write!(f, "shorts"),
@@ -98,11 +101,17 @@ pub mod archive {
         }
     }
 
+    #[derive(Serialize)]
+    pub enum GetResponse {
+        Meta { version: u32, url: String },
+        Videos(Videos),
+    }
+
     pub async fn get(
         Extension(state): Extension<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
         Query(GetQuerySchema { kind }): Query<GetQuerySchema>,
-    ) -> Result<Json<Videos>> {
+    ) -> Result<Json<GetResponse>> {
         debug!("Getting a full list of {} for archive {}", kind, archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
@@ -110,9 +119,15 @@ pub mod archive {
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
         Ok(Json(match kind {
-            GetKind::Videos => archive.videos.clone(),
-            GetKind::Livestreams => archive.livestreams.clone(),
-            GetKind::Shorts => archive.shorts.clone(),
+            // meta
+            GetKind::Meta => GetResponse::Meta {
+                version: archive.version,
+                url: archive.url.clone(),
+            },
+            // video lists
+            GetKind::Videos => GetResponse::Videos(archive.videos.clone()),
+            GetKind::Livestreams => GetResponse::Videos(archive.livestreams.clone()),
+            GetKind::Shorts => GetResponse::Videos(archive.shorts.clone()),
         }))
     }
 

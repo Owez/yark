@@ -66,14 +66,16 @@ This route also requires a bearer token containing admin credentials. Once all o
 
 This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
 
+- `kind=meta`: Get meta-information about the archive itself; useful for saving
 - `kind=videos`: Get a list of all contentional videos
 - `kind=livestreams`: Gets a list of all livestreams
 - `kind=shorts`: Gets a list of all shorts
 
-With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you'll get a videos list from the archive data, for example:
+With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you might get a videos list from the archive data, for example:
 
 ```jsonc
 [
+	// First video
 	{
 		"id": "Jlsxl-1zQJM",
 		"uploaded": "2021-07-28T00:00:00",
@@ -87,6 +89,7 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 		},
 		// etc..
 	},
+	// Second video
 	{
 		"id": "z6y0mx2flRY",
 		"uploaded": "2021-04-29T00:00:00",
@@ -101,6 +104,17 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 		// etc..
 	}
 ]
+```
+
+Or if you queried for metadata a response about the archives meta-information, for example:
+
+```jsonc
+{
+	// Compatible archive version spec
+	"version": 3,
+	// Target URL of the archive
+	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
+}
 ```
 
 Each of the thumbnail identifiers provided back can be used to [get](#get-archiveidimageidfile) thumbnails as always.
