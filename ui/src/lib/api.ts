@@ -323,13 +323,13 @@ export interface NoteCreate {
 }
 
 /**
- * 
- * @param archiveId 
- * @param videoId 
- * @param info 
- * @param adminSecret 
- * @param base 
- * @returns 
+ * Creates a note for a video archive.
+ * @param archiveId The ID of the  archive
+ * @param videoId The ID of the video in the archive
+ * @param info An object containing information about the note to create
+ * @param adminSecret The admin secret used to authenticate the API request
+ * @param base (Optional) The base URL to use for the API request; defaults to null
+ * @returns A promise that resolves to the ID of the created note
  */
 export async function createNote(archiveId: string, videoId: string, info: NoteCreate, adminSecret: string, base?: URL): Promise<string> {
     const resp = await sendApiRequest({
@@ -344,7 +344,7 @@ export async function createNote(archiveId: string, videoId: string, info: NoteC
 }
 
 /**
- * 
+ * An object representing the information to update for a note.
  */
 export interface NoteUpdate {
     title?: string,
@@ -353,13 +353,14 @@ export interface NoteUpdate {
 }
 
 /**
- * 
- * @param archiveId 
- * @param videoId 
- * @param noteId 
- * @param info 
- * @param adminSecret 
- * @param base 
+ * Updates a video's note
+ * @param archiveId The ID of the archive
+ * @param videoId The ID of the video in the archive
+ * @param noteId The ID of the note to update
+ * @param info An object containing information about the update to perform
+ * @param adminSecret The admin secret used to authenticate the API request
+ * @param base (Optional) The base URL to use for the API request; defaults to null
+ * @returns A promise that resolves when the update is complete
  */
 export async function updateNote(archiveId: string, videoId: string, noteId: string, info: NoteUpdate, adminSecret: string, base?: URL): Promise<void> {
     await sendApiRequest({
@@ -372,12 +373,13 @@ export async function updateNote(archiveId: string, videoId: string, noteId: str
 }
 
 /**
- * 
- * @param archiveId 
- * @param videoId 
- * @param noteId 
- * @param adminSecret 
- * @param base 
+ * Deletes a video's note
+ * @param archiveId The ID of the archive
+ * @param videoId The ID of the video in the archive
+ * @param noteId The ID of the note to delete
+ * @param adminSecret The admin secret used to authenticate the API request
+ * @param base (Optional) The base URL to use for the API request; defaults to null
+ * @returns A promise that resolves when the deletion is complete
  */
 export async function deleteNote(archiveId: string, videoId: string, noteId: string, adminSecret: string, base?: URL): Promise<void> {
     await sendApiRequest({
@@ -389,7 +391,7 @@ export async function deleteNote(archiveId: string, videoId: string, noteId: str
 }
 
 /**
- * 
+ * An object representing an item in a directory from {@link getDir}
  */
 export interface DirectoryItem {
     path: string,
@@ -397,11 +399,11 @@ export interface DirectoryItem {
 }
 
 /**
- * 
- * @param path 
- * @param adminSecret 
- * @param base 
- * @returns 
+ * Gets the contents of a directory in the file system
+ * @param path The path of the directory to get
+ * @param adminSecret The admin secret used to authenticate the API request
+ * @param base (Optional) The base URL to use for the API request; defaults to null
+ * @returns A promise that resolves to an array of {@link DirectoryItem} objects representing the contents of the directory
  */
 export async function getDir(path: string, adminSecret: string, base?: URL): Promise<DirectoryItem[]> {
     const payload = { path: path }
