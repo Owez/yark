@@ -2,7 +2,6 @@
 
 use crate::errors::{Error, Result};
 use serde::Serialize;
-use std::vec::IntoIter;
 use std::{fs, path::PathBuf};
 
 /// Directory containing many [items](DirectoryItem) which lists a given directory
@@ -22,15 +21,6 @@ impl Directory {
             items.push(DirectoryItem::from(entry))
         }
         Ok(Self(items))
-    }
-}
-
-impl IntoIterator for Directory {
-    type Item = DirectoryItem;
-    type IntoIter = IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
     }
 }
 
