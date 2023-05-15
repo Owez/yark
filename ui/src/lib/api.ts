@@ -203,7 +203,7 @@ interface MessageIdResponse {
 }
 
 /**
- * Creates an archive with an existing ID in the given path and target
+ * Creates a *new* archive just with an existing ID in the given path and target
  * @param path The path to the archive
  * @param target The target of the archive
  * @param id The ID of the archive
@@ -211,7 +211,7 @@ interface MessageIdResponse {
  * @param base (Optional) The base URL for the API request
  * @returns A promise that resolves when the archive is created
  */
-export async function createExistingArchive(path: string, target: string, id: string, adminSecret: AdminSecret, base?: URL): Promise<void> {
+export async function recreateArchive(path: string, target: string, id: string, adminSecret: AdminSecret, base?: URL): Promise<void> {
     const payload = {
         path: path,
         target: target,
