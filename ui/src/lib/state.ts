@@ -39,11 +39,11 @@ function newVideosSnapshot(videos: Video[]): VideosSnapshot {
 }
 
 /**
- * Gets an up-to-date videos list for an archive state
+ * Gets an up-to-date videos list for an archive state; also saves to state as well as returning
  * @param state State of archive
  * @param kind Kind of videos list to get (doesn't include {@link ArchiveKind.Meta})
  * @param base (Optional) The base URL for the API request
- * @returns Up-to-date videos list for {@link kind} selected
+ * @returns Up-to-date videos list for {@link kind} selected; saved to state as well
  */
 export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base?: URL): Promise<Video[]> {
     switch (kind) {
@@ -80,6 +80,7 @@ export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base
  * Archive state representing a fully saved archive
  */
 export interface ArchiveState {
+    name: string,
     meta: ArchiveMeta,
     videos?: VideosSnapshot,
     livestreams?: VideosSnapshot,
@@ -92,7 +93,47 @@ export interface ArchiveState {
  * @param base (Optional) The base URL for the API request
  * @returns Archive state reflecting the archive with {@link id}
  */
-export async function getArchiveState(id: string, base?: URL): Promise<ArchiveState | null> {
+export async function getArchiveState(id: string, name: string, base?: URL): Promise<ArchiveState | null> {
     const meta = await getArchiveMeta(id, base)
-    return meta == null ? null : { meta: meta }
+    return meta == null ? null : { name: name, meta: meta }
+}
+
+/**
+ * Represents a recent archive from a previous {@link ArchiveState} to pull again if wanted
+ */
+export interface RecentArchive {
+    name: string,
+    id: string
+}
+
+/**
+ * Converts an archive state into a {@link RecentArchive}
+ * @param state State to convert
+ * @returns Converted {@link state} as a {@link RecentArchive} to use
+ */
+export function archiveStateToRecent(state: ArchiveState): RecentArchive {
+    return { name: state.name, id: state.meta.id }
+}
+
+/**
+ * Gets an {@link ArchiveState} reflecting the inputted {@link RecentArchive}
+ * @param recent Recent archive to get state of
+ * @param base (Optional) The base URL for the API request
+ * @returns Archive state reflecting the archive with {@link recent.id}
+ */
+export async function recentArchiveToState(recent: RecentArchive, base?: URL): Promise<ArchiveState | null> {
+    return getArchiveState(recent.id, recent.name, base)
+}
+
+/**
+ * Saves provided {@link state} to the {@link document}'s cookie
+ * @param state Archive state to save
+ * @param document Document to save {@link state} to
+ */
+export function saveArchiveState(state: ArchiveState, document: Document) {
+    function setCookie(name: string, val: string, document: Document) {
+        const value = val;
+        document.cookie = name + "=" + value + "; path=/";
+    }
+    setCookie("archiveState", JSON.stringify(state), document)
 }

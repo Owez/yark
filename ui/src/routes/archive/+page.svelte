@@ -1,16 +1,23 @@
+<script lang="ts">
+    // import type { PageData } from "./$types";
+
+    // export let data: PageData;
+    // TODO: use data for lists
+</script>
+
 <div class="content">
     <h1>Owen's Channel</h1>
     <div class="cards">
         <a href="/archive/videos" class="card count">
-            <p class="number">10</p>
+            <p class="number">123</p>
             <p>Videos</p>
         </a>
         <a href="/archive/livestreams" class="card count">
-            <p class="number">10</p>
+            <p class="number">5</p>
             <p>Livestreams</p>
         </a>
         <a href="/archive/shorts" class="card count">
-            <p class="number">10</p>
+            <p class="number">19</p>
             <p>Shorts</p>
         </a>
         <div class="card videos">TODO: videos</div>
@@ -21,7 +28,7 @@
 </div>
 
 <style lang="scss">
-    $gap: 30px;
+    $gap: 20px;
 
     .content {
         margin-left: $gap;
@@ -32,7 +39,7 @@
         font-size: 2rem;
         font-weight: 500;
         margin-top: 2.25rem;
-        margin-bottom: $gap;
+        margin-bottom: calc($gap * 1.5);
     }
 
     .cards {
