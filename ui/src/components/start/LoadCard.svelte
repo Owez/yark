@@ -4,15 +4,23 @@
     import StartCard from "./StartCard.svelte";
 
     export let recentArchives: RecentArchive[];
-    export let ball = 1
     export let big = false;
+    export let back = false;
+
+    function genHref(): string {
+        if (back) {
+            return "/start";
+        }
+        return "/start/load";
+    }
 </script>
 
 <StartCard
     title="Load existing"
     description="Manage/view an existing archive that you've already created"
-    {ball}
+    ball={1}
     {big}
+    href={genHref()}
 >
     {#each recentArchives as recentArchive}
         <LoadItem {recentArchive} />

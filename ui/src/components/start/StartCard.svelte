@@ -4,16 +4,19 @@
         "Lorem ipsum here like create an archive from scratch";
     export let ball = 0;
     export let big = false;
+    export let href = "/start";
 
     function getBall(): string {
         return `/img/ball${ball + 1}.png`;
     }
 </script>
 
-<div class="card">
-    <img src={getBall()} alt={title} class="ball" />
-    <h1>{title}</h1>
-    <p>{description}</p>
+<div class="card" class:big>
+    <a {href}>
+        <img src={getBall()} alt={title} class="ball" />
+        <h1>{title}</h1>
+        <p>{description}</p>
+    </a>
     <slot />
 </div>
 
@@ -25,6 +28,10 @@
         border-radius: 7.5px;
         box-sizing: border-box;
         padding: 30px;
+
+        &.big {
+            width: calc(30rem + 20vw);
+        }
     }
 
     .ball {
@@ -44,5 +51,10 @@
         margin-top: $margin;
         margin-bottom: $margin;
         line-height: 1.5;
+    }
+
+    a {
+        text-decoration: none;
+        color: initial;
     }
 </style>

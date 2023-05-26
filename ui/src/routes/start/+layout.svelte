@@ -1,8 +1,8 @@
 <div class="pane">
-    <div class="header">
+    <a href="/start" class="header">
         <h1>Yark</h1>
         <p>1.3.2</p>
-    </div>
+    </a>
     <div class="cards">
         <slot />
     </div>
@@ -22,6 +22,8 @@
         display: flex;
         align-items: end;
         margin-bottom: 2rem;
+        text-decoration: none;
+        color:inherit;
 
         h1 {
             font-size: 1.75rem;

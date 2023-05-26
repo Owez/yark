@@ -34,6 +34,7 @@
         width: 100%;
         text-align: left;
         transition: 0.125s;
+        cursor: pointer;
 
         &:hover {
             background-color: rgb(235, 235, 235);
