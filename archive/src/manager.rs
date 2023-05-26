@@ -67,10 +67,18 @@ pub struct Manager {
         serialize_with = "serialize_data",
         deserialize_with = "deserialize_data"
     )]
-    pub data: HashMap<Uuid, Archive>,
+    pub archives: HashMap<Uuid, Archive>,
 }
 
 impl Manager {
+    /// Creates a new manager with the current archive spec version and no data; use [Self::save] to save
+    pub fn new(path: PathBuf) -> Self {
+        Self {
+            path,
+            ..Default::default()
+        }
+    }
+
     /// Inserts a brand new archive into the manager not previously known
     pub fn insert_new(&mut self, archive: Archive) -> Uuid {
         let id = Uuid::new_v4();
@@ -80,12 +88,12 @@ impl Manager {
 
     /// Inserts an existing archive with a prior identifier into the manager
     pub fn insert_existing(&mut self, id: Uuid, archive: Archive) {
-        self.data.insert(id, archive);
+        self.archives.insert(id, archive);
     }
 
     /// Checks all archives under the manager to make sure they're all compatible
     pub fn ensure_compat(&self) -> Result<()> {
-        for archive in self.data.values() {
+        for archive in self.archives.values() {
             if archive.version != VERSION_COMPAT {
                 return Err(Error::IncompatibleVersion(archive.version));
             }
@@ -95,17 +103,17 @@ impl Manager {
 
     /// Gets a reference to an archive by it's identifier
     pub fn get(&self, id: &Uuid) -> Option<&Archive> {
-        self.data.get(id)
+        self.archives.get(id)
     }
 
     /// Gets a mutable reference to an archive by it's identifier
     pub fn get_mut(&mut self, id: &Uuid) -> Option<&mut Archive> {
-        self.data.get_mut(id)
+        self.archives.get_mut(id)
     }
 
     /// Removes an archive from the manager by it's identifier
     pub fn remove(&mut self, id: &Uuid) -> Option<Archive> {
-        self.data.remove(id)
+        self.archives.remove(id)
     }
 }
 
@@ -136,7 +144,7 @@ impl Default for Manager {
         Self {
             path: PathBuf::default(),
             version: VERSION_COMPAT,
-            data: HashMap::with_capacity(1),
+            archives: HashMap::with_capacity(1),
         }
     }
 }

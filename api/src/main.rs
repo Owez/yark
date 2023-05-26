@@ -1,21 +1,25 @@
 //! REST API for web-based Yark instances
 
 pub mod auth;
+pub mod directory;
 pub mod errors;
 pub mod routes;
 pub mod state;
-pub mod directory;
 
 use crate::errors::Result;
 use crate::state::{AppStateExtension, Config};
 use axum::routing::{delete, get, patch, post};
 use axum::{Router, Server};
+use dotenv::dotenv;
+use errors::Error;
 use log::info;
 use state::AppState;
 use std::fmt;
+use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use tower_http::cors::CorsLayer;
 use yark_archive::prelude::Manager;
 use yark_archive::DataSaveLoad;
 
@@ -39,9 +43,12 @@ fn err_exit(msg: impl fmt::Display) -> ! {
 
 /// Launches axum web server or fatally errors during the process
 async fn launch() -> Result<()> {
+    // Get dotenv file if possible
+    dotenv().ok();
+
     // Get required preamble
     let config = Config::from_vars()?;
-    let manager = Manager::load(config.manager_path.clone())?;
+    let manager = get_manager(config.manager_path.clone())?;
     let addr = config.to_addr()?;
 
     // Log to user
@@ -81,6 +88,24 @@ async fn launch() -> Result<()> {
             "/archive/:archive_id/video/:video_id/note/:note_id",
             delete(routes::note::delete),
         )
-        .with_state(state);
+        .with_state(state)
+        .layer(CorsLayer::permissive());
     Ok(Server::bind(&addr).serve(app.into_make_service()).await?)
+}
+
+/// Gets or creates a new [Manager] from `manager_path` provided
+fn get_manager(manager_path: PathBuf) -> Result<Manager> {
+    match Manager::load(manager_path.clone()) {
+        Ok(manager) => Ok(manager),
+        Err(yark_archive::errors::Error::ManagerNotFound) => {
+            log::info!(
+                "Creating new manager file at {:?} as it doesn't exist",
+                manager_path
+            );
+            let manager = Manager::new(manager_path);
+            manager.save()?;
+            Ok(manager)
+        }
+        Err(err) => Err(Error::Archive(err)),
+    }
 }

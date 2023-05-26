@@ -10,9 +10,11 @@ publish = false
 log = "0.4"
 axum = "0.6"
 hyper = "0.14"
+dotenv = "0.15"
 axum-auth = "0.4"
 uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 axum-extra = { version = "0.7", features = ["async-read-body"] }
 yark-archive = { path = "../archive" }
+tower-http = { version = "0.4", features = ["cors"] }

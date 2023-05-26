@@ -1,3 +1,4 @@
+import type { Cookies } from "@sveltejs/kit"
 import { type ArchiveMeta, getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
 import type { Video } from "./archive"
 
@@ -16,6 +17,7 @@ export interface VideosSnapshot {
  * @returns If it's valid
  */
 function videosSnapshotValid(snapshot?: VideosSnapshot, seconds?: number): boolean {
+    // TODO: snapshot.taken inputted is string for some reason, i think its loading from prev cookie yep thats it
     if (snapshot == undefined) {
         return false
     }
@@ -91,11 +93,22 @@ export interface ArchiveState {
  * Gets archive state from archive identifier
  * @param id Identifier of the archive
  * @param base (Optional) The base URL for the API request
- * @returns Archive state reflecting the archive with {@link id}
+ * @returns Archive state reflecting the archive with {@link id}; only metainfo included
  */
-export async function getArchiveState(id: string, name: string, base?: URL): Promise<ArchiveState | null> {
+export async function getArchiveStateRemote(id: string, name: string, base?: URL): Promise<ArchiveState | null> {
     const meta = await getArchiveMeta(id, base)
     return meta == null ? null : { name: name, meta: meta }
+}
+
+/**
+ * Gets archive state from server-side cookies, deserializing properly
+ * @param cookies Cookies to get state from
+ * @returns Properly deserialized archive state
+ */
+export function getArchiveStateCookie(cookies: Cookies): ArchiveState | null {
+    const stateRaw = cookies.get("archiveState")
+    if (stateRaw == undefined) { return null }
+    // TODO: deserialize properly 
 }
 
 /**
@@ -122,18 +135,27 @@ export function archiveStateToRecent(state: ArchiveState): RecentArchive {
  * @returns Archive state reflecting the archive with {@link recent.id}
  */
 export async function recentArchiveToState(recent: RecentArchive, base?: URL): Promise<ArchiveState | null> {
-    return getArchiveState(recent.id, recent.name, base)
+    return getArchiveStateRemote(recent.id, recent.name, base)
 }
 
 /**
- * Saves provided {@link state} to the {@link document}'s cookie
+ * Saves provided {@link state} to the {@link document}'s cookie for browser-side saving
  * @param state Archive state to save
  * @param document Document to save {@link state} to
  */
-export function saveArchiveState(state: ArchiveState, document: Document) {
+export function saveArchiveStateBrowser(state: ArchiveState, document: Document) {
     function setCookie(name: string, val: string, document: Document) {
         const value = val;
         document.cookie = name + "=" + value + "; path=/";
     }
     setCookie("archiveState", JSON.stringify(state), document)
+}
+
+/**
+ * Saves provided {@link state} to the {@link cookies} for server-side saving
+ * @param state Archive state to save
+ * @param cookies Cookies to save to
+ */
+export function saveArchiveStateServer(state: ArchiveState, cookies: Cookies) {
+    cookies.set("archiveState", JSON.stringify(state))
 }

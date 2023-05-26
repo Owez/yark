@@ -1,6 +1,5 @@
 <script lang="ts">
     import Navbar from "../../components/Navbar.svelte";
-    import type { LayoutData } from "../$types";
 </script>
 
 <div class="panel">

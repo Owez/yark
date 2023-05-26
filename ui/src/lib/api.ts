@@ -79,7 +79,7 @@ export enum ApiRequestMethod {
  */
 export interface ApiRequest {
     /**
-     * Base URL of the API, leave blank for default localhost
+     * Base URL of the API, leave blank for default `0.0.0.0` host
      */
     base?: URL;
     /**
@@ -120,10 +120,10 @@ async function sendApiRequest(info: ApiRequest): Promise<Response> {
 /**
  * Creates the URL to use for an {@link sendApiRequest}
  * @param info Info context to create the URL from
- * @returns URL which defaults to `localhost:7776` if no base is provided in {@link info}
+ * @returns URL which defaults to `0.0.0.0:7776` if no base is provided in {@link info}
  */
 function createUrl(info: ApiRequest): string {
-    const base = info.base == undefined ? "http://localhost:7776" : info.base
+    const base = info.base == undefined ? "http://0.0.0.0:7776" : info.base
     return new URL(info.path, base).toString();
 }
 

@@ -1,10 +1,3 @@
-<script lang="ts">
-    // import type { PageData } from "./$types";
-
-    // export let data: PageData;
-    // TODO: use data for lists
-</script>
-
 <div class="content">
     <h1>Owen's Channel</h1>
     <div class="cards">

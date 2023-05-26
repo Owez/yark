@@ -35,8 +35,8 @@ pub mod archive {
         state::AppStateExtension,
     };
     use axum::{
-        extract::{Path, Query},
-        Extension, Json,
+        extract::{Path, Query, State},
+        Json,
     };
     use axum_auth::AuthBearer;
     use log::debug;
@@ -53,7 +53,7 @@ pub mod archive {
     }
 
     pub async fn create(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         auth: AuthBearer,
         Json(schema): Json<CreateJsonSchema>,
     ) -> Result<Json<MessageIdResponse>> {
@@ -108,7 +108,7 @@ pub mod archive {
     }
 
     pub async fn get(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
         Query(GetQuerySchema { kind }): Query<GetQuerySchema>,
     ) -> Result<Json<GetResponse>> {
@@ -132,7 +132,7 @@ pub mod archive {
     }
 
     pub async fn delete(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
         auth: AuthBearer,
     ) -> Result<Json<MessageResponse>> {
@@ -156,9 +156,8 @@ pub mod image {
         state::AppStateExtension,
     };
     use axum::{
-        extract::Path,
+        extract::{Path, State},
         response::{IntoResponse, Response},
-        Extension,
     };
     use axum_extra::body::AsyncReadBody;
     use hyper::header;
@@ -167,7 +166,7 @@ pub mod image {
     use uuid::Uuid;
 
     pub async fn get_file(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, image_hash)): Path<(Uuid, String)>,
     ) -> Result<Response> {
         debug!(
@@ -199,9 +198,9 @@ pub mod video {
         state::AppStateExtension,
     };
     use axum::{
-        extract::Path,
+        extract::{Path, State},
         response::{IntoResponse, Response},
-        Extension, Json,
+        Json,
     };
     use axum_extra::body::AsyncReadBody;
     use hyper::header;
@@ -211,7 +210,7 @@ pub mod video {
     use yark_archive::prelude::*;
 
     pub async fn get(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, video_id)): Path<(Uuid, String)>,
     ) -> Result<Json<Video>> {
         debug!(
@@ -231,7 +230,7 @@ pub mod video {
     }
 
     pub async fn get_file(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, video_id)): Path<(Uuid, Uuid)>,
     ) -> Result<Response> {
         debug!("Getting video {} file for archive {}", video_id, archive_id);
@@ -259,7 +258,10 @@ pub mod note {
         errors::{Error, Result},
         state::AppStateExtension,
     };
-    use axum::{extract::Path, Extension, Json};
+    use axum::{
+        extract::{Path, State},
+        Json,
+    };
     use axum_auth::AuthBearer;
     use log::debug;
     use serde::Deserialize;
@@ -274,7 +276,7 @@ pub mod note {
     }
 
     pub async fn create(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, video_id)): Path<(Uuid, String)>,
         auth: AuthBearer,
         Json(schema): Json<CreateJsonSchema>,
@@ -313,7 +315,7 @@ pub mod note {
     }
 
     pub async fn update(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
         auth: AuthBearer,
         Json(schema): Json<UpdateJsonSchema>,
@@ -347,7 +349,7 @@ pub mod note {
     }
 
     pub async fn delete(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         Path((archive_id, video_id, note_id)): Path<(Uuid, String, Uuid)>,
         auth: AuthBearer,
     ) -> Result<Json<MessageResponse>> {
@@ -374,7 +376,7 @@ pub mod note {
 /// Sensitive filesystem routing for file exploration
 pub mod fs {
     use crate::{auth, directory::Directory, errors::Result, state::AppStateExtension};
-    use axum::{Extension, Json};
+    use axum::{extract::State, Json};
     use axum_auth::AuthBearer;
     use serde::Deserialize;
     use std::path::PathBuf;
@@ -385,7 +387,7 @@ pub mod fs {
     }
 
     pub async fn get(
-        Extension(state): Extension<AppStateExtension>,
+        State(state): State<AppStateExtension>,
         auth: AuthBearer,
         Json(schema): Json<GetJsonSchema>,
     ) -> Result<Json<Directory>> {

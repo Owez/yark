@@ -23,8 +23,8 @@ impl Config {
     pub fn from_vars() -> Result<Self> {
         debug!("Collecting configuration information");
         Ok(Self {
-            host: get_var("HOST")?,
-            port: get_var("PORT")?,
+            host: get_var("HOST").unwrap_or("0.0.0.0".to_string()),
+            port: get_var("PORT").unwrap_or(7776),
             admin_secret: get_var("ADMIN_SECRET")?,
             manager_path: get_var("MANAGER_PATH")?,
         })
