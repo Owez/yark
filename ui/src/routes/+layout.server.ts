@@ -1,10 +1,10 @@
-import { getArchiveStateCookie, type ArchiveState } from "$lib/state";
+import { getArchiveStateCookie } from "$lib/state";
 import type { LayoutServerLoad } from "./$types";
 
-export async function load({ cookies }): Promise<LayoutServerLoad> {
+export const load = (({ cookies }) => {
     // Get archive state
     const archiveState = getArchiveStateCookie(cookies)
 
     // Return data
     return { archiveState }
-}
+}) satisfies LayoutServerLoad;

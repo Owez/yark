@@ -47,31 +47,31 @@ function newVideosSnapshot(videos: Video[]): VideosSnapshot {
  * @param base (Optional) The base URL for the API request
  * @returns Up-to-date videos list for {@link kind} selected; saved to state as well
  */
-export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base?: URL): Promise<Video[]> {
+export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base?: URL): Promise<VideosSnapshot> {
     switch (kind) {
         case ArchiveKind.Videos:
             if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos.videos
+                return state.videos
             }
             const newVideos = await getArchiveVideos(state.meta.id, kind, base)
             state.videos = newVideosSnapshot(newVideos)
-            return newVideos
+            return state.videos
 
         case ArchiveKind.Livestreams:
             if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos.videos
+                return state.videos
             }
             const newLivestreams = await getArchiveVideos(state.meta.id, kind, base)
             state.livestreams = newVideosSnapshot(newLivestreams)
-            return newLivestreams
+            return state.livestreams
 
         case ArchiveKind.Shorts:
             if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos.videos
+                return state.videos
             }
             const newShorts = await getArchiveVideos(state.meta.id, kind, base)
             state.shorts = newVideosSnapshot(newShorts)
-            return newShorts
+            return state.shorts
 
         default:
             throw new Error("Meta-information archive kind isn't a valid videos list")
@@ -108,7 +108,12 @@ export async function getArchiveStateRemote(id: string, name: string, base?: URL
 export function getArchiveStateCookie(cookies: Cookies): ArchiveState | null {
     const stateRaw = cookies.get("archiveState")
     if (stateRaw == undefined) { return null }
-    // TODO: deserialize properly 
+    const archiveStateRaw = JSON.parse(stateRaw)
+    return archiveStateRaw
+    // TODO: deserialize elements
+    // TODO: deserialize images
+    // TODO: deserialize uploaded
+    return null
 }
 
 /**

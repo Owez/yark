@@ -1,16 +1,25 @@
+<script lang="ts">
+    import type { PageServerData } from "./$types";
+
+    export let data: PageServerData;
+</script>
+
 <div class="content">
     <h1>Owen's Channel</h1>
     <div class="cards">
         <a href="/archive/videos" class="card count">
-            <p class="number">123</p>
+            <p class="number">{data.archiveState.videos.length}</p>
+            <!-- TODO: check if right -->
             <p>Videos</p>
         </a>
         <a href="/archive/livestreams" class="card count">
-            <p class="number">5</p>
+            <p class="number">{data.archiveState.livestreams.length}</p>
+            <!-- TODO: check if right -->
             <p>Livestreams</p>
         </a>
         <a href="/archive/shorts" class="card count">
-            <p class="number">19</p>
+            <p class="number">{data.archiveState.shorts.length}</p>
+            <!-- TODO: check if right -->
             <p>Shorts</p>
         </a>
         <div class="card videos">TODO: videos</div>

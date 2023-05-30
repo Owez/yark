@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export async function load({ parent }): Promise<LayoutServerLoad> {
+export const load =(async ({ parent }) => {
     // Get state and redirect if it's already loaded
     const archiveState = (await parent()).archiveState
     if (archiveState == null) {
@@ -9,4 +9,4 @@ export async function load({ parent }): Promise<LayoutServerLoad> {
     }
 
     return { archiveState }
-}
+}) satisfies LayoutServerLoad
