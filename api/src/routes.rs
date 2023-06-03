@@ -185,7 +185,7 @@ pub mod image {
         let file = File::open(path.clone())
             .await
             .map_err(|err| Error::FileShare(err))?;
-        let headers = [(header::CONTENT_TYPE, "text/x-toml")]; // TODO: change
+        let headers = [(header::CONTENT_TYPE, "image/*")];
         let body = AsyncReadBody::new(file);
         Ok((headers, body).into_response())
     }
@@ -244,7 +244,7 @@ pub mod video {
         let file = File::open(path.clone())
             .await
             .map_err(|err| Error::FileShare(err))?;
-        let headers = [(header::CONTENT_TYPE, "text/x-toml")]; // TODO: change
+        let headers = [(header::CONTENT_TYPE, "image/*")];
         let body = AsyncReadBody::new(file);
         Ok((headers, body).into_response())
     }

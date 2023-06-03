@@ -12,7 +12,7 @@
         if (state != null) {
             saveArchiveStateClient(state, document);
         } else {
-            console.log("archive not found"); // TODO: not found, error here
+            throw new Error("archive not found"); // TODO: not found, error here
         }
     }
 </script>

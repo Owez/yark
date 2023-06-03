@@ -18,7 +18,6 @@ export interface VideosSnapshot {
  * @returns If it's valid
  */
 function videosSnapshotValid(snapshot?: VideosSnapshot, seconds?: number): boolean {
-    // TODO: snapshot.taken inputted is string for some reason, i think its loading from prev cookie yep thats it
     if (snapshot == undefined) {
         return false
     }
@@ -73,7 +72,6 @@ export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base
             const newShorts = await getArchiveVideos(state.meta.id, kind, base)
             state.shorts = newVideosSnapshot(newShorts)
             return state.shorts
-
         default:
             throw new Error("Meta-information archive kind isn't a valid videos list")
     }
