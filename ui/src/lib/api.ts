@@ -3,6 +3,7 @@
  */
 
 import type { Video } from "./archive";
+import { deserializeVideo, type SerializedVideo } from "./serialdeserial";
 
 /**
  * Overarching custom exception for API errors
@@ -273,7 +274,8 @@ export async function getArchiveVideos(id: string, kind: ArchiveKind, base?: URL
         path: path,
         method: ApiRequestMethod.Get,
     })
-    return await resp.json()
+    const serializedVideos: SerializedVideo[] = await resp.json()
+    return serializedVideos.map(serializedVideo => deserializeVideo(serializedVideo))
 }
 
 /**
@@ -300,7 +302,7 @@ export async function getArchiveMeta(id: string, base?: URL): Promise<ArchiveMet
         path: `/archive/${id}`,
         method: ApiRequestMethod.Get,
     })
-    return await resp.json()
+    return await resp.json() // NOTE: meta is already deserialized
 }
 
 /**
@@ -335,7 +337,7 @@ export async function getVideo(archiveId: string, videoId: string, base?: URL): 
         path: `/archive/${archiveId}/video/${videoId}`,
         method: ApiRequestMethod.Get,
     })
-    return await resp.json()
+    return deserializeVideo(await resp.json())
 }
 
 // TODO: get video file

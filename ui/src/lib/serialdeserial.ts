@@ -81,7 +81,6 @@ export interface SerializedVideo {
  * @returns Deserialized {@link input}
  */
 export function deserializeVideo(input: SerializedVideo): Video {
-    console.log(input) // TODO: fix this - we're not deserializing from the api lmao
     return {
         id: input.id,
         uploaded: dateRawToDate(input.uploaded),

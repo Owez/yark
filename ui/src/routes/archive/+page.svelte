@@ -4,31 +4,24 @@
     export let data: LayoutServerData;
 </script>
 
-<div class="content">
-    <h1 class="dash-title">Owen's Channel</h1>
-    <div class="cards">
-        <a href="/archive/videos" class="card count">
-            <p class="number">{data.archiveState.meta.videos_count}</p>
-            <p>Videos</p>
-        </a>
-        <a href="/archive/livestreams" class="card count">
-            <p class="number">{data.archiveState.meta.livestreams_count}</p>
-            <p>Livestreams</p>
-        </a>
-        <a href="/archive/shorts" class="card count">
-            <p class="number">{data.archiveState.meta.shorts_count}</p>
-            <p>Shorts</p>
-        </a>
-    </div>
+<h1 class="dash-title">{data.archiveState.name}'s archive</h1>
+<div class="cards">
+    <a href="/archive/videos" class="card count">
+        <p class="number">{data.archiveState.meta.videos_count}</p>
+        <p>Videos</p>
+    </a>
+    <a href="/archive/livestreams" class="card count">
+        <p class="number">{data.archiveState.meta.livestreams_count}</p>
+        <p>Livestreams</p>
+    </a>
+    <a href="/archive/shorts" class="card count">
+        <p class="number">{data.archiveState.meta.shorts_count}</p>
+        <p>Shorts</p>
+    </a>
 </div>
 
 <style lang="scss">
     $gap: 20px;
-
-    .content {
-        margin-left: $gap;
-        margin-right: $gap;
-    }
 
     .cards {
         width: 100%;

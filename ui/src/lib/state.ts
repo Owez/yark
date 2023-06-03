@@ -1,7 +1,7 @@
 import type { Cookies } from "@sveltejs/kit"
 import { type ArchiveMeta, getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
 import type { Video } from "./archive"
-import { deserializeArchiveState, jsonParseArchiveState, jsonStringifyArchiveState, type SerializedArchiveState } from "./state_json"
+import { deserializeArchiveState, jsonParseArchiveState, jsonStringifyArchiveState, type SerializedArchiveState } from "./serialdeserial"
 
 /**
  * Snapshot of a {@link Video} list used for {@link ArchiveState} operations

@@ -4,5 +4,5 @@
     export let data: LayoutServerData;
 </script>
 
-<h1 class="dash-title">{data.archiveState.name}'s {data.archiveKind}s</h1>
+<h1 class="dash-title">{data.archiveState.name}'s {data.archiveKind}</h1>
 <slot />
