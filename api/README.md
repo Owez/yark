@@ -7,7 +7,8 @@ REST API for web-based Yark instances
 	- [Specification](#specification)
 		- [GET `/`](#get-)
 		- [POST 🔒 `/archive`](#post--archive)
-		- [GET `/archive/:id?kind`](#get-archiveidkind)
+		- [GET `/archive/:id`](#get-archiveid)
+		- [GET `/archive/:id/videos?kind`](#get-archiveidvideoskind)
 		- [DELETE 🔒 `/archive/:id`](#delete--archiveid)
 		- [GET `/archive/:id/image/:id/file`](#get-archiveidimageidfile)
 		- [GET `/archive/:id/video/:id`](#get-archiveidvideoid)
@@ -62,11 +63,27 @@ This route also requires a bearer token containing admin credentials. Once all o
 }
 ```
 
-### GET `/archive/:id?kind`
+### GET `/archive/:id`
 
-This route gets a page of information for an existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
+This route lets you get meta-infromation about an existing archive, including the length of video/livestream/shorts lists. To use it, just put the known id of the archive you're trying to get:
 
-- `kind=meta`: Get meta-information about the archive itself; useful for saving
+```jsonc
+{
+	// General info
+	"id": "uuid",
+	"version": 3,
+	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
+	// Counts for video lists
+	"videos_count": 42,
+	"livestreams_count": 1,
+	"shorts_count": 0,
+}
+```
+
+### GET `/archive/:id/videos?kind`
+
+This route gets a list of videos for existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
+
 - `kind=videos`: Get a list of all contentional videos
 - `kind=livestreams`: Gets a list of all livestreams
 - `kind=shorts`: Gets a list of all shorts
@@ -104,17 +121,6 @@ With these query args supplied, you might get an empty `[]` JSON response back, 
 		// etc..
 	}
 ]
-```
-
-Or if you queried for metadata a response about the archives meta-information, for example:
-
-```jsonc
-{
-	// Compatible archive version spec
-	"version": 3,
-	// Target URL of the archive
-	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-}
 ```
 
 Each of the thumbnail identifiers provided back can be used to [get](#get-archiveidimageidfile) thumbnails as always.

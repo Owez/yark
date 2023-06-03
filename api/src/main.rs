@@ -62,7 +62,8 @@ async fn launch() -> Result<()> {
     let app = Router::new()
         .route("/", get(routes::misc::index))
         .route("/archive", post(routes::archive::create))
-        .route("/archive/:archive_id", get(routes::archive::get))
+        .route("/archive/:archive_id", get(routes::archive::get_meta))
+        .route("/archive/:archive_id/videos", get(routes::archive::get_videos))
         .route("/archive/:archive_id", delete(routes::archive::delete))
         .route(
             "/archive/:archive_id/image/:image_hash/file",

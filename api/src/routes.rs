@@ -73,15 +73,50 @@ pub mod archive {
         }))
     }
 
-    #[derive(Deserialize)]
-    pub struct GetQuerySchema {
-        kind: GetKind,
+    #[derive(Serialize)]
+    pub struct GetMetaResponse {
+        id: Uuid,
+        version: u32,
+        url: String,
+        videos_count: usize,
+        livestreams_count: usize,
+        shorts_count: usize,
+    }
+
+    impl From<(Uuid, &Archive)> for GetMetaResponse {
+        fn from((archive_id, archive): (Uuid, &Archive)) -> Self {
+            Self {
+                id: archive_id,
+                version: archive.version,
+                url: archive.url.clone(),
+                videos_count: archive.videos.len(),
+                livestreams_count: archive.livestreams.len(),
+                shorts_count: archive.shorts.len(),
+            }
+        }
+    }
+
+    pub async fn get_meta(
+        State(state): State<AppStateExtension>,
+        Path(archive_id): Path<Uuid>,
+    ) -> Result<Json<GetMetaResponse>> {
+        debug!("Getting metadata for archive {}", archive_id);
+        let state_lock = state.lock().await;
+        let archive = state_lock
+            .manager
+            .get(&archive_id)
+            .ok_or(Error::ArchiveNotFound)?;
+        let archive_with_id = (archive_id, archive);
+        Ok(Json(GetMetaResponse::from(archive_with_id)))
     }
 
     #[derive(Deserialize)]
-    enum GetKind {
-        #[serde(rename(deserialize = "meta"))]
-        Meta,
+    pub struct GetVideosQuerySchema {
+        kind: GetVideosKind,
+    }
+
+    #[derive(Deserialize)]
+    enum GetVideosKind {
         #[serde(rename(deserialize = "videos"))]
         Videos,
         #[serde(rename(deserialize = "livestreams"))]
@@ -90,10 +125,9 @@ pub mod archive {
         Shorts,
     }
 
-    impl fmt::Display for GetKind {
+    impl fmt::Display for GetVideosKind {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::Meta => write!(f, "meta"),
                 Self::Videos => write!(f, "videos"),
                 Self::Livestreams => write!(f, "livestreams"),
                 Self::Shorts => write!(f, "shorts"),
@@ -101,17 +135,11 @@ pub mod archive {
         }
     }
 
-    #[derive(Serialize)]
-    pub enum GetResponse {
-        Meta { version: u32, url: String },
-        Videos(Videos),
-    }
-
-    pub async fn get(
+    pub async fn get_videos(
         State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
-        Query(GetQuerySchema { kind }): Query<GetQuerySchema>,
-    ) -> Result<Json<GetResponse>> {
+        Query(GetVideosQuerySchema { kind }): Query<GetVideosQuerySchema>,
+    ) -> Result<Json<Videos>> {
         debug!("Getting a full list of {} for archive {}", kind, archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
@@ -119,15 +147,9 @@ pub mod archive {
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
         Ok(Json(match kind {
-            // meta
-            GetKind::Meta => GetResponse::Meta {
-                version: archive.version,
-                url: archive.url.clone(),
-            },
-            // video lists
-            GetKind::Videos => GetResponse::Videos(archive.videos.clone()),
-            GetKind::Livestreams => GetResponse::Videos(archive.livestreams.clone()),
-            GetKind::Shorts => GetResponse::Videos(archive.shorts.clone()),
+            GetVideosKind::Videos => archive.videos.clone(),
+            GetVideosKind::Livestreams => archive.livestreams.clone(),
+            GetVideosKind::Shorts => archive.shorts.clone(),
         }))
     }
 

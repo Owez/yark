@@ -1,28 +1,23 @@
 <script lang="ts">
     import type { VideosSnapshot } from "$lib/state";
-    import type { PageServerData } from "./$types";
+    import type { LayoutServerData } from "./$types";
 
-    export let data: PageServerData;
-
-    function getVideosLength(snapshot?: VideosSnapshot): number {
-        if (snapshot == undefined) {return 0}
-        return snapshot.videos.length
-    }
+    export let data: LayoutServerData;
 </script>
 
 <div class="content">
     <h1>Owen's Channel</h1>
     <div class="cards">
         <a href="/archive/videos" class="card count">
-            <p class="number">{getVideosLength(data.archiveState.videos)}</p>
+            <p class="number">{data.archiveState.meta.videos_count}</p>
             <p>Videos</p>
         </a>
         <a href="/archive/livestreams" class="card count">
-            <p class="number">{getVideosLength(data.archiveState.livestreams)}</p>
+            <p class="number">{data.archiveState.meta.livestreams_count}</p>
             <p>Livestreams</p>
         </a>
         <a href="/archive/shorts" class="card count">
-            <p class="number">{getVideosLength(data.archiveState.shorts)}</p>
+            <p class="number">{data.archiveState.meta.shorts_count}</p>
             <p>Shorts</p>
         </a>
         <div class="card videos">TODO: videos</div>

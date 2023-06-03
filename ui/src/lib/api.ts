@@ -254,7 +254,6 @@ export async function createNewArchive(path: string, target: string, adminSecret
  * Different types of specific archives queries for different video lists
  */
 export enum ArchiveKind {
-    Meta = "meta",
     Videos = "videos",
     Livestreams = "livestreams",
     Shorts = "shorts",
@@ -268,7 +267,7 @@ export enum ArchiveKind {
  * @returns A promise that resolves with an array of videos
  */
 export async function getArchiveVideos(id: string, kind: ArchiveKind, base?: URL): Promise<Video[]> {
-    const path = kind == undefined ? `/archive/${id}` : `/archive/${id}?kind=${kind}`
+    const path = `/archive/${id}/videos?kind=${kind}`
     const resp = await sendApiRequest({
         base: base,
         path: path,
@@ -280,10 +279,13 @@ export async function getArchiveVideos(id: string, kind: ArchiveKind, base?: URL
 /**
  * Meta-information about an archive returned from {@link getArchiveMeta}; can be saved permanently
  */
-export interface ArchiveMeta {
+export interface ArchiveMeta { // TODO: make snapshot for this because of the counts
     id: string,
     version: number,
-    url: string
+    url: string,
+    videos_count: number,
+    livestreams_count: number,
+    shorts_count: number,
 }
 
 /**
@@ -295,19 +297,10 @@ export interface ArchiveMeta {
 export async function getArchiveMeta(id: string, base?: URL): Promise<ArchiveMeta> {
     const resp = await sendApiRequest({
         base: base,
-        path: `/archive/${id}?kind=meta`,
+        path: `/archive/${id}`,
         method: ApiRequestMethod.Get,
     })
-    interface ArchiveMetaRaw {
-        version: number,
-        url: string
-    }
-    const dataRaw: ArchiveMetaRaw = await resp.json();
-    return {
-        id: id,
-        version: dataRaw.version,
-        url: dataRaw.url
-    }
+    return await resp.json()
 }
 
 /**
