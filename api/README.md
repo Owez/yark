@@ -26,7 +26,7 @@ To get this API setup, please make sure you've got the development dependencies 
 YARK_ADMIN_SECRET=dev
 YARK_MANAGER_PATH=manager.json
 ```
-Now that that's all been setup, you can run your brand new development server with `make dev` now 🎉
+Now that that's all been setup, you can run your brand new development server with `cargo run` now 🎉
 
 ## Specification
 
@@ -196,11 +196,11 @@ This will return a simple creation message with the ID to refer to in the future
 
 This route lets you update an existing note, it requires authentication and a JSON body of what to update. Here's the complete request to update every item possible (to not update an item, just remove the line):
 
-```json
+```jsonc
 {
 	// Main title
 	"title": "New title for the note",
-    // Video timestamp in seconds
+	// Video timestamp in seconds
 	"timestamp": 30,
 	// Optional description
 	"body": "New big paragraph body for the note",
@@ -242,6 +242,7 @@ This will return a response of either not found (if the directory doesn't exist 
 
 ```jsonc
 [
+	// Each returned object is a file/directory
 	{
 		"path": "/get/this/directory/file.txt",
 		"directory": false
