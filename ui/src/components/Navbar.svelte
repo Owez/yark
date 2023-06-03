@@ -1,22 +1,9 @@
 <script lang="ts">
-    import { ArchiveKind } from "$lib/api";
     import { page } from "$app/stores";
-
-    function getArchiveKind(path: string | undefined): ArchiveKind {
-        switch (path) {
-            case "/archive/videos":
-                return ArchiveKind.Videos;
-            case "/archive/livestreams":
-                return ArchiveKind.Livestreams;
-            case "/archive/shorts":
-                return ArchiveKind.Shorts;
-            default:
-                return ArchiveKind.Meta;
-        }
-    }
+    import { getArchiveKind } from "$lib/state";
 
     function getButtonPath(path: string | undefined, name: string): string {
-        const wantedKind: string = getArchiveKind(path);
+        const wantedKind: string | null = getArchiveKind(path);
         if (wantedKind == name) {
             return `/img/btn${name}_active.svg`;
         }
@@ -80,6 +67,7 @@
         box-sizing: border-box;
         padding-top: $gap-small;
         padding-bottom: $gap-small;
+        box-shadow: rgba(100, 100, 111, 0.075) 0px 7px 20px 0px;
     }
 
     .block {

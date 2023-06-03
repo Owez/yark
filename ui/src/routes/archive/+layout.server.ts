@@ -8,5 +8,6 @@ export const load =(async ({ parent }) => {
         throw redirect(307, "/start")
     }
 
+    // Return back the state
     return { archiveState }
 }) satisfies LayoutServerLoad

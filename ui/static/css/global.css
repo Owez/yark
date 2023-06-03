@@ -138,3 +138,10 @@ table {
     border-collapse: collapse;
     border-spacing: 0;
 }
+
+h1.dash-title {
+    font-size: 2rem;
+    font-weight: 500;
+    margin-top: 2.25rem;
+    margin-bottom: calc(20px * 1.5);
+}
