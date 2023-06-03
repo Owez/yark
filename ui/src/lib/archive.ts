@@ -10,8 +10,9 @@ export interface Video {
     description: Elements<string>,
     views: Elements<number>,
     likes: Elements<number>,
-    thumbnail: Images,
-    deleted: Elements<boolean>, notes: Note[]
+    thumbnail: Elements<ImageHash>,
+    deleted: Elements<boolean>,
+    notes: Note[]
 }
 
 /**
@@ -22,14 +23,9 @@ export interface Elements<T> {
 }
 
 /**
- * Type cover for hashes of {@link Images} to use
+ * Type cover for hashes of {@link Elements} to use for images (e.g. thumbnails)
  */
 export type ImageHash = string;
-
-/**
- * Type cover of many {@link ImageHash}; this can be used to pull the image files from the archive
- */
-export type Images = Elements<ImageHash>;
 
 /**
  * User-written note for a video to comment on something at a specific time

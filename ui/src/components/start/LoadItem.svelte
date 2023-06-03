@@ -2,7 +2,7 @@
     import {
         recentArchiveToState,
         type RecentArchive,
-        saveArchiveStateBrowser,
+        saveArchiveStateClient,
     } from "$lib/state";
 
     export let recentArchive: RecentArchive;
@@ -10,7 +10,7 @@
     async function loadArchive() {
         const state = await recentArchiveToState(recentArchive);
         if (state != null) {
-            saveArchiveStateBrowser(state, document);
+            saveArchiveStateClient(state, document);
         } else {
             console.log("archive not found"); // TODO: not found, error here
         }
