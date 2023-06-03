@@ -18,9 +18,7 @@ export interface Video {
 /**
  * Collection of timestamped values to mark changes to history
  */
-export interface Elements<T> {
-    // TODO
-}
+export type Elements<T> = Map<Date, T>
 
 /**
  * Type cover for hashes of {@link Elements} to use for images (e.g. thumbnails)

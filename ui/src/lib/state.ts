@@ -1,7 +1,7 @@
 import type { Cookies } from "@sveltejs/kit"
 import { type ArchiveMeta, getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
 import type { Video } from "./archive"
-import { deserializeArchiveState, type SerializedArchiveState } from "./state_json"
+import { deserializeArchiveState, jsonParseArchiveState, jsonStringifyArchiveState, type SerializedArchiveState } from "./state_json"
 
 /**
  * Snapshot of a {@link Video} list used for {@link ArchiveState} operations
@@ -107,8 +107,7 @@ export async function getArchiveStateRemote(id: string, name: string, base?: URL
 export function getArchiveStateCookie(cookies: Cookies): ArchiveState | null {
     const stateRaw = cookies.get("archiveState")
     if (stateRaw == undefined) { return null }
-    const serializedArchiveState: SerializedArchiveState = JSON.parse(stateRaw)
-    return deserializeArchiveState(serializedArchiveState)
+    return jsonParseArchiveState(stateRaw)
 }
 
 /**
@@ -143,12 +142,12 @@ export async function recentArchiveToState(recent: RecentArchive, base?: URL): P
  * @param state Archive state to save
  * @param document Document to save {@link state} to
  */
-export function saveArchiveStateClient(state: ArchiveState, document: Document) {
+export function saveArchiveStateClient(archiveState: ArchiveState, document: Document) {
     function setCookie(name: string, val: string, document: Document) {
         const value = val;
         document.cookie = name + "=" + value + "; path=/";
     }
-    setCookie("archiveState", JSON.stringify(state), document)
+    setCookie("archiveState", jsonStringifyArchiveState(archiveState), document)
 }
 
 /**
@@ -156,6 +155,6 @@ export function saveArchiveStateClient(state: ArchiveState, document: Document) 
  * @param state Archive state to save
  * @param cookies Cookies to save to
  */
-export function saveArchiveStateServer(state: ArchiveState, cookies: Cookies) {
-    cookies.set("archiveState", JSON.stringify(state))
+export function saveArchiveStateServer(archiveState: ArchiveState, cookies: Cookies) {
+    cookies.set("archiveState", jsonStringifyArchiveState(archiveState))
 }

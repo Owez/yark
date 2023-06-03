@@ -29,7 +29,7 @@ function dateRawToDate(dateRaw: DateRaw): Date {
  * Serialized version of {@link Elements}
  */
 export interface SerializedElements<T> {
-    // TODO
+    [date: string]: T
 }
 
 /**
@@ -38,7 +38,24 @@ export interface SerializedElements<T> {
  * @returns Deserialized {@link input}
  */
 export function deserializeElements<T>(input: SerializedElements<T>): Elements<T> {
-    // TODO
+    const elements: Elements<T> = new Map<Date, T>();
+    for (const dateStr in input) {
+        if (input.hasOwnProperty(dateStr)) {
+            const date = new Date(dateStr);
+            const value = input[dateStr];
+            elements.set(date, value);
+        }
+    }
+    return elements;
+}
+
+// TODO
+export function serializeElements<T>(input: Elements<T>): SerializedElements<T> {
+    const serialized: SerializedElements<T> = {};
+    for (const [date, value] of input) {
+        serialized[date.toISOString()] = value;
+    }
+    return serialized;
 }
 
 /**
@@ -79,6 +96,23 @@ export function deserializeVideo(input: SerializedVideo): Video {
     }
 }
 
+// TODO
+export function serializeVideo(input: Video): SerializedVideo {
+    return {
+        id: input.id,
+        uploaded: input.uploaded.toISOString(),
+        width: input.width,
+        height: input.height,
+        title: serializeElements(input.title),
+        description: serializeElements(input.description),
+        views: serializeElements(input.views),
+        likes: serializeElements(input.likes),
+        thumbnail: serializeElements(input.thumbnail),
+        deleted: serializeElements(input.deleted),
+        notes: input.notes
+    }
+}
+
 /**
  * Serialized version of a {@link VideosSnapshot}
  */
@@ -96,6 +130,14 @@ export function deserializeVideosSnapshot(input: SerializedVideosSnapshot): Vide
     return {
         taken: dateRawToDate(input.taken),
         videos: input.videos.map(serializedVideo => deserializeVideo(serializedVideo))
+    }
+}
+
+// TODO
+export function serializeVideosSnapshot(input: VideosSnapshot): SerializedVideosSnapshot {
+    return {
+        taken: input.taken.toISOString(),
+        videos: input.videos.map(video => serializeVideo(video))
     }
 }
 
@@ -123,4 +165,27 @@ export function deserializeArchiveState(input: SerializedArchiveState): ArchiveS
         livestreams: input.livestreams == undefined ? undefined : deserializeVideosSnapshot(input.livestreams),
         shorts: input.shorts == undefined ? undefined : deserializeVideosSnapshot(input.shorts)
     }
+}
+
+// TODO
+export function serializeArchiveState(input: ArchiveState): SerializedArchiveState {
+    return {
+        name: input.name,
+        meta: input.meta,
+        videos: input.videos == undefined ? undefined : serializeVideosSnapshot(input.videos),
+        livestreams: input.livestreams == undefined ? undefined : serializeVideosSnapshot(input.livestreams),
+        shorts: input.shorts == undefined ? undefined : serializeVideosSnapshot(input.shorts),
+    }
+}
+
+// TODO
+export function jsonParseArchiveState(json: string): ArchiveState {
+    const serializedArchiveState: SerializedArchiveState = JSON.parse(json)
+    return deserializeArchiveState(serializedArchiveState)
+}
+
+// TODO
+export function jsonStringifyArchiveState(archiveState: ArchiveState): string {
+    const serializedArchiveState: SerializedArchiveState = serializeArchiveState(archiveState)
+    return JSON.stringify(serializedArchiveState)
 }
