@@ -1,6 +1,6 @@
 import type { Cookies } from "@sveltejs/kit"
-import { type ArchiveMeta, getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
-import type { Video } from "./archive"
+import { getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
+import type { ArchiveMeta, Video } from "./archive"
 import { deserializeArchiveState, jsonParseArchiveState, jsonStringifyArchiveState, type SerializedArchiveState } from "./serialdeserial"
 
 /**
@@ -157,23 +157,4 @@ export function saveArchiveStateClient(archiveState: ArchiveState, document: Doc
  */
 export function saveArchiveStateServer(archiveState: ArchiveState, cookies: Cookies) {
     cookies.set("archiveState", jsonStringifyArchiveState(archiveState))
-}
-
-/**
- * Gets archive kind based on {@link path} provided
- * @param path Ending path of the current url
- */
-export function getArchiveKind(
-    path: string | undefined
-): ArchiveKind | null {
-    switch (path) {
-        case "/archive/videos":
-            return ArchiveKind.Videos;
-        case "/archive/livestreams":
-            return ArchiveKind.Livestreams;
-        case "/archive/shorts":
-            return ArchiveKind.Shorts;
-        default:
-            return null;
-    }
 }

@@ -1,4 +1,5 @@
-import { getArchiveKind, getVideosList, saveArchiveStateServer } from "$lib/state";
+import { getVideosList, saveArchiveStateServer } from "$lib/state";
+import { getArchiveKind } from "$lib/utils";
 import type { LayoutServerLoad } from "./$types";
 
 export const load = (async ({ parent, url, cookies }) => {

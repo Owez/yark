@@ -6,8 +6,7 @@
 
 // NOTE: if this can be done better, please do it better. i'm sure there's a decent library out there like `serde` to make this less manual and overall cleaner
 
-import type { ArchiveMeta } from "./api";
-import type { Elements, ImageHash, Note, Video } from "./archive";
+import type { ArchiveMeta, Elements, ImageHash, Note, Video } from "./archive";
 import type { ArchiveState, VideosSnapshot } from "./state";
 
 /**

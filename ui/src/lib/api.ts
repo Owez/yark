@@ -2,7 +2,7 @@
  * Connectivity wrapper for the Yark API
  */
 
-import type { Video } from "./archive";
+import type { ArchiveMeta, Video } from "./archive";
 import { deserializeVideo, type SerializedVideo } from "./serialdeserial";
 
 /**
@@ -279,18 +279,6 @@ export async function getArchiveVideos(id: string, kind: ArchiveKind, base?: URL
 }
 
 /**
- * Meta-information about an archive returned from {@link getArchiveMeta}; can be saved permanently
- */
-export interface ArchiveMeta { // TODO: make snapshot for this because of the counts
-    id: string,
-    version: number,
-    url: string,
-    videos_count: number,
-    livestreams_count: number,
-    shorts_count: number,
-}
-
-/**
  * Gets meta-information about an archive
  * @param id Identifier of the archive to get meta-information on
  * @param base (Optional) The base URL for the API request
@@ -321,7 +309,7 @@ export async function deleteArchive(id: string, adminSecret: string, base?: URL)
     })
 }
 
-// TODO: get image file
+// NOTE: getting image files is handled by HTML; search codebase for the `getImageUrl` function
 
 
 /**
