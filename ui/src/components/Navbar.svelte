@@ -1,9 +1,9 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { getArchiveKind } from "$lib/state";
+    import { getArchiveKind } from "$lib/utils";
 
     function getButtonPath(path: string | undefined, name: string): string {
-        const wantedKind: string | null = getArchiveKind(path);
+        const wantedKind: string | null = getArchiveKind    (path);
         if (wantedKind == name) {
             return `/img/btn${name}_active.svg`;
         }
