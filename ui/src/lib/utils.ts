@@ -7,14 +7,13 @@ import { ArchiveKind } from "./api";
 /**
  * Gets a full URL to an image for an archive 
  * @param archiveId The ID of the archive which the image is stored under
- * @param imageId The ID of the image to retrieve
+ * @param imageHash The ID of the image to retrieve
  * @param base (Optional) The base URL for the API request
  * @returns Full URL string to an image file for use in HTML
  */
-export function getImageUrl(archiveId: string, imageId: string, base?: URL): string {
-    // TODO: fix
+export function getImageUrl(archiveId: string, imageHash: string, base?: URL): string {
     const url = base == undefined ? "127.0.0.1:7776" : base.toString()
-    return `http://${url}/archive/${archiveId}/image/${imageId}`
+    return `http://${url}/archive/${archiveId}/image/${imageHash}/file`
 }
 
 /**

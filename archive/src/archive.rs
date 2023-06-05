@@ -105,7 +105,7 @@ impl Archive {
 
     /// Returns the expected filepath to an image with the `hash` if it exists
     pub fn path_image(&self, hash: &str) -> Option<PathBuf> {
-        let image_path = self.path.join("/images").join(format!("{}.png", hash));
+        let image_path = self.path.join("thumbnails").join(format!("{}.webp", hash)); // NOTE: update to `images` for future specs, right now v3 is still "thumbnails"
         if image_path.exists() {
             Some(image_path)
         } else {

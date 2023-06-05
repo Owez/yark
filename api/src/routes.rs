@@ -178,38 +178,34 @@ pub mod image {
         state::AppStateExtension,
     };
     use axum::{
+        body::{boxed, BoxBody},
         extract::{Path, State},
-        response::{IntoResponse, Response},
     };
-    use axum_extra::body::AsyncReadBody;
-    use hyper::header;
+    use hyper::{Body, Request, Response};
     use log::debug;
-    use tokio::fs::File;
+    use tower::util::ServiceExt;
+    use tower_http::services::ServeFile;
     use uuid::Uuid;
 
     pub async fn get_file(
         State(state): State<AppStateExtension>,
         Path((archive_id, image_hash)): Path<(Uuid, String)>,
-    ) -> Result<Response> {
-        debug!(
-            "Getting image {} file for archive {}",
-            image_hash, archive_id
-        );
+    ) -> Result<Response<BoxBody>> {
+        debug!("Getting image {} for archive {}", image_hash, archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
             .manager
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        let path = archive
+        let image_path = archive
             .path_image(&image_hash)
             .ok_or(Error::ImageNotFound)?;
-        drop(state_lock);
-        let file = File::open(path.clone())
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let resp = ServeFile::new(image_path)
+            .oneshot(req)
             .await
-            .map_err(|err| Error::FileShare(err))?;
-        let headers = [(header::CONTENT_TYPE, "image/*")];
-        let body = AsyncReadBody::new(file);
-        Ok((headers, body).into_response())
+            .map_err(|err| Error::ImageFetch(err))?;
+        Ok(resp.map(boxed))
     }
 }
 

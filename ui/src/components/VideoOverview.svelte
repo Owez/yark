@@ -18,12 +18,5 @@
 </div>
 
 <style lang="scss">
-    .video {
-        aspect-ratio: 16/10;
-        margin: 20px;
-        margin-left: 0;
-        margin-top: 0;
-        display: flex;
-        flex-direction: column;
-    }
+
 </style>

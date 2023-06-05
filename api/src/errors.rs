@@ -2,6 +2,7 @@
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use std::convert::Infallible;
 use std::net::AddrParseError;
 use std::{fmt, io};
 
@@ -37,6 +38,8 @@ pub enum Error {
     DirectoryPath(io::Error),
     /// Couldn't find directory during query
     DirectoryNotFound,
+    /// Couldn't fetch image using a tower oneshot
+    ImageFetch(Infallible),
 }
 
 impl Error {
@@ -49,7 +52,8 @@ impl Error {
             | Self::Archive(_)
             | Self::Server(_)
             | Self::FileShare(_)
-            | Self::DirectoryPath(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | Self::DirectoryPath(_)
+            | Self::ImageFetch(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ArchiveNotFound
             | Self::VideoNotFound
             | Self::ImageNotFound
@@ -78,6 +82,11 @@ impl fmt::Display for Error {
                 write!(f, "path to directory to query had an issue, {}", err)
             }
             Self::DirectoryNotFound => write!(f, "couldn't find queried directory"),
+            Self::ImageFetch(err) => write!(
+                f,
+                "failed to use tower's oneshot to fetch an image, {}",
+                err
+            ),
         }
     }
 }
