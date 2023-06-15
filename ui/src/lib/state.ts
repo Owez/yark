@@ -3,21 +3,12 @@ import { getArchiveMeta, ArchiveKind, getArchiveVideos } from "./api"
 import type { ArchiveMeta, Video } from "./archive"
 import { deserializeArchiveState, jsonParseArchiveState, jsonStringifyArchiveState, type SerializedArchiveState } from "./serialdeserial"
 
-/**
- * Snapshot of a {@link Video} list used for {@link ArchiveState} operations
- */
-export interface VideosSnapshot {
+export interface Snapshot<T> {
     taken: Date,
-    videos: Video[]
+    data: T
 }
 
-/**
- * Checks if a snapshot is valid within {@link VideosSnapshot.taken} + {@link seconds}
- * @param snapshot Snapshot to check
- * @param seconds Seconds to add; defaults to `30`
- * @returns If it's valid
- */
-function videosSnapshotValid(snapshot?: VideosSnapshot, seconds?: number): boolean {
+function snapshotValid<T>(snapshot?: Snapshot<T>, seconds?: number): boolean {
     if (snapshot == undefined) {
         return false
     }
@@ -28,15 +19,10 @@ function videosSnapshotValid(snapshot?: VideosSnapshot, seconds?: number): boole
     return snapshotMax > now
 }
 
-/**
- * Creates a video snapshot rated for now
- * @param videos Videos list to use as data
- * @returns New snapshot for now
- */
-function newVideosSnapshot(videos: Video[]): VideosSnapshot {
+function newSnapshot<T>(data: T): Snapshot<T> {
     return {
         taken: new Date(),
-        videos: videos
+        data: data
     }
 }
 
@@ -47,31 +33,32 @@ function newVideosSnapshot(videos: Video[]): VideosSnapshot {
  * @param base (Optional) The base URL for the API request
  * @returns Up-to-date videos list for {@link kind} selected; saved to state as well
  */
-export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base?: URL): Promise<VideosSnapshot> {
+export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base?: URL): Promise<Video[]> {
+    const metaData = state.meta.data
     switch (kind) {
         case ArchiveKind.Videos:
-            if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos
+            if (state.videos != undefined && snapshotValid(state.videos)) {
+                return state.videos.data
             }
-            const newVideos = await getArchiveVideos(state.meta.id, kind, base)
-            state.videos = newVideosSnapshot(newVideos)
-            return state.videos
+            const newVideos = await getArchiveVideos(metaData.id, kind, base)
+            state.videos = newSnapshot(newVideos)
+            return state.videos.data
 
         case ArchiveKind.Livestreams:
-            if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos
+            if (state.livestreams != undefined && snapshotValid(state.livestreams)) {
+                return state.livestreams.data
             }
-            const newLivestreams = await getArchiveVideos(state.meta.id, kind, base)
-            state.livestreams = newVideosSnapshot(newLivestreams)
-            return state.livestreams
+            const newLivestreams = await getArchiveVideos(metaData.id, kind, base)
+            state.livestreams = newSnapshot(newLivestreams)
+            return state.livestreams.data
 
         case ArchiveKind.Shorts:
-            if (state.videos != undefined && videosSnapshotValid(state.videos)) {
-                return state.videos
+            if (state.shorts != undefined && snapshotValid(state.shorts)) {
+                return state.videos.data
             }
-            const newShorts = await getArchiveVideos(state.meta.id, kind, base)
-            state.shorts = newVideosSnapshot(newShorts)
-            return state.shorts
+            const newShorts = await getArchiveVideos(metaData.id, kind, base)
+            state.shorts = newSnapshot(newShorts)
+            return state.shorts.data
         default:
             throw new Error("Meta-information archive kind isn't a valid videos list")
     }
@@ -82,10 +69,10 @@ export async function getVideosList(state: ArchiveState, kind: ArchiveKind, base
  */
 export interface ArchiveState {
     name: string,
-    meta: ArchiveMeta,
-    videos?: VideosSnapshot,
-    livestreams?: VideosSnapshot,
-    shorts?: VideosSnapshot
+    meta: Snapshot<ArchiveMeta>,
+    videos?: Snapshot<Video[]>,
+    livestreams?: Snapshot<Video[]>,
+    shorts?: Snapshot<Video[]>
 }
 
 /**
@@ -96,7 +83,8 @@ export interface ArchiveState {
  */
 export async function getArchiveStateRemote(id: string, name: string, base?: URL): Promise<ArchiveState | null> {
     const meta = await getArchiveMeta(id, base)
-    return meta == null ? null : { name: name, meta: meta }
+    const metaSnapshot = newSnapshot(meta)
+    return meta == null ? null : { name: name, meta: metaSnapshot }
 }
 
 /**
@@ -124,7 +112,8 @@ export interface RecentArchive {
  * @returns Converted {@link state} as a {@link RecentArchive} to use
  */
 export function archiveStateToRecent(state: ArchiveState): RecentArchive {
-    return { name: state.name, id: state.meta.id }
+    const metaData = state.meta.data
+    return { name: state.name, id: metaData.id }
 }
 
 /**
@@ -156,5 +145,5 @@ export function saveArchiveStateClient(archiveState: ArchiveState, document: Doc
  * @param cookies Cookies to save to
  */
 export function saveArchiveStateServer(archiveState: ArchiveState, cookies: Cookies) {
-    cookies.set("archiveState", jsonStringifyArchiveState(archiveState))
+    cookies.set("archiveState", jsonStringifyArchiveState(archiveState), { path: "/" })
 }

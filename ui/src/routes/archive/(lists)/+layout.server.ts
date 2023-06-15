@@ -9,7 +9,7 @@ export const load = (async ({ parent, url, cookies }) => {
     const archiveState = (await parent()).archiveState
 
     // Get relevant videos list and save so it's up to date
-    let videos = (await getVideosList(archiveState, archiveKind)).videos
+    let videos = await getVideosList(archiveState, archiveKind)
     saveArchiveStateServer(archiveState, cookies)
 
     // Return all data

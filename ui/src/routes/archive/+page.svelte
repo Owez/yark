@@ -2,20 +2,22 @@
     import type { LayoutServerData } from "./$types";
 
     export let data: LayoutServerData;
+
+    let metaData = data.archiveState.meta.data;
 </script>
 
 <h1 class="dash-title">{data.archiveState.name}'s archive</h1>
 <div class="cards">
     <a href="/archive/videos" class="card count">
-        <p class="number">{data.archiveState.meta.videos_count}</p>
+        <p class="number">{metaData.videos_count}</p>
         <p>Videos</p>
     </a>
     <a href="/archive/livestreams" class="card count">
-        <p class="number">{data.archiveState.meta.livestreams_count}</p>
+        <p class="number">{metaData.livestreams_count}</p>
         <p>Livestreams</p>
     </a>
     <a href="/archive/shorts" class="card count">
-        <p class="number">{data.archiveState.meta.shorts_count}</p>
+        <p class="number">{metaData.shorts_count}</p>
         <p>Shorts</p>
     </a>
 </div>

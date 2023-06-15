@@ -14,7 +14,7 @@
 
 <div class="video">
     <img src={currentThumbnailUrl} alt={currentTitle} />
-    <!-- TODO: info -->
+    <!-- TODO: info and reduce thumbnail size -->
 </div>
 
 <style lang="scss">

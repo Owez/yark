@@ -5,7 +5,7 @@
 /**
  * Meta-information about an archive returned from {@link getArchiveMeta}; can be saved permanently
  */
-export interface ArchiveMeta { // TODO: make snapshot for this because of the counts
+export interface ArchiveMeta { 
     id: string,
     version: number,
     url: string,

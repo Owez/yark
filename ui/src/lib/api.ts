@@ -328,7 +328,7 @@ export async function getVideo(archiveId: string, videoId: string, base?: URL): 
     return deserializeVideo(await resp.json())
 }
 
-// TODO: get video file
+// TODO: get video bytes? or just send file like how images work
 
 /**
  * Information for items of a {@link Note} to be created with {@link createNote}
