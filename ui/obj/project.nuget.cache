@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "k5P9emUKnWjTkyJ/rsnf4b2b+TWKODx+TVVrw4jCViZeMQ47ucp95wwyE7LnmuiO0qgrAFo8653pusG4wKzkHw==",
+  "dgSpecHash": "k1ljYDNsCUN0ei8wUne+uEWqag/lZzYgn8RAzLRTm5yV9bqkW4WlWi9dua2EUQc8x7dyX+snV0W2UWKcBmmMow==",
   "success": true,
-  "projectFilePath": "/Users/owen/Projects/yark/YarkUi/YarkUi.csproj",
+  "projectFilePath": "/Users/owen/Projects/yark/ui/YarkUi.csproj",
   "expectedPackageFiles": [
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.authorization/7.0.7/microsoft.aspnetcore.authorization.7.0.7.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.components/7.0.7/microsoft.aspnetcore.components.7.0.7.nupkg.sha512",

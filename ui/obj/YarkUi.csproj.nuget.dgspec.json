@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/owen/Projects/yark/YarkUi/YarkUi.csproj": {}
+    "/Users/owen/Projects/yark/ui/YarkUi.csproj": {}
   },
   "projects": {
-    "/Users/owen/Projects/yark/YarkUi/YarkUi.csproj": {
+    "/Users/owen/Projects/yark/ui/YarkUi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/owen/Projects/yark/YarkUi/YarkUi.csproj",
+        "projectUniqueName": "/Users/owen/Projects/yark/ui/YarkUi.csproj",
         "projectName": "YarkUi",
-        "projectPath": "/Users/owen/Projects/yark/YarkUi/YarkUi.csproj",
+        "projectPath": "/Users/owen/Projects/yark/ui/YarkUi.csproj",
         "packagesPath": "/Users/owen/.nuget/packages/",
-        "outputPath": "/Users/owen/Projects/yark/YarkUi/obj/",
+        "outputPath": "/Users/owen/Projects/yark/ui/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/owen/.nuget/NuGet/NuGet.Config"
