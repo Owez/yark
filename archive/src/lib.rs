@@ -46,7 +46,6 @@
 //! 1. [Archive](crate::archive::Archive) – Centerpiece of the crate
 //! 2. [Video](crate::video::Video) – Single archived video in an archive
 //! 3. [Elements](crate::elements::Elements) – Typical timestamped metadata storage
-//! 4. [Manager](crate::manager::Manager) – Simple permanent multi-archive management
 //! 4. [Error](crate::errors::Error) – The crate-wide error enumeration
 //!
 //! You can use the [prelude] module (`use yark_archive::prelude::*`) to quickly import everything you need!
@@ -56,7 +55,6 @@ pub mod date;
 pub mod elements;
 pub mod errors;
 pub mod images;
-pub mod manager;
 pub mod note;
 pub mod prelude;
 pub mod video;
@@ -71,7 +69,7 @@ pub type ArchiveVersion = u32;
 /// Version of the [ArchiveVersion] this version of the crate is compatible with
 pub const VERSION_COMPAT: ArchiveVersion = 3;
 
-/// API for the [Archive](crate::archive::Archive)/[Manager](crate::manager::Manager) which enables loading and saving
+/// API for the [Archive](crate::archive::Archive) which enables loading and saving
 pub trait DataSaveLoad<'a>: Sized + Serialize + Deserialize<'a> {
     /// Loads an instance from the `path` provided
     fn load(path: PathBuf) -> Result<Self>;

@@ -1,10 +1,6 @@
 //! Simple multi-archive manager; see [Manager] for more info
 
-use crate::{
-    archive::Archive,
-    errors::{Error, Result},
-    ArchiveVersion, DataSaveLoad, VERSION_COMPAT,
-};
+use crate::DataSaveLoad;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
     collections::HashMap,
@@ -12,6 +8,11 @@ use std::{
     path::PathBuf,
 };
 use uuid::Uuid;
+use yark_archive::{
+    errors::{Error, Result},
+    prelude::*,
+    ArchiveVersion, VERSION_COMPAT,
+};
 
 /// Collection of many opened archives which can be easily & quickly queried
 ///
@@ -22,7 +23,7 @@ use uuid::Uuid;
 /// 1. Store archives in the manager
 /// 2. [Save](Self::save) the manager to a file when it's not needed
 /// 3. [Load](Self::load) it back up again to retain the same identifiers
-/// 4. Keep using the archives in the manager
+/// 4. Job management state for refreshing
 ///
 /// This data structure acts as a *permanent* curator of multiple archives and attaches a unique identifier for every archive stored. Under the hood, this manager is a [HashMap] containing the identifier as a key and the archive as the value.
 ///
@@ -121,7 +122,7 @@ impl<'a> DataSaveLoad<'a> for Manager {
     fn load(path: PathBuf) -> Result<Self> {
         // Check path
         if !path.exists() {
-            return Err(Error::ManagerNotFound);
+            return Err(Error::ArchiveNotFound); // TODO: jank; replace with manager-specific enums throughout this file. ok for now
         }
 
         // Load up manager file
@@ -179,3 +180,17 @@ fn deserialize_data<'de, D: Deserializer<'de>>(
     }
     Ok(data)
 }
+
+// TODO: job schdulaing once everything else is figured out
+// /// Archive wrapper for the [Manager] which packages it's job state with it
+// #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+// pub struct ManagedArchive {
+//     pub archive: Archive,
+//     pub jobs: Vec<Job>,
+// }
+
+// #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+// pub enum Job {
+//     Metadata, // TODO: metadata options
+//     Download, // TODO: download options
+// }
