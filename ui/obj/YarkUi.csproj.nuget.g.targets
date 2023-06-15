@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)system.text.json/7.0.0/buildTransitive/net6.0/System.Text.Json.targets" Condition="Exists('$(NuGetPackageRoot)system.text.json/7.0.0/buildTransitive/net6.0/System.Text.Json.targets')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.extensions.logging.abstractions/7.0.1/buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.extensions.logging.abstractions/7.0.1/buildTransitive/net6.0/Microsoft.Extensions.Logging.Abstractions.targets')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly.devserver/7.0.7/build/Microsoft.AspNetCore.Components.WebAssembly.DevServer.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly.devserver/7.0.7/build/Microsoft.AspNetCore.Components.WebAssembly.DevServer.targets')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.analyzers/7.0.7/buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.analyzers/7.0.7/buildTransitive/netstandard2.0/Microsoft.AspNetCore.Components.Analyzers.targets')" />
+  </ImportGroup>
+</Project>
