@@ -65,7 +65,7 @@ This route also requires a bearer token containing admin credentials. Once all o
 
 ### GET `/archive/:id`
 
-This route lets you get meta-infromation about an existing archive, including the length of video/livestream/shorts lists. To use it, just put the known id of the archive you're trying to get:
+This route lets you get meta-infromation about an existing archive. To use it, just put the known id of the archive you're trying to get:
 
 ```jsonc
 {
@@ -73,10 +73,6 @@ This route lets you get meta-infromation about an existing archive, including th
 	"id": "uuid",
 	"version": 3,
 	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
-	// Counts for video lists
-	"videos_count": 42,
-	"livestreams_count": 1,
-	"shorts_count": 0,
 }
 ```
 
@@ -172,7 +168,7 @@ This route gets information about a specific video, probably one that you found 
 
 ### GET `/archive/:id/video/:id/file`
 
-This route returns a raw video file for the provided archive identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
+This route returns a raw video file for the provided archive identifier like how getting images work. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
 
 ### POST 🔒 `/archive/:id/video/:id/note`
 
