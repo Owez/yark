@@ -1,5 +1,4 @@
-using System.Net.Http;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace YarkApiClient;
 
@@ -9,14 +8,15 @@ public class ArchiveMeta
     public int Version { get; set; }
     public string Url { get; set; }
 
-    // public static async Task<ArchiveMeta> Get(Context ctx, string id)
-    public static async void Get(Context ctx, string id)
+    public static async Task<ArchiveMeta> Get(Context ctx, string archiveId)
     {
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage resp = await client.GetAsync(ctx.ArchivePath());
+            HttpResponseMessage resp = await client.GetAsync(ctx.ArchivePath(archiveId));
+            // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
-            System.Console.WriteLine(respBody);
+            ArchiveMeta archiveMeta = JsonSerializer.Deserialize<ArchiveMeta>(respBody);
+            return archiveMeta;
         }
     }
 }

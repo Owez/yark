@@ -106,11 +106,11 @@ pub mod archive {
 
     #[derive(Deserialize)]
     pub struct GetVideosQuerySchema {
-        kind: GetVideosKind,
+        kind: GetVideoCollectionKind,
     }
 
     #[derive(Deserialize)]
-    enum GetVideosKind {
+    enum GetVideoCollectionKind {
         #[serde(rename(deserialize = "videos"))]
         Videos,
         #[serde(rename(deserialize = "livestreams"))]
@@ -119,7 +119,7 @@ pub mod archive {
         Shorts,
     }
 
-    impl fmt::Display for GetVideosKind {
+    impl fmt::Display for GetVideoCollectionKind {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
                 Self::Videos => write!(f, "videos"),
@@ -141,9 +141,9 @@ pub mod archive {
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
         Ok(Json(match kind {
-            GetVideosKind::Videos => archive.videos.clone(),
-            GetVideosKind::Livestreams => archive.livestreams.clone(),
-            GetVideosKind::Shorts => archive.shorts.clone(),
+            GetVideoCollectionKind::Videos => archive.videos.clone(),
+            GetVideoCollectionKind::Livestreams => archive.livestreams.clone(),
+            GetVideoCollectionKind::Shorts => archive.shorts.clone(),
         }))
     }
 
