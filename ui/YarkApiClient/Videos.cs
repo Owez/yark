@@ -21,7 +21,29 @@ public class Video
     public Elements<Nullable<int>> Likes { get; set; }
     public Elements<string> Thumbnail { get; set; }
     public Elements<bool> Deleted { get; set; }
-    // TODO: notes
+    public List<Note> Notes { get; set; }
+
+    public static async Task<Video> Get(Context ctx, string archiveId, string videoId)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            HttpResponseMessage resp = await client.GetAsync(ctx.VideoPath(archiveId, videoId));
+            // TODO: err handling
+            string respBody = await resp.Content.ReadAsStringAsync();
+            Video video = JsonSerializer.Deserialize<Video>(respBody);
+            return video;
+        }
+    }
+
+    public string FileUrl(Context ctx, string archiveId)
+    {
+        return ctx.VideoPath(archiveId, this.Id, "/file");
+    }
+
+    public string ThumbnailUrl(Context ctx, string archiveId, string imageHash)
+    {
+        return ctx.ImagePath(archiveId, imageHash, "/file");
+    }
 }
 
 public class VideoCollection
@@ -35,7 +57,7 @@ public class VideoCollection
         Content = content;
     }
 
-    public static async Task<VideoCollection> Get(string archiveId, VideoCollectionKind kind, Context ctx)
+    public static async Task<VideoCollection> Get(Context ctx, string archiveId, VideoCollectionKind kind)
     {
         string kindPath = string.Format("/videos?kind={0}", VideoCollectionKindToString(kind));
         using (HttpClient client = new HttpClient())

@@ -22,12 +22,12 @@ public class Archive
     {
         public string Path { get; set; }
         public string Target { get; set; }
-        // public string Id { get; set; }
     }
 
-    private class MessageIdResponse
+    private class ArchiveImportSchema
     {
-        public string Message { get; set; }
+        public string Path { get; set; }
+        public string Target { get; set; }
         public string Id { get; set; }
     }
 
@@ -38,7 +38,23 @@ public class Archive
             Path = path,
             Target = target,
         };
-        string createJson = JsonSerializer.Serialize(createSchema);
+        return await Archive.SendPost(ctx, createSchema);
+    }
+
+    public static async Task<Archive> Import(Context ctx, string path, string target, string archiveId)
+    {
+        ArchiveImportSchema importSchema = new ArchiveImportSchema
+        {
+            Path = path,
+            Target = target,
+            Id = archiveId
+        };
+        return await Archive.SendPost(ctx, importSchema);
+    }
+
+    private static async Task<Archive> SendPost<T>(Context ctx, T schema)
+    {
+        string createJson = JsonSerializer.Serialize(schema);
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
