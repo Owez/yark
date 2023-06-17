@@ -3,4 +3,5 @@
 .idea/
 
 demo/
-foobar/
+*/demo/
+**/foobar/

@@ -1,4 +1,4 @@
 target/
 Cargo.lock
 .env
-manager.json
+testarchive/videos/*
