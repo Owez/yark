@@ -7,7 +7,7 @@ public class VideosTests
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
-        VideoCollection videos = await VideoCollection.Get(id, VideoCollectionKind.Videos, ctx);
+        VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Videos);
         // TODO: assert
     }
 
@@ -16,7 +16,7 @@ public class VideosTests
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
-        VideoCollection videos = await VideoCollection.Get(id, VideoCollectionKind.Livestreams, ctx);
+        VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Livestreams, );
         // TODO: assert
     }
 
@@ -25,7 +25,7 @@ public class VideosTests
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
-        VideoCollection videos = await VideoCollection.Get(id, VideoCollectionKind.Shorts, ctx);
+        VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Shorts);
         // TODO: assert
     }
 }

@@ -59,9 +59,9 @@ public class VideoCollection
 
     public static async Task<VideoCollection> Get(Context ctx, string archiveId, VideoCollectionKind kind)
     {
-        string kindPath = string.Format("/videos?kind={0}", VideoCollectionKindToString(kind));
         using (HttpClient client = new HttpClient())
         {
+            string kindPath = string.Format("/videos?kind={0}", VideoCollectionKindToString(kind));
             HttpResponseMessage resp = await client.GetAsync(ctx.ArchivePath(archiveId, kindPath));
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
