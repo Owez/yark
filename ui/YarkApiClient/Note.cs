@@ -17,20 +17,21 @@ public class Note
         public string Description { get; set; }
     }
 
-    public static async Task<Note> Create(Context ctx, string archiveId, string videoId, int timestamp, string title, string description)
+    public static async Task<Note> Create(AdminContext adminCtx, string archiveId, string videoId, int timestamp, string title, string description)
     {
-        NoteCreateSchema createSchema = new NoteCreateSchema
-        {
-            Timestamp = timestamp,
-            Title = title,
-            Description = description
-        };
-        string createJson = JsonSerializer.Serialize(createSchema);
         using (HttpClient client = new HttpClient())
         {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            NoteCreateSchema createSchema = new NoteCreateSchema
+            {
+                Timestamp = timestamp,
+                Title = title,
+                Description = description
+            };
+            string createJson = JsonSerializer.Serialize(createSchema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(createJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(ctx.VideoPath(archiveId, videoId, "/note"), body);
+            HttpResponseMessage resp = await client.PostAsync(adminCtx.VideoPath(archiveId, videoId, "/note"), body);
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
@@ -58,36 +59,38 @@ public class Note
         }
     }
 
-    public async void Update(Context ctx, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky
+    public async void Update(AdminContext adminCtx, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky
     {
-        NoteUpdateSchema updateSchema = new NoteUpdateSchema(this);
-        if (timestamp != 1612140613)
-        {
-            updateSchema.Timestamp = timestamp;
-        }
-        if (title != "1612175069594426240613")
-        {
-            updateSchema.Title = title;
-        }
-        if (description != "1612175069594426240613")
-        {
-            updateSchema.Title = description;
-        }
-        string updateJson = JsonSerializer.Serialize(updateSchema);
         using (HttpClient client = new HttpClient())
         {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            NoteUpdateSchema updateSchema = new NoteUpdateSchema(this);
+            if (timestamp != 1612140613)
+            {
+                updateSchema.Timestamp = timestamp;
+            }
+            if (title != "1612175069594426240613")
+            {
+                updateSchema.Title = title;
+            }
+            if (description != "1612175069594426240613")
+            {
+                updateSchema.Title = description;
+            }
+            string updateJson = JsonSerializer.Serialize(updateSchema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(updateJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(ctx.NotePath(archiveId, videoId, this.Id), body);
+            HttpResponseMessage resp = await client.PostAsync(adminCtx.NotePath(archiveId, videoId, this.Id), body);
             // TODO: err handling
         }
     }
 
-    public async void Delete(Context ctx, string archiveId, string videoId)
+    public async void Delete(AdminContext adminCtx, string archiveId, string videoId)
     {
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage resp = await client.DeleteAsync(ctx.NotePath(archiveId, videoId, this.Id));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            HttpResponseMessage resp = await client.DeleteAsync(adminCtx.NotePath(archiveId, videoId, this.Id));
             // TODO: err handling
         }
     }

@@ -31,17 +31,17 @@ public class Archive
         public string Id { get; set; }
     }
 
-    public static async Task<Archive> Create(Context ctx, string path, string target)
+    public static async Task<Archive> Create(AdminContext adminCtx, string path, string target)
     {
         ArchiveCreateSchema createSchema = new ArchiveCreateSchema
         {
             Path = path,
             Target = target,
         };
-        return await Archive.SendPost(ctx, createSchema);
+        return await Archive.SendPost(adminCtx, createSchema);
     }
 
-    public static async Task<Archive> Import(Context ctx, string path, string target, string archiveId)
+    public static async Task<Archive> Import(AdminContext adminCtx, string path, string target, string archiveId)
     {
         ArchiveImportSchema importSchema = new ArchiveImportSchema
         {
@@ -49,30 +49,32 @@ public class Archive
             Target = target,
             Id = archiveId
         };
-        return await Archive.SendPost(ctx, importSchema);
+        return await Archive.SendPost(adminCtx, importSchema);
     }
 
-    private static async Task<Archive> SendPost<T>(Context ctx, T schema)
+    private static async Task<Archive> SendPost<T>(AdminContext adminCtx, T schema)
     {
-        string createJson = JsonSerializer.Serialize(schema);
         using (HttpClient client = new HttpClient())
         {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            string createJson = JsonSerializer.Serialize(schema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(createJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(ctx.Path("/archive"), body);
+            HttpResponseMessage resp = await client.PostAsync(adminCtx.Path("/archive"), body);
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
-            ArchiveMeta archiveMeta = await ArchiveMeta.Get(ctx, msg.Id);
+            ArchiveMeta archiveMeta = await ArchiveMeta.Get(adminCtx, msg.Id);
             return new Archive(archiveMeta);
         }
     }
 
-    public async void Delete(Context ctx)
+    public async void Delete(AdminContext adminCtx)
     {
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage resp = await client.DeleteAsync(ctx.ArchivePath(this.Meta.Id));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            HttpResponseMessage resp = await client.DeleteAsync(adminCtx.ArchivePath(this.Meta.Id));
             // TODO: err handling
         }
     }
