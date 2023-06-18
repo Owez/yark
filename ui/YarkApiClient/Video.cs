@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
@@ -11,16 +12,27 @@ public enum VideoCollectionKind
 
 public class Video
 {
+    [JsonPropertyName("id")]
     public string Id { get; set; }
+    [JsonPropertyName("uploaded")]
     public DateTime Uploaded { get; set; }
+    [JsonPropertyName("width")]
     public int Width { get; set; }
+    [JsonPropertyName("height")]
     public int Height { get; set; }
+    [JsonPropertyName("title")]
     public Elements<string> Title { get; set; }
+    [JsonPropertyName("description")]
     public Elements<string> Description { get; set; }
-    public Elements<Nullable<int>> Views { get; set; }
-    public Elements<Nullable<int>> Likes { get; set; }
+    [JsonPropertyName("views")]
+    public Elements<int?> Views { get; set; }
+    [JsonPropertyName("likes")]
+    public Elements<int?> Likes { get; set; }
+    [JsonPropertyName("thumbnail")]
     public Elements<string> Thumbnail { get; set; }
+    [JsonPropertyName("deleted")]
     public Elements<bool> Deleted { get; set; }
+    [JsonPropertyName("notes")]
     public List<Note> Notes { get; set; }
 
     public static async Task<Video> Get(Context ctx, string archiveId, string videoId)

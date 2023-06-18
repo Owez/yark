@@ -1,13 +1,18 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
 public class Note
 {
+    [JsonPropertyName("id")]
     public string Id { get; set; }
+    [JsonPropertyName("timestamp")]
     public int Timestamp { get; set; }
+    [JsonPropertyName("title")]
     public string Title { get; set; }
+    [JsonPropertyName("description")]
     public string Description { get; set; }
 
     private class NoteCreateSchema

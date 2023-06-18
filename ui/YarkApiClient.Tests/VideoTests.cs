@@ -1,3 +1,5 @@
+using FluentAssertions;
+
 namespace YarkApiClient.Tests;
 
 public class VideosTests
@@ -8,7 +10,8 @@ public class VideosTests
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
         VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Videos);
-        // TODO: assert
+        videos.Kind.Should().Be(VideoCollectionKind.Videos);
+        videos.Content.Should().BeEquivalentTo(Expected.Videos());
     }
 
     [Fact]
@@ -16,8 +19,9 @@ public class VideosTests
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
-        VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Livestreams, );
-        // TODO: assert
+        VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Livestreams);
+        videos.Kind.Should().Be(VideoCollectionKind.Livestreams);
+        videos.Content.Should().BeEquivalentTo(Expected.Livestreams());
     }
 
     [Fact]
@@ -26,6 +30,7 @@ public class VideosTests
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context ctx = new Context();
         VideoCollection videos = await VideoCollection.Get(ctx, id, VideoCollectionKind.Shorts);
-        // TODO: assert
+        videos.Kind.Should().Be(VideoCollectionKind.Shorts);
+        videos.Content.Should().BeEquivalentTo(Expected.Shorts());
     }
 }
