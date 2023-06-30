@@ -11,4 +11,14 @@ public class Elements<T> : Dictionary<DateTime, T>
         };
         return values;
     }
+
+    public T? Current()
+    {
+        if (Count == 0)
+        {
+            return default;
+        }
+        DateTime mostRecentDate = Keys.OrderByDescending(k => k).First();
+        return this[mostRecentDate];
+    }
 }

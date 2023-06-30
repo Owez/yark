@@ -64,7 +64,7 @@ public class Note
         }
     }
 
-    public async void Update(AdminContext adminCtx, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky
+    public async void Update(AdminContext adminCtx, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky or wait for new Option type
     {
         using (HttpClient client = new HttpClient())
         {
