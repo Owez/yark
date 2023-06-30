@@ -13,11 +13,11 @@ public class SnapshotTests
         Snapshot<string> roundTrip = JsonSerializer.Deserialize<Snapshot<string>>(serialized);
         snapshot.Should().BeEquivalentTo(roundTrip);
     }
-
+    
     [Fact]
-    public void TestStringSnapshot()
+    public void TestStringSnapshotGood()
     {
-        string exampleDate = "2020-06-21";
+        string exampleDate = "2020-06-21T00:00:00";
         DateTime parsedDate = DateTime.Parse(exampleDate);
         string exampleData = "this is some data here!!";
         Snapshot<string> snapshot = new Snapshot<string>
@@ -26,7 +26,7 @@ public class SnapshotTests
             Data = exampleData
         };
         string serialized = JsonSerializer.Serialize(snapshot);
-        serialized.Should().Be($"{{\"{exampleDate}\":\"{exampleData}\"}}");
+        serialized.Should().Be($"{{\"taken\":\"{exampleDate}\",\"data\":\"{exampleData}\"}}");
         Snapshot<string> roundTrip = JsonSerializer.Deserialize<Snapshot<string>>(serialized);
         snapshot.Should().BeEquivalentTo(roundTrip);
     }

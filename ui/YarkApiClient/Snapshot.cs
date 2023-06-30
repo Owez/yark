@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace YarkApiClient;
 
-// TODO: make into kv pair and then deserialize into this full class, it should be `k: v` not `Snapshot { Taken: k, Data: v }`
 public class Snapshot<T>
 {
+    [JsonPropertyName("taken")]
     public DateTime Taken { get; set; }
+    [JsonPropertyName("data")]
     public T Data { get; set; }
 
     public static Snapshot<T> NewEmpty()
@@ -15,3 +18,4 @@ public class Snapshot<T>
         };
     }
 }
+

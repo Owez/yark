@@ -180,17 +180,3 @@ fn deserialize_data<'de, D: Deserializer<'de>>(
     }
     Ok(data)
 }
-
-// TODO: job schdulaing once everything else is figured out
-// /// Archive wrapper for the [Manager] which packages it's job state with it
-// #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-// pub struct ManagedArchive {
-//     pub archive: Archive,
-//     pub jobs: Vec<Job>,
-// }
-
-// #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-// pub enum Job {
-//     Metadata, // TODO: metadata options
-//     Download, // TODO: download options
-// }
