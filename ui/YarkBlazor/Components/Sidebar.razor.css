@@ -1,0 +1,28 @@
+nav {
+    margin: 20px;
+    box-sizing: border-box;
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+a.header {
+    color: initial;
+    text-decoration: none;
+    font-size: 28px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: -15px;
+    margin-bottom: 7.5px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    width: calc(250px - 60px);
+    margin: 0;
+}

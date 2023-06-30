@@ -1,5 +1,17 @@
 ﻿@inherits LayoutComponentBase
 
-<main>
-    @Body
-</main>
+<div class="content">
+    <YarkBlazor.Components.Sidebar />
+    <main>
+        @Body
+    </main>
+</div>
+
+@* NOTE: here not in a seperate css because it doesn't look like blazor supports it *@
+<style scoped>
+    .content {
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+    }
+</style>

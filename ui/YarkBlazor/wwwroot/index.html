@@ -6,12 +6,12 @@
     <title>YarkBlazor</title>
     <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
+    <!-- Below is the scoped styling enabler -->
+    <link href="YarkBlazor.styles.css" rel="stylesheet" />
     <!-- Below is the custom inter font linking with app.css global styling -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- If you add any scoped CSS files, uncomment the following to load them
-    <link href="YarkBlazor.styles.css" rel="stylesheet" /> -->
 </head>
 
 <body>
@@ -36,7 +36,7 @@
                 font-size: 0.8rem;
                 margin-top: 1rem;
                 color: #afafaf;
-                width:16rem;
+                width: 16rem;
             }
 
             .lds-ripple {
@@ -107,6 +107,12 @@
                 "It's possible to refresh without downloading videos",
                 "You can exit the archive at anytime by pressing the \"leave\" button",
                 "Videos are stored on your computer so make sure not to delete them!",
+                "Create backups of important videos to prevent data loss",
+                // "Set up a regular archiving schedule to ensure consistent backups",
+                "Test the integrity of your archived files periodically",
+                "Consider implementing a backup plan for your archived files",
+                "Check for updates to Yark for new features and bugfixes!",
+                "If archiving stops working, consider trying to update Yark due to API changes"
                 // More tips here :)
             ];
             const random = Math.floor(Math.random() * tips.length);
