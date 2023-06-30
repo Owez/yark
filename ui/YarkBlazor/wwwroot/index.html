@@ -6,13 +6,115 @@
     <title>YarkBlazor</title>
     <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
-    
+    <!-- Below is the custom inter font linking with app.css global styling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="YarkBlazor.styles.css" rel="stylesheet" /> -->
 </head>
 
 <body>
-    <div id="app">Loading...</div>
+    <div id="app">
+        <style>
+            .loading {
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .loading>div {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .loading>div>p {
+                text-align: center;
+                font-size: 0.8rem;
+                margin-top: 1rem;
+                color: #afafaf;
+                width:16rem;
+            }
+
+            .lds-ripple {
+                display: inline-block;
+                position: relative;
+                width: 80px;
+                height: 80px;
+                margin-top: calc(0.8rem + 1rem);
+            }
+
+            .lds-ripple div {
+                position: absolute;
+                border: 4px solid #bababa;
+                opacity: 1;
+                border-radius: 50%;
+                animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            }
+
+            .lds-ripple div:nth-child(2) {
+                animation-delay: -0.5s;
+            }
+
+            @keyframes lds-ripple {
+                0% {
+                    top: 36px;
+                    left: 36px;
+                    width: 0;
+                    height: 0;
+                    opacity: 0;
+                }
+
+                4.9% {
+                    top: 36px;
+                    left: 36px;
+                    width: 0;
+                    height: 0;
+                    opacity: 0;
+                }
+
+                5% {
+                    top: 36px;
+                    left: 36px;
+                    width: 0;
+                    height: 0;
+                    opacity: 1;
+                }
+
+                100% {
+                    top: 0px;
+                    left: 0px;
+                    width: 72px;
+                    height: 72px;
+                    opacity: 0;
+                }
+            }
+        </style>
+        <div class="loading">
+            <div>
+                <div class="lds-ripple">
+                    <div></div>
+                    <div></div>
+                </div>
+                <p id="loading-tip"></p>
+            </div>
+        </div>
+        <script>
+            const tips = [
+                "It's possible to refresh without downloading videos",
+                "You can exit the archive at anytime by pressing the \"leave\" button",
+                "Videos are stored on your computer so make sure not to delete them!",
+                // More tips here :)
+            ];
+            const random = Math.floor(Math.random() * tips.length);
+            const gotTip = tips[random];
+            let tipElement = document.getElementById("loading-tip");
+            tipElement.textContent = `Tip: ${gotTip}`;
+        </script>
+    </div>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
