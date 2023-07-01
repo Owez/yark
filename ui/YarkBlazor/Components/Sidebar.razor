@@ -1,8 +1,8 @@
 @inject NavigationManager NavigationManager
 
 <nav>
-    <div class="list">
-        <a href="/" class="header">Y</a>
+    <div class="sidebar-list">
+        <a href="/" class="sidebar-header">Y</a>
         <hr>
         <YarkBlazor.Components.SidebarButton Title="Dashboard" Link="/archive" Icon=@IconKind.Dashboard
             Active=@OnDashboard />
@@ -14,9 +14,9 @@
         <YarkBlazor.Components.SidebarButton Title="Shorts" Link="/archive/shorts" Icon=@IconKind.Shorts
             Active=@OnShorts />
     </div>
-    <div class="list">
+    <div class="sidebar-list">
         <hr>
-        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/donate" Icon=@IconKind.Stars Active=@OnDonate />
+        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/archive/donate" Icon=@IconKind.Stars Active=@OnDonate />
         <YarkBlazor.Components.SidebarButton Title="Settings" Link="/archive/settings" Icon=@IconKind.Settings
             Active=@OnSettings />
         <YarkBlazor.Components.SidebarButton Title="Leave" Link="/" Icon=@IconKind.Leave Active=@OnLeave />
@@ -27,7 +27,7 @@
     nav {
         margin: 20px;
         box-sizing: border-box;
-        padding: 30px;
+        padding: calc(30px - 12.5px);
         border-radius: 20px;
         border: 1px solid rgba(0, 0, 0, 0.12);
         width: 250px;
@@ -36,29 +36,27 @@
         justify-content: space-between;
         background-color: white;
         color: #171717;
+        min-height: calc(470px + 12.5px);
     }
 
-    .list {
+    .sidebar-list {
         display: flex;
         flex-direction: column;
     }
 
-    a.header {
+    .sidebar-header {
         color: initial;
         text-decoration: none;
         font-size: 28px;
         font-weight: 500;
         text-align: center;
-        margin-top: -15px;
     }
 
     hr {
         border: none;
         border-top: 1px solid rgba(0, 0, 0, 0.12);
         width: calc(250px - 60px);
-        margin: 0;
-        margin-top: 12.5px;
-        margin-bottom: 12.5px;
+        margin: 12.5px;
     }
 </style>
 

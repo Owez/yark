@@ -1,4 +1,4 @@
-<img src=@IconKindMethods.GetUri(Icon) />
+<img src=@IconKindMethods.GetUri(Icon) class="@((Active ? "sidebar-img-active" : ""))" />
 <p>@Title</p>
 
 <style scoped>
@@ -11,6 +11,11 @@
     p {
         font-size: 15px;
         font-weight: 500;
+        margin:0;
+    }
+
+    .sidebar-img-active {
+        filter: invert(95%) sepia(97%) saturate(14%) hue-rotate(213deg) brightness(104%) contrast(104%);
     }
 </style>
 
@@ -20,4 +25,7 @@
 
     [Parameter]
     public IconKind Icon { get; set; } = IconKind.Placeholder;
+
+    [Parameter]
+    public bool Active { get; set; } = false;
 }

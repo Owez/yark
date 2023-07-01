@@ -1,21 +1,26 @@
-<a href=@Link class="button @((Active ? "active" : ""))">
-    <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon />
+<a href=@Link class="sidebar-button @((Active ? "sidebar-active" : ""))">
+    <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon Active=@Active />
 </a>
 
 <style scoped>
-    .button {
+    .sidebar-button {
         color: initial;
         text-decoration: none;
         width: 100%;
         display: flex;
         align-items: center;
+        box-sizing: border-box;
         padding-top: 12.5px;
         padding-bottom: 12.5px;
+        padding-left: 12.5px;
+        padding-right: 12.5px;
         color: #171717;
     }
 
-    .active {
-        background-color: blue;
+    .sidebar-active {
+        background-color: #0183FF;
+        border-radius: 15px;
+        color:white;
     }
 </style>
 
