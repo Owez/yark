@@ -1,9 +1,116 @@
+@inject NavigationManager NavigationManager
+
 <nav>
-    <a href="/" class="header">Y</a>
-    <hr>
-    <YarkBlazor.Components.SidebarButton />
-    <hr>
-    <YarkBlazor.Components.SidebarButton />
-    <YarkBlazor.Components.SidebarButton />
-    <YarkBlazor.Components.SidebarButton />
+    <div class="list">
+        <a href="/" class="header">Y</a>
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Dashboard" Link="/archive" Icon=@IconKind.Dashboard
+            Active=@OnDashboard />
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Videos" Link="/archive/videos" Icon=@IconKind.Videos
+            Active=@OnVideos />
+        <YarkBlazor.Components.SidebarButton Title="Livestreams" Link="/archive/livestreams" Icon=@IconKind.Livestreams
+            Active=@OnLivestreams />
+        <YarkBlazor.Components.SidebarButton Title="Shorts" Link="/archive/shorts" Icon=@IconKind.Shorts
+            Active=@OnShorts />
+    </div>
+    <div class="list">
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/donate" Icon=@IconKind.Stars Active=@OnDonate />
+        <YarkBlazor.Components.SidebarButton Title="Settings" Link="/archive/settings" Icon=@IconKind.Settings
+            Active=@OnSettings />
+        <YarkBlazor.Components.SidebarButton Title="Leave" Link="/" Icon=@IconKind.Leave Active=@OnLeave />
+    </div>
 </nav>
+
+<style scoped>
+    nav {
+        margin: 20px;
+        box-sizing: border-box;
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background-color: white;
+        color: #171717;
+    }
+
+    .list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    a.header {
+        color: initial;
+        text-decoration: none;
+        font-size: 28px;
+        font-weight: 500;
+        text-align: center;
+        margin-top: -15px;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        width: calc(250px - 60px);
+        margin: 0;
+        margin-top: 12.5px;
+        margin-bottom: 12.5px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool OnDashboard { get; set; } = false;
+
+    [Parameter]
+    public bool OnVideos { get; set; } = false;
+
+    [Parameter]
+    public bool OnLivestreams { get; set; } = false;
+
+    [Parameter]
+    public bool OnShorts { get; set; } = false;
+
+    [Parameter]
+    public bool OnDonate { get; set; } = false;
+
+    [Parameter]
+    public bool OnSettings { get; set; } = false;
+
+    [Parameter]
+    public bool OnLeave { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        Uri gotUri = new Uri(NavigationManager.Uri.ToString());
+        string path = gotUri.AbsolutePath;
+        switch (path)
+        {
+            case "/archive":
+                OnDashboard = true;
+                break;
+            case "/archive/videos":
+                OnVideos = true;
+                break;
+            case "/archive/livestreams":
+                OnLivestreams = true;
+                break;
+            case "/archive/shorts":
+                OnShorts = true;
+                break;
+            case "/archive/donate":
+                OnDonate = true;
+                break;
+            case "/archive/settings":
+                OnSettings = true;
+                break;
+            case "/":
+                OnLeave = true;
+                break;
+        }
+    }
+}

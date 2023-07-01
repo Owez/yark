@@ -1,0 +1,23 @@
+<img src=@IconKindMethods.GetUri(Icon) />
+<p>@Title</p>
+
+<style scoped>
+    img {
+        width: 17px;
+        height: auto;
+        margin-right: 12.5px;
+    }
+
+    p {
+        font-size: 15px;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Button";
+
+    [Parameter]
+    public IconKind Icon { get; set; } = IconKind.Placeholder;
+}

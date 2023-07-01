@@ -1,4 +1,34 @@
-<a href="/" class="button">
-    <div class="lmao"></div>
-    <p>Dashboard</p>
+<a href=@Link class="button @((Active ? "active" : ""))">
+    <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon />
 </a>
+
+<style scoped>
+    .button {
+        color: initial;
+        text-decoration: none;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding-top: 12.5px;
+        padding-bottom: 12.5px;
+        color: #171717;
+    }
+
+    .active {
+        background-color: blue;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Button";
+
+    [Parameter]
+    public string Link { get; set; } = "/";
+
+    [Parameter]
+    public IconKind Icon { get; set; } = IconKind.Placeholder;
+
+    [Parameter]
+    public bool Active { get; set; } = false;
+}
