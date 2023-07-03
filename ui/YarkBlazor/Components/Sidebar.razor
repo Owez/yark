@@ -2,7 +2,9 @@
 
 <nav>
     <div class="sidebar-list">
-        <a href="/" class="sidebar-header">Y</a>
+        <a href="/" class="sidebar-header">
+            <YarkBlazor.Components.Logo />
+        </a>
         <hr>
         <YarkBlazor.Components.SidebarButton Title="Dashboard" Link="/archive" Icon=@IconKind.Dashboard
             Active=@OnDashboard />
@@ -16,7 +18,8 @@
     </div>
     <div class="sidebar-list">
         <hr>
-        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/archive/donate" Icon=@IconKind.Stars Active=@OnDonate />
+        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/archive/donate" Icon=@IconKind.Stars
+            Active=@OnDonate />
         <YarkBlazor.Components.SidebarButton Title="Settings" Link="/archive/settings" Icon=@IconKind.Settings
             Active=@OnSettings />
         <YarkBlazor.Components.SidebarButton Title="Leave" Link="/" Icon=@IconKind.Leave Active=@OnLeave />
@@ -45,10 +48,8 @@
     }
 
     .sidebar-header {
-        color: initial;
+        color: inherit;
         text-decoration: none;
-        font-size: 28px;
-        font-weight: 500;
         text-align: center;
     }
 
@@ -56,7 +57,7 @@
         border: none;
         border-top: 1px solid rgba(0, 0, 0, 0.12);
         width: calc(250px - 60px);
-        margin: 12.5px;
+        margin: 15px;
     }
 </style>
 
