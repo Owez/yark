@@ -1,0 +1,43 @@
+<div class="start-card">
+    <div class="start-card-header">
+        <img src=@IconKindMethods.GetUri(Orb) alt="Orb" class="orb">
+        <h1>@Title</h1>
+    </div>
+    <p>@Description</p>
+    @Orb
+</div>
+
+<style scoped>
+    .start-card {
+        margin: 20px;
+        box-sizing: border-box;
+        padding: 17.5px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        width: 20vw;
+        height: 40vh;
+    }
+</style>
+
+@* TODO: copy old design *@
+<style scoped>
+    .start-card-header {}
+
+    h1 {}
+
+    .orb {}
+</style>
+
+@code {
+    [Parameter]
+    public StartCardKind Kind { get; set; } = StartCardKind.Normal;
+
+    [Parameter]
+    public string Title { get; set; } = "Start Card";
+
+    [Parameter]
+    public string Description { get; set; } = "Description";
+
+    [Parameter]
+    public IconKind Orb { get; set; } = IconKind.GreenOrb;
+}
