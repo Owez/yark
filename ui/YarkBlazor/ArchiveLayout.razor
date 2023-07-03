@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+
+<div class="app-content">
+    <YarkBlazor.Components.Sidebar />
+    <main>
+        @Body
+    </main>
+</div>
+
+<style scoped>
+    .app-content {
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+    }
+</style>

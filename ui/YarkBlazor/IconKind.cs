@@ -1,5 +1,3 @@
-using YarkBlazor;
-
 public enum IconKind
 {
     Placeholder,
@@ -9,7 +7,10 @@ public enum IconKind
     Shorts,
     Stars,
     Settings,
-    Leave
+    Leave,
+    GreenOrb,
+    OrangeOrb,
+    PurpleOrb
 }
 
 public class IconKindMethods
@@ -18,20 +19,28 @@ public class IconKindMethods
     {
         switch (kind)
         {
-            case IconKind.Placeholder: return UriGenerator("Placeholder");
-            case IconKind.Dashboard: return UriGenerator("Dashboard");
-            case IconKind.Videos: return UriGenerator("Videos");
-            case IconKind.Livestreams: return UriGenerator("Livestreams");
-            case IconKind.Shorts: return UriGenerator("Shorts");
-            case IconKind.Stars: return UriGenerator("Stars");
-            case IconKind.Settings: return UriGenerator("Settings");
-            case IconKind.Leave: return UriGenerator("Leave");
+            case IconKind.Placeholder: return TypicalUriGenerator("Placeholder");
+            case IconKind.Dashboard: return TypicalUriGenerator("Dashboard");
+            case IconKind.Videos: return TypicalUriGenerator("Videos");
+            case IconKind.Livestreams: return TypicalUriGenerator("Livestreams");
+            case IconKind.Shorts: return TypicalUriGenerator("Shorts");
+            case IconKind.Stars: return TypicalUriGenerator("Stars");
+            case IconKind.Settings: return TypicalUriGenerator("Settings");
+            case IconKind.Leave: return TypicalUriGenerator("Leave");
+            case IconKind.GreenOrb: return OrbUriGenerator("Green");
+            case IconKind.OrangeOrb: return OrbUriGenerator("Orange");
+            case IconKind.PurpleOrb: return OrbUriGenerator("Purple");
         }
-        return UriGenerator("Placeholder");
+        return TypicalUriGenerator("Placeholder");
     }
 
-    private static string UriGenerator(string name)
+    private static string TypicalUriGenerator(string name)
     {
         return string.Format("/img/icons/{0} Icon.svg", name);
+    }
+
+    private static string OrbUriGenerator(string name)
+    {
+        return string.Format("/img/icons/{0} Orb.png", name);
     }
 }
