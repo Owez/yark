@@ -1,6 +1,10 @@
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
 <YarkBlazor.Components.Start.StartCard Title="Load Existing"
     Description="Manage or view an archive that's already been made" Link="/start/load" Orb=@IconKind.OrangeOrb
-    Kind=@Kind OnLeft=@OnLeft />
+    Kind=@Kind OnLeft=@OnLeft>
+
+</YarkBlazor.Components.Start.StartCard>
 
 @code {
     [Parameter]
@@ -8,4 +12,6 @@
 
     [Parameter]
     public bool OnLeft { get; set; } = false;
+
+    // TODO: use get recent archive thing
 }

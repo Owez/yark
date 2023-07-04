@@ -2,6 +2,18 @@
   "version": 3,
   "targets": {
     "net7.0": {
+      "Blazored.LocalStorage/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Web": "7.0.0"
+        },
+        "compile": {
+          "lib/net7.0/Blazored.LocalStorage.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazored.LocalStorage.dll": {}
+        }
+      },
       "Microsoft.AspNetCore.Authorization/7.0.7": {
         "type": "package",
         "dependencies": {
@@ -475,9 +487,31 @@
         "build": {
           "buildTransitive/net6.0/System.Text.Json.targets": {}
         }
+      },
+      "YarkApiClient/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/YarkApiClient.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/YarkApiClient.dll": {}
+        }
       }
     },
     "net7.0/browser-wasm": {
+      "Blazored.LocalStorage/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Web": "7.0.0"
+        },
+        "compile": {
+          "lib/net7.0/Blazored.LocalStorage.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/Blazored.LocalStorage.dll": {}
+        }
+      },
       "Microsoft.AspNetCore.Authorization/7.0.7": {
         "type": "package",
         "dependencies": {
@@ -945,10 +979,34 @@
         "build": {
           "buildTransitive/net6.0/System.Text.Json.targets": {}
         }
+      },
+      "YarkApiClient/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v7.0",
+        "compile": {
+          "bin/placeholder/YarkApiClient.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/YarkApiClient.dll": {}
+        }
       }
     }
   },
   "libraries": {
+    "Blazored.LocalStorage/4.3.0": {
+      "sha512": "CfHp9SWN45cM/TM8uw4pELQBfCRtMssCMSOjsEXVWibeYBn36TLpzw+J1vsC2Su2BEQ3Et19A5+GqK1S3kHbTQ==",
+      "type": "package",
+      "path": "blazored.localstorage/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "blazored.localstorage.4.3.0.nupkg.sha512",
+        "blazored.localstorage.nuspec",
+        "icon.png",
+        "lib/net6.0/Blazored.LocalStorage.dll",
+        "lib/net7.0/Blazored.LocalStorage.dll"
+      ]
+    },
     "Microsoft.AspNetCore.Authorization/7.0.7": {
       "sha512": "1w7+mJU4atTeHqd2P53WrAsSnifm/YV8/nDWL16QyfGRTQiyezvQKMbM3qof9QPGeqMfjQPbaphaIYDSqYPAig==",
       "type": "package",
@@ -1792,12 +1850,19 @@
         "system.text.json.nuspec",
         "useSharedDesignerContext.txt"
       ]
+    },
+    "YarkApiClient/1.0.0": {
+      "type": "project",
+      "path": "../YarkApiClient/YarkApiClient.csproj",
+      "msbuildProject": "../YarkApiClient/YarkApiClient.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net7.0": [
+      "Blazored.LocalStorage >= 4.3.0",
       "Microsoft.AspNetCore.Components.WebAssembly >= 7.0.7",
-      "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 7.0.7"
+      "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 7.0.7",
+      "YarkApiClient >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -1824,7 +1889,11 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj": {
+              "projectPath": "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
@@ -1837,6 +1906,10 @@
       "net7.0": {
         "targetAlias": "net7.0",
         "dependencies": {
+          "Blazored.LocalStorage": {
+            "target": "Package",
+            "version": "[4.3.0, )"
+          },
           "Microsoft.AspNetCore.Components.WebAssembly": {
             "target": "Package",
             "version": "[7.0.7, )"

@@ -67,6 +67,7 @@ pub mod archive {
         archive.save()?;
         let id = schema.id.unwrap_or(Uuid::new_v4());
         state_lock.manager.insert_existing(id, archive);
+        state_lock.manager.save()?;
         Ok(Json(MessageIdResponse {
             message: "Archive created",
             id,
