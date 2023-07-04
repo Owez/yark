@@ -1,8 +1,10 @@
-<div class="start-card @((OnLeft ? "start-card-left" : ""))">
-    <a href=@Link class="start-card-link">
-        <img src=@IconKindMethods.GetUri(Orb) alt="Orb" class="orb">
-        <h1 class="start-card-title">@Title</h1>
-        <p class="start-card-description">@Description</p>
+<div class="start-card @GetDynamicClasses()">
+    <a href=@CorrectExpandedLink() class="start-card-link">
+        <div>
+            <img src=@IconKindMethods.GetUri(Orb) alt="Orb" class="orb">
+            <h1 class="start-card-title">@Title</h1>
+            <p class="start-card-description">@Description</p>
+        </div>
     </a>
     @ChildContent
 </div>
@@ -10,23 +12,35 @@
 <style scoped>
     .start-card {
         margin: 20px;
-        box-sizing: border-box;
-        padding: 20px;
         border-radius: 20px;
         border: 1px solid rgba(0, 0, 0, 0.12);
         width: calc(10vw + 12.5rem);
         min-width: 18rem;
-        aspect-ratio: 3/4;
-        max-height: 70vh;
+        height: 25rem;
     }
 
     .start-card-left {
         margin-right: 0;
     }
 
+    .start-card-size-half {
+        height: calc(25rem / 2);
+    }
+
+    .start-card-size-full {
+        width: calc(20vw + 25rem + 20px + 2.25px);
+    }
+
     .start-card-link {
         color: inherit;
         text-decoration: none;
+    }
+
+    .start-card-link>div {
+        width: 100%;
+        height: 12.5rem;
+        box-sizing: border-box;
+        padding: 20px;
     }
 
     .orb {
@@ -42,12 +56,14 @@
     }
 
     .start-card-description {
+        margin: 0;
         font-size: 12pt;
-        margin-bottom: 1.5rem;
     }
 </style>
 
 @code {
+    const string DEFAULT_LINK = "/start";
+
     [Parameter]
     public StartCardKind Kind { get; set; } = StartCardKind.Normal;
 
@@ -58,7 +74,7 @@
     public string Description { get; set; } = "Description";
 
     [Parameter]
-    public string Link { get; set; } = "/example";
+    public string Link { get; set; } = DEFAULT_LINK;
 
     [Parameter]
     public IconKind Orb { get; set; } = IconKind.GreenOrb;
@@ -68,4 +84,38 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
+    public string CorrectExpandedLink()
+    {
+        if (Kind == StartCardKind.Full)
+        {
+            return DEFAULT_LINK;
+        }
+        return Link;
+    }
+
+    public string GetDynamicClasses()
+    {
+        List<string> classes = new List<string> { GetLeftClass(), GetSizeClass() };
+        return String.Join(" ", classes.ToArray());
+    }
+
+    private string GetLeftClass()
+    {
+        if (OnLeft)
+        {
+            return "start-card-left";
+        }
+        return "";
+    }
+
+    private string GetSizeClass()
+    {
+        switch (Kind)
+        {
+            case StartCardKind.Half: return "start-card-size-half";
+            case StartCardKind.Full: return "start-card-size-full";
+        }
+        return "";
+    }
 }

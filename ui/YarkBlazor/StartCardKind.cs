@@ -1,6 +1,6 @@
 public enum StartCardKind
 {
-    HalfHeight,
     Normal,
+    Half,
     Full
 }
