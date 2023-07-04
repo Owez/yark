@@ -1,0 +1,11 @@
+<YarkBlazor.Components.Start.StartCard Title="Load Existing"
+    Description="Manage or view an archive that's already been made" Link="/start/load" Orb=@IconKind.OrangeOrb
+    Kind=@Kind OnLeft=@OnLeft />
+
+@code {
+    [Parameter]
+    public StartCardKind Kind { get; set; } = StartCardKind.Normal;
+
+    [Parameter]
+    public bool OnLeft { get; set; } = false;
+}

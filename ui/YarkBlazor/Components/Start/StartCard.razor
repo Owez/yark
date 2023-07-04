@@ -1,31 +1,50 @@
-<div class="start-card">
-    <div class="start-card-header">
+<div class="start-card @((OnLeft ? "start-card-left" : ""))">
+    <a href=@Link class="start-card-link">
         <img src=@IconKindMethods.GetUri(Orb) alt="Orb" class="orb">
-        <h1>@Title</h1>
-    </div>
-    <p>@Description</p>
-    @Orb
+        <h1 class="start-card-title">@Title</h1>
+        <p class="start-card-description">@Description</p>
+    </a>
+    @ChildContent
 </div>
 
 <style scoped>
     .start-card {
         margin: 20px;
         box-sizing: border-box;
-        padding: 17.5px;
+        padding: 20px;
         border-radius: 20px;
         border: 1px solid rgba(0, 0, 0, 0.12);
-        width: 20vw;
-        height: 40vh;
+        width: calc(10vw + 12.5rem);
+        min-width: 18rem;
+        aspect-ratio: 3/4;
+        max-height: 70vh;
     }
-</style>
 
-@* TODO: copy old design *@
-<style scoped>
-    .start-card-header {}
+    .start-card-left {
+        margin-right: 0;
+    }
 
-    h1 {}
+    .start-card-link {
+        color: inherit;
+        text-decoration: none;
+    }
 
-    .orb {}
+    .orb {
+        width: 50px;
+        height: 50px;
+    }
+
+    .start-card-title {
+        font-size: 18pt;
+        font-weight: 500;
+        margin-top: 7.5px;
+        margin-bottom: 1rem;
+    }
+
+    .start-card-description {
+        font-size: 12pt;
+        margin-bottom: 1.5rem;
+    }
 </style>
 
 @code {
@@ -39,5 +58,14 @@
     public string Description { get; set; } = "Description";
 
     [Parameter]
+    public string Link { get; set; } = "/example";
+
+    [Parameter]
     public IconKind Orb { get; set; } = IconKind.GreenOrb;
+
+    [Parameter]
+    public bool OnLeft { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 }

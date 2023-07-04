@@ -40,6 +40,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyQnV0dG9uSW5uZXIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/CreateCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9DcmVhdGVDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/LoadCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9Mb2FkQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/StartCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9TdGFydENhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

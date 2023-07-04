@@ -1,6 +1,12 @@
 @page "/start"
 
-@* TODO: copy old content and make into components with bool "expanded" toggle *@
-<YarkBlazor.Components.Start.StartCard />
-<YarkBlazor.Components.Start.StartCard />
-<YarkBlazor.Components.Start.StartCard />
+<div class="start-cards">
+    <YarkBlazor.Components.Start.CreateCard OnLeft=@true />
+    <YarkBlazor.Components.Start.LoadCard />
+</div>
+
+<style scoped>
+    .start-cards {
+        display: flex;
+    }
+</style>
