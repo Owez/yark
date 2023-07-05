@@ -26,7 +26,8 @@
     [Parameter]
     public RecentArchive Archive { get; set; }
 
-    private async Task OpenCurrentArchive() {
+    private async Task OpenCurrentArchive()
+    {
         await Archive.OpenArchive(sessionStorage, navManager);
     }
 }

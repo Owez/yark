@@ -13,7 +13,7 @@ public class SnapshotTests
         Snapshot<string> roundTrip = JsonSerializer.Deserialize<Snapshot<string>>(serialized);
         snapshot.Should().BeEquivalentTo(roundTrip);
     }
-    
+
     [Fact]
     public void TestStringSnapshotGood()
     {
@@ -26,8 +26,52 @@ public class SnapshotTests
             Data = exampleData
         };
         string serialized = JsonSerializer.Serialize(snapshot);
-        serialized.Should().Be($"{{\"taken\":\"{exampleDate}\",\"data\":\"{exampleData}\"}}");
+        serialized.Should().Be($"{{\"taken\":\"{exampleDate}\",\"page\":0,\"data\":\"{exampleData}\"}}");
         Snapshot<string> roundTrip = JsonSerializer.Deserialize<Snapshot<string>>(serialized);
         snapshot.Should().BeEquivalentTo(roundTrip);
+    }
+
+    [Fact]
+    public void FromVideoCollection()
+    {
+        VideoCollection videoCollection = new()
+        {
+            Kind = VideoCollectionKind.Videos,
+            Page = 42, // cheating but its ok
+            Data = Expected.Videos()
+        };
+        Snapshot<List<Video>> snapshot = videoCollection.IntoSnapshot();
+        Snapshot<List<Video>> expected = new Snapshot<List<Video>>
+        {
+            Taken = snapshot.Taken,
+            Page = 42,
+            Data = Expected.Videos()
+        };
+        snapshot.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public void CheckUnExpired()
+    {
+        Snapshot<List<Video>> snapshot = new()
+        {
+            Taken = DateTime.UtcNow,
+            Page = 1,
+            Data = Expected.Videos()
+        };
+        snapshot.IsExpired().Should().Be(false);
+    }
+
+    [Fact]
+    public void CheckExpired()
+    {
+        DateTime oldTime = DateTime.UtcNow.AddDays(-1);
+        Snapshot<List<Video>> snapshot = new()
+        {
+            Taken = oldTime,
+            Page = 1,
+            Data = Expected.Videos()
+        };
+        snapshot.IsExpired().Should().Be(true);
     }
 }

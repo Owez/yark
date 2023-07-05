@@ -1,13 +1,19 @@
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
 public class Archive
 {
+    [JsonPropertyName("meta")]
     public ArchiveMeta Meta { get; set; }
+    [JsonPropertyName("videos")]
     public Snapshot<List<Video>> Videos { get; set; }
+    [JsonPropertyName("livestreams")]
     public Snapshot<List<Video>> Livestreams { get; set; }
+    [JsonPropertyName("shorts")]
     public Snapshot<List<Video>> Shorts { get; set; }
 
     private Archive(ArchiveMeta archiveMeta)
@@ -20,14 +26,19 @@ public class Archive
 
     private class ArchiveCreateSchema
     {
+        [JsonPropertyName("path")]
         public string Path { get; set; }
+        [JsonPropertyName("target")]
         public string Target { get; set; }
     }
 
     private class ArchiveImportSchema
     {
+        [JsonPropertyName("path")]
         public string Path { get; set; }
+        [JsonPropertyName("target")]
         public string Target { get; set; }
+        [JsonPropertyName("id")]
         public string Id { get; set; }
     }
 
@@ -52,6 +63,13 @@ public class Archive
         return await Archive.SendPost(adminCtx, importSchema);
     }
 
+    public static async Task<Archive> GetArchiveAsync(Context context, string archiveId)
+    {
+        // NOTE: this is basically just an alias for ArchiveMeta plus unset snapshots
+        ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(context, archiveId);
+        return new Archive(archiveMeta);
+    }
+
     private static async Task<Archive> SendPost<T>(AdminContext adminCtx, T schema)
     {
         using (HttpClient client = new HttpClient())
@@ -64,7 +82,7 @@ public class Archive
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
-            ArchiveMeta archiveMeta = await ArchiveMeta.Get(adminCtx, msg.Id);
+            ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminCtx, msg.Id);
             return new Archive(archiveMeta);
         }
     }
@@ -76,6 +94,17 @@ public class Archive
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
             HttpResponseMessage resp = await client.DeleteAsync(adminCtx.ArchivePath(this.Meta.Id));
             // TODO: err handling
+        }
+    }
+
+    public void ApplyVideoCollection(VideoCollection videoCollection)
+    {
+        Snapshot<List<Video>> generatedSnapshot = videoCollection.IntoSnapshot();
+        switch (videoCollection.Kind)
+        {
+            case VideoCollectionKind.Videos: this.Videos = generatedSnapshot; break;
+            case VideoCollectionKind.Livestreams: this.Livestreams = generatedSnapshot; break;
+            case VideoCollectionKind.Shorts: this.Shorts = generatedSnapshot; break;
         }
     }
 }

@@ -12,11 +12,11 @@ public class ArchiveMeta
     [JsonPropertyName("url")]
     public string Url { get; set; }
 
-    public static async Task<ArchiveMeta> Get(Context ctx, string archiveId)
+    public static async Task<ArchiveMeta> GetArchiveMetaAsync(Context context, string archiveId)
     {
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage resp = await client.GetAsync(ctx.ArchivePath(archiveId));
+            HttpResponseMessage resp = await client.GetAsync(context.ArchivePath(archiveId));
             string respBody = await resp.Content.ReadAsStringAsync();
             ArchiveMeta archiveMeta = JsonSerializer.Deserialize<ArchiveMeta>(respBody);
             return archiveMeta;

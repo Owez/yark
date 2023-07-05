@@ -3,13 +3,6 @@ using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
-public enum VideoCollectionKind
-{
-    Videos,
-    Livestreams,
-    Shorts
-}
-
 public class Video
 {
     [JsonPropertyName("id")]
@@ -35,11 +28,11 @@ public class Video
     [JsonPropertyName("notes")]
     public List<Note> Notes { get; set; }
 
-    public static async Task<Video> Get(Context ctx, string archiveId, string videoId)
+    public static async Task<Video> Get(Context context, string archiveId, string videoId)
     {
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage resp = await client.GetAsync(ctx.VideoPath(archiveId, videoId));
+            HttpResponseMessage resp = await client.GetAsync(context.VideoPath(archiveId, videoId));
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             Video video = JsonSerializer.Deserialize<Video>(respBody);
@@ -47,53 +40,14 @@ public class Video
         }
     }
 
-    public string FileUrl(Context ctx, string archiveId)
+    public string FileUrl(Context context, string archiveId)
     {
-        return ctx.VideoPath(archiveId, this.Id, "/file");
+        return context.VideoPath(archiveId, this.Id, "/file");
     }
 
-    public string ThumbnailUrl(Context ctx, string archiveId, string imageHash)
+    public string ThumbnailUrl(Context context, string archiveId, string imageHash)
     {
-        return ctx.ImagePath(archiveId, imageHash, "/file");
-    }
-}
-
-public class VideoCollection
-{
-    public VideoCollectionKind Kind { get; set; }
-    public List<Video> Content { get; set; }
-
-    private VideoCollection(VideoCollectionKind kind, List<Video> content)
-    {
-        Kind = kind;
-        Content = content;
-    }
-
-    public static async Task<VideoCollection> Get(Context ctx, string archiveId, VideoCollectionKind kind)
-    {
-        using (HttpClient client = new HttpClient())
-        {
-            string kindPath = string.Format("/videos?kind={0}", VideoCollectionKindToString(kind));
-            HttpResponseMessage resp = await client.GetAsync(ctx.ArchivePath(archiveId, kindPath));
-            // TODO: err handling
-            string respBody = await resp.Content.ReadAsStringAsync();
-            List<Video> content = JsonSerializer.Deserialize<List<Video>>(respBody);
-            return new VideoCollection(kind, content);
-        }
-    }
-
-    private static string VideoCollectionKindToString(VideoCollectionKind kind)
-    {
-        switch (kind)
-        {
-            case VideoCollectionKind.Videos:
-                return "videos";
-            case VideoCollectionKind.Livestreams:
-                return "livestreams";
-            case VideoCollectionKind.Shorts:
-                return "shorts";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unsupported VideoCollectionKind value.");
-        }
+        return context.ImagePath(archiveId, imageHash, "/file");
     }
 }
+
