@@ -1,0 +1,32 @@
+@inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
+
+<button onclick="@OpenCurrentArchive">@Archive.Name</button>
+
+@* TODO: onclick *@
+
+<style scoped>
+    button {
+        width: calc(100% - 40px);
+        margin-left: 20px;
+        margin-right: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 5px;
+        padding: 5px;
+        background-color: #f7f7f7;
+        transition: 0.175s;
+    }
+
+    button:hover {
+        background-color: #efefef;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public RecentArchive Archive { get; set; }
+
+    private async Task OpenCurrentArchive() {
+        await Archive.OpenArchive(sessionStorage, navManager);
+    }
+}

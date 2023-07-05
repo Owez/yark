@@ -2,7 +2,7 @@
 
 <nav>
     <div class="sidebar-list">
-        <a href="/" class="sidebar-header">
+        <a href="/archive" class="sidebar-header">
             <YarkBlazor.Components.Logo />
         </a>
         <hr>
@@ -22,7 +22,7 @@
             Active=@OnDonate />
         <YarkBlazor.Components.SidebarButton Title="Settings" Link="/archive/settings" Icon=@IconKind.Settings
             Active=@OnSettings />
-        <YarkBlazor.Components.SidebarButton Title="Leave" Link="/" Icon=@IconKind.Leave Active=@OnLeave />
+        <YarkBlazor.Components.SidebarButton Title="Leave" Link="/archive/exit" Icon=@IconKind.Leave Active=@OnLeave />
     </div>
 </nav>
 
@@ -37,7 +37,6 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        background-color: white;
         color: #171717;
         min-height: calc(470px + 12.5px);
     }

@@ -160,6 +160,7 @@ pub mod archive {
             .manager
             .remove(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
+        state_lock.manager.save()?;
         Ok(Json(MessageResponse {
             message: "Archive deleted",
         }))

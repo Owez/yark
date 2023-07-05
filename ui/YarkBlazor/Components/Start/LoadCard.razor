@@ -3,15 +3,27 @@
 <YarkBlazor.Components.Start.StartCard Title="Load Existing"
     Description="Manage or view an archive that's already been made" Link="/start/load" Orb=@IconKind.OrangeOrb
     Kind=@Kind OnLeft=@OnLeft>
+    @foreach (RecentArchive recentArchive in RecentArchives)
+    {
+        <YarkBlazor.Components.Start.LoadCardItem Archive=@recentArchive />
+    }
+    </YarkBlazor.Components.Start.StartCard>
 
-</YarkBlazor.Components.Start.StartCard>
-
-@code {
+    @code {
     [Parameter]
     public StartCardKind Kind { get; set; } = StartCardKind.Normal;
 
     [Parameter]
     public bool OnLeft { get; set; } = false;
 
-    // TODO: use get recent archive thing
+    public RecentArchiveCollection RecentArchives { get; set; } = new RecentArchiveCollection();
+
+    protected override async Task OnInitializedAsync()
+    {
+        RecentArchiveCollection? recentArchives = await RecentArchiveCollection.FromLocalStorage(localStorage);
+        if (recentArchives != null)
+        {
+            RecentArchives = recentArchives;
+        }
+    }
 }

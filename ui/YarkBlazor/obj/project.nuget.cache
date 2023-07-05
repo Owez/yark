@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "bYAwg97zmTStbCHfn4+LgaLGwGasB7yzmJzDoKBLJYnk8IwQy80ykNm8aodvd2tSXFLBIH2SuoBU7wr4RIE+iA==",
+  "dgSpecHash": "gfSD5l071LH/zlchIpp+7PDpjIW0aDz1PMfVXg/P+9a9wlTd0S5KR5K1kzy3RELFJYBEe0SDiJeR2sALAw/gjg==",
   "success": true,
   "projectFilePath": "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj",
   "expectedPackageFiles": [
     "/Users/owen/.nuget/packages/blazored.localstorage/4.3.0/blazored.localstorage.4.3.0.nupkg.sha512",
+    "/Users/owen/.nuget/packages/blazored.sessionstorage/2.3.0/blazored.sessionstorage.2.3.0.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.authorization/7.0.7/microsoft.aspnetcore.authorization.7.0.7.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.components/7.0.7/microsoft.aspnetcore.components.7.0.7.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.components.analyzers/7.0.7/microsoft.aspnetcore.components.analyzers.7.0.7.nupkg.sha512",

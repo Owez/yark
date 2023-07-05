@@ -1,12 +1,22 @@
 ﻿@page "/"
-@inject NavigationManager NavManager
+@inject NavigationManager navManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
+@using YarkApiClient
+@using System.Text.Json
 
-@* This page is intended to be the landing page on startup or archive leave *@
+@* This page is intended to be the landing page on startup *@
 
 @code {
     protected override void OnInitialized()
     {
-        @* TODO: in the future actually implement, no state as of time of writing *@
-        NavManager.NavigateTo("/start");
+        ArchiveMeta? openedArchive = sessionStorage.GetItem<ArchiveMeta>("openedArchive");
+        if (openedArchive == null)
+        {
+            navManager.NavigateTo("/start");
+        }
+        else
+        {
+            navManager.NavigateTo("/archive");
+        }
     }
 }
