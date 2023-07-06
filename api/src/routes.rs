@@ -147,7 +147,7 @@ pub mod archive {
             GetVideoCollectionKind::Livestreams => archive.livestreams.clone(),
             GetVideoCollectionKind::Shorts => archive.shorts.clone(),
         };
-        Ok(Json(videos.pagify(page, 100)))
+        Ok(Json(videos.pagify(page, 50)))
     }
 
     pub async fn delete(

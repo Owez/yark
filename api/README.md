@@ -84,7 +84,7 @@ This route gets a list of videos for existing archive and can be used by anyone.
 - `kind=livestreams`: Gets a list of all livestreams
 - `kind=shorts`: Gets a list of all shorts
 
-Plus the page of videos to get (each page contains 100 videos) as a number, e.g. `&page=5` for the 5th page. With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you might get a videos list from the archive data, for example:
+Plus the page of videos to get (each page contains 50 videos) as a number, e.g. `&page=5` for the 5th page. With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you might get a videos list from the archive data, for example:
 
 ```jsonc
 [
