@@ -1,6 +1,6 @@
 ﻿@page "/"
-@inject NavigationManager navManager
-@inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
+@inject NavigationManager NavManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 @using YarkApiClient
 @using System.Text.Json
 
@@ -9,14 +9,16 @@
 @code {
     protected override void OnInitialized()
     {
-        ArchiveMeta? openedArchive = sessionStorage.GetItem<ArchiveMeta>("openedArchive");
+        ArchiveMeta? openedArchive = SessionStorage.GetItem<ArchiveMeta>("openedArchive");
         if (openedArchive == null)
         {
-            navManager.NavigateTo("/start");
+            NavManager.NavigateTo("/start");
         }
         else
         {
-            navManager.NavigateTo("/archive");
+            NavManager.NavigateTo("/archive");
         }
+
+        base.OnInitialized();
     }
 }

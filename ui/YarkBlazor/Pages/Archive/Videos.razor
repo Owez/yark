@@ -1,0 +1,28 @@
+@page "/archive/videos"
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
+@using YarkApiClient
+
+<p>Videos!</p>
+
+@VideoList.Count
+
+@* TODO: use video list to style *@
+@* TODO: move to layout and then only slight tweaks for videos/livestreams/shorts *@
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "page")]
+    public int Page { get; set; } = 0;
+
+    [Parameter]
+    public List<Video> VideoList { get; set; } = new List<Video>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Archive archive = SessionStorage.GetItem<Archive>("openedArchive");
+        await archive.PullVideos(VideoCollectionKind.Videos, Page);
+        VideoList = archive.Videos.Data;
+
+        await base.OnInitializedAsync();
+    }
+}

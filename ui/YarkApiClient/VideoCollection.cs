@@ -8,8 +8,7 @@ public class VideoCollection
     public int Page { get; set; }
     public List<Video> Data { get; set; }
 
-
-    public static async Task<VideoCollection> Get(Context context, string archiveId, VideoCollectionKind kind, int page)
+    public static async Task<VideoCollection> GetVideoCollectionAsync(Context context, string archiveId, VideoCollectionKind kind, int page)
     {
         using (HttpClient client = new HttpClient())
         {

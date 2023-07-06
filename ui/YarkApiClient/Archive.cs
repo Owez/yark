@@ -16,12 +16,15 @@ public class Archive
     [JsonPropertyName("shorts")]
     public Snapshot<List<Video>> Shorts { get; set; }
 
-    private Archive(ArchiveMeta archiveMeta)
+    private static Archive NewArchiveFromMeta(ArchiveMeta archiveMeta)
     {
-        Meta = archiveMeta;
-        Videos = Snapshot<List<Video>>.NewEmpty();
-        Livestreams = Snapshot<List<Video>>.NewEmpty();
-        Shorts = Snapshot<List<Video>>.NewEmpty();
+        return new Archive
+        {
+            Meta = archiveMeta,
+            Videos = Snapshot<List<Video>>.NewEmpty(),
+            Livestreams = Snapshot<List<Video>>.NewEmpty(),
+            Shorts = Snapshot<List<Video>>.NewEmpty(),
+        };
     }
 
     private class ArchiveCreateSchema
@@ -67,7 +70,7 @@ public class Archive
     {
         // NOTE: this is basically just an alias for ArchiveMeta plus unset snapshots
         ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(context, archiveId);
-        return new Archive(archiveMeta);
+        return Archive.NewArchiveFromMeta(archiveMeta);
     }
 
     private static async Task<Archive> SendPost<T>(AdminContext adminCtx, T schema)
@@ -83,7 +86,7 @@ public class Archive
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
             ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminCtx, msg.Id);
-            return new Archive(archiveMeta);
+            return Archive.NewArchiveFromMeta(archiveMeta);
         }
     }
 
@@ -97,7 +100,31 @@ public class Archive
         }
     }
 
-    public void ApplyVideoCollection(VideoCollection videoCollection)
+    public async Task PullVideos(VideoCollectionKind videoCollectionKind, int page)
+    {
+        if (!this.CheckSnapshotInvalid(videoCollectionKind, page)) { return; }
+        VideoCollection videoCollection = await VideoCollection.GetVideoCollectionAsync(new Context(), this.Meta.Id, videoCollectionKind, page);
+        this.ApplyVideoCollection(videoCollection);
+    }
+
+    private Snapshot<List<Video>> GetSnapshotFromVideoCollectionKind(VideoCollectionKind videoCollectionKind)
+    {
+        switch (videoCollectionKind)
+        {
+            case VideoCollectionKind.Videos: return this.Videos;
+            case VideoCollectionKind.Livestreams: return this.Livestreams;
+            case VideoCollectionKind.Shorts: return this.Shorts;
+        }
+        return this.Videos; // NOTE: won't happen, weird compiler
+    }
+
+    private bool CheckSnapshotInvalid(VideoCollectionKind videoCollectionKind, int page)
+    {
+        Snapshot<List<Video>> snapshot = this.GetSnapshotFromVideoCollectionKind(videoCollectionKind);
+        return snapshot.IsExpired() || snapshot.Page != page;
+    }
+
+    private void ApplyVideoCollection(VideoCollection videoCollection)
     {
         Snapshot<List<Video>> generatedSnapshot = videoCollection.IntoSnapshot();
         switch (videoCollection.Kind)

@@ -2,13 +2,13 @@ using Blazored.LocalStorage;
 
 public class RecentArchiveCollection : List<RecentArchive>
 {
-    public static async Task<RecentArchiveCollection?> FromLocalStorage(ILocalStorageService localStorage)
+    public static async Task<RecentArchiveCollection?> FromLocalStorage(ILocalStorageService LocalStorage)
     {
-        return await localStorage.GetItemAsync<RecentArchiveCollection>("recentArchives");
+        return await LocalStorage.GetItemAsync<RecentArchiveCollection>("recentArchives");
     }
 
-    public async Task SaveLocalStorage(ILocalStorageService localStorage)
+    public async Task SaveLocalStorage(ILocalStorageService LocalStorage)
     {
-        await localStorage.SetItemAsync("recentArchives", this);
+        await LocalStorage.SetItemAsync("recentArchives", this);
     }
 }

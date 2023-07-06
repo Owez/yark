@@ -1,5 +1,5 @@
-@inject NavigationManager navManager
-@inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
+@inject NavigationManager NavManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 
 <button onclick="@OpenCurrentArchive">@Archive.Name</button>
 
@@ -24,10 +24,10 @@
 
 @code {
     [Parameter]
-    public RecentArchive Archive { get; set; }
+    public required RecentArchive Archive { get; set; }
 
-    private async Task OpenCurrentArchive()
+    async Task OpenCurrentArchive()
     {
-        await Archive.OpenArchive(sessionStorage, navManager);
+        await Archive.OpenArchive(SessionStorage, NavManager);
     }
 }

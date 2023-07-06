@@ -143,13 +143,19 @@ impl Videos {
     /// Pagifies the videos list to the `page` desired, with each page being a max of `size` long
     pub fn pagify(self, page: usize, size: usize) -> Videos {
         // TODO: make this more efficient, this isn't good code but it works™️
+
+        // Get start index and return nothing if there's no videos on the page
+        let start_ind = page * size;
+        if self.0.len() < start_ind {
+            return Videos::default();
+        }
+
         // Get all the videos as a vec (the id is inside of video anyway)
         let mut videos: Vec<Video> = self.0.into_values().collect();
         videos.sort_by_key(|item| item.uploaded);
         videos.reverse();
 
-        // Get start/end indexes
-        let start_ind = page * size;
+        // Get end indexes
         let end_ind = (page + 1) * size;
         let clamped_end_ind = end_ind.min(videos.len());
 

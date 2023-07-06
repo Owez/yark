@@ -6,15 +6,15 @@ using System.Text.Json.Serialization;
 public class RecentArchive
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
-    public async Task<Archive> OpenArchive(ISyncSessionStorageService sessionStorage, NavigationManager navManager)
+    public async Task<Archive> OpenArchive(ISyncSessionStorageService SessionStorage, NavigationManager NavManager)
     {
-        Archive archive = await Archive.GetArchiveAsync(new Context(), Id); // TODO: use Archive.Get instead
-        sessionStorage.SetItem("openedArchive", archive);
-        navManager.NavigateTo("/archive");
+        Archive archive = await Archive.GetArchiveAsync(new Context(), Id); 
+        SessionStorage.SetItem("openedArchive", archive);
+        NavManager.NavigateTo("/archive");
         return archive;
     }
 }

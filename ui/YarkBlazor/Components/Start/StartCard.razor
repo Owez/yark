@@ -84,7 +84,7 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    public string CorrectExpandedLink()
+    string CorrectExpandedLink()
     {
         if (Kind == StartCardKind.Full)
         {
@@ -93,13 +93,13 @@
         return Link;
     }
 
-    public string GetDynamicClasses()
+    string GetDynamicClasses()
     {
         List<string> classes = new List<string> { GetLeftClass(), GetSizeClass() };
         return String.Join(" ", classes.ToArray());
     }
 
-    private string GetLeftClass()
+    string GetLeftClass()
     {
         if (OnLeft)
         {
@@ -108,7 +108,7 @@
         return "";
     }
 
-    private string GetSizeClass()
+    string GetSizeClass()
     {
         switch (Kind)
         {

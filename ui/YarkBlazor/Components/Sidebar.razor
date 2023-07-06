@@ -1,4 +1,6 @@
-@inject NavigationManager NavigationManager
+@inject NavigationManager NavManager
+@implements IDisposable
+@inject ILogger<Sidebar> Logger
 
 <nav>
     <div class="sidebar-list">
@@ -84,9 +86,19 @@
 
     protected override void OnInitialized()
     {
-        Uri gotUri = new Uri(NavigationManager.Uri.ToString());
-        string path = gotUri.AbsolutePath;
-        switch (path)
+        NavManager.LocationChanged += HandleLocationChanged;
+
+        Uri gotUri = new Uri(NavManager.Uri.ToString());
+        string absolutePath = gotUri.AbsolutePath;
+        ProcessNavbarActive(absolutePath);
+        
+        base.OnInitialized();
+    }
+
+    void ProcessNavbarActive(string absolutePath)
+    {
+
+        switch (absolutePath)
         {
             case "/archive":
                 OnDashboard = true;
@@ -110,5 +122,18 @@
                 OnLeave = true;
                 break;
         }
+    }
+
+    void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        Logger.LogInformation("URL of new location: {Location}", e.Location);
+        Uri gotUri = new Uri(e.Location);
+        string absolutePath = gotUri.AbsolutePath;
+        ProcessNavbarActive(absolutePath);
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
     }
 }

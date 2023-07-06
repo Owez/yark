@@ -1,14 +1,16 @@
 @page "/archive/exit"
 
-@inject NavigationManager navManager
-@inject Blazored.SessionStorage.ISyncSessionStorageService sessionStorage
+@inject NavigationManager NavManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 
 @* This is a cheat page used so I don't have to remake the leave link in the sidebar into a button *@
 
 @code {
     protected override void OnInitialized()
     {
-        sessionStorage.Clear();
-        navManager.NavigateTo("/");
+        SessionStorage.Clear();
+        NavManager.NavigateTo("/");
+
+        base.OnInitialized();
     }
 }
