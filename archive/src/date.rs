@@ -4,7 +4,7 @@ use chrono::prelude::*;
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// Wrapper around [DateTime]<[Utc]> due to varying serialization/deserialization
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize)]
 pub struct YarkDate(pub DateTime<Utc>);
 
 impl<'de> Deserialize<'de> for YarkDate {

@@ -108,6 +108,7 @@ pub mod archive {
     #[derive(Deserialize)]
     pub struct GetVideosQuerySchema {
         kind: GetVideoCollectionKind,
+        page: usize,
     }
 
     #[derive(Deserialize)]
@@ -133,7 +134,7 @@ pub mod archive {
     pub async fn get_videos(
         State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
-        Query(GetVideosQuerySchema { kind }): Query<GetVideosQuerySchema>,
+        Query(GetVideosQuerySchema { kind, page }): Query<GetVideosQuerySchema>,
     ) -> Result<Json<Videos>> {
         debug!("Getting a full list of {} for archive {}", kind, archive_id);
         let state_lock = state.lock().await;
@@ -141,11 +142,12 @@ pub mod archive {
             .manager
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        Ok(Json(match kind {
+        let videos = match kind {
             GetVideoCollectionKind::Videos => archive.videos.clone(),
             GetVideoCollectionKind::Livestreams => archive.livestreams.clone(),
             GetVideoCollectionKind::Shorts => archive.shorts.clone(),
-        }))
+        };
+        Ok(Json(videos.pagify(page, 100)))
     }
 
     pub async fn delete(

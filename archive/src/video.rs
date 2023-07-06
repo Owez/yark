@@ -139,6 +139,30 @@ impl Videos {
     pub fn iter(&self) -> impl Iterator<Item = (&String, &Video)> {
         self.0.iter()
     }
+
+    /// Pagifies the videos list to the `page` desired, with each page being a max of `size` long
+    pub fn pagify(self, page: usize, size: usize) -> Videos {
+        // TODO: make this more efficient, this isn't good code but it works™️
+        // Get all the videos as a vec (the id is inside of video anyway)
+        let mut videos: Vec<Video> = self.0.into_values().collect();
+        videos.sort_by_key(|item| item.uploaded);
+        videos.reverse();
+
+        // Get start/end indexes
+        let start_ind = page * size;
+        let end_ind = (page + 1) * size;
+        let clamped_end_ind = end_ind.min(videos.len());
+
+        // Select the videos in range
+        let selected_videos: Vec<Video> = videos[start_ind..clamped_end_ind].to_vec();
+
+        // Create a new HashMap using the selected videos
+        let mut paginated_videos = HashMap::new();
+        for video in selected_videos {
+            paginated_videos.insert(video.id.clone(), video);
+        }
+        Videos(paginated_videos)
+    }
 }
 
 impl Default for Videos {
@@ -377,5 +401,84 @@ mod tests {
         let converted: Videos =
             serde_json::from_str(OWEZ_VIDEOS_DATA).expect("JSON conversion failed");
         assert_eq!(exp, converted);
+    }
+
+    #[test]
+    fn pagification() {
+        let video1 = Video {
+            id: "1".to_string(),
+            uploaded: Utc::now().into(),
+            width: 1920,
+            height: 1080,
+            title: Elements::default(),
+            description: Elements::default(),
+            views: Elements::default(),
+            likes: Elements::default(),
+            thumbnail: Images::default(),
+            deleted: Elements::default(),
+            notes: Notes::default(),
+        };
+
+        let video2 = Video {
+            id: "2".to_string(),
+            uploaded: DateTime::<Utc>::MIN_UTC.into(),
+            width: 1280,
+            height: 720,
+            title: Elements::default(),
+            description: Elements::default(),
+            views: Elements::default(),
+            likes: Elements::default(),
+            thumbnail: Images::default(),
+            deleted: Elements::default(),
+            notes: Notes::default(),
+        };
+
+        let video3 = Video {
+            id: "3".to_string(),
+            uploaded: Utc::now().into(),
+            width: 1920,
+            height: 1080,
+            title: Elements::default(),
+            description: Elements::default(),
+            views: Elements::default(),
+            likes: Elements::default(),
+            thumbnail: Images::default(),
+            deleted: Elements::default(),
+            notes: Notes::default(),
+        };
+
+        let video4 = Video {
+            id: "4".to_string(),
+            uploaded: DateTime::<Utc>::MIN_UTC.into(),
+            width: 1280,
+            height: 720,
+            title: Elements::default(),
+            description: Elements::default(),
+            views: Elements::default(),
+            likes: Elements::default(),
+            thumbnail: Images::default(),
+            deleted: Elements::default(),
+            notes: Notes::default(),
+        };
+
+        let videos_list = Videos(
+            vec![
+                ("1".to_string(), video1),
+                ("2".to_string(), video2.clone()),
+                ("3".to_string(), video3),
+                ("4".to_string(), video4.clone()),
+            ]
+            .into_iter()
+            .collect::<HashMap<String, Video>>(),
+        );
+
+        let paginated_videos = videos_list.pagify(1, 2);
+        let expected_videos = Videos(
+            vec![("2".to_string(), video2), ("4".to_string(), video4)]
+                .into_iter()
+                .collect::<HashMap<String, Video>>(),
+        );
+
+        assert_eq!(paginated_videos, expected_videos);
     }
 }
