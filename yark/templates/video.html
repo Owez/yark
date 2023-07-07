@@ -269,8 +269,10 @@
                     "Content-Type": "application/json"
                 }
             }).then(() => {
-                // Reload to see new note
-                window.location.reload()
+                // Reload to see new note and keep timestamp
+                const location = new URL(window.location);
+                location.searchParams.append("timestamp", timestamp)
+                window.location.replace(location)
             })
         }
 
@@ -455,7 +457,7 @@
             // Get identifier
             const id = el.getElementsByClassName("id")[0].innerText
 
-            // Send request
+            // Send request to current route
             fetch("", {
                 method: "DELETE",
                 body: JSON.stringify({
@@ -474,6 +476,13 @@
                 const notesHeader = document.getElementById("notes-title")
                 notesHeader.remove()
             }
+        }
+
+        // Jump to timestamp on startup if requested in query
+        const urlParams = new URLSearchParams(window.location.search);
+        const timestampParam = urlParams.get("timestamp");
+        if (timestampParam != undefined && timestampParam != null) {
+            toTimestamp(parseInt(timestampParam));
         }
 
         // Listen for `focusout` event on note title or body
