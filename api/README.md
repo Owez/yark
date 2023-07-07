@@ -168,7 +168,7 @@ This route gets information about a specific video, probably one that you found 
 
 ### GET `/archive/:id/video/:id/file`
 
-This route returns a raw video file for the provided archive identifier like how getting images work. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
+This route returns a raw video file for the provided archive identifier like how getting images works. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
 
 ### POST 🔒 `/archive/:id/video/:id/note`
 
