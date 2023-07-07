@@ -2,9 +2,8 @@
 @inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 @using YarkApiClient
 
+<h1 class="dashboard-title">@Name's videos</h1>
 <p>Videos!</p>
-
-@VideoList.Count
 
 @* TODO: use video list to style *@
 @* TODO: move to layout and then only slight tweaks for videos/livestreams/shorts *@
@@ -14,14 +13,15 @@
     [SupplyParameterFromQuery(Name = "page")]
     public int Page { get; set; } = 0;
 
-    [Parameter]
-    public List<Video> VideoList { get; set; } = new List<Video>();
+    Archive Archive { get; set; }
+
+    string Name { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Archive archive = SessionStorage.GetItem<Archive>("openedArchive");
-        await archive.PullVideos(VideoCollectionKind.Videos, Page);
-        VideoList = archive.Videos.Data;
+        Name = SessionStorage.GetItem<string>("OpenedArchiveName");
+        Archive = SessionStorage.GetItem<Archive>("OpenedArchive");
+        await Archive.PullVideos(VideoCollectionKind.Videos, Page);
 
         await base.OnInitializedAsync();
     }

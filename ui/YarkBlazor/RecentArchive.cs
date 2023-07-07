@@ -12,8 +12,12 @@ public class RecentArchive
 
     public async Task<Archive> OpenArchive(ISyncSessionStorageService SessionStorage, NavigationManager NavManager)
     {
-        Archive archive = await Archive.GetArchiveAsync(new Context(), Id); 
-        SessionStorage.SetItem("openedArchive", archive);
+        // Set the name we know about now to session
+        SessionStorage.SetItem("OpenedArchiveName", this.Name);
+
+        // Get archive details and set to currently-opened archive
+        Archive archive = await Archive.GetArchiveAsync(new Context(), Id);
+        SessionStorage.SetItem("OpenedArchive", archive);
         NavManager.NavigateTo("/archive");
         return archive;
     }

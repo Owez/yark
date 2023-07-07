@@ -1,3 +1,12 @@
 @page "/archive"
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 
-<p>Yay dashboard works!</p>
+<h1 class="dashboard-title">@Name's archive</h1>
+
+@code {
+    string Name { get; set; }
+    protected override void OnInitialized()
+    {
+        Name = SessionStorage.GetItem<string>("OpenedArchiveName");
+    }
+}
