@@ -1,0 +1,139 @@
+@inject NavigationManager NavManager
+@implements IDisposable
+@inject ILogger<Sidebar> Logger
+
+<nav>
+    <div class="sidebar-list">
+        <a href="/archive" class="sidebar-header">
+            <YarkBlazor.Components.Logo />
+        </a>
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Dashboard" Link="/archive" Icon=@IconKind.Dashboard
+            Active=@OnDashboard />
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Videos" Link="/archive/videos" Icon=@IconKind.Videos
+            Active=@OnVideos />
+        <YarkBlazor.Components.SidebarButton Title="Livestreams" Link="/archive/livestreams" Icon=@IconKind.Livestreams
+            Active=@OnLivestreams />
+        <YarkBlazor.Components.SidebarButton Title="Shorts" Link="/archive/shorts" Icon=@IconKind.Shorts
+            Active=@OnShorts />
+    </div>
+    <div class="sidebar-list">
+        <hr>
+        <YarkBlazor.Components.SidebarButton Title="Donate" Link="/archive/donate" Icon=@IconKind.Stars
+            Active=@OnDonate />
+        <YarkBlazor.Components.SidebarButton Title="Settings" Link="/archive/settings" Icon=@IconKind.Settings
+            Active=@OnSettings />
+        <YarkBlazor.Components.SidebarButton Title="Leave" Link="/archive/exit" Icon=@IconKind.Leave Active=@OnLeave />
+    </div>
+</nav>
+
+<style scoped>
+    nav {
+        margin: 20px;
+        box-sizing: border-box;
+        padding: 17.5px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #171717;
+        min-height: calc(470px + 12.5px);
+    }
+
+    .sidebar-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-header {
+        color: inherit;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    hr {
+        border: none;
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        width: calc(250px - 60px);
+        margin: 15px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public bool OnDashboard { get; set; } = false;
+
+    [Parameter]
+    public bool OnVideos { get; set; } = false;
+
+    [Parameter]
+    public bool OnLivestreams { get; set; } = false;
+
+    [Parameter]
+    public bool OnShorts { get; set; } = false;
+
+    [Parameter]
+    public bool OnDonate { get; set; } = false;
+
+    [Parameter]
+    public bool OnSettings { get; set; } = false;
+
+    [Parameter]
+    public bool OnLeave { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        NavManager.LocationChanged += HandleLocationChanged;
+
+        Uri gotUri = new Uri(NavManager.Uri.ToString());
+        string absolutePath = gotUri.AbsolutePath;
+        ProcessNavbarActive(absolutePath);
+        
+        base.OnInitialized();
+    }
+
+    void ProcessNavbarActive(string absolutePath)
+    {
+
+        switch (absolutePath)
+        {
+            case "/archive":
+                OnDashboard = true;
+                break;
+            case "/archive/videos":
+                OnVideos = true;
+                break;
+            case "/archive/livestreams":
+                OnLivestreams = true;
+                break;
+            case "/archive/shorts":
+                OnShorts = true;
+                break;
+            case "/archive/donate":
+                OnDonate = true;
+                break;
+            case "/archive/settings":
+                OnSettings = true;
+                break;
+            case "/":
+                OnLeave = true;
+                break;
+        }
+    }
+
+    void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        Logger.LogInformation("URL of new location: {Location}", e.Location);
+        Uri gotUri = new Uri(e.Location);
+        string absolutePath = gotUri.AbsolutePath;
+        ProcessNavbarActive(absolutePath);
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
+    }
+}

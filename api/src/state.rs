@@ -1,10 +1,12 @@
 //! Configuration and state logic/utilities; see [Config]/[AppState] for more info
 
-use crate::errors::{Error, Result};
+use crate::{
+    errors::{Error, Result},
+    manager::Manager,
+};
 use log::debug;
 use std::{env, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 use tokio::sync::Mutex;
-use yark_archive::prelude::*;
 
 /// Configuration context for the API
 pub struct Config {

@@ -88,9 +88,14 @@ impl Archive {
             .or(self.shorts.get_mut(id))
     }
 
+    /// Returns the path to the video folder which contains all archived video content
+    pub fn path_videos(&self) -> PathBuf {
+        self.path.join("videos")
+    }
+
     /// Returns the expected filepath to a video with the `id` if it exists
     pub fn path_video(&self, id: &Uuid) -> Option<PathBuf> {
-        let videos_path = self.path.join("/videos");
+        let videos_path = self.path_videos();
         let videos_path_webm = videos_path.join(format!("{}.webm", id));
         if videos_path_webm.exists() {
             return Some(videos_path_webm);
@@ -103,9 +108,14 @@ impl Archive {
         }
     }
 
+    /// Returns the path to the image folder which contains all archived image content
+    pub fn path_images(&self) -> PathBuf {
+        self.path.join("thumbnails") // NOTE: update to `images` for future specs, right now v3 is still "thumbnails"
+    }
+
     /// Returns the expected filepath to an image with the `hash` if it exists
     pub fn path_image(&self, hash: &str) -> Option<PathBuf> {
-        let image_path = self.path.join("thumbnails").join(format!("{}.webp", hash)); // NOTE: update to `images` for future specs, right now v3 is still "thumbnails"
+        let image_path = self.path_images().join(format!("{}.webp", hash));
         if image_path.exists() {
             Some(image_path)
         } else {
@@ -131,12 +141,27 @@ impl<'a> DataSaveLoad<'a> for Archive {
 
     /// Saves the current archive to the [Self::path] directory
     fn save(&self) -> Result<()> {
-        // Get file path and backup old if present
+        // Create directory structure if they don't exist (new archives)
+        let create_dir = |path| fs::create_dir(path).map_err(|err| Error::DataPath(err));
+        if !self.path.exists() {
+            create_dir(&self.path)?;
+        }
+        let path_videos = self.path_videos();
+        if !path_videos.exists() {
+            create_dir(&path_videos)?;
+        }
+        let path_images = self.path_images();
+        if !path_images.exists() {
+            create_dir(&path_images)?;
+        }
+
+        // Get the archive file's path and backup old if present
         let (archive_file_path, archive_file_path_exists) = archive_file_path(&self.path);
         if archive_file_path_exists {
             try_backup(&archive_file_path);
         }
 
+        // Save the archive file
         let writer = File::create(archive_file_path).map_err(|err| Error::DataPath(err))?;
         serde_json::to_writer(&writer, self).map_err(|err| Error::DataSave(err))
     }

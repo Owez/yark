@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YarkApiClient", "YarkApiClient\YarkApiClient.csproj", "{2AED4091-7A1F-4486-90AE-4ACED33516FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YarkApiClient.Tests", "YarkApiClient.Tests\YarkApiClient.Tests.csproj", "{97F74BC0-A962-4E2A-8624-57AA198FB318}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YarkBlazor", "YarkBlazor\YarkBlazor.csproj", "{87C4F047-0B93-4D08-8886-7FD8AE5AE609}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AED4091-7A1F-4486-90AE-4ACED33516FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AED4091-7A1F-4486-90AE-4ACED33516FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AED4091-7A1F-4486-90AE-4ACED33516FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AED4091-7A1F-4486-90AE-4ACED33516FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97F74BC0-A962-4E2A-8624-57AA198FB318}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97F74BC0-A962-4E2A-8624-57AA198FB318}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97F74BC0-A962-4E2A-8624-57AA198FB318}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97F74BC0-A962-4E2A-8624-57AA198FB318}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87C4F047-0B93-4D08-8886-7FD8AE5AE609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87C4F047-0B93-4D08-8886-7FD8AE5AE609}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87C4F047-0B93-4D08-8886-7FD8AE5AE609}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87C4F047-0B93-4D08-8886-7FD8AE5AE609}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

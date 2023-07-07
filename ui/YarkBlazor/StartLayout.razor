@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+
+<div class="start-container">
+    <div class="start-split">
+        <YarkBlazor.Components.Logo />
+        @Body
+    </div>
+</div>
+
+<style scoped>
+    .start-container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .start-split {
+        display: flex;
+        flex-direction: column;
+    }
+</style>

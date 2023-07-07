@@ -1,0 +1,11 @@
+<YarkBlazor.Components.Start.StartCard Title="Create Local"
+    Description="Create an archive from scratch to save channels/playlists" Link="/start/create" Orb=@IconKind.PurpleOrb
+    Kind=@Kind OnLeft=@OnLeft />
+
+@code {
+    [Parameter]
+    public StartCardKind Kind { get; set; } = StartCardKind.Normal;
+
+    [Parameter]
+    public bool OnLeft { get; set; } = false;
+}

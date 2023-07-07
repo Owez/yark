@@ -3,6 +3,7 @@
 pub mod auth;
 pub mod directory;
 pub mod errors;
+pub mod manager;
 pub mod routes;
 pub mod state;
 
@@ -13,6 +14,7 @@ use axum::{Router, Server};
 use dotenv::dotenv;
 use errors::Error;
 use log::info;
+use manager::Manager;
 use state::AppState;
 use std::fmt;
 use std::path::PathBuf;
@@ -20,7 +22,6 @@ use std::process::exit;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tower_http::cors::CorsLayer;
-use yark_archive::prelude::Manager;
 use yark_archive::DataSaveLoad;
 
 /// Main function which [launches](launch) the application
@@ -99,17 +100,16 @@ async fn launch() -> Result<()> {
 
 /// Gets or creates a new [Manager] from `manager_path` provided
 fn get_manager(manager_path: PathBuf) -> Result<Manager> {
-    match Manager::load(manager_path.clone()) {
+    if !manager_path.exists() || manager_path.is_dir() {
+        log::info!(
+            "Creating new manager file at {:?} as it doesn't exist",
+            manager_path
+        );
+        let manager = Manager::new(manager_path.clone());
+        manager.save()?;
+    }
+    match Manager::load(manager_path) {
         Ok(manager) => Ok(manager),
-        Err(yark_archive::errors::Error::ManagerNotFound) => {
-            log::info!(
-                "Creating new manager file at {:?} as it doesn't exist",
-                manager_path
-            );
-            let manager = Manager::new(manager_path);
-            manager.save()?;
-            Ok(manager)
-        }
         Err(err) => Err(Error::Archive(err)),
     }
 }

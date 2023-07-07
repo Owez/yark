@@ -1,0 +1,105 @@
+is_global = true
+build_property.TargetFramework = net7.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = YarkBlazor
+build_property.RootNamespace = YarkBlazor
+build_property.ProjectDir = /Users/owen/Projects/yark/ui/YarkBlazor/
+build_property.RazorLangVersion = 7.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = /Users/owen/Projects/yark/ui/YarkBlazor
+build_property._RazorSourceGeneratorDebug = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/ArchiveLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = QXJjaGl2ZUxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Logo.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Mb2dvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Sidebar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/SidebarButton.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyQnV0dG9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/SidebarButtonInner.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyQnV0dG9uSW5uZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/CreateCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9DcmVhdGVDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/LoadCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9Mb2FkQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/LoadCardItem.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9Mb2FkQ2FyZEl0ZW0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/StartCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9TdGFydENhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TWFpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Archive/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXJjaGl2ZS9EYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Archive/Exit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXJjaGl2ZS9FeGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Archive/Videos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXJjaGl2ZS9WaWRlb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Archive/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQXJjaGl2ZS9fSW1wb3J0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Start/Create.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU3RhcnQvQ3JlYXRlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Start/Load.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU3RhcnQvTG9hZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Start/Start.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU3RhcnQvU3RhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Pages/Start/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXMvU3RhcnQvX0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/StartLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U3RhcnRMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 

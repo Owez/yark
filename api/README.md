@@ -65,7 +65,7 @@ This route also requires a bearer token containing admin credentials. Once all o
 
 ### GET `/archive/:id`
 
-This route lets you get meta-infromation about an existing archive, including the length of video/livestream/shorts lists. To use it, just put the known id of the archive you're trying to get:
+This route lets you get meta-infromation about an existing archive. To use it, just put the known id of the archive you're trying to get:
 
 ```jsonc
 {
@@ -73,14 +73,10 @@ This route lets you get meta-infromation about an existing archive, including th
 	"id": "uuid",
 	"version": 3,
 	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
-	// Counts for video lists
-	"videos_count": 42,
-	"livestreams_count": 1,
-	"shorts_count": 0,
 }
 ```
 
-### GET `/archive/:id/videos?kind`
+### GET `/archive/:id/videos?kind&page`
 
 This route gets a list of videos for existing archive and can be used by anyone. To use it, put the known id of the archive you're trying to get and the kind of video list you're trying to fetch:
 
@@ -88,7 +84,7 @@ This route gets a list of videos for existing archive and can be used by anyone.
 - `kind=livestreams`: Gets a list of all livestreams
 - `kind=shorts`: Gets a list of all shorts
 
-With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you might get a videos list from the archive data, for example:
+Plus the page of videos to get (each page contains 50 videos) as a number, e.g. `&page=5` for the 5th page. With these query args supplied, you might get an empty `[]` JSON response back, indicating that there where no videos to fetch. If not you might get a videos list from the archive data, for example:
 
 ```jsonc
 [
@@ -172,7 +168,7 @@ This route gets information about a specific video, probably one that you found 
 
 ### GET `/archive/:id/video/:id/file`
 
-This route returns a raw video file for the provided archive identifier, as well as the video identifier. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
+This route returns a raw video file for the provided archive identifier like how getting images works. It's usually used in conjunction with [getting](#get-archiveidkind) archives to actually view the video.
 
 ### POST 🔒 `/archive/:id/video/:id/note`
 

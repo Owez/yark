@@ -1,0 +1,148 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj": {}
+  },
+  "projects": {
+    "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj",
+        "projectName": "YarkApiClient",
+        "projectPath": "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj",
+        "packagesPath": "/Users/owen/.nuget/packages/",
+        "outputPath": "/Users/owen/Projects/yark/ui/YarkApiClient/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/owen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.304/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj",
+        "projectName": "YarkBlazor",
+        "projectPath": "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj",
+        "packagesPath": "/Users/owen/.nuget/packages/",
+        "outputPath": "/Users/owen/Projects/yark/ui/YarkBlazor/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/owen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj": {
+                "projectPath": "/Users/owen/Projects/yark/ui/YarkApiClient/YarkApiClient.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Blazored.LocalStorage": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            },
+            "Blazored.SessionStorage": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
+            "Microsoft.AspNetCore.Components.WebAssembly": {
+              "target": "Package",
+              "version": "[7.0.7, )"
+            },
+            "Microsoft.AspNetCore.Components.WebAssembly.DevServer": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.7, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.NETCore.App.Runtime.Mono.browser-wasm",
+              "version": "[7.0.7, 7.0.7]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.304/RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "browser-wasm": {
+          "#import": []
+        }
+      }
+    }
+  }
+}

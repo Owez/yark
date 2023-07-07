@@ -1,0 +1,31 @@
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+<YarkBlazor.Components.Start.StartCard Title="Load Existing"
+    Description="Manage or view an archive that's already been made" Link="/start/load" Orb=@IconKind.OrangeOrb
+    Kind=@Kind OnLeft=@OnLeft>
+    @foreach (RecentArchive recentArchive in RecentArchives)
+    {
+        <YarkBlazor.Components.Start.LoadCardItem Archive=@recentArchive />
+    }
+    </YarkBlazor.Components.Start.StartCard>
+
+    @code {
+    [Parameter]
+    public StartCardKind Kind { get; set; } = StartCardKind.Normal;
+
+    [Parameter]
+    public bool OnLeft { get; set; } = false;
+
+    RecentArchiveCollection RecentArchives { get; set; } = new RecentArchiveCollection();
+
+    protected override async Task OnInitializedAsync()
+    {
+        RecentArchiveCollection? recentArchives = await RecentArchiveCollection.FromLocalStorage(LocalStorage);
+        if (recentArchives != null)
+        {
+            RecentArchives = recentArchives;
+        }
+
+        base.OnInitialized();
+    }
+}

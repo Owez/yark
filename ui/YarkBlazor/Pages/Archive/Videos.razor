@@ -1,0 +1,28 @@
+@page "/archive/videos"
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
+@using YarkApiClient
+
+<h1 class="dashboard-title">@Name's videos</h1>
+<p>Videos!</p>
+
+@* TODO: use video list to style *@
+@* TODO: move to layout and then only slight tweaks for videos/livestreams/shorts *@
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "page")]
+    public int Page { get; set; } = 0;
+
+    Archive Archive { get; set; }
+
+    string Name { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Name = SessionStorage.GetItem<string>("OpenedArchiveName");
+        Archive = SessionStorage.GetItem<Archive>("OpenedArchive");
+        await Archive.PullVideos(VideoCollectionKind.Videos, Page);
+
+        await base.OnInitializedAsync();
+    }
+}

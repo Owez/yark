@@ -13,6 +13,7 @@ hyper = "0.14"
 tower = "0.4"
 dotenv = "0.15"
 axum-auth = "0.4"
+serde_json = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }

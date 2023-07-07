@@ -67,6 +67,7 @@ pub mod archive {
         archive.save()?;
         let id = schema.id.unwrap_or(Uuid::new_v4());
         state_lock.manager.insert_existing(id, archive);
+        state_lock.manager.save()?;
         Ok(Json(MessageIdResponse {
             message: "Archive created",
             id,
@@ -78,9 +79,6 @@ pub mod archive {
         id: Uuid,
         version: u32,
         url: String,
-        videos_count: usize,
-        livestreams_count: usize,
-        shorts_count: usize,
     }
 
     impl From<(Uuid, &Archive)> for GetMetaResponse {
@@ -89,9 +87,6 @@ pub mod archive {
                 id: archive_id,
                 version: archive.version,
                 url: archive.url.clone(),
-                videos_count: archive.videos.len(),
-                livestreams_count: archive.livestreams.len(),
-                shorts_count: archive.shorts.len(),
             }
         }
     }
@@ -112,11 +107,12 @@ pub mod archive {
 
     #[derive(Deserialize)]
     pub struct GetVideosQuerySchema {
-        kind: GetVideosKind,
+        kind: GetVideoCollectionKind,
+        page: usize,
     }
 
     #[derive(Deserialize)]
-    enum GetVideosKind {
+    enum GetVideoCollectionKind {
         #[serde(rename(deserialize = "videos"))]
         Videos,
         #[serde(rename(deserialize = "livestreams"))]
@@ -125,7 +121,7 @@ pub mod archive {
         Shorts,
     }
 
-    impl fmt::Display for GetVideosKind {
+    impl fmt::Display for GetVideoCollectionKind {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
                 Self::Videos => write!(f, "videos"),
@@ -138,7 +134,7 @@ pub mod archive {
     pub async fn get_videos(
         State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
-        Query(GetVideosQuerySchema { kind }): Query<GetVideosQuerySchema>,
+        Query(GetVideosQuerySchema { kind, page }): Query<GetVideosQuerySchema>,
     ) -> Result<Json<Videos>> {
         debug!("Getting a full list of {} for archive {}", kind, archive_id);
         let state_lock = state.lock().await;
@@ -146,11 +142,12 @@ pub mod archive {
             .manager
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        Ok(Json(match kind {
-            GetVideosKind::Videos => archive.videos.clone(),
-            GetVideosKind::Livestreams => archive.livestreams.clone(),
-            GetVideosKind::Shorts => archive.shorts.clone(),
-        }))
+        let videos = match kind {
+            GetVideoCollectionKind::Videos => archive.videos.clone(),
+            GetVideoCollectionKind::Livestreams => archive.livestreams.clone(),
+            GetVideoCollectionKind::Shorts => archive.shorts.clone(),
+        };
+        Ok(Json(videos.pagify(page, 50)))
     }
 
     pub async fn delete(
@@ -165,6 +162,7 @@ pub mod archive {
             .manager
             .remove(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
+        state_lock.manager.save()?;
         Ok(Json(MessageResponse {
             message: "Archive deleted",
         }))
@@ -191,7 +189,10 @@ pub mod image {
         State(state): State<AppStateExtension>,
         Path((archive_id, image_hash)): Path<(Uuid, String)>,
     ) -> Result<Response<BoxBody>> {
-        debug!("Getting image {} for archive {}", image_hash, archive_id);
+        debug!(
+            "Getting image {} file for archive {}",
+            image_hash, archive_id
+        );
         let state_lock = state.lock().await;
         let archive = state_lock
             .manager
@@ -216,14 +217,14 @@ pub mod video {
         state::AppStateExtension,
     };
     use axum::{
+        body::{boxed, BoxBody},
         extract::{Path, State},
-        response::{IntoResponse, Response},
-        Json,
     };
-    use axum_extra::body::AsyncReadBody;
-    use hyper::header;
+    use axum::{response::Response, Json};
+    use hyper::{Body, Request};
     use log::debug;
-    use tokio::fs::File;
+    use tower::util::ServiceExt;
+    use tower_http::services::ServeFile;
     use uuid::Uuid;
     use yark_archive::prelude::*;
 
@@ -250,21 +251,20 @@ pub mod video {
     pub async fn get_file(
         State(state): State<AppStateExtension>,
         Path((archive_id, video_id)): Path<(Uuid, Uuid)>,
-    ) -> Result<Response> {
+    ) -> Result<Response<BoxBody>> {
         debug!("Getting video {} file for archive {}", video_id, archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
             .manager
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        let path = archive.path_video(&video_id).ok_or(Error::ImageNotFound)?;
-        drop(state_lock);
-        let file = File::open(path.clone())
+        let video_path = archive.path_video(&video_id).ok_or(Error::ImageNotFound)?;
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let resp = ServeFile::new(video_path)
+            .oneshot(req)
             .await
-            .map_err(|err| Error::FileShare(err))?;
-        let headers = [(header::CONTENT_TYPE, "image/*")];
-        let body = AsyncReadBody::new(file);
-        Ok((headers, body).into_response())
+            .map_err(|err| Error::ImageFetch(err))?;
+        Ok(resp.map(boxed))
     }
 }
 

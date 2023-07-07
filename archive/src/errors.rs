@@ -9,17 +9,15 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Enumeration covering the possible errors which could occur during archive operations
 #[derive(Debug)]
 pub enum Error {
-    /// An error occurred while attempting to load the archive/manager
+    /// An error occurred while attempting to load the archive
     DataLoad(serde_json::Error),
     /// The archive was not found at the specified location
     ArchiveNotFound,
-    /// The manager was not found at the specified location
-    ManagerNotFound,
-    /// An error occurred while attempting to access the archive/manager path
+    /// An error occurred while attempting to access the archive path
     DataPath(io::Error),
-    /// An error occurred while attempting to save the archive/manager
+    /// An error occurred while attempting to save the archive
     DataSave(serde_json::Error),
-    /// Version of a found archive/manager is incompatible with this crate's version
+    /// Version of a found archive is incompatible with this crate's version
     IncompatibleVersion(ArchiveVersion),
 }
 
@@ -32,7 +30,6 @@ impl fmt::Display for Error {
                 err
             ),
             Self::ArchiveNotFound => write!(f, "archive could not be found"), // could be dir or file or id
-            Self::ManagerNotFound => write!(f, "manager file could not be found"),
             Self::DataPath(err) => write!(
                 f,
                 "could not access path or read from a file; check permissions ({})",

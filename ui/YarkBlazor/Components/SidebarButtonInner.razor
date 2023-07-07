@@ -1,0 +1,32 @@
+<img src=@IconKindMethods.GetUri(Icon) class="@((Active ? "sidebar-img-active" : ""))" />
+<p>@Title</p>
+
+<style scoped>
+    img {
+        width: 15px;
+        height: auto;
+        margin-right: 12.5px;
+    }
+
+    p {
+        font-size: 14.5px;
+        font-weight: 400;
+        margin: 0;
+        letter-spacing: -5%;
+    }
+
+    .sidebar-img-active {
+        filter: invert(33%) sepia(75%) saturate(2299%) hue-rotate(194deg) brightness(100%) contrast(109%);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Button";
+
+    [Parameter]
+    public IconKind Icon { get; set; } = IconKind.Placeholder;
+
+    [Parameter]
+    public bool Active { get; set; } = false;
+}
