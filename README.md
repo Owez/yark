@@ -2,6 +2,9 @@
 
 YouTube archiving made simple.
 
+<!-- TODO: comment out when rewrite happens -->
+<a href="https://github.com/Owez/yark/tree/v1.3-rewrite"><img src="./examples/images/rewrite.png" alt="Yark is being rewritten on the v1.3-rewrite branch!" width=400 /></a>
+
 <!-- TODO: uncomment when new gui is out -->
 <!-- If you're reading this, you're probably trying to download/use Yark via PyPI which has been removed in newer versions. You can download a modern version of Yark [here](https://github.com/Owez/yark).
 
