@@ -1,8 +1,10 @@
+@inject NavigationManager NavManager
+@implements IDisposable
+@inject ILogger<SidebarButton> logger
+
 <a href=@Link class="sidebar-button @((Active ? "sidebar-active" : ""))">
     <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon Active=@Active />
 </a>
-
-@* TODO: process archive change *@
 
 <style scoped>
     .sidebar-button {
@@ -14,8 +16,8 @@
         box-sizing: border-box;
         padding-top: 12.5px;
         padding-bottom: 12.5px;
-        margin-top:2.5px;
-        margin-bottom:2.5px;
+        margin-top: 2.5px;
+        margin-bottom: 2.5px;
         padding-left: 12.5px;
         padding-right: 12.5px;
         color: #171717;
@@ -38,6 +40,36 @@
     [Parameter]
     public IconKind Icon { get; set; } = IconKind.Placeholder;
 
-    [Parameter]
-    public bool Active { get; set; } = false;
+    bool Active { get; set; } = false;
+    protected override void OnInitialized()
+    {
+        Uri uri = new Uri(NavManager.Uri.ToString());
+        ProcessActiveFromUri(uri);
+
+        NavManager.LocationChanged += HandleLocationChanged;
+
+        base.OnInitialized();
+    }
+
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
+    }
+
+    void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        Uri uri = new Uri(e.Location);
+        ProcessActiveFromUri(uri);
+    }
+
+    void ProcessActiveFromUri(Uri uri)
+    {
+        string absolutePath = uri.AbsolutePath;
+        bool activeSnapshot = Active;
+        Active = absolutePath == Link;
+        if (activeSnapshot != Active)
+        {
+            StateHasChanged();
+        }
+    }
 }
