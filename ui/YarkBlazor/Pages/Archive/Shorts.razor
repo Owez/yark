@@ -1,11 +1,11 @@
-@page "/archive/videos"
+@page "/archive/shorts"
 @inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 @using YarkApiClient
 
-<h1 class="dashboard-title">@ArchiveName's videos</h1>
+<h1 class="dashboard-title">@ArchiveName's shorts</h1>
 @if (Archive != null && ArchiveName != null)
 {
-    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Videos.Data />
+    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Shorts.Data />
 }
 
 @code {
@@ -22,7 +22,7 @@
         ArchiveName = SessionStorage.GetItem<string>("OpenedArchiveName");
 
         Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
-        await archive.PullVideos(VideoCollectionKind.Videos, Page);
+        await archive.PullVideos(VideoCollectionKind.Shorts, Page);
         Archive = archive;
 
         await base.OnInitializedAsync();
