@@ -16,8 +16,8 @@ public class Snapshot<T>
         return new Snapshot<T>
         {
             Taken = DateTime.MinValue,
-            Page = default,
-            Data = default
+            Page = 0,
+            Data = default,
         };
     }
 

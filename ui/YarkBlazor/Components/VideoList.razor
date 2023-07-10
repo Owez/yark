@@ -1,0 +1,67 @@
+@using YarkApiClient;
+
+@if (Videos != null && ArchiveId != null)
+{
+    <div class="videos-list">
+    @foreach (Video Video in Videos)
+        {
+            <a href="/archive/video/@Video.Id" class="video-item-link">
+                <div class="video-item">
+                    <img src=@GetVideoThumbnail(Video) alt=@Video.Title.Current()>
+                    <p class="video-item-title">@Video.Title.Current()</p>
+                    <p class="video-item-info">@Video.Views.Current() views • 1 year ago
+                    </p>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+<style scoped>
+    .videos-list {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .video-item-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .video-item {
+        width: 300px;
+        margin-right: 20px;
+        margin-bottom: 25px;
+    }
+
+    .video-item>img {
+        width: 100%;
+        aspect-ratio: 16/9;
+        border-radius: 10px;
+    }
+
+    .video-item-title {
+        font-weight: 500;
+        font-size: 1rem;
+        margin-top:3.5px;
+        margin-bottom:2px;
+    }
+
+    .video-item-info {
+        font-size: 0.8rem;
+        color:#525252;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public string? ArchiveId { get; set; }
+
+    [Parameter, EditorRequired]
+    public List<Video>? Videos { get; set; }
+
+    string GetVideoThumbnail(Video video)
+    {
+        return video.ThumbnailUrl(new Context(), ArchiveId, video.Thumbnail.Current());
+    }
+}

@@ -23,8 +23,8 @@
 </style>
 
 @code {
-    [Parameter]
-    public required RecentArchive Archive { get; set; }
+    [Parameter, EditorRequired]
+    public RecentArchive Archive { get; set; } = null!;
 
     async Task OpenCurrentArchive()
     {
