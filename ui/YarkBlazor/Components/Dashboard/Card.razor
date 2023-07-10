@@ -1,0 +1,64 @@
+@if (CardKind != null)
+{
+    <div class="card @CardKindToCss()">@ChildContent</div>
+}
+
+<style scoped>
+    .card {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 20px;
+        min-height: 40px;
+    }
+
+    .card-full {
+        grid-column-start: 1;
+        grid-column-end: 4;
+    }
+
+    .card-left {
+        grid-column-start: 1;
+        grid-column-end: 2;
+    }
+
+    .card-middle {
+        grid-column-start: 2;
+        grid-column-end: 3;
+    }
+
+    .card-right {
+        grid-column-start: 3;
+        grid-column-end: 4;
+    }
+
+    .card-bigleft {
+        grid-column-start: 1;
+        grid-column-end: 3;
+    }
+
+    .card-bigright {
+        grid-column-start: 2;
+        grid-column-end: 4;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public CardKind? CardKind { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    string CardKindToCss()
+    {
+        switch (CardKind)
+        {
+            case YarkBlazor.CardKind.Full: return "card-full";
+            case YarkBlazor.CardKind.Left: return "card-left";
+            case YarkBlazor.CardKind.Middle: return "card-middle";
+            case YarkBlazor.CardKind.Right: return "card-right";
+            case YarkBlazor.CardKind.BigLeft: return "card-bigleft";
+            case YarkBlazor.CardKind.BigRight: return "card-bigright";
+        }
+        return "";
+    }
+}

@@ -1,5 +1,7 @@
 using Blazored.LocalStorage;
 
+namespace YarkBlazor;
+
 public class RecentArchiveCollection : List<RecentArchive>
 {
     public static async Task<RecentArchiveCollection?> FromLocalStorage(ILocalStorageService LocalStorage)

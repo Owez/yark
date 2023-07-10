@@ -3,6 +3,8 @@ using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using System.Text.Json.Serialization;
 
+namespace YarkBlazor;
+
 public class RecentArchive
 {
     [JsonPropertyName("id")]

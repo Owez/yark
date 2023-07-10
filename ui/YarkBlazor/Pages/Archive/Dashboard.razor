@@ -1,10 +1,31 @@
 @page "/archive"
 @inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
 
-<h1 class="dashboard-title">@Name's archive</h1>
+@if (Name != null)
+{
+    <h1 class="dashboard-title">@Name's archive</h1>
+}
+<div class="cards">
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Left />
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Middle />
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Right />
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Full />
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.BigLeft />
+    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Right />
+</div>
+
+<style scoped>
+    .cards {
+        width: calc(100% - 30px);
+        min-width: calc(235px * 3 + 40px);
+        display: grid;
+        grid-template-columns: 3;
+        gap: 20px;
+    }
+</style>
 
 @code {
-    string Name { get; set; }
+    string? Name { get; set; }
     protected override void OnInitialized()
     {
         Name = SessionStorage.GetItem<string>("OpenedArchiveName");

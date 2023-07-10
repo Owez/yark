@@ -1,3 +1,5 @@
+namespace YarkBlazor;
+
 public enum IconKind
 {
     Placeholder,
