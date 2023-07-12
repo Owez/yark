@@ -250,7 +250,7 @@ pub mod video {
 
     pub async fn get_file(
         State(state): State<AppStateExtension>,
-        Path((archive_id, video_id)): Path<(Uuid, Uuid)>,
+        Path((archive_id, video_id)): Path<(Uuid, String)>,
     ) -> Result<Response<BoxBody>> {
         debug!("Getting video {} file for archive {}", video_id, archive_id);
         let state_lock = state.lock().await;
@@ -258,12 +258,12 @@ pub mod video {
             .manager
             .get(&archive_id)
             .ok_or(Error::ArchiveNotFound)?;
-        let video_path = archive.path_video(&video_id).ok_or(Error::ImageNotFound)?;
+        let video_path = archive.path_video(&video_id).ok_or(Error::VideoNotFound)?;
         let req = Request::builder().body(Body::empty()).unwrap();
         let resp = ServeFile::new(video_path)
             .oneshot(req)
             .await
-            .map_err(|err| Error::ImageFetch(err))?;
+            .map_err(|err| Error::VideoFetch(err))?;
         Ok(resp.map(boxed))
     }
 }

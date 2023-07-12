@@ -40,6 +40,8 @@ pub enum Error {
     DirectoryNotFound,
     /// Couldn't fetch image using a tower oneshot
     ImageFetch(Infallible),
+    /// Couldn't fetch video using a tower oneshot
+    VideoFetch(Infallible),
 }
 
 impl Error {
@@ -53,7 +55,8 @@ impl Error {
             | Self::Server(_)
             | Self::FileShare(_)
             | Self::DirectoryPath(_)
-            | Self::ImageFetch(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | Self::ImageFetch(_)
+            | Self::VideoFetch(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ArchiveNotFound
             | Self::VideoNotFound
             | Self::ImageNotFound
@@ -87,6 +90,9 @@ impl fmt::Display for Error {
                 "failed to use tower's oneshot to fetch an image, {}",
                 err
             ),
+            Self::VideoFetch(err) => {
+                write!(f, "failed to use tower's oneshot to fetch a video, {}", err)
+            }
         }
     }
 }

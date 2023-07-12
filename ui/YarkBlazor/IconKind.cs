@@ -10,6 +10,7 @@ public enum IconKind
     Stars,
     Settings,
     Leave,
+    Back,
     GreenOrb,
     OrangeOrb,
     PurpleOrb
@@ -29,6 +30,7 @@ public class IconKindMethods
             case IconKind.Stars: return TypicalUriGenerator("Stars");
             case IconKind.Settings: return TypicalUriGenerator("Settings");
             case IconKind.Leave: return TypicalUriGenerator("Leave");
+            case IconKind.Back: return TypicalUriGenerator("Back");
             case IconKind.GreenOrb: return OrbUriGenerator("Green");
             case IconKind.OrangeOrb: return OrbUriGenerator("Orange");
             case IconKind.PurpleOrb: return OrbUriGenerator("Purple");

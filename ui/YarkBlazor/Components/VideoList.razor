@@ -1,15 +1,17 @@
-@using YarkApiClient;
+@using YarkApiClient
+@using System.Web
+@inject NavigationManager NavManager
 
 @if (Videos != null && ArchiveId != null)
 {
     <div class="videos-list">
     @foreach (Video Video in Videos)
         {
-            <a href="/archive/video/@Video.Id" class="video-item-link">
+            <a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&back=@GenerateBackLink()" class="video-item-link">
                 <div class="video-item">
-                    <img src=@GetVideoThumbnail(Video) alt=@Video.Title.Current()>
+                    <img src=@GetVideoThumbnail(Video)>
                     <p class="video-item-title">@Video.Title.Current()</p>
-                    <p class="video-item-info">@Video.Views.Current() views • 1 year ago
+                    <p class="video-item-info">@Video.Views.Current() views • @GetUploadedString(Video)
                     </p>
                 </div>
             </a>
@@ -43,13 +45,13 @@
     .video-item-title {
         font-weight: 500;
         font-size: 1rem;
-        margin-top:3.5px;
-        margin-bottom:2px;
+        margin-top: 3.5px;
+        margin-bottom: 2px;
     }
 
     .video-item-info {
         font-size: 0.8rem;
-        color:#525252;
+        color: #525252;
     }
 </style>
 
@@ -63,5 +65,17 @@
     string GetVideoThumbnail(Video video)
     {
         return video.ThumbnailUrl(new Context(), ArchiveId, video.Thumbnail.Current());
+    }
+
+    string GenerateBackLink()
+    {
+        Uri uri = new Uri(NavManager.Uri.ToString());
+        string absolutePath = uri.AbsolutePath;
+        return HttpUtility.UrlEncode(absolutePath);
+    }
+
+    string GetUploadedString(Video video)
+    {
+        return new TimeAgo(video.Uploaded).ToString();
     }
 }

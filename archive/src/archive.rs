@@ -8,7 +8,6 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::path::PathBuf;
-use uuid::Uuid;
 
 /// Representation of a Yark archive and its included videos/metadata
 ///
@@ -94,7 +93,7 @@ impl Archive {
     }
 
     /// Returns the expected filepath to a video with the `id` if it exists
-    pub fn path_video(&self, id: &Uuid) -> Option<PathBuf> {
+    pub fn path_video(&self, id: &str) -> Option<PathBuf> {
         let videos_path = self.path_videos();
         let videos_path_webm = videos_path.join(format!("{}.webm", id));
         if videos_path_webm.exists() {

@@ -1,0 +1,91 @@
+@page "/archive/play"
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
+@using YarkApiClient
+@using System.Web
+
+<a href=@(Back == null ? "/archive" : GetBackLink(Back)) class="back-button"><img
+        src=@IconKindMethods.GetUri(IconKind.Back) alt="Back">Back</a>
+@if (Video != null && ArchiveId != null)
+{
+    <video src=@GetVideoLink(Video, ArchiveId) controls autoplay></video>
+    <h1>@Video.Title.Current()</h1>
+    <p class="info">@Video.Views.Current() views • @GetUploadedString(Video)</p>
+}
+
+<style scoped>
+    .back-button {
+        color: #525252;
+        text-decoration: none;
+        font-size: 1rem;
+        padding: 10px;
+        margin-left: -10px;
+    }
+
+    .back-button>img {
+        filter: invert(31%) sepia(6%) saturate(8%) hue-rotate(314deg) brightness(94%) contrast(89%);
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        margin-bottom: -2px;
+    }
+
+    video,
+    .video-loading {
+        width: calc(60vw - 5rem);
+        min-width: 500px;
+        border-radius: 10px;
+        aspect-ratio: 16/9;
+    }
+
+    h1 {
+        margin-top: 15px;
+        margin-bottom: 2.5px;
+        font-size: 1.35rem;
+        font-weight: 500;
+    }
+
+    .info {
+        font-size: 0.9rem;
+        color: #525252;
+    }
+</style>
+
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? Id { get; set; } = null;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "back")]
+    public string? Back { get; set; } = null;
+
+    Video? Video { get; set; } = null;
+
+    string? ArchiveId { get; set; } = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
+        ArchiveId = archive.Meta.Id;
+        Video = await Video.Get(new Context(), archive.Meta.Id, HttpUtility.UrlDecode(Id));
+        @* TODO: err handling on not found video *@
+
+        await base.OnInitializedAsync();
+    }
+
+    string GetBackLink(string back)
+    {
+        return back == null ? "/archive" : HttpUtility.UrlDecode(back);
+    }
+
+    string GetVideoLink(Video video, string archiveId)
+    {
+        return video.FileUrl(new Context(), archiveId);
+    }
+
+    string GetUploadedString(Video video)
+    {
+        return new TimeAgo(video.Uploaded).ToString();
+    }
+}

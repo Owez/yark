@@ -174,8 +174,7 @@ body {
 }
 
 .dashboard-title {
-    margin-top: 32.5px;
-    margin-bottom: 32.5px;
+    margin-bottom: 30px;
     font-weight: 500;
     font-size: 30px;
     color: #171717;
