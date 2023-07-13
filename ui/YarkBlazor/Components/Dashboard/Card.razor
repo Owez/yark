@@ -43,7 +43,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public CardKind? CardKind { get; set; } = null!;
+    public CardKind CardKind { get; set; } = default!;
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }

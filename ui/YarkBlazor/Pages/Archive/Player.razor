@@ -10,6 +10,8 @@
     <video src=@GetVideoLink(Video, ArchiveId) controls autoplay></video>
     <h1>@Video.Title.Current()</h1>
     <p class="info">@Video.Views.Current() views • @GetUploadedString(Video)</p>
+    <h2>History</h2>
+    <YarkBlazor.Components.VideoHistory Video=@Video />
 }
 
 <style scoped>
@@ -29,23 +31,30 @@
         margin-bottom: -2px;
     }
 
-    video,
-    .video-loading {
+    video {
         width: calc(60vw - 5rem);
         min-width: 500px;
         border-radius: 10px;
         aspect-ratio: 16/9;
+        background-color: black;
     }
 
     h1 {
         margin-top: 15px;
         margin-bottom: 2.5px;
-        font-size: 1.35rem;
+        font-size: 1.6rem;
         font-weight: 500;
     }
 
+    h2 {
+        font-size: 1.15rem;
+        font-weight: 500;
+        margin-top: 30px;
+        margin-bottom: 7.5px;
+    }
+
     .info {
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         color: #525252;
     }
 </style>

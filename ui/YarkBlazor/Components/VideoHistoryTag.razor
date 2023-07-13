@@ -1,0 +1,72 @@
+@using System.Security.Cryptography
+@using System.Text
+
+<span style="background-color:@GetSeededHex();color:@GetTextOverlayColour();"
+    class="video-history-tag">@DateTime.ToString()</span>
+
+<style scoped>
+    .video-history-tag {
+        font-size: xx-small;
+        margin-left: 2.5px;
+        padding: 5px;
+        border-radius: 5px;
+        filter: saturate(50%);
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public DateTime DateTime { get; set; } = default!;
+
+    public static byte[] GetHash(string inputString)
+    {
+        using (HashAlgorithm algorithm = SHA256.Create())
+        {
+            return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+        }
+    }
+
+    string CollectAlphanumerics(string input, int length)
+    {
+        string output = "";
+        foreach (char c in input)
+        {
+            if (char.IsLetterOrDigit(c))
+            {
+                output += c;
+            }
+
+            if (output.Length == length)
+            {
+                break;
+            }
+        }
+        return output;
+    }
+
+    string GetSeededHex()
+    {
+        byte[] hash = GetHash(DateTime.ToString());
+        string asHex = BitConverter.ToString(hash);
+        string collected = CollectAlphanumerics(asHex, 6);
+        return String.Format("#{0}", collected);
+    }
+
+    bool TextOverlayShouldBeWhite(string hex)
+    {
+        string hexCode = hex.Substring(1);
+        int red = Convert.ToInt32(hexCode.Substring(0, 2), 16);
+        int green = Convert.ToInt32(hexCode.Substring(2, 2), 16);
+        int blue = Convert.ToInt32(hexCode.Substring(4, 2), 16);
+        double brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+        return brightness < 128;
+    }
+
+    string GetTextOverlayColour()
+    {
+        string hex = GetSeededHex();
+        return TextOverlayShouldBeWhite(hex) ? "white" : "black";
+    }
+
+
+}

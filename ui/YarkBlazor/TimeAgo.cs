@@ -11,13 +11,11 @@ public class TimeAgo
 
     public override string ToString()
     {
-        // seconds
-        DateTime oneMin = DateTime.UtcNow.AddMinutes(-1);
-        if (DateTime >= oneMin)
+        // just now
+        DateTime justNow = DateTime.UtcNow.AddMinutes(-10);
+        if (DateTime >= justNow)
         {
-            TimeSpan intersection = DateTime.Subtract(oneMin);
-            string plural = intersection.Seconds == 1 ? "" : "s";
-            return String.Format("{0} second{1} ago", intersection.Seconds, plural);
+            return "just now";
         }
         // minutes
         DateTime oneHour = DateTime.UtcNow.AddHours(-1);

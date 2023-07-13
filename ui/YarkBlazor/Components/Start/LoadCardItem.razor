@@ -24,7 +24,7 @@
 
 @code {
     [Parameter, EditorRequired]
-    public RecentArchive Archive { get; set; } = null!;
+    public RecentArchive Archive { get; set; } = default!;
 
     async Task OpenCurrentArchive()
     {

@@ -1,0 +1,93 @@
+@if (Length > 1)
+{
+    <li>@Name @GenerateMiddleExplainer() <button onclick=@ToggleData>@if (!ShouldReveal){<span>Show @Name</span>} else {<i>Hide @Name</i>}</button> @GenerateDate() <YarkBlazor.Components.VideoHistoryTag DateTime=@DateTime /></li>
+    @if (ShouldReveal)
+    {
+        <p class="revealed">@Data</p>
+    }
+}
+else
+{
+    <li>No @Name.ToLower() changes on record</li>
+}
+
+<style scoped>
+    li {
+        line-height: 1.85;
+        font-size: 0.95rem;
+    }
+
+    .revealed {
+        margin-top: 2.5px;
+        margin-bottom: 5px;
+        color: grey;
+        font-size: smaller;
+    }
+
+    li,
+    .revealed {
+        margin-left: 1rem;
+        max-width: calc(500px - 1rem);
+    }
+
+    button {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 5px;
+        background-color: #f7f7f7;
+        padding: 5px;
+        transition: 0.175s;
+    }
+
+    button:hover {
+        background-color: #efefef;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Name { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public DateTime DateTime { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Data { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public int Length { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public int Index { get; set; } = default!;
+
+    bool ShouldReveal { get; set; } = false;
+
+    string GenerateMiddleExplainer()
+    {
+        if (Index == 0)
+        {
+            return "was originally";
+        }
+        else if (Length == 2 && Index == 1)
+        {
+            return "got changed to";
+        }
+        else if (Index == Length - 1)
+        {
+            return "finally changed to";
+        }
+        else
+        {
+            return "was changed to";
+        }
+    }
+
+    void ToggleData()
+    {
+        ShouldReveal = !ShouldReveal;
+    }
+
+    string GenerateDate()
+    {
+        return new TimeAgo(DateTime).ToString();
+    }
+}

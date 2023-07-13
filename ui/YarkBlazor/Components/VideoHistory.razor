@@ -1,0 +1,19 @@
+@using YarkApiClient
+
+<ol>
+    <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime.UtcNow Data="Woohoo" Length=2 Index=0 />
+    <YarkBlazor.Components.VideoHistoryItem Name="Description" DateTime=@DateTime.UtcNow Data="cool this" Length=1
+        Index=0 />
+    <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime.UtcNow Data="haha" Length=2 Index=1 />
+</ol>
+
+<style scoped>
+    ol {
+        list-style-type: decimal;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public Video Video { get; set; } = default!;
+}

@@ -60,6 +60,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9TdGFydENhcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WaWRlb0hpc3RvcnkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoHistoryItem.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WaWRlb0hpc3RvcnlJdGVtLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoHistoryTag.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WaWRlb0hpc3RvcnlUYWcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoList.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WaWRlb0xpc3QucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

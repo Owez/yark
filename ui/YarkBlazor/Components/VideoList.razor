@@ -57,10 +57,10 @@
 
 @code {
     [Parameter, EditorRequired]
-    public string? ArchiveId { get; set; }
+    public string ArchiveId { get; set; } = default!;
 
     [Parameter, EditorRequired]
-    public List<Video>? Videos { get; set; }
+    public List<Video> Videos { get; set; } = default!;
 
     string GetVideoThumbnail(Video video)
     {
