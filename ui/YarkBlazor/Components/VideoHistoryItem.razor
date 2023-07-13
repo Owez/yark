@@ -1,9 +1,18 @@
 @if (Length > 1)
 {
-    <li>@Name @GenerateMiddleExplainer() <button onclick=@ToggleData>@if (!ShouldReveal){<span>Show @Name</span>} else {<i>Hide @Name</i>}</button> @GenerateDate() <YarkBlazor.Components.VideoHistoryTag DateTime=@DateTime /></li>
+    <li>@Name @GenerateMiddleExplainer() <button onclick=@ToggleData>@if (!ShouldReveal)
+            {
+                <span>Show @Name</span>
+            }
+            else
+            {
+                <i>Hide @Name</i>
+            }</button> @GenerateDate()
+        <YarkBlazor.Components.VideoHistoryTag DateTime=@DateTime />
+    </li>
     @if (ShouldReveal)
     {
-        <p class="revealed">@Data</p>
+        <p class="revealed">@ChildContent</p>
     }
 }
 else
@@ -51,13 +60,13 @@ else
     public DateTime DateTime { get; set; } = default!;
 
     [Parameter, EditorRequired]
-    public string Data { get; set; } = default!;
-
-    [Parameter, EditorRequired]
     public int Length { get; set; } = default!;
 
     [Parameter, EditorRequired]
     public int Index { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment ChildContent { get; set; } = default!;
 
     bool ShouldReveal { get; set; } = false;
 

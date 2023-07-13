@@ -1,10 +1,36 @@
 @using YarkApiClient
 
 <ol>
-    <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime.UtcNow Data="Woohoo" Length=2 Index=0 />
-    <YarkBlazor.Components.VideoHistoryItem Name="Description" DateTime=@DateTime.UtcNow Data="cool this" Length=1
-        Index=0 />
-    <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime.UtcNow Data="haha" Length=2 Index=1 />
+    @* Titles *@
+    @for (int Index = 0; Index < Titles.Count; Index += 1)
+    {
+        (DateTime DateTime, string Data) = Titles[Index];
+        <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime Length=@Titles.Count Index=@Index>@Data
+        </YarkBlazor.Components.VideoHistoryItem>
+    }
+    @* Descriptions *@
+    @for (int Index = 0; Index < Descriptions.Count; Index += 1)
+    {
+        (DateTime DateTime, string Data) = Descriptions[Index];
+        <YarkBlazor.Components.VideoHistoryItem Name="Description" DateTime=@DateTime Length=@Descriptions.Count
+            Index=@Index>@Data</YarkBlazor.Components.VideoHistoryItem>
+    }
+    @* Views *@
+    @for (int Index = 0; Index < Views.Count; Index += 1)
+    {
+        (DateTime DateTime, int Data) = Views[Index];
+        <YarkBlazor.Components.VideoHistoryItem Name="View count" DateTime=@DateTime Length=@Views.Count Index=@Index>@Data
+        </YarkBlazor.Components.VideoHistoryItem>
+    }
+    @* Likes *@
+    @for (int Index = 0; Index < Likes.Count; Index += 1)
+    {
+        (DateTime DateTime, int Data) = Likes[Index];
+        <YarkBlazor.Components.VideoHistoryItem Name="Like count" DateTime=@DateTime Length=@Likes.Count Index=@Index>@Data
+        </YarkBlazor.Components.VideoHistoryItem>
+    }
+    @* Nothing disclaimer *@
+    @* TODO *@
 </ol>
 
 <style scoped>
@@ -16,4 +42,18 @@
 @code {
     [Parameter, EditorRequired]
     public Video Video { get; set; } = default!;
+
+    List<(DateTime, string)> Titles { get; set; } = new List<(DateTime, string)>();
+
+    List<(DateTime, string)> Descriptions { get; set; } = new List<(DateTime, string)>();
+
+    List<(DateTime, int)> Views { get; set; } = new List<(DateTime, int)>();
+
+    List<(DateTime, int)> Likes { get; set; } = new List<(DateTime, int)>();
+
+    protected override void OnInitialized()
+    {
+        @* TODO *@
+        base.OnInitialized();
+    }
 }
