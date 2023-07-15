@@ -22,11 +22,11 @@ public class Note
         public string Description { get; set; }
     }
 
-    public static async Task<Note> Create(AdminContext adminCtx, string archiveId, string videoId, int timestamp, string title, string description)
+    public static async Task<Note> Create(AdminContext adminContext, string archiveId, string videoId, int timestamp, string title, string description)
     {
         using (HttpClient client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
             NoteCreateSchema createSchema = new NoteCreateSchema
             {
                 Timestamp = timestamp,
@@ -36,7 +36,7 @@ public class Note
             string createJson = JsonSerializer.Serialize(createSchema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(createJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(adminCtx.VideoPath(archiveId, videoId, "/note"), body);
+            HttpResponseMessage resp = await client.PostAsync(adminContext.VideoPath(archiveId, videoId, "/note"), body);
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
@@ -64,11 +64,11 @@ public class Note
         }
     }
 
-    public async void Update(AdminContext adminCtx, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky or wait for new Option type
+    public async Task Update(AdminContext adminContext, string archiveId, string videoId, int timestamp = 1612140613, string title = "1612175069594426240613", string description = "1612175069594426240613") // TODO: fix because this is really janky or wait for new Option type
     {
         using (HttpClient client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
             NoteUpdateSchema updateSchema = new NoteUpdateSchema(this);
             if (timestamp != 1612140613)
             {
@@ -85,17 +85,17 @@ public class Note
             string updateJson = JsonSerializer.Serialize(updateSchema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(updateJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(adminCtx.NotePath(archiveId, videoId, this.Id), body);
+            HttpResponseMessage resp = await client.PostAsync(adminContext.NotePath(archiveId, videoId, this.Id), body);
             // TODO: err handling
         }
     }
 
-    public async void Delete(AdminContext adminCtx, string archiveId, string videoId)
+    public async Task Delete(AdminContext adminContext, string archiveId, string videoId)
     {
         using (HttpClient client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
-            HttpResponseMessage resp = await client.DeleteAsync(adminCtx.NotePath(archiveId, videoId, this.Id));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
+            HttpResponseMessage resp = await client.DeleteAsync(adminContext.NotePath(archiveId, videoId, this.Id));
             // TODO: err handling
         }
     }

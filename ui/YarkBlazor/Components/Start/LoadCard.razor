@@ -3,11 +3,56 @@
 <YarkBlazor.Components.Start.StartCard Title="Load Existing"
     Description="Manage or view an archive that's already been made" Link="/start/load" Orb=@IconKind.OrangeOrb
     Kind=@Kind OnLeft=@OnLeft>
+    @* Recent list *@
+    @if (Kind == StartCardKind.Full && RecentArchives.Count != 0)
+    {
+        <h2 class="little-heading">Recents</h2>
+    }
     @foreach (RecentArchive recentArchive in RecentArchives)
     {
         <YarkBlazor.Components.Start.LoadCardItem Archive=@recentArchive />
     }
+    @* Import notice (non-full) *@
+    @if (Kind != StartCardKind.Full)
+    {
+        <p class="import-notice">@if (RecentArchives.Count == 0)
+            {
+                <span>Click</span>
+            }
+            else
+            {
+                <span>Or click</span>
+            } to import
+        </p>
+    }
+    @* Importer (only on full) *@
+    @if (Kind == StartCardKind.Full)
+    {
+        <h2 class="little-heading @(RecentArchives.Count != 0 ? "import-spacing" : "")">Import</h2>
+        <YarkBlazor.Components.Start.Importer />
+    }
     </YarkBlazor.Components.Start.StartCard>
+
+    <style scoped>
+        .import-notice {
+            font-size: small;
+            color: grey;
+            margin-top: 5px;
+            margin-left: 20px;
+        }
+
+        .little-heading {
+            font-weight: normal;
+            margin-left: 20px;
+            color: grey;
+            font-size: small;
+            margin-bottom: 5px;
+        }
+
+        .import-spacing {
+            margin-top: 10px;
+        }
+    </style>
 
 @code {
     [Parameter]

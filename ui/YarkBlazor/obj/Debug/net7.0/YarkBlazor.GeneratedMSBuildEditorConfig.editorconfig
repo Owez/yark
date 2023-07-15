@@ -32,10 +32,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Mb2dvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Reveal/RevealButton.razor]
-build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9SZXZlYWwvUmV2ZWFsQnV0dG9uLnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Sidebar.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -50,6 +46,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/CreateCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9DcmVhdGVDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/Importer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9JbXBvcnRlci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/LoadCard.razor]

@@ -45,17 +45,17 @@ public class Archive
         public string Id { get; set; }
     }
 
-    public static async Task<Archive> Create(AdminContext adminCtx, string path, string target)
+    public static async Task<Archive> Create(AdminContext adminContext, string path, string target)
     {
         ArchiveCreateSchema createSchema = new ArchiveCreateSchema
         {
             Path = path,
             Target = target,
         };
-        return await Archive.SendPost(adminCtx, createSchema);
+        return await Archive.SendPost(adminContext, createSchema);
     }
 
-    public static async Task<Archive> Import(AdminContext adminCtx, string path, string target, string archiveId)
+    public static async Task<Archive> Import(AdminContext adminContext, string path, string target, string archiveId)
     {
         ArchiveImportSchema importSchema = new ArchiveImportSchema
         {
@@ -63,7 +63,7 @@ public class Archive
             Target = target,
             Id = archiveId
         };
-        return await Archive.SendPost(adminCtx, importSchema);
+        return await Archive.SendPost(adminContext, importSchema);
     }
 
     public static async Task<Archive> GetArchiveAsync(Context context, string archiveId)
@@ -73,29 +73,29 @@ public class Archive
         return Archive.NewArchiveFromMeta(archiveMeta);
     }
 
-    private static async Task<Archive> SendPost<T>(AdminContext adminCtx, T schema)
+    private static async Task<Archive> SendPost<T>(AdminContext adminContext, T schema)
     {
         using (HttpClient client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
             string createJson = JsonSerializer.Serialize(schema);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             StringContent body = new StringContent(createJson, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage resp = await client.PostAsync(adminCtx.Path("/archive"), body);
+            HttpResponseMessage resp = await client.PostAsync(adminContext.Path("/archive"), body);
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
             MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
-            ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminCtx, msg.Id);
+            ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminContext, msg.Id);
             return Archive.NewArchiveFromMeta(archiveMeta);
         }
     }
 
-    public async void Delete(AdminContext adminCtx)
+    public async Task Delete(AdminContext adminContext)
     {
         using (HttpClient client = new HttpClient())
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminCtx.Secret);
-            HttpResponseMessage resp = await client.DeleteAsync(adminCtx.ArchivePath(this.Meta.Id));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
+            HttpResponseMessage resp = await client.DeleteAsync(adminContext.ArchivePath(this.Meta.Id));
             // TODO: err handling
         }
     }

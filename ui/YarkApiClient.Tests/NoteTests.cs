@@ -6,7 +6,7 @@ namespace YarkApiClient.Tests;
 public class NoteTests
 {
     [Fact]
-    public async void SerdeNotes()
+    public async Task SerdeNotes()
     {
         Note exampleNote = new Note
         {

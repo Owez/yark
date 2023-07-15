@@ -5,7 +5,7 @@ namespace YarkApiClient.Tests;
 public class VideosTests
 {
     [Fact]
-    public async void GetVideos()
+    public async Task GetVideos()
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context context = new Context();
@@ -15,7 +15,7 @@ public class VideosTests
     }
 
     [Fact]
-    public async void GetLivestreams()
+    public async Task GetLivestreams()
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context context = new Context();
@@ -25,7 +25,7 @@ public class VideosTests
     }
 
     [Fact]
-    public async void GetShorts()
+    public async Task GetShorts()
     {
         string id = "bc9f389d-275b-4500-9c36-85d46539b0d3";
         Context context = new Context();
