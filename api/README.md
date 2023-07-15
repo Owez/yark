@@ -231,7 +231,7 @@ This route lets you delete an existing note, it just requires authentication and
 
 This route lets you explore content on the API instances local filesystem so that a web-based file explorer can be implemented. This route will open the directory and list all files/folders in the path provided as json content. There is no POST/DELETE/etc because the *only* other action any actor should be able to do on the filesystem is create new archives. 
 
-This route is protected by an admin secret and is probably the most sensitive route in the API, but it's needed due to (good) security restrictions on `<input type="file">` in modern browsers. Here's an example of the JSON body used to query for a path:
+This route is protected by an admin secret and is probably the most sensitive route in the API, but it's needed due to (good) security restrictions on `<input type="file">` in modern browsers. If you don't supply any JSON, the response will be the current user's home directory. Here's an example of the JSON body used to query for a path:
 
 ```jsonc
 {

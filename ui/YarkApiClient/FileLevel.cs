@@ -9,9 +9,9 @@ public class FileLevel
 
     private class FileLevelSchema
     {
-        private string Path { get; set; }
+        private string? Path { get; set; }
 
-        public FileLevelSchema(string path)
+        public FileLevelSchema(string? path)
         {
             Path = path;
         }
@@ -23,7 +23,7 @@ public class FileLevel
         return await FileLevel.GetFileLevelFromStringAsync(adminContext, path);
     }
 
-    public static async Task<FileLevel> GetFileLevelFromStringAsync(AdminContext adminContext, string path) // TODO: figure out c# paths to PathBuf equivalent
+    public static async Task<FileLevel> GetFileLevelFromStringAsync(AdminContext adminContext, string? path) // TODO: figure out c# paths to PathBuf equivalent
     {
         using (HttpClient client = new HttpClient())
         {
@@ -42,6 +42,4 @@ public class FileLevel
             };
         }
     }
-
-
 }

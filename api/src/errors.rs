@@ -42,6 +42,8 @@ pub enum Error {
     ImageFetch(Infallible),
     /// Couldn't fetch video using a tower oneshot
     VideoFetch(Infallible),
+    /// Need a path for filesystem as home directory couldn't be got
+    PathNeeded,
 }
 
 impl Error {
@@ -63,6 +65,7 @@ impl Error {
             | Self::NoteNotFound
             | Self::DirectoryNotFound => StatusCode::NOT_FOUND,
             Self::InvalidAdminSecret => StatusCode::UNAUTHORIZED,
+            Self::PathNeeded => StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -93,6 +96,10 @@ impl fmt::Display for Error {
             Self::VideoFetch(err) => {
                 write!(f, "failed to use tower's oneshot to fetch a video, {}", err)
             }
+            Self::PathNeeded => write!(
+                f,
+                "Need a path for filesystem as home directory couldn't be got"
+            ),
         }
     }
 }
