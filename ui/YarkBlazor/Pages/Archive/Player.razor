@@ -10,6 +10,7 @@
     @* NOTE: in the future this could be made into a reel-like view if its a short *@
     <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
     <h1>@Video.Title.Current()</h1>
+    <YarkBlazor.Components.VideoDescription Description=@Video.Description.Current() />
     <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
     <h2>History</h2>
     <YarkBlazor.Components.VideoHistory Video=@Video />

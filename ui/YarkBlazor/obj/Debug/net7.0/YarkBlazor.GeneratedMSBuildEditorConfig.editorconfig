@@ -32,6 +32,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Mb2dvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Reveal/RevealButton.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9SZXZlYWwvUmV2ZWFsQnV0dG9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Sidebar.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TaWRlYmFyLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -58,6 +62,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Start/StartCard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGFydC9TdGFydENhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoDescription.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9WaWRlb0Rlc2NyaXB0aW9uLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/VideoHistory.razor]

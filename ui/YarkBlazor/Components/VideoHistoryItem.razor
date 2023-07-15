@@ -1,6 +1,7 @@
 @if (Length > 1)
 {
-    <li>@Name @GenerateMiddleExplainer() <button onclick=@ToggleData>@if (!ShouldReveal)
+    @* TODO: merge button and revealed content into new component *@
+    <li>@Name @GenerateMiddleExplainer() <button class="reveal-button" onclick=@ToggleData>@if (!ShouldReveal)
             {
                 <span>Show @Name</span>
             }
@@ -12,7 +13,7 @@
     </li>
     @if (ShouldReveal)
     {
-        <p class="revealed">@ChildContent</p>
+        <p class="reveal-content">@ChildContent</p>
     }
 }
 else
@@ -24,31 +25,8 @@ else
     li {
         line-height: 1.85;
         font-size: 0.95rem;
-    }
-
-    .revealed {
-        margin-top: 2.5px;
-        margin-bottom: 5px;
-        color: grey;
-        font-size: smaller;
-    }
-
-    li,
-    .revealed {
         margin-left: 1rem;
         max-width: calc(500px - 1rem);
-    }
-
-    button {
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        border-radius: 5px;
-        background-color: #f7f7f7;
-        padding: 5px;
-        transition: 0.175s;
-    }
-
-    button:hover {
-        background-color: #efefef;
     }
 </style>
 
