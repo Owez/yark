@@ -1,5 +1,6 @@
 @using YarkApiClient
 
+@* Changes *@
 <ol>
     @* Titles *@
     @for (int Index = 0; Index < Titles.Count; Index += 1)
@@ -29,13 +30,60 @@
         <YarkBlazor.Components.VideoHistoryItem Name="Like count" DateTime=@DateTime Length=@Likes.Count Index=@Index>@Data
         </YarkBlazor.Components.VideoHistoryItem>
     }
-    @* Nothing disclaimer *@
-    @* TODO *@
 </ol>
+@* Disclaimers *@
+<ul>
+    @* No changes at all *@
+    @if (Titles.Count == 0 && Descriptions.Count == 0 && Views.Count == 0 && Likes.Count == 0)
+    {
+        <li class="disclaimer">No changes on record</li>
+    }
+    @* Specific nothing disclaimers *@
+    else
+    {
+        @* Nothing disclaimers (title/description) *@
+        @if (Titles.Count == 0 && Descriptions.Count == 0)
+        {
+            <li class="disclaimer">No title or description changes on record</li>
+        }
+        else if (Titles.Count == 0)
+        {
+            <li class="disclaimer">No title changes on record</li>
+        }
+        else if (Descriptions.Count == 0)
+        {
+            <li class="disclaimer">No description changes on record</li>
+        }
+        @* Nothing disclaimers (views/likes) *@
+        @if (Views.Count == 0 && Likes.Count == 0)
+        {
+            <li class="disclaimer">No view or like count changes on record</li>
+        }
+        else if (Views.Count == 0)
+        {
+            <li class="disclaimer">No view count changes on record</li>
+        }
+        else if (Likes.Count == 0)
+        {
+            <li class="disclaimer">No like count changes on record</li>
+        }
+    }
+</ul>
 
 <style scoped>
     ol {
         list-style-type: decimal;
+    }
+
+    ul {
+        list-style-type: disc;
+    }
+
+    .disclaimer {
+        line-height: 1.85;
+        font-size: 0.95rem;
+        margin-left: 1rem;
+        max-width: calc(500px - 1rem);
     }
 </style>
 

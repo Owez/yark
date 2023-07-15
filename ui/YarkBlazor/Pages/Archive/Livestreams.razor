@@ -5,7 +5,8 @@
 <h1 class="dashboard-title">@ArchiveName's livestreams</h1>
 @if (Archive != null && ArchiveName != null)
 {
-    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Livestreams.Data />
+    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Livestreams.Data
+    VideoCollectionKind=@VideoCollectionKind.Livestreams />
 }
 
 @code {

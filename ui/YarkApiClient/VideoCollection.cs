@@ -58,3 +58,39 @@ public enum VideoCollectionKind
     Livestreams,
     Shorts
 }
+
+public class VideoCollectionKindMethods
+{
+    public static VideoCollectionKind DecodeFromString(string encodedVideoCollectionKind)
+    {
+        switch (encodedVideoCollectionKind.ToLower())
+        {
+            case "videos": return VideoCollectionKind.Videos;
+            case "livestreams": return VideoCollectionKind.Livestreams;
+            case "shorts": return VideoCollectionKind.Shorts;
+        }
+        return VideoCollectionKind.Videos;
+    }
+
+    public static string GenerateLink(VideoCollectionKind videoCollectionKind)
+    {
+        switch (videoCollectionKind)
+        {
+            case VideoCollectionKind.Videos: return "/archive/videos";
+            case VideoCollectionKind.Livestreams: return "/archive/livestreams";
+            case VideoCollectionKind.Shorts: return "/archive/shorts";
+        }
+        return "/archive/videos";
+    }
+
+    public static string ToString(VideoCollectionKind videoCollectionKind)
+    {
+        switch (videoCollectionKind)
+        {
+            case VideoCollectionKind.Videos: return "videos";
+            case VideoCollectionKind.Livestreams: return "livestreams";
+            case VideoCollectionKind.Shorts: return "shorts";
+        }
+        return default!;
+    }
+}

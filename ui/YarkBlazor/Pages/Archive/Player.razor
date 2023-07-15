@@ -3,13 +3,14 @@
 @using YarkApiClient
 @using System.Web
 
-<a href=@(Back == null ? "/archive" : GetBackLink(Back)) class="back-button"><img
+<a href=@VideoCollectionKindMethods.GenerateLink(VideoCollectionKind) class="back-button"><img
         src=@IconKindMethods.GetUri(IconKind.Back) alt="Back">Back</a>
 @if (Video != null && ArchiveId != null)
 {
-    <video src=@GetVideoLink(Video, ArchiveId) controls autoplay></video>
+    @* NOTE: in the future this could be made into a reel-like view if its a short *@
+    <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
     <h1>@Video.Title.Current()</h1>
-    <p class="info">@Video.Views.Current() views • @GetUploadedString(Video)</p>
+    <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
     <h2>History</h2>
     <YarkBlazor.Components.VideoHistory Video=@Video />
 }
@@ -66,15 +67,21 @@
     public string? Id { get; set; } = null;
 
     [Parameter]
-    [SupplyParameterFromQuery(Name = "back")]
-    public string? Back { get; set; } = null;
+    [SupplyParameterFromQuery(Name = "kind")]
+    public string VideoCollectionKindString { get; set; } = "videos";
 
     Video? Video { get; set; } = null;
 
     string? ArchiveId { get; set; } = null;
 
+    VideoCollectionKind VideoCollectionKind { get; set; } = VideoCollectionKind.Videos;
+
     protected override async Task OnInitializedAsync()
     {
+        @* Figure out the video collection kind *@
+        VideoCollectionKind = VideoCollectionKindMethods.DecodeFromString(VideoCollectionKindString);
+
+        @* Get archive information *@
         Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
         ArchiveId = archive.Meta.Id;
         Video = await Video.Get(new Context(), archive.Meta.Id, HttpUtility.UrlDecode(Id));
@@ -83,17 +90,12 @@
         await base.OnInitializedAsync();
     }
 
-    string GetBackLink(string back)
-    {
-        return back == null ? "/archive" : HttpUtility.UrlDecode(back);
-    }
-
-    string GetVideoLink(Video video, string archiveId)
+    string GenerateVideoLink(Video video, string archiveId)
     {
         return video.FileUrl(new Context(), archiveId);
     }
 
-    string GetUploadedString(Video video)
+    string GenerateUploadedString(Video video)
     {
         return new TimeAgo(video.Uploaded).ToString();
     }

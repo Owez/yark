@@ -5,7 +5,7 @@
 <h1 class="dashboard-title">@ArchiveName's videos</h1>
 @if (Archive != null && ArchiveName != null)
 {
-    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Videos.Data />
+    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Videos.Data VideoCollectionKind=@VideoCollectionKind.Videos />
 }
 
 @code {

@@ -1,3 +1,5 @@
+@using YarkApiClient
+
 <nav>
     <div class="sidebar-list">
         <a href="/archive" class="sidebar-header">
@@ -6,10 +8,12 @@
         <hr>
         <YarkBlazor.Components.SidebarButton Title="Dashboard" Link="/archive" Icon=@IconKind.Dashboard />
         <hr>
-        <YarkBlazor.Components.SidebarButton Title="Videos" Link="/archive/videos" Icon=@IconKind.Videos />
-        <YarkBlazor.Components.SidebarButton Title="Livestreams" Link="/archive/livestreams"
-            Icon=@IconKind.Livestreams />
-        <YarkBlazor.Components.SidebarButton Title="Shorts" Link="/archive/shorts" Icon=@IconKind.Shorts />
+        <YarkBlazor.Components.SidebarButton Title="Videos" Link="/archive/videos" Icon=@IconKind.Videos
+            VideoListButtonKind=@VideoCollectionKind.Videos />
+        <YarkBlazor.Components.SidebarButton Title="Livestreams" Link="/archive/livestreams" Icon=@IconKind.Livestreams
+            VideoListButtonKind=@VideoCollectionKind.Livestreams />
+        <YarkBlazor.Components.SidebarButton Title="Shorts" Link="/archive/shorts" Icon=@IconKind.Shorts
+            VideoListButtonKind=@VideoCollectionKind.Shorts />
     </div>
     <div class="sidebar-list">
         <hr>

@@ -1,9 +1,11 @@
 @inject NavigationManager NavManager
 @implements IDisposable
 @inject ILogger<SidebarButton> logger
+@using System.Collections.Specialized
+@using YarkApiClient
 
-<a href=@Link class="sidebar-button @((Active ? "sidebar-active" : ""))">
-    <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon Active=@Active />
+<a href=@Link class="sidebar-button @((Active ? "sidebar-active" : "")) @((Inside ? "sidebar-inside" : ""))">
+    <YarkBlazor.Components.SidebarButtonInner Title=@Title Icon=@Icon Active=@Active Inside=@Inside />
 </a>
 
 <style scoped>
@@ -28,6 +30,12 @@
         border-radius: 15px;
         background-color: #E9F0FE;
     }
+
+    .sidebar-inside {
+        color: #982BDB;
+        border-radius: 15px;
+        background-color: #F7EBFE;
+    }
 </style>
 
 @code {
@@ -40,11 +48,16 @@
     [Parameter]
     public IconKind Icon { get; set; } = IconKind.Placeholder;
 
+    [Parameter]
+    public VideoCollectionKind? VideoListButtonKind { get; set; } = null;
+
     bool Active { get; set; } = false;
+    bool Inside { get; set; } = false;
     protected override void OnInitialized()
     {
         Uri uri = new Uri(NavManager.Uri.ToString());
         ProcessActiveFromUri(uri);
+        ProcessInsideFromUri(uri);
 
         NavManager.LocationChanged += HandleLocationChanged;
 
@@ -60,16 +73,49 @@
     {
         Uri uri = new Uri(e.Location);
         ProcessActiveFromUri(uri);
+        ProcessInsideFromUri(uri);
     }
 
     void ProcessActiveFromUri(Uri uri)
     {
         string absolutePath = uri.AbsolutePath;
-        bool activeSnapshot = Active;
-        Active = absolutePath == Link;
-        if (activeSnapshot != Active)
+        ChangeActive(absolutePath == Link);
+    }
+
+    void ChangeActive(bool newActive)
+    {
+        if (newActive == Active)
         {
-            StateHasChanged();
+            return;
         }
+        Active = newActive;
+        StateHasChanged();
+    }
+
+    void ProcessInsideFromUri(Uri uri)
+    {
+        if (VideoListButtonKind == null) { return; }
+
+        NameValueCollection? queryDirectory = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        string? queryKind = queryDirectory.Get("kind");
+        logger.LogInformation(queryKind);
+        if (queryKind == null)
+        {
+            ChangeInside(false);
+            return;
+        }
+
+        VideoCollectionKind videoCollectionKind = VideoCollectionKindMethods.DecodeFromString(queryKind);
+        ChangeInside(videoCollectionKind == VideoListButtonKind);
+    }
+
+    void ChangeInside(bool newInside)
+    {
+        if (newInside == Inside)
+        {
+            return;
+        }
+        Inside = newInside;
+        StateHasChanged();
     }
 }

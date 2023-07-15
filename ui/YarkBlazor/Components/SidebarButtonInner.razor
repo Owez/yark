@@ -1,4 +1,5 @@
-<img src=@IconKindMethods.GetUri(Icon) class="@((Active ? "sidebar-img-active" : ""))" />
+<img src=@IconKindMethods.GetUri(Icon)
+    class="@((Active ? "sidebar-img-active" : "")) @((Inside ? "sidebar-img-inside" : ""))" />
 <p>@Title</p>
 
 <style scoped>
@@ -18,6 +19,10 @@
     .sidebar-img-active {
         filter: invert(28%) sepia(49%) saturate(3548%) hue-rotate(220deg) brightness(93%) contrast(81%);
     }
+
+    .sidebar-img-inside {
+        filter: invert(27%) sepia(66%) saturate(7282%) hue-rotate(272deg) brightness(91%) contrast(90%);
+    }
 </style>
 
 @code {
@@ -29,4 +34,7 @@
 
     [Parameter]
     public bool Active { get; set; } = false;
+
+    [Parameter]
+    public bool Inside { get; set; } = false;
 }

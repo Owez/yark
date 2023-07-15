@@ -7,7 +7,8 @@
     <div class="videos-list">
     @foreach (Video Video in Videos)
         {
-            <a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&back=@GenerateBackLink()" class="video-item-link">
+            <a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&kind=@VideoCollectionKindMethods.ToString(VideoCollectionKind)"
+                class="video-item-link">
                 <div class="video-item">
                     <img src=@GetVideoThumbnail(Video)>
                     <p class="video-item-title">@Video.Title.Current()</p>
@@ -62,16 +63,12 @@
     [Parameter, EditorRequired]
     public List<Video> Videos { get; set; } = default!;
 
+    [Parameter, EditorRequired]
+    public VideoCollectionKind VideoCollectionKind { get; set; } = default!;
+
     string GetVideoThumbnail(Video video)
     {
         return video.ThumbnailUrl(new Context(), ArchiveId, video.Thumbnail.Current());
-    }
-
-    string GenerateBackLink()
-    {
-        Uri uri = new Uri(NavManager.Uri.ToString());
-        string absolutePath = uri.AbsolutePath;
-        return HttpUtility.UrlEncode(absolutePath);
     }
 
     string GetUploadedString(Video video)
