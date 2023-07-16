@@ -93,8 +93,9 @@ async fn launch() -> Result<()> {
             "/archive/:archive_id/video/:video_id/note/:note_id",
             delete(routes::note::delete),
         )
+        .route("/fs", post(routes::fs::post))
         .with_state(state)
-        .layer(CorsLayer::permissive());
+        .layer(CorsLayer::very_permissive());
     Ok(Server::bind(&addr).serve(app.into_make_service()).await?)
 }
 

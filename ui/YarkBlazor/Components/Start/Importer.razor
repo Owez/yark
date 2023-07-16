@@ -1,5 +1,93 @@
 @using YarkApiClient
 
+@if (FileLevel != null)
+{
+    @* Up-directory button *@
+    @if (FileLevel.Path != "/" && FileLevel.Path != "\\")
+    {
+        @* TODO: connect *@
+        <button class="file-button"><img src=@IconKindMethods.GetUri(IconKind.Folder) />..</button>
+    }
+    @* Files *@
+    @foreach (File file in GenerateFileList(FileLevel.Files))
+    {
+        @* TODO: split it into two columns *@
+        <button class="file-button"><img src=@IconKindMethods.GetUri(GetIconKind(file)) />@file.Filename
+            @if (file.Archive)
+            {
+                <span class="archive-indicator">(archive)</span>
+            }</button>
+    }
+    @* TODO: thing here *@
+}
+
+<style scoped>
+    .file-button {
+        border: 0;
+        background-color: transparent;
+        text-align: left;
+        display: flex;
+        margin-top: 2.5px;
+        margin-bottom: 2.5px;
+        color: #171717;
+        transition: 0.175s;
+        font-size: small;
+    }
+
+    .file-button:hover {
+        background-color: #f6f6f6;
+    }
+
+    .file-button>img {
+        margin-right: 5px;
+    }
+
+    .archive-indicator {
+        margin-left: 2.75px;
+        margin-top: 2.5px;
+        font-size: x-small;
+    }
+</style>
+
 @code {
-    
+    FileLevel? FileLevel { get; set; } = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        @* TODO: move away from debugging *@
+        FileLevel = await FileLevel.GetFileLevelFromStringAsync(new AdminContext("abc"), null);
+
+        await base.OnInitializedAsync();
+    }
+
+    IconKind GetIconKind(File file)
+    {
+        if (file.Archive)
+        {
+            return IconKind.FolderArchive;
+        }
+        else if (file.Directory)
+        {
+            return IconKind.Folder;
+        }
+        return IconKind.File;
+    }
+
+    List<File> GenerateFileList(List<File> files)
+    {
+        List<File> archiveBucket = new List<File>();
+        List<File> dirBucket = new List<File>();
+        List<File> fileBucket = new List<File>();
+        foreach (File file in files)
+        {
+            if (file.Hidden) { continue; }
+            else if (file.Archive) { archiveBucket.Add(file); }
+            else if (file.Directory) { dirBucket.Add(file); }
+            else { fileBucket.Add(file); }
+        }
+        List<File> kept = archiveBucket;
+        kept.AddRange(dirBucket);
+        kept.AddRange(fileBucket);
+        return kept;
+    }
 }

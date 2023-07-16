@@ -406,18 +406,18 @@ pub mod fs {
 
     #[derive(Deserialize)]
     pub struct GetJsonSchema {
-        path: Option<PathBuf>,
+        path: PathBuf,
     }
 
-    pub async fn get(
+    pub async fn post(
         State(state): State<AppStateExtension>,
         auth: AuthBearer,
-        Json(schema): Json<GetJsonSchema>,
+        optional_schema: Option<Json<GetJsonSchema>>,
     ) -> Result<Json<Directory>> {
         let state_lock = state.lock().await;
         auth::check(&state_lock.config, auth)?;
-        match schema.path {
-            Some(path) => Ok(Json(Directory::new(path)?)),
+        match optional_schema {
+            Some(Json(schema)) => Ok(Json(Directory::new(schema.path)?)),
             None => {
                 let home_dir = std::env::home_dir().ok_or(Error::PathNeeded)?;
                 Ok(Json(Directory::new(home_dir)?))

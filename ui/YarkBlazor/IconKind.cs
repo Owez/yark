@@ -11,9 +11,12 @@ public enum IconKind
     Settings,
     Leave,
     Back,
+    File,
+    Folder,
+    FolderArchive,
     GreenOrb,
     OrangeOrb,
-    PurpleOrb
+    PurpleOrb,
 }
 
 public class IconKindMethods
@@ -31,6 +34,9 @@ public class IconKindMethods
             case IconKind.Settings: return TypicalUriGenerator("Settings");
             case IconKind.Leave: return TypicalUriGenerator("Leave");
             case IconKind.Back: return TypicalUriGenerator("Back");
+            case IconKind.File: return TypicalUriGenerator("File");
+            case IconKind.Folder: return TypicalUriGenerator("Folder");
+            case IconKind.FolderArchive: return TypicalUriGenerator("Folder Archive");
             case IconKind.GreenOrb: return OrbUriGenerator("Green");
             case IconKind.OrangeOrb: return OrbUriGenerator("Orange");
             case IconKind.PurpleOrb: return OrbUriGenerator("Purple");

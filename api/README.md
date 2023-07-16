@@ -227,7 +227,7 @@ This route lets you delete an existing note, it just requires authentication and
 }
 ```
 
-### GET 🔒 `/fs`
+### POST 🔒 `/fs`
 
 This route lets you explore content on the API instances local filesystem so that a web-based file explorer can be implemented. This route will open the directory and list all files/folders in the path provided as json content. There is no POST/DELETE/etc because the *only* other action any actor should be able to do on the filesystem is create new archives. 
 
@@ -243,16 +243,33 @@ This route is protected by an admin secret and is probably the most sensitive ro
 This will return a response of either not found (if the directory doesn't exist or isn't a directory) or a list of all of the filenames and directories for the directory. You can then use this information to query deeper into the filesystem:
 
 ```jsonc
-[
+{
+	// Path of original query (or the home dir got by default)
+	"path": "/Users/owen/",
 	// Each returned object is a file/directory
-	{
-		"path": "/get/this/directory/file.txt",
-		"directory": false
-	},
-	{
-		"path": "/get/this/directory/other",
-		"directory": true
-	},
-	// etc..
-]
+	"files": [
+		{
+			"path": "/get/this/directory/.file.txt",
+			"filename": "file.txt",
+			"directory": false,
+			"hidden": true,
+			"archive": false
+		},
+		{
+			"path": "/get/this/directory/other/",
+			"filename": "other",
+			"directory": true,
+			"hidden": false,
+			"archive": false
+		},
+		{
+			"path": "/get/this/directory/myarchive/",
+			"filename": "myarchive",
+			"directory": true,
+			"hidden": false,
+			"archive": true
+		},
+		// etc..
+	]
+}
 ```

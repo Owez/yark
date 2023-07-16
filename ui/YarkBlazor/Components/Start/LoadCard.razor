@@ -6,22 +6,23 @@
     @* Recent list *@
     @if (Kind == StartCardKind.Full && RecentArchives.Count != 0)
     {
-        <h2 class="little-heading">Recents</h2>
+        <h2 class="little-heading recents-spacing">Recents</h2>
     }
     @foreach (RecentArchive recentArchive in RecentArchives)
     {
         <YarkBlazor.Components.Start.LoadCardItem Archive=@recentArchive />
     }
     @* Import notice (non-full) *@
+    @* TODO: make better *@
     @if (Kind != StartCardKind.Full)
     {
         <p class="import-notice">@if (RecentArchives.Count == 0)
             {
-                <span>Click</span>
+                <span>Expand</span>
             }
             else
             {
-                <span>Or click</span>
+                <span>Or expand</span>
             } to import
         </p>
     }
@@ -44,17 +45,21 @@
         .little-heading {
             font-weight: normal;
             margin-left: 20px;
-            color: grey;
-            font-size: small;
+            color: #535353;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .recents-spacing {
             margin-bottom: 5px;
         }
 
         .import-spacing {
-            margin-top: 10px;
+            margin-top: 15px;
         }
     </style>
 
-@code {
+    @code {
     [Parameter]
     public StartCardKind Kind { get; set; } = StartCardKind.Normal;
 

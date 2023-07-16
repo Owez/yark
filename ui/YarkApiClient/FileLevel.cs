@@ -1,10 +1,15 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
 public class FileLevel
 {
+    [JsonPropertyName("path")]
+    public string Path { get; set; }
+
+    [JsonPropertyName("files")]
     public List<File> Files { get; set; }
 
     private class FileLevelSchema
@@ -35,11 +40,8 @@ public class FileLevel
             HttpResponseMessage resp = await client.PostAsync(reqPath, body);
             // TODO: err handling
             string respBody = await resp.Content.ReadAsStringAsync();
-            List<File> files = JsonSerializer.Deserialize<List<File>>(respBody);
-            return new FileLevel
-            {
-                Files = files
-            };
+            FileLevel fileLevel = JsonSerializer.Deserialize<FileLevel>(respBody);
+            return fileLevel;
         }
     }
 }
