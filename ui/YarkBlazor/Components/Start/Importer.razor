@@ -76,18 +76,35 @@
     List<File> GenerateFileList(List<File> files)
     {
         List<File> archiveBucket = new List<File>();
+        List<File> specialsBucket = new List<File>();
         List<File> dirBucket = new List<File>();
         List<File> fileBucket = new List<File>();
         foreach (File file in files)
         {
             if (file.Hidden) { continue; }
             else if (file.Archive) { archiveBucket.Add(file); }
-            else if (file.Directory) { dirBucket.Add(file); }
+            else if (file.Directory && HasSpecialName(file))
+            {
+                specialsBucket.Add(file);
+            }
+            else if (file.Directory)
+            {
+                dirBucket.Add(file);
+            }
             else { fileBucket.Add(file); }
         }
         List<File> kept = archiveBucket;
+        kept.AddRange(specialsBucket);
         kept.AddRange(dirBucket);
         kept.AddRange(fileBucket);
         return kept;
+    }
+
+    bool HasSpecialName(File file)
+    {
+        string name = file.Filename.ToLower();
+        List<string> specials = new List<string> { "desktop", "documents", "projects", "archives", "yark",
+            "youtube", "archive", "archival", "osint", "projects", "lake", "data" };
+        return specials.Contains(name);
     }
 }
