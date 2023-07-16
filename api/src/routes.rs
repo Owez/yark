@@ -49,7 +49,6 @@ pub mod archive {
     pub struct CreateJsonSchema {
         path: PathBuf,
         target: String,
-        id: Option<Uuid>,
     }
 
     pub async fn create(
@@ -65,11 +64,43 @@ pub mod archive {
         auth::check(&state_lock.config, auth)?;
         let archive = Archive::new(schema.path, schema.target);
         archive.save()?;
-        let id = schema.id.unwrap_or(Uuid::new_v4());
-        state_lock.manager.insert_existing(id, archive);
+        let id = state_lock.manager.insert_new(archive);
         state_lock.manager.save()?;
         Ok(Json(MessageIdResponse {
             message: "Archive created",
+            id,
+        }))
+    }
+
+    #[derive(Deserialize)]
+    pub struct ImportJsonSchema {
+        path: PathBuf,
+        id: Option<Uuid>,
+    }
+
+    pub async fn import(
+        State(state): State<AppStateExtension>,
+        auth: AuthBearer,
+        Json(schema): Json<ImportJsonSchema>,
+    ) -> Result<Json<MessageIdResponse>> {
+        debug!(
+            "Import archive creation request at '{:?}' path",
+            schema.path
+        );
+        let mut state_lock = state.lock().await;
+        auth::check(&state_lock.config, auth)?;
+        let archive = Archive::load(schema.path)?;
+        archive.save()?;
+        let id = match schema.id {
+            Some(old_id) => {
+                state_lock.manager.insert_import(old_id, archive);
+                old_id
+            }
+            None => state_lock.manager.insert_new(archive),
+        };
+        state_lock.manager.save()?;
+        Ok(Json(MessageIdResponse {
+            message: "Archive imported",
             id,
         }))
     }

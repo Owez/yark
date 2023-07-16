@@ -63,6 +63,7 @@ async fn launch() -> Result<()> {
     let app = Router::new()
         .route("/", get(routes::misc::index))
         .route("/archive", post(routes::archive::create))
+        .route("/archive/import", post(routes::archive::import))
         .route("/archive/:archive_id", get(routes::archive::get_meta))
         .route(
             "/archive/:archive_id/videos",

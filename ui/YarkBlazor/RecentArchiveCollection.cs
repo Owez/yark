@@ -1,4 +1,5 @@
 using Blazored.LocalStorage;
+using YarkApiClient;
 
 namespace YarkBlazor;
 
@@ -9,8 +10,26 @@ public class RecentArchiveCollection : List<RecentArchive>
         return await LocalStorage.GetItemAsync<RecentArchiveCollection>("RecentArchives");
     }
 
-    public async Task SaveLocalStorage(ILocalStorageService LocalStorage)
+    public async Task SaveLocalStorage(ILocalStorageService localStorageService)
     {
-        await LocalStorage.SetItemAsync("RecentArchives", this);
+        await localStorageService.SetItemAsync("RecentArchives", this);
+    }
+
+    public async Task<RecentArchive> ImportNewArchiveAsync(AdminContext adminContext, ILocalStorageService localStorageService, ExplorerFile file)
+    {
+        Archive archive = await Archive.Import(adminContext, file.Path);
+        RecentArchive recentArchive = new RecentArchive
+        {
+            Id = archive.Meta.Id,
+            Name = file.Filename
+        };
+        await this.AddAndSave(localStorageService, recentArchive);
+        return recentArchive;
+    }
+
+    private async Task AddAndSave(ILocalStorageService localStorageService, RecentArchive recentArchive)
+    {
+        this.Insert(0, recentArchive);
+        await this.SaveLocalStorage(localStorageService);
     }
 }

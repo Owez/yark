@@ -31,50 +31,19 @@ public class Archive
     {
         [JsonPropertyName("path")]
         public string Path { get; set; }
+
         [JsonPropertyName("target")]
         public string Target { get; set; }
     }
 
-    private class ArchiveImportSchema
-    {
-        [JsonPropertyName("path")]
-        public string Path { get; set; }
-        [JsonPropertyName("target")]
-        public string Target { get; set; }
-        [JsonPropertyName("id")]
-        public string Id { get; set; }
-    }
-
+    // TODO: rename with Async on end
     public static async Task<Archive> Create(AdminContext adminContext, string path, string target)
     {
-        ArchiveCreateSchema createSchema = new ArchiveCreateSchema
+        ArchiveCreateSchema schema = new ArchiveCreateSchema
         {
             Path = path,
             Target = target,
         };
-        return await Archive.SendPost(adminContext, createSchema);
-    }
-
-    public static async Task<Archive> Import(AdminContext adminContext, string path, string target, string archiveId)
-    {
-        ArchiveImportSchema importSchema = new ArchiveImportSchema
-        {
-            Path = path,
-            Target = target,
-            Id = archiveId
-        };
-        return await Archive.SendPost(adminContext, importSchema);
-    }
-
-    public static async Task<Archive> GetArchiveAsync(Context context, string archiveId)
-    {
-        // NOTE: this is basically just an alias for ArchiveMeta plus unset snapshots
-        ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(context, archiveId);
-        return Archive.NewArchiveFromMeta(archiveMeta);
-    }
-
-    private static async Task<Archive> SendPost<T>(AdminContext adminContext, T schema)
-    {
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
@@ -88,6 +57,45 @@ public class Archive
             ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminContext, msg.Id);
             return Archive.NewArchiveFromMeta(archiveMeta);
         }
+    }
+
+    private class ArchiveImportSchema
+    {
+        [JsonPropertyName("path")]
+        public string Path { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+    }
+
+    // TODO: rename with Async on end
+    public static async Task<Archive> Import(AdminContext adminContext, string path, string? id = null)
+    {
+        ArchiveImportSchema schema = new ArchiveImportSchema
+        {
+            Path = path,
+            Id = id
+        };
+        using (HttpClient client = new HttpClient())
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
+            string createJson = JsonSerializer.Serialize(schema);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            StringContent body = new StringContent(createJson, System.Text.Encoding.UTF8, "application/json");
+            HttpResponseMessage resp = await client.PostAsync(adminContext.Path("/archive/import"), body);
+            // TODO: err handling
+            string respBody = await resp.Content.ReadAsStringAsync();
+            MessageIdResponse msg = JsonSerializer.Deserialize<MessageIdResponse>(respBody);
+            ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(adminContext, msg.Id);
+            return Archive.NewArchiveFromMeta(archiveMeta);
+        }
+    }
+
+    public static async Task<Archive> GetArchiveAsync(Context context, string archiveId)
+    {
+        // NOTE: this is basically just an alias for ArchiveMeta plus unset snapshots
+        ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(context, archiveId);
+        return Archive.NewArchiveFromMeta(archiveMeta);
     }
 
     public async Task Delete(AdminContext adminContext)

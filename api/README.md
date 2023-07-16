@@ -41,16 +41,14 @@ This route will simply redirect to the GitHub repository page if a user accident
 
 ### POST 🔒 `/archive`
 
-This route lets you create/import an archive if you're the admin of the API instance. To add an archive into the API, you must supply a JSON body:
+This route lets you create a completely new archive if you're the admin of the API instance. To add an archive into the API, you must supply a JSON body:
 
 ```jsonc
 {
-    // Local path to this archive
+    // Save destination for this archive
 	"path": "/Users/owen/Projects/MainArchive",
-    // The URL this archive targets
+    // The URL this archive should target
 	"target": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
-	// Optional identifier to set for this archive (only put this to re-add)
-	"id": "existing-uuid"
 }
 ```
 
@@ -59,6 +57,28 @@ This route also requires a bearer token containing admin credentials. Once all o
 ```jsonc
 {
 	"message": "Archive created",
+	"id": "uuid"
+}
+```
+
+### POST 🔒 `/archive/import`
+
+This route lets you import an archive currently saved on a local filepath, optionally allowing you to also specify an id for it so you can re-add previous archives. To import an archive into the API, you must supply a JSON body:
+
+```jsonc
+{
+    // Local path to the existing archive
+	"path": "/Users/owen/Projects/ExistingArchive",
+	// Optional id if you'd like to re-add the archive's id
+	"id": "uuid",
+}
+```
+
+This route also requires a bearer token containing admin credentials. Once all of this is given, the API will create the archive and return you with an id reflecting the archive:
+
+```jsonc
+{
+	"message": "Archive imported",
 	"id": "uuid"
 }
 ```

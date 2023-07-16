@@ -1,16 +1,19 @@
 @using YarkApiClient
+@inject NavigationManager NavManager
+@inject Blazored.SessionStorage.ISyncSessionStorageService SessionStorage
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
 
-@if (FileLevel != null)
+@if (Explorer != null)
 {
     @* Up-directory button *@
-    @if (FileLevel.Path != "/" && FileLevel.Path != "\\")
+    @if (Explorer.Path != "/" && Explorer.Path != "\\")
     {
         @* TODO: connect *@
         <button class="file-button" onclick=@UpDirectory><img
-                src=@IconKindMethods.GetUri(IconKind.Folder) />@FileLevel.Path/..</button>
+                src=@IconKindMethods.GetUri(IconKind.Folder) />@Explorer.Path/..</button>
     }
     @* Files *@
-    @foreach (File file in GenerateFileList(FileLevel.Files))
+    @foreach (ExplorerFile file in GenerateFileList(Explorer.Files))
     {
         @* TODO: split it into two columns *@
         <button class="file-button" onclick="@(async () => await FileButtonClicked(file))">
@@ -59,17 +62,17 @@
 </style>
 
 @code {
-    FileLevel? FileLevel { get; set; } = null;
+    Explorer? Explorer { get; set; } = null;
 
     protected override async Task OnInitializedAsync()
     {
         @* TODO: move away from debugging *@
-        FileLevel = await FileLevel.GetFileLevelFromStringAsync(new AdminContext("abc"), "/Users/owen");
+        Explorer = await Explorer.GetExplorerFromStringAsync(new AdminContext("abc"), "/Users/owen");
 
         await base.OnInitializedAsync();
     }
 
-    IconKind GetIconKind(File file)
+    IconKind GetIconKind(ExplorerFile file)
     {
         if (file.Archive)
         {
@@ -82,13 +85,13 @@
         return IconKind.File;
     }
 
-    List<File> GenerateFileList(List<File> files)
+    List<ExplorerFile> GenerateFileList(List<ExplorerFile> files)
     {
-        List<File> archiveBucket = new List<File>();
-        List<File> specialsBucket = new List<File>();
-        List<File> dirBucket = new List<File>();
-        List<File> fileBucket = new List<File>();
-        foreach (File file in files)
+        List<ExplorerFile> archiveBucket = new List<ExplorerFile>();
+        List<ExplorerFile> specialsBucket = new List<ExplorerFile>();
+        List<ExplorerFile> dirBucket = new List<ExplorerFile>();
+        List<ExplorerFile> fileBucket = new List<ExplorerFile>();
+        foreach (ExplorerFile file in files)
         {
             if (file.Hidden) { continue; }
             else if (file.Archive) { archiveBucket.Add(file); }
@@ -102,14 +105,14 @@
             }
             else { fileBucket.Add(file); }
         }
-        List<File> kept = archiveBucket;
+        List<ExplorerFile> kept = archiveBucket;
         kept.AddRange(specialsBucket);
         kept.AddRange(dirBucket);
         kept.AddRange(fileBucket);
         return kept;
     }
 
-    bool HasSpecialName(File file)
+    bool HasSpecialName(ExplorerFile file)
     {
         string name = file.Filename.ToLower();
         List<string> specials = new List<string> { "desktop", "documents", "projects", "archives", "yark", "youtube", "archive",
@@ -120,24 +123,26 @@
     async Task UpDirectory()
     {
         @* TODO: move away from debugging *@
-        FileLevel = await FileLevel.GetLevelAboveAsync(new AdminContext("abc"));
+        Explorer = await Explorer.GetLevelAboveAsync(new AdminContext("abc"));
         StateHasChanged();
     }
 
-    async Task FileButtonClicked(File file)
+    async Task FileButtonClicked(ExplorerFile file)
     {
+        @* Open archive if button is for it *@
         if (file.Archive)
         {
-            @* TODO *@
-            return;
+            RecentArchiveCollection recentArchives = await RecentArchiveCollection.FromLocalStorage(LocalStorage);
+            @* TODO: move away from debugging *@
+            RecentArchive recentArchive = await recentArchives.ImportNewArchiveAsync(new AdminContext("abc"), LocalStorage, file);
+            await recentArchive.OpenArchive(SessionStorage, NavManager);
         }
-        else if (!file.Directory)
+        @* Navigate to folder if button is for it *@
+        else if (file.Directory)
         {
-            return;
+            @* TODO: move away from debugging *@
+            Explorer = await Explorer.GetExplorerFromFileAsync(new AdminContext("abc"), file);
+            StateHasChanged();
         }
-
-        @* TODO: move away from debugging *@
-        FileLevel = await FileLevel.GetFileLevelFromFileAsync(new AdminContext("abc"), file);
-        StateHasChanged();
     }
 }

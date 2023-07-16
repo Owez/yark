@@ -83,12 +83,12 @@ impl Manager {
     /// Inserts a brand new archive into the manager not previously known
     pub fn insert_new(&mut self, archive: Archive) -> Uuid {
         let id = Uuid::new_v4();
-        self.insert_existing(id.clone(), archive);
+        self.insert_import(id.clone(), archive);
         id
     }
 
-    /// Inserts an existing archive with a prior identifier into the manager
-    pub fn insert_existing(&mut self, id: Uuid, archive: Archive) {
+    /// Inserts an existing archive (to import) with a prior identifier into the manager
+    pub fn insert_import(&mut self, id: Uuid, archive: Archive) {
         self.archives.insert(id, archive);
     }
 

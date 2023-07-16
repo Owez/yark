@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace YarkApiClient;
 
-public class File
+public class ExplorerFile
 {
     [JsonPropertyName("path")]
     public string Path { get; set; }
