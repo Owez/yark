@@ -6,19 +6,24 @@
     @if (FileLevel.Path != "/" && FileLevel.Path != "\\")
     {
         @* TODO: connect *@
-        <button class="file-button"><img src=@IconKindMethods.GetUri(IconKind.Folder) />..</button>
+        <button class="file-button" onclick=@UpDirectory><img
+                src=@IconKindMethods.GetUri(IconKind.Folder) />@FileLevel.Path/..</button>
     }
     @* Files *@
     @foreach (File file in GenerateFileList(FileLevel.Files))
     {
         @* TODO: split it into two columns *@
-        <button class="file-button"><img src=@IconKindMethods.GetUri(GetIconKind(file)) />@file.Filename
+        <button class="file-button" onclick="@(async () => await FileButtonClicked(file))">
+            <img src=@IconKindMethods.GetUri(GetIconKind(file)) />
+            @file.Filename
             @if (file.Archive)
             {
                 <span class="archive-indicator">(archive)</span>
-            }</button>
+            }
+        </button>
     }
     @* TODO: thing here *@
+    <div class="importer-bottom-space" />
 }
 
 <style scoped>
@@ -47,6 +52,10 @@
         margin-top: 2.5px;
         font-size: x-small;
     }
+
+    .importer-bottom-space {
+        margin-bottom: 20px;
+    }
 </style>
 
 @code {
@@ -55,7 +64,7 @@
     protected override async Task OnInitializedAsync()
     {
         @* TODO: move away from debugging *@
-        FileLevel = await FileLevel.GetFileLevelFromStringAsync(new AdminContext("abc"), null);
+        FileLevel = await FileLevel.GetFileLevelFromStringAsync(new AdminContext("abc"), "/Users/owen");
 
         await base.OnInitializedAsync();
     }
@@ -103,8 +112,32 @@
     bool HasSpecialName(File file)
     {
         string name = file.Filename.ToLower();
-        List<string> specials = new List<string> { "desktop", "documents", "projects", "archives", "yark",
-            "youtube", "archive", "archival", "osint", "projects", "lake", "data" };
+        List<string> specials = new List<string> { "desktop", "documents", "projects", "archives", "yark", "youtube", "archive",
+"archival", "osint", "projects", "lake", "data" };
         return specials.Contains(name);
+    }
+
+    async Task UpDirectory()
+    {
+        @* TODO: move away from debugging *@
+        FileLevel = await FileLevel.GetLevelAboveAsync(new AdminContext("abc"));
+        StateHasChanged();
+    }
+
+    async Task FileButtonClicked(File file)
+    {
+        if (file.Archive)
+        {
+            @* TODO *@
+            return;
+        }
+        else if (!file.Directory)
+        {
+            return;
+        }
+
+        @* TODO: move away from debugging *@
+        FileLevel = await FileLevel.GetFileLevelFromFileAsync(new AdminContext("abc"), file);
+        StateHasChanged();
     }
 }

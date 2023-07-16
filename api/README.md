@@ -236,7 +236,9 @@ This route is protected by an admin secret and is probably the most sensitive ro
 ```jsonc
 {
 	// Path to query for
-	"path": "/get/this/directory"
+	"path": "/get/this/directory",
+	// If you want to go up one directory from the path
+	"up": false,
 }
 ```
 

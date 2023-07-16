@@ -404,19 +404,28 @@ pub mod fs {
     use serde::Deserialize;
     use std::path::PathBuf;
 
-    #[derive(Deserialize)]
-    pub struct GetJsonSchema {
+    #[derive(Debug, Deserialize)]
+    pub struct PostJsonSchema {
         path: PathBuf,
+        up: bool,
     }
 
     pub async fn post(
         State(state): State<AppStateExtension>,
         auth: AuthBearer,
-        optional_schema: Option<Json<GetJsonSchema>>,
+        optional_schema: Option<Json<PostJsonSchema>>,
     ) -> Result<Json<Directory>> {
+        // TODO: fix Operation not permitted when opening ~/Documents/
         let state_lock = state.lock().await;
         auth::check(&state_lock.config, auth)?;
         match optional_schema {
+            Some(Json(schema)) if schema.up => {
+                let path = match schema.path.parent() {
+                    Some(parent_path) => parent_path.into(),
+                    None => schema.path,
+                };
+                Ok(Json(Directory::new(path)?))
+            }
             Some(Json(schema)) => Ok(Json(Directory::new(schema.path)?)),
             None => {
                 let home_dir = std::env::home_dir().ok_or(Error::PathNeeded)?;
