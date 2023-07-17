@@ -28,6 +28,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EYXNoYm9hcmQvQ2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/owen/Projects/yark/ui/YarkBlazor/Components/Dashboard/VideoCollectionCount.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9EYXNoYm9hcmQvVmlkZW9Db2xsZWN0aW9uQ291bnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/owen/Projects/yark/ui/YarkBlazor/Components/Logo.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Mb2dvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 

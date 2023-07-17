@@ -7,10 +7,10 @@ namespace YarkApiClient;
 public class Explorer
 {
     [JsonPropertyName("path")]
-    public string Path { get; set; }
+    public required string Path { get; set; }
 
     [JsonPropertyName("files")]
-    public List<ExplorerFile> Files { get; set; }
+    public required List<ExplorerFile> Files { get; set; }
 
     private class ExplorerSchema
     {

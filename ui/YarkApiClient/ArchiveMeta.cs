@@ -6,11 +6,11 @@ namespace YarkApiClient;
 public class ArchiveMeta
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     [JsonPropertyName("version")]
-    public int Version { get; set; }
+    public required int Version { get; set; }
     [JsonPropertyName("url")]
-    public string Url { get; set; }
+    public required string Url { get; set; }
 
     public static async Task<ArchiveMeta> GetArchiveMetaAsync(Context context, string archiveId)
     {

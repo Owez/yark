@@ -2,11 +2,14 @@
 
 public class Context
 {
-    public string BaseUrl { get; set; }
+    public string BaseUrl { get; set; } = "http://127.0.0.1:7776";
 
-    public Context(string baseUrl = "http://127.0.0.1:7776")
+    public Context(string? baseUrl = null)
     {
-        BaseUrl = baseUrl;
+        if (baseUrl != null)
+        {
+            BaseUrl = baseUrl;
+        }
     }
 
     public string Path(string path)

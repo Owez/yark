@@ -6,27 +6,27 @@ namespace YarkApiClient;
 public class Video
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     [JsonPropertyName("uploaded")]
-    public DateTime Uploaded { get; set; }
+    public required DateTime Uploaded { get; set; }
     [JsonPropertyName("width")]
-    public int Width { get; set; }
+    public required int Width { get; set; }
     [JsonPropertyName("height")]
-    public int Height { get; set; }
+    public required int Height { get; set; }
     [JsonPropertyName("title")]
-    public Elements<string> Title { get; set; }
+    public Elements<string> Title { get; set; } = new Elements<string>();
     [JsonPropertyName("description")]
-    public Elements<string> Description { get; set; }
+    public Elements<string> Description { get; set; } = new Elements<string>();
     [JsonPropertyName("views")]
-    public Elements<int?> Views { get; set; }
+    public Elements<int?> Views { get; set; } = new Elements<int?>();
     [JsonPropertyName("likes")]
-    public Elements<int?> Likes { get; set; }
+    public Elements<int?> Likes { get; set; } = new Elements<int?>();
     [JsonPropertyName("thumbnail")]
-    public Elements<string> Thumbnail { get; set; }
+    public Elements<string> Thumbnail { get; set; } = new Elements<string>();
     [JsonPropertyName("deleted")]
-    public Elements<bool> Deleted { get; set; }
+    public Elements<bool> Deleted { get; set; } = new Elements<bool>();
     [JsonPropertyName("notes")]
-    public List<Note> Notes { get; set; }
+    public List<Note> Notes { get; set; } = new List<Note>();
 
     public static async Task<Video> Get(Context context, string archiveId, string videoId)
     {

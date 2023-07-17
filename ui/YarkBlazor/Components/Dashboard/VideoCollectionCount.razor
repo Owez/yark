@@ -1,0 +1,18 @@
+@using YarkApiClient
+
+<YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Left>
+    <p class="video-count">@Count</p>
+    <p class="video-count-info">Total @VideoCollectionKindMethods.ToString(VideoCollectionKind)</p>
+</YarkBlazor.Components.Dashboard.Card>
+
+<style scoped>
+    @*TODO*@
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public int Count { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public VideoCollectionKind VideoCollectionKind { get; set; } = default!;
+}

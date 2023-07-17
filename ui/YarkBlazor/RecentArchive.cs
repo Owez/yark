@@ -8,9 +8,9 @@ namespace YarkBlazor;
 public class RecentArchive
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public required string Name { get; set; }
 
     public async Task<Archive> OpenArchive(ISyncSessionStorageService SessionStorage, NavigationManager NavManager)
     {

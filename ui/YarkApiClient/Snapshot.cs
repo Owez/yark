@@ -5,21 +5,11 @@ namespace YarkApiClient;
 public class Snapshot<T>
 {
     [JsonPropertyName("taken")]
-    public DateTime Taken { get; set; }
+    public required DateTime Taken { get; set; }
     [JsonPropertyName("page")]
-    public int Page { get; set; }
+    public required int Page { get; set; }
     [JsonPropertyName("data")]
-    public T Data { get; set; }
-
-    public static Snapshot<T> NewEmpty()
-    {
-        return new Snapshot<T>
-        {
-            Taken = DateTime.MinValue,
-            Page = 0,
-            Data = default,
-        };
-    }
+    public required T Data { get; set; }
 
     public bool IsExpired()
     {

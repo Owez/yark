@@ -7,19 +7,19 @@ namespace YarkApiClient;
 public class Note
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public required string Id { get; set; }
     [JsonPropertyName("timestamp")]
-    public int Timestamp { get; set; }
+    public required int Timestamp { get; set; }
     [JsonPropertyName("title")]
-    public string Title { get; set; }
+    public required string Title { get; set; }
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public required string Description { get; set; }
 
     private class NoteCreateSchema
     {
-        public int Timestamp { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public required int Timestamp { get; set; }
+        public required string Title { get; set; }
+        public required string Description { get; set; }
     }
 
     public static async Task<Note> Create(AdminContext adminContext, string archiveId, string videoId, int timestamp, string title, string description)

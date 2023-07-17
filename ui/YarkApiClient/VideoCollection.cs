@@ -4,9 +4,9 @@ namespace YarkApiClient;
 
 public class VideoCollection
 {
-    public VideoCollectionKind Kind { get; set; }
-    public int Page { get; set; }
-    public List<Video> Data { get; set; }
+    public required VideoCollectionKind Kind { get; set; }
+    public required int Page { get; set; }
+    public required List<Video> Data { get; set; }
 
     public static async Task<VideoCollection> GetVideoCollectionAsync(Context context, string archiveId, VideoCollectionKind kind, int page)
     {

@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -8,32 +7,32 @@ namespace YarkApiClient;
 public class Archive
 {
     [JsonPropertyName("meta")]
-    public ArchiveMeta Meta { get; set; }
+    public required ArchiveMeta Meta { get; set; }
     [JsonPropertyName("videos")]
-    public Snapshot<List<Video>> Videos { get; set; }
+    public Snapshot<List<Video>>? Videos { get; set; }
     [JsonPropertyName("livestreams")]
-    public Snapshot<List<Video>> Livestreams { get; set; }
+    public Snapshot<List<Video>>? Livestreams { get; set; }
     [JsonPropertyName("shorts")]
-    public Snapshot<List<Video>> Shorts { get; set; }
+    public Snapshot<List<Video>>? Shorts { get; set; }
 
     private static Archive NewArchiveFromMeta(ArchiveMeta archiveMeta)
     {
         return new Archive
         {
             Meta = archiveMeta,
-            Videos = Snapshot<List<Video>>.NewEmpty(),
-            Livestreams = Snapshot<List<Video>>.NewEmpty(),
-            Shorts = Snapshot<List<Video>>.NewEmpty(),
+            Videos = null,
+            Livestreams = null,
+            Shorts = null,
         };
     }
 
     private class ArchiveCreateSchema
     {
         [JsonPropertyName("path")]
-        public string Path { get; set; }
+        public required string Path { get; set; }
 
         [JsonPropertyName("target")]
-        public string Target { get; set; }
+        public required string Target { get; set; }
     }
 
     // TODO: rename with Async on end
@@ -62,10 +61,10 @@ public class Archive
     private class ArchiveImportSchema
     {
         [JsonPropertyName("path")]
-        public string Path { get; set; }
+        public required string Path { get; set; }
 
         [JsonPropertyName("id")]
-        public string? Id { get; set; }
+        public required string? Id { get; set; }
     }
 
     // TODO: rename with Async on end
@@ -115,7 +114,7 @@ public class Archive
         this.ApplyVideoCollection(videoCollection);
     }
 
-    private Snapshot<List<Video>> GetSnapshotFromVideoCollectionKind(VideoCollectionKind videoCollectionKind)
+    private Snapshot<List<Video>>? GetSnapshotFromVideoCollectionKind(VideoCollectionKind videoCollectionKind)
     {
         switch (videoCollectionKind)
         {
@@ -128,7 +127,8 @@ public class Archive
 
     private bool CheckSnapshotInvalid(VideoCollectionKind videoCollectionKind, int page)
     {
-        Snapshot<List<Video>> snapshot = this.GetSnapshotFromVideoCollectionKind(videoCollectionKind);
+        Snapshot<List<Video>>? snapshot = this.GetSnapshotFromVideoCollectionKind(videoCollectionKind);
+        if (snapshot == null) { return true; }
         return snapshot.IsExpired() || snapshot.Page != page;
     }
 
