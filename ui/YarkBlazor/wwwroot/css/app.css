@@ -192,7 +192,7 @@ body {
 .reveal-button {
     border: 1px solid rgba(0, 0, 0, 0.12);
     border-radius: 5px;
-    background-color: #f7f7f7;
+    background-color: #f6f6f6;
     padding: 5px;
     transition: 0.175s;
 }

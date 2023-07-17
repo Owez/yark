@@ -56,6 +56,7 @@ pub mod archive {
         auth: AuthBearer,
         Json(schema): Json<CreateJsonSchema>,
     ) -> Result<Json<MessageIdResponse>> {
+        // TODO: check if schema path already exists
         debug!(
             "New archive creation request for '{}' channel at '{:?}' path",
             schema.target, schema.path
@@ -83,6 +84,7 @@ pub mod archive {
         auth: AuthBearer,
         Json(schema): Json<ImportJsonSchema>,
     ) -> Result<Json<MessageIdResponse>> {
+        // TODO: check if schema path already exists
         debug!(
             "Import archive creation request at '{:?}' path",
             schema.path

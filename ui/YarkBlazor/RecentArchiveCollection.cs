@@ -30,6 +30,20 @@ public class RecentArchiveCollection : List<RecentArchive>
     private async Task AddAndSave(ILocalStorageService localStorageService, RecentArchive recentArchive)
     {
         this.Insert(0, recentArchive);
+        TryCullCollection();
         await this.SaveLocalStorage(localStorageService);
+    }
+
+    private void TryCullCollection()
+    {
+        const int MAX = 5;
+        while (true)
+        {
+            if (this.Count <= MAX)
+            {
+                break;
+            }
+            this.RemoveAt(5);
+        }
     }
 }
