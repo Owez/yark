@@ -1,0 +1,15 @@
+@using Blazorise.Charts
+@using YarkApiClient
+
+
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Singular { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Elements<string> Elements { get; set; } = default!;
+}

@@ -1,14 +1,17 @@
 @* TODO: merge button and revealed content into new component *@
-<button class="reveal-button" onclick=@ToggleData>
+@if (Description != "" && Description != null)
+{
+    <button class="reveal-button" onclick=@(() => ToggleData())>
     @if (!ShouldReveal)
-    {
-        <span>Show Description</span>
-    }
-    else
-    {
-        <i>Hide Description</i>
-    }
-</button>
+        {
+            <span>Show Description</span>
+        }
+        else
+        {
+            <i>Hide Description</i>
+        }
+    </button>
+}
 @if (ShouldReveal)
 {
     <p class="reveal-content">@Description</p>

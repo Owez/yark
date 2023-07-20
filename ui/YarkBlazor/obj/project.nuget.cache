@@ -1,11 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "gfSD5l071LH/zlchIpp+7PDpjIW0aDz1PMfVXg/P+9a9wlTd0S5KR5K1kzy3RELFJYBEe0SDiJeR2sALAw/gjg==",
+  "dgSpecHash": "UvPnlIlDRc4jq/Fa97MfJkJuqW4Q7DdvTGxHmvLaUbPABiXQ/rjLjujQMZfgdBk1sQzDqNGw4HJWpSC0SHev0g==",
   "success": true,
   "projectFilePath": "/Users/owen/Projects/yark/ui/YarkBlazor/YarkBlazor.csproj",
   "expectedPackageFiles": [
     "/Users/owen/.nuget/packages/blazored.localstorage/4.3.0/blazored.localstorage.4.3.0.nupkg.sha512",
     "/Users/owen/.nuget/packages/blazored.sessionstorage/2.3.0/blazored.sessionstorage.2.3.0.nupkg.sha512",
+    "/Users/owen/.nuget/packages/blazorise/1.2.4/blazorise.1.2.4.nupkg.sha512",
+    "/Users/owen/.nuget/packages/blazorise.charts/1.2.4/blazorise.charts.1.2.4.nupkg.sha512",
+    "/Users/owen/.nuget/packages/blazorise.licensing/1.1.0/blazorise.licensing.1.1.0.nupkg.sha512",
+    "/Users/owen/.nuget/packages/lambda2js/3.1.4/lambda2js.3.1.4.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.authorization/7.0.7/microsoft.aspnetcore.authorization.7.0.7.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.components/7.0.7/microsoft.aspnetcore.components.7.0.7.nupkg.sha512",
     "/Users/owen/.nuget/packages/microsoft.aspnetcore.components.analyzers/7.0.7/microsoft.aspnetcore.components.analyzers.7.0.7.nupkg.sha512",

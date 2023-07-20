@@ -14,6 +14,8 @@
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly/7.0.7/build/net7.0/Microsoft.AspNetCore.Components.WebAssembly.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly/7.0.7/build/net7.0/Microsoft.AspNetCore.Components.WebAssembly.props')" />
+    <Import Project="$(NuGetPackageRoot)blazorise/1.2.4/buildTransitive/Blazorise.props" Condition="Exists('$(NuGetPackageRoot)blazorise/1.2.4/buildTransitive/Blazorise.props')" />
+    <Import Project="$(NuGetPackageRoot)blazorise.charts/1.2.4/buildTransitive/Blazorise.Charts.props" Condition="Exists('$(NuGetPackageRoot)blazorise.charts/1.2.4/buildTransitive/Blazorise.Charts.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer)' == '' ">/Users/owen/.nuget/packages/microsoft.aspnetcore.components.webassembly.devserver/7.0.7</PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer>

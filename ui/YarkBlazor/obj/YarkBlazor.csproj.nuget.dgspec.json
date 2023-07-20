@@ -103,6 +103,10 @@
               "target": "Package",
               "version": "[2.3.0, )"
             },
+            "Blazorise.Charts": {
+              "target": "Package",
+              "version": "[1.2.4, )"
+            },
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",
               "version": "[7.0.7, )"

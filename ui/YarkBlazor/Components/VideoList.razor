@@ -2,10 +2,11 @@
 @using System.Web
 @inject NavigationManager NavManager
 
+@* TODO: sort by popularity/oldest also *@
 @if (Videos != null && ArchiveId != null)
 {
     <div class="videos-list">
-    @foreach (Video Video in Videos)
+    @foreach (Video Video in SortedByUpload())
         {
             <a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&kind=@VideoCollectionKindMethods.ToString(VideoCollectionKind)"
                 class="video-item-link">
@@ -74,5 +75,10 @@
     string GetUploadedString(Video video)
     {
         return new TimeAgo(video.Uploaded).ToString();
+    }
+
+    List<Video> SortedByUpload()
+    {
+        return Videos.OrderByDescending(video => video.Uploaded).ToList();
     }
 }
