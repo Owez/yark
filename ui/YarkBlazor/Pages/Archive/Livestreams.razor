@@ -5,7 +5,7 @@
 <h1 class="dashboard-title">@ArchiveName's livestreams</h1>
 @if (Archive != null && ArchiveName != null)
 {
-    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Id Videos=@Archive.Livestreams.Data
+    <YarkBlazor.Components.VideoList ArchiveId=@Archive.Meta.Data.Id Videos=@Archive.Livestreams.Data
     VideoCollectionKind=@VideoCollectionKind.Livestreams />
 }
 
@@ -23,7 +23,7 @@
         ArchiveName = SessionStorage.GetItem<string>("OpenedArchiveName");
 
         Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
-        await archive.PullVideos(VideoCollectionKind.Livestreams, Page);
+        await archive.PullVideos(new Context(), VideoCollectionKind.Livestreams, Page);
         Archive = archive;
 
         await base.OnInitializedAsync();

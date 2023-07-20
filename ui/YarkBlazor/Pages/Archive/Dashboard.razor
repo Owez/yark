@@ -9,10 +9,12 @@
 @if (Archive != null)
 {
     <div class="cards">
-    <YarkBlazor.Components.Dashboard.VideoCollectionCount Count=@Archive.Videos.Data.Count
-        VideoCollectionKind=@VideoCollectionKind.Videos />
-    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Middle />
-    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Right />
+    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Left
+        VideoCollectionKind=@VideoCollectionKind.Videos Count=@Archive.Meta.Data.VideosCount />
+    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Middle
+        VideoCollectionKind=@VideoCollectionKind.Livestreams Count=@Archive.Meta.Data.LivestreamsCount />
+    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Right
+        VideoCollectionKind=@VideoCollectionKind.Shorts Count=@Archive.Meta.Data.ShortsCount />
     <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Full />
     <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.BigLeft />
     <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Right />
@@ -34,11 +36,13 @@
 
     Archive? Archive { get; set; } = null;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Name = SessionStorage.GetItem<string>("OpenedArchiveName");
-        Archive = SessionStorage.GetItem<Archive>("OpenedArchive");
+        Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
+        await archive.PullMeta(new Context());
+        Archive = archive;
 
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 }

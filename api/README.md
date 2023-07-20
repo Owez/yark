@@ -93,6 +93,9 @@ This route lets you get meta-infromation about an existing archive. To use it, j
 	"id": "uuid",
 	"version": 3,
 	"url": "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA",
+	"videos_count": 3,
+	"livestreams_count": 20,
+	"shorts_count": 0
 }
 ```
 

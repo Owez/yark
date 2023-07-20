@@ -20,7 +20,7 @@ public class RecentArchiveCollection : List<RecentArchive>
         Archive archive = await Archive.Import(adminContext, file.Path);
         RecentArchive recentArchive = new RecentArchive
         {
-            Id = archive.Meta.Id,
+            Id = archive.Meta.Data.Id,
             Name = file.Filename
         };
         await this.AddAndSave(localStorageService, recentArchive);

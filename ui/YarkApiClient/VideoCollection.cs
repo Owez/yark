@@ -26,9 +26,9 @@ public class VideoCollection
         }
     }
 
-    public Snapshot<List<Video>> IntoSnapshot()
+    public VideoCollectionSnapshot IntoSnapshot()
     {
-        return new Snapshot<List<Video>>
+        return new VideoCollectionSnapshot
         {
             Taken = DateTime.UtcNow,
             Page = this.Page,

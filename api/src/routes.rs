@@ -112,6 +112,9 @@ pub mod archive {
         id: Uuid,
         version: u32,
         url: String,
+        videos_count: usize,
+        livestreams_count: usize,
+        shorts_count: usize,
     }
 
     impl From<(Uuid, &Archive)> for GetMetaResponse {
@@ -120,6 +123,9 @@ pub mod archive {
                 id: archive_id,
                 version: archive.version,
                 url: archive.url.clone(),
+                videos_count: archive.videos.len(),
+                livestreams_count: archive.livestreams.len(),
+                shorts_count: archive.shorts.len(),
             }
         }
     }

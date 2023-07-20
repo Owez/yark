@@ -7,16 +7,42 @@
         src=@IconKindMethods.GetUri(IconKind.Back) alt="Back">Back</a>
 @if (Video != null && ArchiveId != null)
 {
-    @* NOTE: in the future this could be made into a reel-like view if its a short *@
-    <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
-    <h1>@Video.Title.Current()</h1>
-    <YarkBlazor.Components.VideoDescription Description=@Video.Description.Current() />
-    <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
-    <h2>History</h2>
-    <YarkBlazor.Components.VideoHistory Video=@Video />
+    <div class="player-split">
+        <div class="player-left">
+            @* NOTE: in the future this could be made into a reel-like view if its a short *@
+            <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
+            <h1>@Video.Title.Current()</h1>
+            <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
+            <YarkBlazor.Components.VideoDescription Description=@Video.Description.Current() />
+            <h2>History</h2>
+            <YarkBlazor.Components.VideoHistory Video=@Video />
+            @if (Video.Views.Count > 1)
+            {
+                <h2>Views over time</h2>
+                <p>TODO</p>
+            }
+            @if (Video.Likes.Count > 1)
+            {
+                <h2>Likes over time</h2>
+                <p>TODO</p>
+            }
+        </div>
+        <div class="player-right">
+            @* TODO: notes here? *@
+        </div>
+    </div>
 }
 
 <style scoped>
+    .player-split {
+        display: flex;
+    }
+
+    .player-right {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
     .back-button {
         color: #525252;
         text-decoration: none;
@@ -43,8 +69,8 @@
 
     h1 {
         margin-top: 15px;
-        margin-bottom: 2.5px;
-        font-size: 1.6rem;
+        margin-bottom: 5px;
+        font-size: 1.75rem;
         font-weight: 500;
     }
 
@@ -56,8 +82,9 @@
     }
 
     .info {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #525252;
+        margin-bottom: 12.5px;
     }
 </style>
 
@@ -84,8 +111,8 @@
 
         @* Get archive information *@
         Archive archive = SessionStorage.GetItem<Archive>("OpenedArchive");
-        ArchiveId = archive.Meta.Id;
-        Video = await Video.Get(new Context(), archive.Meta.Id, HttpUtility.UrlDecode(Id));
+        ArchiveId = archive.Meta.Data.Id;
+        Video = await Video.Get(new Context(), archive.Meta.Data.Id, HttpUtility.UrlDecode(Id));
         @* TODO: err handling on not found video *@
 
         await base.OnInitializedAsync();

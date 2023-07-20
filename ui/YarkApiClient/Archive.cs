@@ -7,19 +7,19 @@ namespace YarkApiClient;
 public class Archive
 {
     [JsonPropertyName("meta")]
-    public required ArchiveMeta Meta { get; set; }
+    public required Snapshot<ArchiveMeta> Meta { get; set; }
     [JsonPropertyName("videos")]
-    public Snapshot<List<Video>>? Videos { get; set; }
+    public VideoCollectionSnapshot? Videos { get; set; }
     [JsonPropertyName("livestreams")]
-    public Snapshot<List<Video>>? Livestreams { get; set; }
+    public VideoCollectionSnapshot? Livestreams { get; set; }
     [JsonPropertyName("shorts")]
-    public Snapshot<List<Video>>? Shorts { get; set; }
+    public VideoCollectionSnapshot? Shorts { get; set; }
 
     private static Archive NewArchiveFromMeta(ArchiveMeta archiveMeta)
     {
         return new Archive
         {
-            Meta = archiveMeta,
+            Meta = Snapshot<ArchiveMeta>.NewNow(archiveMeta),
             Videos = null,
             Livestreams = null,
             Shorts = null,
@@ -102,19 +102,26 @@ public class Archive
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminContext.Secret);
-            HttpResponseMessage resp = await client.DeleteAsync(adminContext.ArchivePath(this.Meta.Id));
+            HttpResponseMessage resp = await client.DeleteAsync(adminContext.ArchivePath(this.Meta.Data.Id));
             // TODO: err handling
         }
     }
 
-    public async Task PullVideos(VideoCollectionKind videoCollectionKind, int page)
+    public async Task PullMeta(Context context)
+    {
+        if (!this.Meta.IsExpired()) { return; }
+        ArchiveMeta archiveMeta = await ArchiveMeta.GetArchiveMetaAsync(context, this.Meta.Data.Id);
+        this.Meta = Snapshot<ArchiveMeta>.NewNow(archiveMeta);
+    }
+
+    public async Task PullVideos(Context context, VideoCollectionKind videoCollectionKind, int page)
     {
         if (!this.CheckSnapshotInvalid(videoCollectionKind, page)) { return; }
-        VideoCollection videoCollection = await VideoCollection.GetVideoCollectionAsync(new Context(), this.Meta.Id, videoCollectionKind, page);
+        VideoCollection videoCollection = await VideoCollection.GetVideoCollectionAsync(context, this.Meta.Data.Id, videoCollectionKind, page);
         this.ApplyVideoCollection(videoCollection);
     }
 
-    private Snapshot<List<Video>>? GetSnapshotFromVideoCollectionKind(VideoCollectionKind videoCollectionKind)
+    private VideoCollectionSnapshot? GetSnapshotFromVideoCollectionKind(VideoCollectionKind videoCollectionKind)
     {
         switch (videoCollectionKind)
         {
@@ -127,14 +134,14 @@ public class Archive
 
     private bool CheckSnapshotInvalid(VideoCollectionKind videoCollectionKind, int page)
     {
-        Snapshot<List<Video>>? snapshot = this.GetSnapshotFromVideoCollectionKind(videoCollectionKind);
+        VideoCollectionSnapshot? snapshot = this.GetSnapshotFromVideoCollectionKind(videoCollectionKind);
         if (snapshot == null) { return true; }
         return snapshot.IsExpired() || snapshot.Page != page;
     }
 
     private void ApplyVideoCollection(VideoCollection videoCollection)
     {
-        Snapshot<List<Video>> generatedSnapshot = videoCollection.IntoSnapshot();
+        VideoCollectionSnapshot generatedSnapshot = videoCollection.IntoSnapshot();
         switch (videoCollection.Kind)
         {
             case VideoCollectionKind.Videos: this.Videos = generatedSnapshot; break;

@@ -1,15 +1,45 @@
 @using YarkApiClient
 
-<YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Left>
-    <p class="video-count">@Count</p>
-    <p class="video-count-info">Total @VideoCollectionKindMethods.ToString(VideoCollectionKind)</p>
+<YarkBlazor.Components.Dashboard.Card CardKind=@CardKind>
+    <div class="video-count-content">
+        <div class="video-count-content-inner">
+            @* TODO: do in meta *@
+            <p class="video-count">@Count</p>
+            <p class="video-count-info">Saved @VideoCollectionKindMethods.ToString(VideoCollectionKind)</p>
+        </div>
+    </div>
 </YarkBlazor.Components.Dashboard.Card>
 
 <style scoped>
-    @*TODO*@
+    .video-count-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .video-count-content-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 25px;
+        margin-bottom: 30px;
+    }
+
+    .video-count {
+        font-size: 48px;
+    }
+
+    .video-count-info {
+        font-size: 1.125rem;
+    }
 </style>
 
 @code {
+    [Parameter, EditorRequired]
+    public CardKind CardKind { get; set; } = default!;
+
     [Parameter, EditorRequired]
     public int Count { get; set; } = default!;
 
