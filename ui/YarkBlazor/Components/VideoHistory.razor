@@ -1,74 +1,20 @@
 @using YarkApiClient
 
-@* Changes *@
-<ol>
-    @* Titles *@
-    @for (int Index = 0; Index < Titles.Count; Index += 1)
-    {
-        (DateTime DateTime, string Data) = Titles[Index];
-        <YarkBlazor.Components.VideoHistoryItem Name="Title" DateTime=@DateTime Length=@Titles.Count Index=@Index>@Data
-        </YarkBlazor.Components.VideoHistoryItem>
-    }
-    @* Descriptions *@
-    @for (int Index = 0; Index < Descriptions.Count; Index += 1)
-    {
-        (DateTime DateTime, string Data) = Descriptions[Index];
-        <YarkBlazor.Components.VideoHistoryItem Name="Description" DateTime=@DateTime Length=@Descriptions.Count
-            Index=@Index>@Data</YarkBlazor.Components.VideoHistoryItem>
-    }
-    @* Views *@
-    @for (int Index = 0; Index < Views.Count; Index += 1)
-    {
-        (DateTime DateTime, int Data) = Views[Index];
-        <YarkBlazor.Components.VideoHistoryItem Name="View count" DateTime=@DateTime Length=@Views.Count Index=@Index>@Data
-        </YarkBlazor.Components.VideoHistoryItem>
-    }
-    @* Likes *@
-    @for (int Index = 0; Index < Likes.Count; Index += 1)
-    {
-        (DateTime DateTime, int Data) = Likes[Index];
-        <YarkBlazor.Components.VideoHistoryItem Name="Like count" DateTime=@DateTime Length=@Likes.Count Index=@Index>@Data
-        </YarkBlazor.Components.VideoHistoryItem>
-    }
-</ol>
-@* Disclaimers *@
-<ul>
-    @* No changes at all *@
-    @if (Titles.Count == 0 && Descriptions.Count == 0 && Views.Count == 0 && Likes.Count == 0)
-    {
-        <li class="disclaimer">No changes on record</li>
-    }
-    @* Specific nothing disclaimers *@
-    else
-    {
-        @* Nothing disclaimers (title/description) *@
-        @if (Titles.Count == 0 && Descriptions.Count == 0)
+@if (History != null && History.Count() > 2)
+{
+    <ol>
+    @foreach (HistoryItem<string> historyItem in History)
         {
-            <li class="disclaimer">No title or description changes on record</li>
+            <VideoHistoryItem Item=@historyItem />
         }
-        else if (Titles.Count == 0)
-        {
-            <li class="disclaimer">No title changes on record</li>
-        }
-        else if (Descriptions.Count == 0)
-        {
-            <li class="disclaimer">No description changes on record</li>
-        }
-        @* Nothing disclaimers (views/likes) *@
-        @if (Views.Count == 0 && Likes.Count == 0)
-        {
-            <li class="disclaimer">No view or like count changes on record</li>
-        }
-        else if (Views.Count == 0)
-        {
-            <li class="disclaimer">No view count changes on record</li>
-        }
-        else if (Likes.Count == 0)
-        {
-            <li class="disclaimer">No like count changes on record</li>
-        }
-    }
+    </ol>
+}
+else
+{
+    <ul>
+    <li class="disclaimer">No changes on record</li>
 </ul>
+}
 
 <style scoped>
     ol {
@@ -76,7 +22,7 @@
     }
 
     ul {
-        list-style-type: disc;
+        list-style-type: disc !important;
     }
 
     .disclaimer {
@@ -91,17 +37,22 @@
     [Parameter, EditorRequired]
     public Video Video { get; set; } = default!;
 
-    List<(DateTime, string)> Titles { get; set; } = new List<(DateTime, string)>();
+    IEnumerable<HistoryItem<string>>? History { get; set; }
 
-    List<(DateTime, string)> Descriptions { get; set; } = new List<(DateTime, string)>();
+    int TitleCount { get; set; } = 0;
 
-    List<(DateTime, int)> Views { get; set; } = new List<(DateTime, int)>();
-
-    List<(DateTime, int)> Likes { get; set; } = new List<(DateTime, int)>();
+    int DescriptionCount { get; set; } = 0;
 
     protected override void OnInitialized()
     {
-        @* TODO *@
+        IEnumerable<HistoryItem<string>> titles = HistoryItem<string>.ElementsToHistoryItems("Title", Video.Title);
+        TitleCount = titles.Count();
+        IEnumerable<HistoryItem<string>> descriptions = HistoryItem<string>.ElementsToHistoryItems("Description",
+        Video.Description);
+        DescriptionCount = descriptions.Count();
+        IEnumerable<HistoryItem<string>> mergedAndSorted = titles.Concat(descriptions).OrderByDescending(hi => hi.DateTime);
+        History = mergedAndSorted;
+
         base.OnInitialized();
     }
 }

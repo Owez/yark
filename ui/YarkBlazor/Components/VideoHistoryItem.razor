@@ -1,24 +1,25 @@
-@if (Length > 1)
+@if (Item.TagCount > 1)
 {
     @* TODO: merge button and revealed content into new component *@
-    <li>@Name @GenerateMiddleExplainer() <button class="reveal-button" onclick=@ToggleData>@if (!ShouldReveal)
+    <li>@Item.Tag @GenerateMiddleExplainer() <button class="reveal-button" onclick=@(() => ToggleData())>@if
+        (!ShouldReveal)
             {
-                <span>Show @Name</span>
+                <span>Show @Item.Tag</span>
             }
             else
             {
-                <i>Hide @Name</i>
+                <i>Hide @Item.Tag</i>
             }</button> @GenerateDate()
-        <YarkBlazor.Components.VideoHistoryTag DateTime=@DateTime />
+        <YarkBlazor.Components.VideoHistoryTag DateTime=@Item.DateTime />
     </li>
     @if (ShouldReveal)
     {
-        <p class="reveal-content">@ChildContent</p>
+        <p class="reveal-content">@Item.Data</p>
     }
 }
 else
 {
-    <li>No @Name.ToLower() changes on record</li>
+    <li>No @Item.Tag.ToLower() changes on record</li>
 }
 
 <style scoped>
@@ -26,39 +27,28 @@ else
         line-height: 1.85;
         font-size: 0.95rem;
         margin-left: 1rem;
-        max-width: calc(500px - 1rem);
+        width: calc(60vw - 5rem);
+        min-width: 500px;
     }
 </style>
 
 @code {
     [Parameter, EditorRequired]
-    public string Name { get; set; } = default!;
-
-    [Parameter, EditorRequired]
-    public DateTime DateTime { get; set; } = default!;
-
-    [Parameter, EditorRequired]
-    public int Length { get; set; } = default!;
-
-    [Parameter, EditorRequired]
-    public int Index { get; set; } = default!;
-
-    [Parameter, EditorRequired]
-    public RenderFragment ChildContent { get; set; } = default!;
+    public HistoryItem<string> Item { get; set; } = default!;
 
     bool ShouldReveal { get; set; } = false;
 
     string GenerateMiddleExplainer()
     {
-        if (Index == 0)
+        if (Item.TagIndex == 0)
         {
             return "was originally";
         }
-        else if (Length == 2 && Index == 1)
+        else if (Item.TagCount == 2 && Item.TagIndex == 1)
         {
             return "got changed to";
         }
-        else if (Index == Length - 1)
+        else if (Item.TagIndex == Item.TagCount - 1)
         {
             return "finally changed to";
         }
@@ -75,6 +65,6 @@ else
 
     string GenerateDate()
     {
-        return new TimeAgo(DateTime).ToString();
+        return new TimeAgo(Item.DateTime).ToString();
     }
 }
