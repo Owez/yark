@@ -32,6 +32,7 @@ pub mod archive {
     use crate::{
         auth,
         errors::{Error, Result},
+        report::Report,
         state::AppStateExtension,
     };
     use axum::{
@@ -108,32 +109,34 @@ pub mod archive {
     }
 
     #[derive(Serialize)]
-    pub struct GetMetaResponse {
+    pub struct GetMetaResponse<'a> {
         id: Uuid,
         version: u32,
         url: String,
-        videos_count: usize,
-        livestreams_count: usize,
-        shorts_count: usize,
+        videos_total: usize,
+        livestreams_total: usize,
+        shorts_total: usize,
+        report: Report<'a>,
     }
 
-    impl From<(Uuid, &Archive)> for GetMetaResponse {
+    impl<'a> From<(Uuid, &Archive)> for GetMetaResponse<'a> {
         fn from((archive_id, archive): (Uuid, &Archive)) -> Self {
             Self {
                 id: archive_id,
                 version: archive.version,
                 url: archive.url.clone(),
-                videos_count: archive.videos.len(),
-                livestreams_count: archive.livestreams.len(),
-                shorts_count: archive.shorts.len(),
+                videos_total: archive.videos.len(),
+                livestreams_total: archive.livestreams.len(),
+                shorts_total: archive.shorts.len(),
+                report: Report::from(archive),
             }
         }
     }
 
-    pub async fn get_meta(
+    pub async fn get_meta<'a>(
         State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
-    ) -> Result<Json<GetMetaResponse>> {
+    ) -> Result<Json<GetMetaResponse<'a>>> {
         debug!("Getting metadata for archive {}", archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock

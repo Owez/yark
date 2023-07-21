@@ -14,14 +14,14 @@ public class ArchiveMeta
     [JsonPropertyName("url")]
     public required string Url { get; set; }
 
-    [JsonPropertyName("videos_count")]
-    public required int VideosCount { get; set; }
+    [JsonPropertyName("videos_total")]
+    public required int VideosTotal { get; set; }
 
-    [JsonPropertyName("livestreams_count")]
-    public required int LivestreamsCount { get; set; }
+    [JsonPropertyName("livestreams_total")]
+    public required int LivestreamsTotal { get; set; }
 
-    [JsonPropertyName("shorts_count")]
-    public required int ShortsCount { get; set; }
+    [JsonPropertyName("shorts_total")]
+    public required int ShortsTotal { get; set; }
 
     public static async Task<ArchiveMeta> GetArchiveMetaAsync(Context context, string archiveId)
     {

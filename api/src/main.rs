@@ -6,6 +6,7 @@ pub mod errors;
 pub mod manager;
 pub mod routes;
 pub mod state;
+pub mod report;
 
 use crate::errors::Result;
 use crate::state::{AppStateExtension, Config};
