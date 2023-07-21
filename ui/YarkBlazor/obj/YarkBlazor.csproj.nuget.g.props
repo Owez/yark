@@ -12,10 +12,19 @@
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <SourceRoot Include="/Users/owen/.nuget/packages/" />
   </ItemGroup>
+  <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Content Include="$(NuGetPackageRoot)chartjs.blazor.fork/2.0.2/contentFiles/any/netstandard2.1/wwwroot/ChartJsBlazorInterop.js" Condition="Exists('$(NuGetPackageRoot)chartjs.blazor.fork/2.0.2/contentFiles/any/netstandard2.1/wwwroot/ChartJsBlazorInterop.js')">
+      <NuGetPackageId>ChartJs.Blazor.Fork</NuGetPackageId>
+      <NuGetPackageVersion>2.0.2</NuGetPackageVersion>
+      <NuGetItemType>Content</NuGetItemType>
+      <Pack>false</Pack>
+      <Private>False</Private>
+      <Link>wwwroot/ChartJsBlazorInterop.js</Link>
+    </Content>
+  </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly/7.0.7/build/net7.0/Microsoft.AspNetCore.Components.WebAssembly.props" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.components.webassembly/7.0.7/build/net7.0/Microsoft.AspNetCore.Components.WebAssembly.props')" />
-    <Import Project="$(NuGetPackageRoot)blazorise/1.2.4/buildTransitive/Blazorise.props" Condition="Exists('$(NuGetPackageRoot)blazorise/1.2.4/buildTransitive/Blazorise.props')" />
-    <Import Project="$(NuGetPackageRoot)blazorise.charts/1.2.4/buildTransitive/Blazorise.Charts.props" Condition="Exists('$(NuGetPackageRoot)blazorise.charts/1.2.4/buildTransitive/Blazorise.Charts.props')" />
+    <Import Project="$(NuGetPackageRoot)chartjs.blazor.fork/2.0.2/buildTransitive/ChartJs.Blazor.Fork.props" Condition="Exists('$(NuGetPackageRoot)chartjs.blazor.fork/2.0.2/buildTransitive/ChartJs.Blazor.Fork.props')" />
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer Condition=" '$(PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer)' == '' ">/Users/owen/.nuget/packages/microsoft.aspnetcore.components.webassembly.devserver/7.0.7</PkgMicrosoft_AspNetCore_Components_WebAssembly_DevServer>

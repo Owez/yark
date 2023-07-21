@@ -19,12 +19,12 @@
             @if (Video.Views.Count > 1)
             {
                 <h2>Views over time</h2>
-                <p>TODO</p>
+                <YarkBlazor.Components.VideoLineChart Label="View count" Elements=@Video.Views />
             }
             @if (Video.Likes.Count > 1)
             {
                 <h2>Likes over time</h2>
-                <p>TODO</p>
+                <YarkBlazor.Components.VideoLineChart Label="Like count" Elements=@Video.Likes />
             }
         </div>
         <div class="player-right">

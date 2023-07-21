@@ -1,0 +1,75 @@
+@using YarkApiClient
+
+@* TODO: use https://github.com/mariusmuntean/ChartJs.Blazor *@
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Elements<int?> Elements { get; set; } = default!;
+
+    LineChartDataset<int> GetLineChartDataset(Elements<int> furnishedElements)
+    {
+        return new LineChartDataset<int>
+            {
+                Label = Label,
+                Data = GenerateData(furnishedElements),
+                BackgroundColor = ChartColor.FromRgba(255, 99, 132, 0.2f),
+                BorderColor = ChartColor.FromRgba(255, 99, 132, 1f),
+                Fill = true,
+                PointRadius = 3,
+                CubicInterpolationMode = "monotone"
+            };
+    }
+
+    List<int> GenerateData(Elements<int> furnishedElements)
+    {
+        return furnishedElements.Select(el => el.Value).ToList();
+    }
+
+    List<string> GenerateLabels(Elements<int> furnishedElements)
+    {
+        List<string> formattedDates = new List<string>();
+        foreach (var kvp in furnishedElements)
+        {
+            DateTime date = kvp.Key;
+            string suffix = GetDayOrdinalSuffix(date.Day);
+            string formattedDate = $"{date.Day}{suffix} {date.ToString("MMM")}";
+            formattedDates.Add(formattedDate);
+        }
+        return formattedDates;
+    }
+
+    string GetDayOrdinalSuffix(int day)
+    {
+        if (day >= 11 && day <= 13)
+        {
+            return "th";
+        }
+        switch (day % 10)
+        {
+            case 1:
+                return "st";
+            case 2:
+                return "nd";
+            case 3:
+                return "rd";
+            default:
+                return "th";
+        }
+    }
+
+    Elements<int> RemoveNullIntValues(Elements<int?> dateData)
+    {
+        Elements<int> filteredData = new Elements<int>();
+        foreach (var kvp in dateData)
+        {
+            if (kvp.Value.HasValue)
+            {
+                filteredData[kvp.Key] = kvp.Value.Value;
+            }
+        }
+        return filteredData;
+    }
+}

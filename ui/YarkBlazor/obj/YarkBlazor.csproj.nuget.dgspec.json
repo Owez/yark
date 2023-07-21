@@ -103,9 +103,9 @@
               "target": "Package",
               "version": "[2.3.0, )"
             },
-            "Blazorise.Charts": {
+            "ChartJs.Blazor.Fork": {
               "target": "Package",
-              "version": "[1.2.4, )"
+              "version": "[2.0.2, )"
             },
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",

@@ -26,77 +26,35 @@
           "lib/net7.0/Blazored.SessionStorage.dll": {}
         }
       },
-      "Blazorise/1.2.4": {
+      "ChartJs.Blazor.Fork/2.0.2": {
         "type": "package",
         "dependencies": {
-          "Blazorise.Licensing": "1.1.0",
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Web": "7.0.7",
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+          "Microsoft.AspNetCore.Components.Web": "3.1.8",
+          "Microsoft.CSharp": "4.7.0",
+          "Newtonsoft.Json": "12.0.3"
         },
         "compile": {
-          "lib/net7.0/Blazorise.dll": {
+          "lib/netstandard2.1/ChartJs.Blazor.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net7.0/Blazorise.dll": {
+          "lib/netstandard2.1/ChartJs.Blazor.dll": {
             "related": ".xml"
+          }
+        },
+        "contentFiles": {
+          "contentFiles/any/netstandard2.1/wwwroot/ChartJsBlazorInterop.js": {
+            "buildAction": "Content",
+            "codeLanguage": "any",
+            "copyToOutput": false
           }
         },
         "build": {
-          "buildTransitive/Blazorise.props": {}
+          "buildTransitive/ChartJs.Blazor.Fork.props": {}
         },
         "buildMultiTargeting": {
-          "buildMultiTargeting/Blazorise.props": {}
-        }
-      },
-      "Blazorise.Charts/1.2.4": {
-        "type": "package",
-        "dependencies": {
-          "Blazorise": "1.2.4",
-          "Lambda2Js": "3.1.4",
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Web": "7.0.7",
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
-        },
-        "compile": {
-          "lib/net7.0/Blazorise.Charts.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net7.0/Blazorise.Charts.dll": {
-            "related": ".xml"
-          }
-        },
-        "build": {
-          "buildTransitive/Blazorise.Charts.props": {}
-        },
-        "buildMultiTargeting": {
-          "buildMultiTargeting/Blazorise.Charts.props": {}
-        }
-      },
-      "Blazorise.Licensing/1.1.0": {
-        "type": "package",
-        "compile": {
-          "lib/net7.0/Blazorise.Licensing.dll": {}
-        },
-        "runtime": {
-          "lib/net7.0/Blazorise.Licensing.dll": {}
-        }
-      },
-      "Lambda2Js/3.1.4": {
-        "type": "package",
-        "compile": {
-          "lib/netstandard2.0/Lambda2Js.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Lambda2Js.dll": {
-            "related": ".xml"
-          }
+          "buildMultiTargeting/ChartJs.Blazor.Fork.props": {}
         }
       },
       "Microsoft.AspNetCore.Authorization/7.0.7": {
@@ -216,6 +174,15 @@
           "lib/net7.0/Microsoft.AspNetCore.Metadata.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "Microsoft.CSharp/4.7.0": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
         }
       },
       "Microsoft.Extensions.Configuration/7.0.0": {
@@ -512,6 +479,19 @@
         },
         "runtime": {
           "lib/net7.0/Microsoft.JSInterop.WebAssembly.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
             "related": ".xml"
           }
         }
@@ -609,77 +589,35 @@
           "lib/net7.0/Blazored.SessionStorage.dll": {}
         }
       },
-      "Blazorise/1.2.4": {
+      "ChartJs.Blazor.Fork/2.0.2": {
         "type": "package",
         "dependencies": {
-          "Blazorise.Licensing": "1.1.0",
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Web": "7.0.7",
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+          "Microsoft.AspNetCore.Components.Web": "3.1.8",
+          "Microsoft.CSharp": "4.7.0",
+          "Newtonsoft.Json": "12.0.3"
         },
         "compile": {
-          "lib/net7.0/Blazorise.dll": {
+          "lib/netstandard2.1/ChartJs.Blazor.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net7.0/Blazorise.dll": {
+          "lib/netstandard2.1/ChartJs.Blazor.dll": {
             "related": ".xml"
+          }
+        },
+        "contentFiles": {
+          "contentFiles/any/netstandard2.1/wwwroot/ChartJsBlazorInterop.js": {
+            "buildAction": "Content",
+            "codeLanguage": "any",
+            "copyToOutput": false
           }
         },
         "build": {
-          "buildTransitive/Blazorise.props": {}
+          "buildTransitive/ChartJs.Blazor.Fork.props": {}
         },
         "buildMultiTargeting": {
-          "buildMultiTargeting/Blazorise.props": {}
-        }
-      },
-      "Blazorise.Charts/1.2.4": {
-        "type": "package",
-        "dependencies": {
-          "Blazorise": "1.2.4",
-          "Lambda2Js": "3.1.4",
-          "Microsoft.AspNetCore.Components": "7.0.7",
-          "Microsoft.AspNetCore.Components.Web": "7.0.7",
-          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
-        },
-        "compile": {
-          "lib/net7.0/Blazorise.Charts.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/net7.0/Blazorise.Charts.dll": {
-            "related": ".xml"
-          }
-        },
-        "build": {
-          "buildTransitive/Blazorise.Charts.props": {}
-        },
-        "buildMultiTargeting": {
-          "buildMultiTargeting/Blazorise.Charts.props": {}
-        }
-      },
-      "Blazorise.Licensing/1.1.0": {
-        "type": "package",
-        "compile": {
-          "lib/net7.0/Blazorise.Licensing.dll": {}
-        },
-        "runtime": {
-          "lib/net7.0/Blazorise.Licensing.dll": {}
-        }
-      },
-      "Lambda2Js/3.1.4": {
-        "type": "package",
-        "compile": {
-          "lib/netstandard2.0/Lambda2Js.dll": {
-            "related": ".xml"
-          }
-        },
-        "runtime": {
-          "lib/netstandard2.0/Lambda2Js.dll": {
-            "related": ".xml"
-          }
+          "buildMultiTargeting/ChartJs.Blazor.Fork.props": {}
         }
       },
       "Microsoft.AspNetCore.Authorization/7.0.7": {
@@ -799,6 +737,15 @@
           "lib/net7.0/Microsoft.AspNetCore.Metadata.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "Microsoft.CSharp/4.7.0": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
         }
       },
       "Microsoft.Extensions.Configuration/7.0.0": {
@@ -1099,6 +1046,19 @@
           }
         }
       },
+      "Newtonsoft.Json/12.0.3": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "System.IO.Pipelines/7.0.0": {
         "type": "package",
         "compile": {
@@ -1191,116 +1151,24 @@
         "lib/net7.0/Blazored.SessionStorage.dll"
       ]
     },
-    "Blazorise/1.2.4": {
-      "sha512": "MSnc+/E/Z4O0BvRUJ4ISSpDvHEdaipsC1GRcxIaoUk62FBuMNVfIsn+1/oWL1vyuDxTPspUjWniy3EaHQRp5HQ==",
+    "ChartJs.Blazor.Fork/2.0.2": {
+      "sha512": "1aJR2uX3Al1OnWsTOIza2UV4oDZcmspOhliXQ2f9rpAOCuwT0BPbN0eFYT3Fzp5aWU9+9tfyhPlQO48UwpfKVQ==",
       "type": "package",
-      "path": "blazorise/1.2.4",
+      "path": "chartjs.blazor.fork/2.0.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "Blazorise.png",
-        "LICENSE.md",
-        "blazorise.1.2.4.nupkg.sha512",
-        "blazorise.nuspec",
-        "build/Blazorise.props",
+        "build/ChartJs.Blazor.Fork.props",
         "build/Microsoft.AspNetCore.StaticWebAssets.props",
-        "buildMultiTargeting/Blazorise.props",
-        "buildTransitive/Blazorise.props",
-        "lib/net6.0/Blazorise.dll",
-        "lib/net6.0/Blazorise.xml",
-        "lib/net7.0/Blazorise.dll",
-        "lib/net7.0/Blazorise.xml",
-        "staticwebassets/blazorise.css",
-        "staticwebassets/blazorise.min.css",
-        "staticwebassets/breakpoint.js",
-        "staticwebassets/button.js",
-        "staticwebassets/closable.js",
-        "staticwebassets/colorPicker.js",
-        "staticwebassets/datePicker.js",
-        "staticwebassets/dragDrop.js",
-        "staticwebassets/dropdown.js",
-        "staticwebassets/fileEdit.js",
-        "staticwebassets/filePicker.js",
-        "staticwebassets/inputMask.js",
-        "staticwebassets/io.js",
-        "staticwebassets/memoEdit.js",
-        "staticwebassets/numericPicker.js",
-        "staticwebassets/observer.js",
-        "staticwebassets/popper.js",
-        "staticwebassets/table.js",
-        "staticwebassets/textEdit.js",
-        "staticwebassets/theme.js",
-        "staticwebassets/timePicker.js",
-        "staticwebassets/tooltip.js",
-        "staticwebassets/utilities.js",
-        "staticwebassets/validators/DateTimeMaskValidator.js",
-        "staticwebassets/validators/NoValidator.js",
-        "staticwebassets/validators/NumericMaskValidator.js",
-        "staticwebassets/validators/RegExMaskValidator.js",
-        "staticwebassets/vendors/Behave.js",
-        "staticwebassets/vendors/Pickr.js",
-        "staticwebassets/vendors/autoNumeric.js",
-        "staticwebassets/vendors/flatpickr.js",
-        "staticwebassets/vendors/inputmask.js",
-        "staticwebassets/vendors/jsencrypt.js",
-        "staticwebassets/vendors/sha512.js"
-      ]
-    },
-    "Blazorise.Charts/1.2.4": {
-      "sha512": "0Pu55eLsijG82Oy9rOuK99QdWEJwUByOMTMmsMtQy1rou/lEcubG5/WTNSfYT23j+oiQWM6CFOUacu4lfE++YQ==",
-      "type": "package",
-      "path": "blazorise.charts/1.2.4",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Blazorise.png",
-        "LICENSE.md",
-        "blazorise.charts.1.2.4.nupkg.sha512",
-        "blazorise.charts.nuspec",
-        "build/Blazorise.Charts.props",
-        "build/Microsoft.AspNetCore.StaticWebAssets.props",
-        "buildMultiTargeting/Blazorise.Charts.props",
-        "buildTransitive/Blazorise.Charts.props",
-        "lib/net6.0/Blazorise.Charts.dll",
-        "lib/net6.0/Blazorise.Charts.xml",
-        "lib/net7.0/Blazorise.Charts.dll",
-        "lib/net7.0/Blazorise.Charts.xml",
-        "staticwebassets/charts.js",
-        "staticwebassets/utilities.js"
-      ]
-    },
-    "Blazorise.Licensing/1.1.0": {
-      "sha512": "QDHl4m8ixmq+xIsW3d0kHBpJYJPqMBzbNCFhtEsqSrmrAPMEmSVm6r9pprkgT51leeqvkPxuy22Osiql48KgDQ==",
-      "type": "package",
-      "path": "blazorise.licensing/1.1.0",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "Blazorise.png",
-        "LICENSE.md",
-        "blazorise.licensing.1.1.0.nupkg.sha512",
-        "blazorise.licensing.nuspec",
-        "lib/net6.0/Blazorise.Licensing.dll",
-        "lib/net7.0/Blazorise.Licensing.dll"
-      ]
-    },
-    "Lambda2Js/3.1.4": {
-      "sha512": "yxPJ5n+jUdjTZSItFj2wx5uFGm8iN6Gt42apqnEq0Zm5R6GgueZFFl+GDSe/CEogMSaBRw8kRG3yZm8ABFWXGQ==",
-      "type": "package",
-      "path": "lambda2js/3.1.4",
-      "files": [
-        ".nupkg.metadata",
-        ".signature.p7s",
-        "LICENSE.txt",
-        "icon-512.png",
-        "lambda2js.3.1.4.nupkg.sha512",
-        "lambda2js.nuspec",
-        "lib/net40/Lambda2Js.dll",
-        "lib/net40/Lambda2Js.xml",
-        "lib/netstandard1.0/Lambda2Js.dll",
-        "lib/netstandard1.0/Lambda2Js.xml",
-        "lib/netstandard2.0/Lambda2Js.dll",
-        "lib/netstandard2.0/Lambda2Js.xml"
+        "buildMultiTargeting/ChartJs.Blazor.Fork.props",
+        "buildTransitive/ChartJs.Blazor.Fork.props",
+        "chartjs.blazor.fork.2.0.2.nupkg.sha512",
+        "chartjs.blazor.fork.nuspec",
+        "content/wwwroot/ChartJsBlazorInterop.js",
+        "contentFiles/any/netstandard2.1/wwwroot/ChartJsBlazorInterop.js",
+        "lib/netstandard2.1/ChartJs.Blazor.dll",
+        "lib/netstandard2.1/ChartJs.Blazor.xml",
+        "staticwebassets/ChartJsBlazorInterop.js"
       ]
     },
     "Microsoft.AspNetCore.Authorization/7.0.7": {
@@ -1555,6 +1423,75 @@
         "lib/netstandard2.0/Microsoft.AspNetCore.Metadata.xml",
         "microsoft.aspnetcore.metadata.7.0.7.nupkg.sha512",
         "microsoft.aspnetcore.metadata.nuspec"
+      ]
+    },
+    "Microsoft.CSharp/4.7.0": {
+      "sha512": "pTj+D3uJWyN3My70i2Hqo+OXixq3Os2D1nJ2x92FFo6sk8fYS1m1WLNTs0Dc1uPaViH0YvEEwvzddQ7y4rhXmA==",
+      "type": "package",
+      "path": "microsoft.csharp/4.7.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/Microsoft.CSharp.dll",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.3/Microsoft.CSharp.dll",
+        "lib/netstandard2.0/Microsoft.CSharp.dll",
+        "lib/netstandard2.0/Microsoft.CSharp.xml",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/uap10.0.16299/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "microsoft.csharp.4.7.0.nupkg.sha512",
+        "microsoft.csharp.nuspec",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/Microsoft.CSharp.dll",
+        "ref/netcore50/Microsoft.CSharp.xml",
+        "ref/netcore50/de/Microsoft.CSharp.xml",
+        "ref/netcore50/es/Microsoft.CSharp.xml",
+        "ref/netcore50/fr/Microsoft.CSharp.xml",
+        "ref/netcore50/it/Microsoft.CSharp.xml",
+        "ref/netcore50/ja/Microsoft.CSharp.xml",
+        "ref/netcore50/ko/Microsoft.CSharp.xml",
+        "ref/netcore50/ru/Microsoft.CSharp.xml",
+        "ref/netcore50/zh-hans/Microsoft.CSharp.xml",
+        "ref/netcore50/zh-hant/Microsoft.CSharp.xml",
+        "ref/netcoreapp2.0/_._",
+        "ref/netstandard1.0/Microsoft.CSharp.dll",
+        "ref/netstandard1.0/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/de/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/es/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/fr/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/it/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ja/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ko/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ru/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/zh-hans/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/zh-hant/Microsoft.CSharp.xml",
+        "ref/netstandard2.0/Microsoft.CSharp.dll",
+        "ref/netstandard2.0/Microsoft.CSharp.xml",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/uap10.0.16299/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "Microsoft.Extensions.Configuration/7.0.0": {
@@ -2018,6 +1955,37 @@
         "microsoft.jsinterop.webassembly.nuspec"
       ]
     },
+    "Newtonsoft.Json/12.0.3": {
+      "sha512": "6mgjfnRB4jKMlzHSl+VD+oUc1IebOZabkbyWj2RiTgWwYPPuaK1H97G1sHqGwPlS5npiF5Q0OrxN1wni2n5QWg==",
+      "type": "package",
+      "path": "newtonsoft.json/12.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "lib/net20/Newtonsoft.Json.dll",
+        "lib/net20/Newtonsoft.Json.xml",
+        "lib/net35/Newtonsoft.Json.dll",
+        "lib/net35/Newtonsoft.Json.xml",
+        "lib/net40/Newtonsoft.Json.dll",
+        "lib/net40/Newtonsoft.Json.xml",
+        "lib/net45/Newtonsoft.Json.dll",
+        "lib/net45/Newtonsoft.Json.xml",
+        "lib/netstandard1.0/Newtonsoft.Json.dll",
+        "lib/netstandard1.0/Newtonsoft.Json.xml",
+        "lib/netstandard1.3/Newtonsoft.Json.dll",
+        "lib/netstandard1.3/Newtonsoft.Json.xml",
+        "lib/netstandard2.0/Newtonsoft.Json.dll",
+        "lib/netstandard2.0/Newtonsoft.Json.xml",
+        "lib/portable-net40+sl5+win8+wp8+wpa81/Newtonsoft.Json.dll",
+        "lib/portable-net40+sl5+win8+wp8+wpa81/Newtonsoft.Json.xml",
+        "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.dll",
+        "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.xml",
+        "newtonsoft.json.12.0.3.nupkg.sha512",
+        "newtonsoft.json.nuspec",
+        "packageIcon.png"
+      ]
+    },
     "System.IO.Pipelines/7.0.0": {
       "sha512": "jRn6JYnNPW6xgQazROBLSfpdoczRw694vO5kKvMcNnpXuolEixUyw6IBuBs2Y2mlSX/LdLvyyWmfXhaI3ND1Yg==",
       "type": "package",
@@ -2157,7 +2125,7 @@
     "net7.0": [
       "Blazored.LocalStorage >= 4.3.0",
       "Blazored.SessionStorage >= 2.3.0",
-      "Blazorise.Charts >= 1.2.4",
+      "ChartJs.Blazor.Fork >= 2.0.2",
       "Microsoft.AspNetCore.Components.WebAssembly >= 7.0.7",
       "Microsoft.AspNetCore.Components.WebAssembly.DevServer >= 7.0.7",
       "YarkApiClient >= 1.0.0"
@@ -2212,9 +2180,9 @@
             "target": "Package",
             "version": "[2.3.0, )"
           },
-          "Blazorise.Charts": {
+          "ChartJs.Blazor.Fork": {
             "target": "Package",
-            "version": "[1.2.4, )"
+            "version": "[2.0.2, )"
           },
           "Microsoft.AspNetCore.Components.WebAssembly": {
             "target": "Package",
