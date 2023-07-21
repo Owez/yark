@@ -103,10 +103,6 @@
               "target": "Package",
               "version": "[2.3.0, )"
             },
-            "ChartJs.Blazor.Fork": {
-              "target": "Package",
-              "version": "[2.0.2, )"
-            },
             "Microsoft.AspNetCore.Components.WebAssembly": {
               "target": "Package",
               "version": "[7.0.7, )"
@@ -115,6 +111,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[7.0.7, )"
+            },
+            "PSC.Blazor.Components.Chartjs": {
+              "target": "Package",
+              "version": "[6.0.40, )"
             }
           },
           "imports": [

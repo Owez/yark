@@ -1,6 +1,10 @@
 @using YarkApiClient
+@using PSC.Blazor.Components.Chartjs
+@using PSC.Blazor.Components.Chartjs.Enums
+@using PSC.Blazor.Components.Chartjs.Models
+@using PSC.Blazor.Components.Chartjs.Models.Line
 
-@* TODO: use https://github.com/mariusmuntean/ChartJs.Blazor *@
+<Chart Config="ChartConfig" @ref="Chart"></Chart>
 
 @code {
     [Parameter, EditorRequired]
@@ -9,36 +13,43 @@
     [Parameter, EditorRequired]
     public Elements<int?> Elements { get; set; } = default!;
 
-    LineChartDataset<int> GetLineChartDataset(Elements<int> furnishedElements)
+    LineChartConfig ChartConfig;
+    Chart Chart;
+
+    protected override void OnInitialized()
     {
-        return new LineChartDataset<int>
+        ChartConfig = new LineChartConfig()
+            {
+                Options = new PSC.Blazor.Components.Chartjs.Models.Common.Options
+                {
+
+                }
+            };
+        Elements<int> furnishedElements = RemoveNullIntValues(Elements);
+        ChartConfig.Data.Labels = GenerateLabels(furnishedElements);
+        ChartConfig.Data.Datasets.Add(new LineDataset()
             {
                 Label = Label,
-                Data = GenerateData(furnishedElements),
-                BackgroundColor = ChartColor.FromRgba(255, 99, 132, 0.2f),
-                BorderColor = ChartColor.FromRgba(255, 99, 132, 1f),
-                Fill = true,
-                PointRadius = 3,
-                CubicInterpolationMode = "monotone"
-            };
-    }
+                Data = furnishedElements.Select(el => (decimal?)el.Value).ToList(),
+                BackgroundColor = "#888888",
+                BorderColor = "#000000",
+                BorderWidth = 1
+            });
 
-    List<int> GenerateData(Elements<int> furnishedElements)
-    {
-        return furnishedElements.Select(el => el.Value).ToList();
+        base.OnInitialized();
     }
 
     List<string> GenerateLabels(Elements<int> furnishedElements)
     {
-        List<string> formattedDates = new List<string>();
+        List<string> generated = new List<string>();
         foreach (var kvp in furnishedElements)
         {
             DateTime date = kvp.Key;
             string suffix = GetDayOrdinalSuffix(date.Day);
             string formattedDate = $"{date.Day}{suffix} {date.ToString("MMM")}";
-            formattedDates.Add(formattedDate);
+            generated.Add(formattedDate);
         }
-        return formattedDates;
+        return generated;
     }
 
     string GetDayOrdinalSuffix(int day)
