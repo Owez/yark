@@ -1,7 +1,7 @@
 @* TODO: merge button and revealed content into new component *@
 @if (Description != "" && Description != null)
 {
-    <button class="reveal-button" onclick=@(() => ToggleData())>
+    <button class="reveal-button description-reveal" onclick=@(() => ToggleData())>
     @if (!ShouldReveal)
         {
             <span>Show Description</span>
@@ -18,7 +18,7 @@
 }
 
 <style scoped>
-    .reveal-button {
+    .description-reveal {
         width: 8rem;
     }
 </style>

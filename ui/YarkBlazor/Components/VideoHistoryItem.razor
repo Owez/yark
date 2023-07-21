@@ -10,25 +10,17 @@
             {
                 <i>Hide @Item.Tag</i>
             }</button> @GenerateDate()
-        <YarkBlazor.Components.VideoHistoryTag DateTime=@Item.DateTime />
     </li>
     @if (ShouldReveal)
     {
         <p class="reveal-content">@Item.Data</p>
     }
 }
-else
-{
-    <li>No @Item.Tag.ToLower() changes on record</li>
-}
 
 <style scoped>
     li {
-        line-height: 1.85;
-        font-size: 0.95rem;
-        margin-left: 1rem;
-        width: calc(60vw - 5rem);
-        min-width: 500px;
+        margin-bottom: 5px;
+        margin-left:2rem;
     }
 </style>
 
@@ -54,7 +46,7 @@ else
         }
         else
         {
-            return "was changed to";
+            return "then changed to";
         }
     }
 

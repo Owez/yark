@@ -1,35 +1,37 @@
 @using YarkApiClient
 
+    <ol>
+@* List *@
 @if (History != null && History.Count() > 2)
 {
-    <ol>
     @foreach (HistoryItem<string> historyItem in History)
         {
             <VideoHistoryItem Item=@historyItem />
         }
-    </ol>
 }
-else
+@* Disclaimers *@
+@if (Video.Title.Count < 2 && Video.Description.Count < 2)
 {
-    <ul>
     <li class="disclaimer">No major changes on record</li>
-</ul>
 }
+else if (Video.Title.Count < 2)
+{
+    <li class="disclaimer">No title changes on record</li>
+}
+else if (Video.Description.Count < 2)
+{
+    <li class="disclaimer">No description changes on record</li>
+}
+    </ol>
 
 <style scoped>
     ol {
         list-style-type: decimal;
     }
 
-    ul {
-        list-style-type: disc !important;
-    }
-
     .disclaimer {
-        line-height: 1.85;
-        font-size: 0.95rem;
-        margin-left: 1rem;
-        max-width: calc(500px - 1rem);
+        margin-bottom: 5px;
+        margin-left:2rem;
     }
 </style>
 
@@ -50,7 +52,7 @@ else
         IEnumerable<HistoryItem<string>> descriptions = HistoryItem<string>.ElementsToHistoryItems("Description",
         Video.Description);
         DescriptionCount = descriptions.Count();
-        IEnumerable<HistoryItem<string>> mergedAndSorted = titles.Concat(descriptions).OrderByDescending(hi => hi.DateTime);
+        IEnumerable<HistoryItem<string>> mergedAndSorted = titles.Concat(descriptions).OrderBy(hi => hi.DateTime);
         History = mergedAndSorted;
 
         base.OnInitialized();
