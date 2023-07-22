@@ -1,0 +1,11 @@
+@using YarkApiClient
+
+<YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Full>
+    TODO
+</YarkBlazor.Components.Dashboard.Card>
+
+
+@code {
+    [Parameter, EditorRequired]
+    public Report Report { get; set; } = default!;
+}

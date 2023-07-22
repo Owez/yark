@@ -23,6 +23,9 @@ public class ArchiveMeta
     [JsonPropertyName("shorts_total")]
     public required int ShortsTotal { get; set; }
 
+    [JsonPropertyName("report")]
+    public required Report Report { get; set; }
+
     public static async Task<ArchiveMeta> GetArchiveMetaAsync(Context context, string archiveId)
     {
         using (HttpClient client = new HttpClient())

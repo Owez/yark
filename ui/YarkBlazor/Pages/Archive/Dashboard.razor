@@ -9,13 +9,13 @@
 @if (Archive != null)
 {
     <div class="cards">
-    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Left
+    <YarkBlazor.Components.Dashboard.VideoCountCard CardKind=@CardKind.Left
         VideoCollectionKind=@VideoCollectionKind.Videos Count=@Archive.Meta.Data.VideosTotal />
-    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Middle
+    <YarkBlazor.Components.Dashboard.VideoCountCard CardKind=@CardKind.Middle
         VideoCollectionKind=@VideoCollectionKind.Livestreams Count=@Archive.Meta.Data.LivestreamsTotal />
-    <YarkBlazor.Components.Dashboard.VideoCollectionCount CardKind=@CardKind.Right
+    <YarkBlazor.Components.Dashboard.VideoCountCard CardKind=@CardKind.Right
         VideoCollectionKind=@VideoCollectionKind.Shorts Count=@Archive.Meta.Data.ShortsTotal />
-    <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Full />
+    <YarkBlazor.Components.Dashboard.ReportCard Report=@Archive.Meta.Data.Report />
     <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.BigLeft />
     <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Right />
 </div>
