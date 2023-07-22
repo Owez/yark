@@ -1,20 +1,19 @@
 //! Reporting extension for an archive enabling recommended report focuses based on a high amount of changed items in a given timescale
 
-// NOTE: this could be in the archive core but i think it's best for it to be placed here as its a custom algo
-
+use chrono::{prelude::*, TimeDelta};
 use serde::Serialize;
 use yark_archive::prelude::*;
 
-type Reports<'a> = Vec<VideoReport<'a>>;
+type Reports = Vec<VideoReport>;
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
-pub struct Report<'a> {
-    pub videos: Reports<'a>,
-    pub livestreams: Reports<'a>,
-    pub shorts: Reports<'a>,
+pub struct Report {
+    pub videos: Reports,
+    pub livestreams: Reports,
+    pub shorts: Reports,
 }
 
-impl<'a> From<&Archive> for Report<'a> {
+impl From<&Archive> for Report {
     fn from(value: &Archive) -> Self {
         Self {
             videos: Self::generate_reports(&value.videos),
@@ -24,11 +23,11 @@ impl<'a> From<&Archive> for Report<'a> {
     }
 }
 
-impl<'a> Report<'a> {
-    fn generate_reports(videos: &Videos) -> Reports<'a> {
+impl Report {
+    fn generate_reports(videos: &Videos) -> Reports {
         let mut reports = Vec::new();
         for video in videos.values() {
-            let report = VideoReport::generate(video);
+            let report = VideoReport::from(video);
             if report.is_interesting() {
                 reports.push(report);
             }
@@ -38,28 +37,72 @@ impl<'a> Report<'a> {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
-pub struct VideoReport<'a> {
-    #[serde(skip_serializing)]
-    pub video: &'a Video,
-    pub title: ReportFocus,
-    pub description: ReportFocus,
+pub struct VideoReport {
+    pub video: Video,
+    pub title: Option<ReportFocus>,
+    pub description: Option<ReportFocus>,
 }
 
-impl<'a> VideoReport<'a> {
-    fn generate(video: &Video) -> Self {
-        todo!()
+impl From<&Video> for VideoReport {
+    fn from(value: &Video) -> Self {
+        Self {
+            video: value.clone(),
+            title: ReportFocus::from_elements(&value.title),
+            description: ReportFocus::from_elements(&value.description),
+        }
     }
+}
 
+impl VideoReport {
     fn is_interesting(&self) -> bool {
-        self.title != ReportFocus::None && self.description != ReportFocus::None
+        self.title.is_some() || self.description.is_some()
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ReportFocus {
-    None,
-    Today(usize),
-    ThisWeek(usize),
-    ThisMonth(usize),
-    ThisYear(usize),
+    Month(usize),
+    Year(usize),
+}
+
+impl ReportFocus {
+    fn from_elements<T>(value: &Elements<T>) -> Option<Self> {
+        if value.len() < 2 {
+            return None;
+        }
+        let now = Utc::now();
+        let month_ago = now - TimeDelta::days(30);
+        let year_ago = now - TimeDelta::days(365);
+        let mut month_count = 0;
+        let mut year_count = 0;
+        for dt in value.0.keys() {
+            if dt.0 >= month_ago {
+                month_count += 1;
+            }
+            if dt.0 >= year_ago {
+                year_count += 1;
+            }
+        }
+        if month_count == 0 && year_count == 0 {
+            None
+        } else if year_count / 12 > month_count {
+            Some(Self::Year(year_count))
+        } else {
+            Some(Self::Month(month_count))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn more_than_year_ago() {
+        let mut elements = Elements::new();
+        let two_years_ago = Utc::now() - TimeDelta::days(365 * 2);
+        elements.insert(two_years_ago, "hello!");
+        let _ = ReportFocus::from_elements(&elements);
+    }
 }

@@ -17,6 +17,11 @@ impl<T> Elements<T> {
         elements
     }
 
+    /// Creates a new empty elements collection with nothing yet in it
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+
     /// Inserts a new value which has been found out about just now
     pub fn insert_now(&mut self, value: T) {
         let now = Utc::now();
@@ -31,6 +36,11 @@ impl<T> Elements<T> {
     /// Returns the most recent value in the collection
     pub fn current(&self) -> Option<&T> {
         self.0.values().next_back()
+    }
+
+    /// Returns the length/count of this collection of elements
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }
 

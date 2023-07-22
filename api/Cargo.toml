@@ -17,6 +17,7 @@ serde_json = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
+chrono = { git = "https://github.com/chronotope/chrono" }
 axum-extra = { version = "0.7", features = ["async-read-body"] }
 yark-archive = { path = "../archive" }
 tower-http = { version = "0.4", features = ["cors", "fs"] }

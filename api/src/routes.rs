@@ -109,17 +109,17 @@ pub mod archive {
     }
 
     #[derive(Serialize)]
-    pub struct GetMetaResponse<'a> {
+    pub struct GetMetaResponse {
         id: Uuid,
         version: u32,
         url: String,
         videos_total: usize,
         livestreams_total: usize,
         shorts_total: usize,
-        report: Report<'a>,
+        report: Report,
     }
 
-    impl<'a> From<(Uuid, &Archive)> for GetMetaResponse<'a> {
+    impl From<(Uuid, &Archive)> for GetMetaResponse {
         fn from((archive_id, archive): (Uuid, &Archive)) -> Self {
             Self {
                 id: archive_id,
@@ -133,10 +133,10 @@ pub mod archive {
         }
     }
 
-    pub async fn get_meta<'a>(
+    pub async fn get_meta(
         State(state): State<AppStateExtension>,
         Path(archive_id): Path<Uuid>,
-    ) -> Result<Json<GetMetaResponse<'a>>> {
+    ) -> Result<Json<GetMetaResponse>> {
         debug!("Getting metadata for archive {}", archive_id);
         let state_lock = state.lock().await;
         let archive = state_lock
