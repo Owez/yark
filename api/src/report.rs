@@ -39,16 +39,20 @@ impl Report {
 #[derive(Debug, PartialEq, Eq, Clone, Serialize)]
 pub struct VideoReport {
     pub video: Video,
+    pub weight: usize,
     pub title: Option<ReportFocus>,
     pub description: Option<ReportFocus>,
 }
 
 impl From<&Video> for VideoReport {
     fn from(value: &Video) -> Self {
+        let title = ReportFocus::from_elements(&value.title);
+        let description = ReportFocus::from_elements(&value.description);
         Self {
             video: value.clone(),
-            title: ReportFocus::from_elements(&value.title),
-            description: ReportFocus::from_elements(&value.description),
+            weight: Self::calculate_weight(vec![&title, &description]),
+            title,
+            description,
         }
     }
 }
@@ -56,6 +60,24 @@ impl From<&Video> for VideoReport {
 impl VideoReport {
     fn is_interesting(&self) -> bool {
         self.title.is_some() || self.description.is_some()
+    }
+
+    fn calculate_weight(focuses: Vec<&Option<ReportFocus>>) -> usize {
+        let mut total = 0.0;
+        for focus in focuses {
+            match focus {
+                None => (),
+                Some(focus) => match focus {
+                    ReportFocus::Month(count) => {
+                        total += *count as f64 * 1.5;
+                    }
+                    ReportFocus::Year(count) => {
+                        total += *count as f64;
+                    }
+                },
+            }
+        }
+        total.round() as usize
     }
 }
 

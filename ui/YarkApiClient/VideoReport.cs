@@ -6,6 +6,8 @@ public class VideoReport
 {
     [JsonPropertyName("video")]
     public required Video Video { get; set; }
+    [JsonPropertyName("weight")]
+    public required int Weight { get; set; }
     [JsonPropertyName("title")]
     public ReportFocus? Title { get; set; }
     [JsonPropertyName("description")]

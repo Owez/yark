@@ -8,4 +8,11 @@
 @code {
     [Parameter, EditorRequired]
     public Report Report { get; set; } = default!;
+
+    List<(VideoCollectionKind, VideoReport)> CombineAndValue()
+    {
+        List<(VideoCollectionKind, VideoReport)> combined = Report.CombineLists();
+        @* TODO: sort by weight *@
+        return combined;
+    }
 }
