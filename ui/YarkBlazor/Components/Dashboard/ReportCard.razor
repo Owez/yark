@@ -1,18 +1,83 @@
 @using YarkApiClient
 
 <YarkBlazor.Components.Dashboard.Card CardKind=@CardKind.Full>
-    TODO
+    @if (BigReport != null)
+    {
+        <div class="report-content">
+            <div class="big-report">
+                <YarkBlazor.Components.VideoPreview ArchiveId=@ArchiveId Video=@BigReport.VideoReport.Video
+                    VideoCollectionKind=@BigReport.VideoCollectionKind CustomBack="/archive" Margin=@false />
+            </div>
+            <div class="small-report">
+                @foreach (WrappedVideoReport report in OtherReports)
+                {
+                    <YarkBlazor.Components.VideoPreview ArchiveId=@ArchiveId Video=@report.VideoReport.Video
+                        VideoCollectionKind=@report.VideoCollectionKind CustomBack="/archive" Small=@true />
+                }
+            </div>
+        </div>
+    }
 </YarkBlazor.Components.Dashboard.Card>
 
+<style scoped>
+    .report-content {
+        display: flex;
+    }
+
+    .big-report {
+        margin: 20px;
+    }
+
+    .small-report {
+        display:flex;
+        width:100%;
+        overflow-y: auto;
+    }
+</style>
 
 @code {
     [Parameter, EditorRequired]
+    public string ArchiveId { get; set; } = default!;
+
+    [Parameter, EditorRequired]
     public Report Report { get; set; } = default!;
 
-    List<(VideoCollectionKind, VideoReport)> CombineAndValue()
+    WrappedVideoReport? BigReport { get; set; } = null;
+
+    List<WrappedVideoReport> OtherReports { get; set; } = new List<WrappedVideoReport>();
+
+    protected override void OnInitialized()
     {
-        List<(VideoCollectionKind, VideoReport)> combined = Report.CombineLists();
-        @* TODO: sort by weight *@
-        return combined;
+        List<WrappedVideoReport> reports = WrappedVideoReport.FromReport(Report);
+        if (reports.Count >= 1)
+        {
+            BigReport = reports[0];
+            reports.RemoveAt(0);
+        }
+        OtherReports.AddRange(reports);
+
+        base.OnInitialized();
+    }
+
+    private class WrappedVideoReport
+    {
+        public required VideoReport VideoReport { get; set; }
+        public required VideoCollectionKind VideoCollectionKind { get; set; }
+
+        public static List<WrappedVideoReport> FromReport(Report report)
+        {
+            List<(VideoCollectionKind, VideoReport)> combined = report.CombineLists();
+            combined = combined.OrderBy(tuple => tuple.Item2.Weight).Reverse().ToList();
+            List<WrappedVideoReport> wrapped = new List<WrappedVideoReport>();
+            foreach ((VideoCollectionKind videoCollectionKind, VideoReport videoReport) in combined)
+            {
+                wrapped.Add(new WrappedVideoReport
+                    {
+                        VideoReport = videoReport,
+                        VideoCollectionKind = videoCollectionKind
+                    });
+            }
+            return wrapped;
+        }
     }
 }

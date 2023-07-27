@@ -3,20 +3,19 @@
 @using YarkApiClient
 @using System.Web
 
-<a href=@VideoCollectionKindMethods.GenerateLink(VideoCollectionKind) class="back-button"><img
-        src=@IconKindMethods.GetUri(IconKind.Back) alt="Back">Back</a>
+<a href=@GenerateBackLink() class="back-button"><img src=@IconKindMethods.GetUri(IconKind.Back) alt="Back">Back</a>
 @if (Video != null && ArchiveId != null)
 {
     <div class="player-split">
-        <div class="player-left">
-            @* NOTE: in the future this could be made into a reel-like view if its a short *@
-            <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
-            <h1>@Video.Title.Current()</h1>
-            <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
-            <YarkBlazor.Components.VideoDescription Description=@Video.Description.Current() />
-            <h2>History</h2>
-            <YarkBlazor.Components.VideoHistory Video=@Video />
-            @if (Video.Views.Count > 1)
+    <div class="player-left">
+        @* NOTE: in the future this could be made into a reel-like view if its a short *@
+        <video src=@GenerateVideoLink(Video, ArchiveId) controls autoplay></video>
+        <h1>@Video.Title.Current()</h1>
+        <p class="info">@Video.Views.Current() views • @GenerateUploadedString(Video)</p>
+        <YarkBlazor.Components.VideoDescription Description=@Video.Description.Current() />
+        <h2>History</h2>
+        <YarkBlazor.Components.VideoHistory Video=@Video />
+        @if (Video.Views.Count > 1)
             {
                 <h2>Views over time</h2>
                 <YarkBlazor.Components.VideoLineChart Label="View count" Elements=@Video.Views />
@@ -57,6 +56,7 @@
         height: 18px;
         margin-top: 2px;
         margin-bottom: -2px;
+        margin-right: 7.5px;
     }
 
     video {
@@ -98,6 +98,10 @@
     [SupplyParameterFromQuery(Name = "kind")]
     public string VideoCollectionKindString { get; set; } = "videos";
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "back")]
+    public string? CustomBackString { get; set; }
+
     Video? Video { get; set; } = null;
 
     string? ArchiveId { get; set; } = null;
@@ -126,5 +130,18 @@
     string GenerateUploadedString(Video video)
     {
         return new TimeAgo(video.Uploaded).ToString();
+    }
+
+    string GenerateBackLink()
+    {
+        if (CustomBackString != null)
+        {
+            return CustomBackString;
+        }
+        else
+        {
+            string name = VideoCollectionKindMethods.ToString(VideoCollectionKind);
+            return String.Format("/archive/{0}", name);
+        }
     }
 }

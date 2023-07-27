@@ -99,7 +99,32 @@ This route lets you get meta-infromation about an existing archive. To use it, j
 	"shorts_count": 0,
 	// Report
 	"report": {
-		// TODO
+		"videos": [
+			{
+				// Full video object contained here
+				"video": { /* .. */ },
+				// Larger weight means its a more prominent video change
+				"weight": 3,
+				// Title update count by either "month" or "year"
+				"title": {
+					"month": 2
+				},
+				// State if no changes are detected
+				"description": null
+			},
+			// etc..
+		],
+		"livestreams": [
+			{
+				"video": { /* .. */ },
+				"weight": 3,
+				"title": {
+					"month": 2
+				},
+				"description": null
+			}
+		],
+		"shorts": []
 	}
 }
 ```

@@ -1,13 +1,13 @@
 @using YarkApiClient
 @using System.Web
 
-<a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&kind=@VideoCollectionKindMethods.ToString(VideoCollectionKind)"
-    class="video-item-link">
-    <div class="video-item">
+<a href="/archive/play?id=@HttpUtility.UrlEncode(Video.Id)&@GenerateKindBack()" class="video-item-link">
+    <div class="video-item @((Margin ? "video-item-margin" : "")) @(Small ? "video-item-small": "")">
         <img src=@GetVideoThumbnail(Video)>
-        <p class="video-item-title">@Video.Title.Current()</p>
-        <p class="video-item-info">@Video.Views.Current() views • @GetUploadedString(Video)
-        </p>
+            <p class="video-item-title @(Small ? "video-item-title-small": "")">@Video.Title.Current()</p>
+            <p class="video-item-info @(Small ? "video-item-info-small": "")">@Video.Views.Current() views •
+                @GetUploadedString(Video)
+            </p>
     </div>
 </a>
 
@@ -19,6 +19,14 @@
 
     .video-item {
         width: 300px;
+    }
+
+    .video-item-small {
+        width: unset;
+        margin-top: 20px;
+    }
+
+    .video-item-margin {
         margin-right: 20px;
         margin-bottom: 25px;
     }
@@ -29,6 +37,10 @@
         border-radius: 10px;
     }
 
+    .video-item-small>img {
+        width: 200px;
+    }
+
     .video-item-title {
         font-weight: 500;
         font-size: 1rem;
@@ -36,9 +48,19 @@
         margin-bottom: 2px;
     }
 
+    .video-item-title-small {
+        font-size: 0.85rem;
+        margin-top: unset;
+        margin-bottom: unset;
+    }
+
     .video-item-info {
         font-size: 0.8rem;
         color: #525252;
+    }
+
+    .video-item-info-small {
+        font-size: 0.75rem;
     }
 </style>
 
@@ -49,8 +71,17 @@
     [Parameter, EditorRequired]
     public Video Video { get; set; } = default!;
 
-    [Parameter, EditorRequired]
-    public VideoCollectionKind VideoCollectionKind { get; set; } = default!;
+    [Parameter]
+    public Nullable<VideoCollectionKind> VideoCollectionKind { get; set; } = null;
+
+    [Parameter]
+    public string? CustomBack { get; set; } = null;
+
+    [Parameter]
+    public bool Margin { get; set; } = true;
+
+    [Parameter]
+    public bool Small { get; set; } = false;
 
     string GetVideoThumbnail(Video video)
     {
@@ -60,5 +91,28 @@
     string GetUploadedString(Video video)
     {
         return new TimeAgo(video.Uploaded).ToString();
+    }
+
+    string GenerateKindBack()
+    {
+        string generated = "";
+        if (VideoCollectionKind != null)
+        {
+            generated += String.Format("&kind={0}", VideoCollectionKindMethods.ToString(VideoCollectionKind.Value));
+        }
+        if (CustomBack != null)
+        {
+            generated += String.Format("&back={0}", CustomBack);
+        }
+
+        if (generated == "")
+        {
+            return "back=/archive";
+        }
+        else
+        {
+            string withoutStartAmpersand = generated.TrimStart('&');
+            return withoutStartAmpersand;
+        }
     }
 }
