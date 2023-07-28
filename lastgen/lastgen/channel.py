@@ -6,14 +6,18 @@ import json
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
-from colorama import Style, Fore
+
+# LASTGEN: not using colorama
+# from colorama import Style, Fore
 import sys
 from .reporter import Reporter
 from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
 from .video import Video, Element
 from typing import Any
 import time
-from progress.spinner import PieSpinner
+
+# LASTGEN: not using progress
+# from progress.spinner import PieSpinner
 from concurrent.futures import ThreadPoolExecutor
 import time
 
@@ -70,12 +74,18 @@ class DownloadConfig:
 
         # If all are 0 as its equivalent to skipping download
         if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
-            print(
-                Fore.YELLOW
-                + "Using the skip downloads option is recommended over setting maximums to 0"
-                + Fore.RESET
-            )
+            # LASTGEN: not using colorama
+            # print(
+            #     Fore.YELLOW
+            #     + "Using the skip downloads option is recommended over setting maximums to 0"
+            #     + Fore.RESET
+            # )
             self.skip_download = True
+
+            # LASTGEN: new
+            print(
+                "Using the skip downloads option is recommended over setting maximums to 0",
+            )
 
 
 class VideoLogger:
@@ -88,16 +98,27 @@ class VideoLogger:
         # Downloading percent
         if d["status"] == "downloading":
             percent = d["_percent_str"].strip()
+            # LASTGEN: not using colorama
+            # print(
+            #     Style.DIM
+            #     + f"  • Downloading {id}, at {percent}..                "
+            #     + Style.NORMAL,
+            #     end="\r",
+            # )
+
+            # LASTGEN: new
             print(
-                Style.DIM
-                + f"  • Downloading {id}, at {percent}..                "
-                + Style.NORMAL,
+                f"  • Downloading {id}, at {percent}..                ",
                 end="\r",
             )
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}        " + Style.NORMAL)
+            # LASTGEN: not using colorama
+            # print(Style.DIM + f"  • Downloaded {id}        " + Style.NORMAL)
+
+            # LASTGEN: new
+            print(f"  • Downloaded {id}        ")
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -180,25 +201,31 @@ class Channel:
 
         # Download metadata and give the user a spinner bar
         with ThreadPoolExecutor() as ex:
-            # Make future for downloading metadata
-            future = ex.submit(self._download_metadata)
+            # LASTGEN: not using progress
+            # # Make future for downloading metadata
+            # future = ex.submit(self._download_metadata)
 
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        break
-                    time.sleep(0.25)
+            # LASTGEN: not using progress
+            # # Start spinning
+            # with PieSpinner(f"{msg} ") as bar:
+            #     # Don't show bar for 2 seconds but check if future is done
+            #     no_bar_time = time.time() + 2
+            #     while time.time() < no_bar_time:
+            #         if future.done():
+            #             break
+            #         time.sleep(0.25)
 
-                # Show loading spinner
-                while not future.done():
-                    bar.next()
-                    time.sleep(0.075)
+            #     # Show loading spinner
+            #     while not future.done():
+            #         bar.next()
+            #         time.sleep(0.075)
 
-            # Get result from thread now that it's finished
-            res = future.result()
+            # LASTGEN: not using progress
+            # # Get result from thread now that it's finished
+            # res = future.result()
+
+            # LASTGEN: updated
+            res = self._download_metadata()
 
         # Uncomment for saving big dumps for testing
         # with open(self.path / "dump.json", "w+") as file:
@@ -219,7 +246,7 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
-            "concurrent_fragment_downloads": 8
+            "concurrent_fragment_downloads": 8,
         }
 
         # Get response and snip it
@@ -235,10 +262,16 @@ class Channel:
 
                     # Print retrying message
                     if retrying:
+                        # LASTGEN: not using colorama
+                        # print(
+                        #     Style.DIM
+                        #     + f"  • Retrying metadata download.."
+                        #     + Style.RESET_ALL
+                        # )  # TODO: compat with loading bar
+
+                        # LASTGEN: new
                         print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
+                            f"  • Retrying metadata download.."
                         )  # TODO: compat with loading bar
 
     def _parse_metadata(self, res: dict[str, Any]):
@@ -436,22 +469,27 @@ class Channel:
 
         # Start computing and show loading spinner
         with ThreadPoolExecutor() as ex:
-            # Make future for computation of the video list
-            future = ex.submit(self._parse_metadata_videos_comp, i, bucket)
+            # LASTGEN: not using progress
+            # # Make future for computation of the video list
+            # future = ex.submit(self._parse_metadata_videos_comp, i, bucket)
 
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        return
-                    time.sleep(0.25)
+            # LASTGEN: not using progress
+            # # Start spinning
+            # with PieSpinner(f"{msg} ") as bar:
+            #     # Don't show bar for 2 seconds but check if future is done
+            #     no_bar_time = time.time() + 2
+            #     while time.time() < no_bar_time:
+            #         if future.done():
+            #             return
+            #         time.sleep(0.25)
 
-                # Spin until future is done
-                while not future.done():
-                    time.sleep(0.075)
-                    bar.next()
+            #     # Spin until future is done
+            #     while not future.done():
+            #         time.sleep(0.075)
+            #         bar.next()
+
+            # LASTGEN: new code
+            self._parse_metadata_videos_comp(i, bucket)
 
     def _parse_metadata_videos_comp(self, i: list, bucket: list):
         """Computes the actual parsing for `_parse_metadata_videos` without outputting what's happening"""
@@ -565,13 +603,27 @@ def _skip_video(
         if not video.downloaded():
             # Tell the user we're skipping over it
             if warning:
+                # LASTGEN: not using colorama
+                # print(
+                #     Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
+                #     file=sys.stderr,
+                # )
+
+                # LASTGEN: new
                 print(
-                    Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
+                    f"  • Skipping {video.id} ({reason})",
                     file=sys.stderr,
                 )
             else:
+                # LASTGEN: not using colorama
+                # print(
+                #     Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
+                # )
+
+                # LASTGEN: new
                 print(
-                    Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
+                    f"  • Skipping {video.id} ({reason})",
+                    file=sys.stderr,
                 )
 
             # Set videos to skip over this one
@@ -602,13 +654,17 @@ def _migrate_archive(
             # Channel id to url
             encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
             del encoded["id"]
-            print(
-                Fore.YELLOW
-                + "Please make sure "
-                + encoded["url"]
-                + " is the correct url"
-                + Fore.RESET
-            )
+            # LASTGEN: not using colorama
+            # print(
+            #     Fore.YELLOW
+            #     + "Please make sure "
+            #     + encoded["url"]
+            #     + " is the correct url"
+            #     + Fore.RESET
+            # )
+
+            # LASTGEN: new
+            print(+"Please make sure " + encoded["url"] + " is the correct url")
 
             # Empty livestreams/shorts lists
             encoded["livestreams"] = []
@@ -636,10 +692,16 @@ def _migrate_archive(
         return migrate_step(cur, encoded)
 
     # Inform user of the backup process
+    # LASTGEN: not using colorama
+    # print(
+    #     Fore.YELLOW
+    #     + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
+    #     + Fore.RESET
+    # )
+
+    # LASTGEN: new
     print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
-        + Fore.RESET
+        f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
     )
 
     # Start recursion step
@@ -689,8 +751,15 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
+    # LASTGEN: not using colorama
+    # print(
+    #     Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
+    #     file=sys.stderr,
+    # )
+
+    # LASTGEN: new
     print(
-        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
+        "  • " + msg + suffix.ljust(40),
         file=sys.stderr,
     )
 

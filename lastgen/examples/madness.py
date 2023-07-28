@@ -1,4 +1,4 @@
-from yark import Channel, DownloadConfig
+from lastgen import Channel, DownloadConfig
 from pathlib import Path
 
 # Create a new channel

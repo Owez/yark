@@ -1,9 +1,8 @@
 [tool.poetry]
-name = "yark"
-version = "1.2.8-stripped.1"
+name = "lastgen"
+version = "1.2.8"
 description = "YouTube archiving made simple."
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
-license = "MIT"
 readme = "README.md"
 repository = "https://github.com/owez/yark"
 classifiers = [
@@ -17,9 +16,6 @@ classifiers = [
 python = "^3.9"
 requests = "^2.28.2"
 yt-dlp = "^2023.3.4"
-
-[tool.poetry.scripts]
-yark = "yark.cli:_cli"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"

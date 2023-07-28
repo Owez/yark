@@ -1,6 +1,7 @@
 """Channel reporting system allowing detailed logging of useful information"""
 
-from colorama import Fore, Style
+# LASTGEN: not using colorama
+# from colorama import Fore, Style
 import datetime
 from .video import Video, Element
 from .utils import _truncate_text
@@ -29,27 +30,44 @@ class Reporter:
 
         # Updated
         for kind, element in self.updated:
-            colour = (
-                Fore.CYAN
-                if kind in ["title", "description", "undeleted"]
-                else Fore.BLUE
-            )
+            # LASTGEN: not using colorama
+            # colour = (
+            #     Fore.CYAN
+            #     if kind in ["title", "description", "undeleted"]
+            #     else Fore.BLUE
+            # )
             video = f"  • {element.video}".ljust(82)
             kind = f" │ 🔥{kind.capitalize()}"
 
-            print(colour + video + kind)
+            # LASTGEN: not using colorama
+            # print(colour + video + kind)
+
+            # LASTGEN: new
+            print(video + kind)
 
         # Added
         for video in self.added:
-            print(Fore.GREEN + f"  • {video}")
+            # LASTGEN: not using colorama
+            # print(Fore.GREEN + f"  • {video}")
+
+            # LASTGEN: new
+            print(f"  • New: {video}")
 
         # Deleted
         for video in self.deleted:
-            print(Fore.RED + f"  • {video}")
+            # LASTGEN: not using colorama
+            # print(Fore.RED + f"  • {video}")
+
+            # LASTGEN: new
+            print(f"  • Deleted: {video}")
 
         # Nothing
         if not self.added and not self.deleted and not self.updated:
-            print(Style.DIM + f"  • Nothing was added or deleted")
+            # LASTGEN: not using colorama
+            # print(Style.DIM + f"  • Nothing was added or deleted")
+
+            # LASTGEN: new
+            print(f"  • Nothing was added or deleted")
 
         # Watermark
         print(_watermark())
@@ -80,8 +98,14 @@ class Reporter:
             # Lambdas for easy buffer addition for next block
             buf: list[str] = []
             maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
-            add_buf = lambda name, change, colour: buf.append(
-                colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
+            # LASTGEN: not using colorama
+            # add_buf = lambda name, change, colour: buf.append(
+            #     colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
+            # )
+
+            # LASTGEN: new
+            add_buf = lambda name, change: buf.append(
+                maybe_capitalize(name) + f" x{change}"
             )
 
             # Figure out how many changes have happened in each category and format them together
@@ -89,27 +113,49 @@ class Reporter:
                 1 for value in video.deleted.inner.values() if value == True
             )
             if change_deleted != 0:
-                add_buf("deleted", change_deleted, Fore.RED)
+                # LASTGEN: not using colorama
+                # add_buf("deleted", change_deleted, Fore.RED)
+
+                # LASTGEN: new
+                add_buf("deleted", change_deleted)
+
             change_description = len(video.description.inner) - 1
             if change_description != 0:
-                add_buf("description", change_description, Fore.CYAN)
+                # LASTGEN: not using colorama
+                # add_buf("description", change_description, Fore.CYAN)
+
+                # LASTGEN: new
+                add_buf("description", change_description)
+
             change_title = len(video.title.inner) - 1
             if change_title != 0:
-                add_buf("title", change_title, Fore.CYAN)
+                # LASTGEN: not using colorama
+                # add_buf("title", change_title, Fore.CYAN)
+
+                # LASTGEN: new
+                add_buf("title", change_title)
 
             # Combine the detected changes together and capitalize
-            changes = ", ".join(buf) + Fore.RESET
+            # LASTGEN: not using colorama
+            # changes = ", ".join(buf) + Fore.RESET
+
+            # LASTGEN: new
+            changes = ", ".join(buf)
 
             # Truncate title, get viewer link, and format all together with viewer link
             title = _truncate_text(video.title.current(), 51).strip()
             url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
-            return (
-                f"  • {title}\n    {changes}\n    "
-                + Style.DIM
-                + url
-                + Style.RESET_ALL
-                + "\n"
-            )
+            # LASTGEN: not using colorama
+            # return (
+            #     f"  • {title}\n    {changes}\n    "
+            #     + Style.DIM
+            #     + url
+            #     + Style.RESET_ALL
+            #     + "\n"
+            # )
+
+            # LASTGEN: new
+            return f"  • {title}\n    {changes}\n    {url}\n"
 
         def fmt_category(kind: str, videos: list) -> Optional[str]:
             """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
@@ -152,4 +198,8 @@ class Reporter:
 def _watermark() -> str:
     """Returns a new watermark with a Yark timestamp"""
     date = datetime.datetime.utcnow().isoformat()
-    return Style.RESET_ALL + f"Yark – {date}"
+    # LASTGEN: not using colorama
+    # return Style.RESET_ALL + f"Yark – {date}"
+
+    # LASTGEN: new
+    return f"Yark – {date}"

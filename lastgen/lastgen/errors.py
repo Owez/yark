@@ -1,6 +1,7 @@
 """Exceptions and error functions"""
 
-from colorama import Style, Fore
+# LASTGEN: not using colorama
+# from colorama import Style, Fore
 import sys
 
 
@@ -39,4 +40,8 @@ def _err_msg(msg: str, report_msg: bool = False):
         if not report_msg
         else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
     )
-    print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
+    # LASTGEN: not using colorama
+    # print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
+
+    # LASTGEN: new
+    print(msg, file=sys.stderr)
