@@ -3,3 +3,5 @@ demo/
 **/.DS*
 dist/
 __pycache__/
+target/
+Cargo.lock

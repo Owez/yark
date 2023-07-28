@@ -1,23 +1,78 @@
-"""Channel and overall archive management with downloader"""
-
 from __future__ import annotations
+
+#
+# UTILS
+#
+
+
+def _truncate_text(text: str, to: int = 31) -> str:
+    """Truncates inputted `text` to ~32 length, adding ellipsis at the end if overflowing"""
+    if len(text) > to:
+        text = text[: to - 2].strip() + ".."
+    return text.ljust(to)
+
+
+#
+# ERROR LOGIC
+#
+
+import sys
+
+
+class ArchiveNotFoundException(Exception):
+    """Archive couldn't be found, the name was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+class VideoNotFoundException(Exception):
+    """Video couldn't be found, the id was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+class NoteNotFoundException(Exception):
+    """Note couldn't be found, the id was probably incorrect"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+class TimestampException(Exception):
+    """Invalid timestamp inputted for note"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+def _err_msg(msg: str, report_msg: bool = False):
+    """Provides a red-coloured error message to the user in the STDERR pipe"""
+    msg = (
+        msg
+        if not report_msg
+        else f"{msg}\nPlease file a bug report if you think this is a problem with Yark!"
+    )
+    # LASTGEN: not using colorama
+    # print(Fore.RED + Style.BRIGHT + msg + Style.NORMAL + Fore.RESET, file=sys.stderr)
+
+    # LASTGEN: new
+    print(msg, file=sys.stderr)
+
+
+#
+# ARCHIVE LOGIC
+#
+
 from datetime import datetime
 import json
 from pathlib import Path
 import time
 from yt_dlp import YoutubeDL, DownloadError  # type: ignore
-
-# LASTGEN: not using colorama
-# from colorama import Style, Fore
 import sys
-from .reporter import Reporter
-from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
-from .video import Video, Element
 from typing import Any
 import time
-
-# LASTGEN: not using progress
-# from progress.spinner import PieSpinner
 from concurrent.futures import ThreadPoolExecutor
 import time
 
@@ -769,3 +824,562 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     else:
         _err_msg("  • Sorry, failed to download {name}", True)
         sys.exit(1)
+
+
+#
+# VIDEO LOGIC
+#
+
+from datetime import datetime
+from pathlib import Path
+from uuid import uuid4
+import requests
+import hashlib
+from typing import TYPE_CHECKING, Any, Optional
+
+
+class Video:
+    channel: "Channel"
+    id: str
+    uploaded: datetime
+    width: int
+    height: int
+    title: "Element"
+    description: "Element"
+    views: "Element"
+    likes: "Element"
+    thumbnail: "Element"
+    deleted: "Element"
+    notes: list["Note"]
+
+    @staticmethod
+    def new(entry: dict[str, Any], channel) -> Video:
+        """Create new video from metadata entry"""
+        # Normal
+        video = Video()
+        video.channel = channel
+        video.id = entry["id"]
+        video.uploaded = _decode_date_yt(entry["upload_date"])
+        video.width = entry["width"]
+        video.height = entry["height"]
+        video.title = Element.new(video, entry["title"])
+        video.description = Element.new(video, entry["description"])
+        video.views = Element.new(video, entry["view_count"])
+        video.likes = Element.new(
+            video, entry["like_count"] if "like_count" in entry else None
+        )
+        video.thumbnail = Element.new(video, Thumbnail.new(entry["thumbnail"], video))
+        video.deleted = Element.new(video, False)
+        video.notes = []
+
+        # Runtime-only
+        video.known_not_deleted = True
+
+        # Return
+        return video
+
+    @staticmethod
+    def _new_empty() -> Video:
+        fake_entry = {"hi": True}  # TODO: finish
+        return Video.new(fake_entry, Channel._new_empty())
+
+    def update(self, entry: dict):
+        """Updates video using new schema, adding a new timestamp to any changes"""
+        # Normal
+        self.title.update("title", entry["title"])
+        self.description.update("description", entry["description"])
+        self.views.update("view count", entry["view_count"])
+        self.likes.update(
+            "like count", entry["like_count"] if "like_count" in entry else None
+        )
+        self.thumbnail.update("thumbnail", Thumbnail.new(entry["thumbnail"], self))
+        self.deleted.update("undeleted", False)
+
+        # Runtime-only
+        self.known_not_deleted = True
+
+    def filename(self) -> Optional[str]:
+        """Returns the filename for the downloaded video, if any"""
+        videos = self.channel.path / "videos"
+        for file in videos.iterdir():
+            if file.stem == self.id and file.suffix != ".part":
+                return file.name
+        return None
+
+    def downloaded(self) -> bool:
+        """Checks if this video has been downloaded"""
+        return self.filename() is not None
+
+    def updated(self) -> bool:
+        """Checks if this video's title or description or deleted status have been ever updated"""
+        return (
+            len(self.title.inner) > 1
+            or len(self.description.inner) > 1
+            or len(self.deleted.inner) > 1
+        )
+
+    def search(self, id: str):
+        """Searches video for note's id"""
+        for note in self.notes:
+            if note.id == id:
+                return note
+        raise NoteNotFoundException(f"Couldn't find note {id}")
+
+    def url(self) -> str:
+        """Returns the YouTube watch url of the current video"""
+        # NOTE: livestreams and shorts are currently just videos and can be seen via a normal watch url
+        return f"https://www.youtube.com/watch?v={self.id}"
+
+    @staticmethod
+    def _from_dict(encoded: dict, channel) -> Video:
+        """Converts id and encoded dictionary to video for loading a channel"""
+        # Normal
+        video = Video()
+        video.channel = channel
+        video.id = encoded["id"]
+        video.uploaded = datetime.fromisoformat(encoded["uploaded"])
+        video.width = encoded["width"]
+        video.height = encoded["height"]
+        video.title = Element._from_dict(encoded["title"], video)
+        video.description = Element._from_dict(encoded["description"], video)
+        video.views = Element._from_dict(encoded["views"], video)
+        video.likes = Element._from_dict(encoded["likes"], video)
+        video.thumbnail = Thumbnail._from_element(encoded["thumbnail"], video)
+        video.notes = [Note._from_dict(video, note) for note in encoded["notes"]]
+        video.deleted = Element._from_dict(encoded["deleted"], video)
+
+        # Runtime-only
+        video.known_not_deleted = False
+
+        # Return
+        return video
+
+    def _to_dict(self) -> dict:
+        """Converts video information to dictionary for committing, doesn't include id"""
+        return {
+            "id": self.id,
+            "uploaded": self.uploaded.isoformat(),
+            "width": self.width,
+            "height": self.height,
+            "title": self.title._to_dict(),
+            "description": self.description._to_dict(),
+            "views": self.views._to_dict(),
+            "likes": self.likes._to_dict(),
+            "thumbnail": self.thumbnail._to_dict(),
+            "deleted": self.deleted._to_dict(),
+            "notes": [note._to_dict() for note in self.notes],
+        }
+
+    def __repr__(self) -> str:
+        # Title
+        title = _truncate_text(self.title.current())
+
+        # Views and likes
+        views = _magnitude(self.views.current()).ljust(6)
+        likes = _magnitude(self.likes.current()).ljust(6)
+
+        # Width and height
+        width = self.width if self.width is not None else "?"
+        height = self.height if self.height is not None else "?"
+
+        # Upload date
+        uploaded = _encode_date_human(self.uploaded)
+
+        # Return
+        return f"{title}  🔎{views} │ 👍{likes} │ 📅{uploaded} │ 📺{width}x{height}"
+
+    def __lt__(self, other) -> bool:
+        return self.uploaded < other.uploaded
+
+
+def _decode_date_yt(input: str) -> datetime:
+    """Decodes date from YouTube like `20180915` for example"""
+    return datetime.strptime(input, "%Y%m%d")
+
+
+def _encode_date_human(input: datetime) -> str:
+    """Encodes an `input` date into a standardized human-readable format"""
+    return input.strftime("%d %b %Y")
+
+
+def _magnitude(count: Optional[int] = None) -> str:
+    """Displays an integer as a sort of ordinal order of magnitude"""
+    if count is None:
+        return "?"
+    elif count < 1000:
+        return str(count)
+    elif count < 1000000:
+        value = "{:.1f}".format(float(count) / 1000.0)
+        return value + "k"
+    elif count < 1000000000:
+        value = "{:.1f}".format(float(count) / 1000000.0)
+        return value + "m"
+    else:
+        value = "{:.1f}".format(float(count) / 1000000000.0)
+        return value + "b"
+
+
+class Element:
+    video: Video
+    inner: dict[datetime, Any]
+
+    @staticmethod
+    def new(video: Video, data):
+        """Creates new element attached to a video with some initial data"""
+        element = Element()
+        element.video = video
+        element.inner = {datetime.utcnow(): data}
+        return element
+
+    def update(self, kind: Optional[str], data):
+        """Updates element if it needs to be and returns self, reports change unless `kind` is none"""
+        # Check if updating is needed
+        has_id = hasattr(data, "id")
+        current = self.current()
+        if (not has_id and current != data) or (has_id and data.id != current.id):
+            # Update
+            self.inner[datetime.utcnow()] = data
+
+            # Report if wanted
+            if kind is not None:
+                self.video.channel.reporter.add_updated(kind, self)
+
+        # Return self
+        return self
+
+    def current(self):
+        """Returns most recent element"""
+        return self.inner[list(self.inner.keys())[-1]]
+
+    def changed(self) -> bool:
+        """Checks if the value has ever been modified from it's original state"""
+        return len(self.inner) > 1
+
+    @staticmethod
+    def _from_dict(encoded: dict, video: Video) -> Element:
+        """Converts encoded dictionary into element"""
+        # Basics
+        element = Element()
+        element.video = video
+        element.inner = {}
+
+        # Inner elements
+        for key in encoded:
+            date = datetime.fromisoformat(key)
+            element.inner[date] = encoded[key]
+
+        # Return
+        return element
+
+    def _to_dict(self) -> dict:
+        """Converts element to dictionary for committing"""
+        # Convert each item
+        encoded = {}
+        for date in self.inner:
+            # Convert element value if method available to support custom
+            data = self.inner[date]
+            data = data._to_element() if hasattr(data, "_to_element") else data
+
+            # Add encoded data to iso-formatted string date
+            encoded[date.isoformat()] = data
+
+        # Return
+        return encoded
+
+
+class Thumbnail:
+    video: Video
+    id: str
+    path: Path
+
+    @staticmethod
+    def new(url: str, video: Video):
+        """Pulls a new thumbnail from YouTube and saves"""
+        # Details
+        thumbnail = Thumbnail()
+        thumbnail.video = video
+
+        # Get image and calculate it's hash
+        image = requests.get(url).content
+        thumbnail.id = hashlib.blake2b(
+            image, digest_size=20, usedforsecurity=False
+        ).hexdigest()
+
+        # Calculate paths
+        thumbnails = thumbnail._path()
+        thumbnail.path = thumbnails / f"{thumbnail.id}.webp"
+
+        # Save to collection
+        with open(thumbnail.path, "wb+") as file:
+            file.write(image)
+
+        # Return
+        return thumbnail
+
+    @staticmethod
+    def load(id: str, video: Video):
+        """Loads existing thumbnail from saved path by id"""
+        thumbnail = Thumbnail()
+        thumbnail.id = id
+        thumbnail.video = video
+        thumbnail.path = thumbnail._path() / f"{thumbnail.id}.webp"
+        return thumbnail
+
+    def _path(self) -> Path:
+        """Gets root path of thumbnail using video's channel path"""
+        return self.video.channel.path / "thumbnails"
+
+    @staticmethod
+    def _from_element(element: dict, video: Video) -> Element:
+        """Converts element of thumbnails to properly formed thumbnails"""
+        decoded = Element._from_dict(element, video)
+        for date in decoded.inner:
+            decoded.inner[date] = Thumbnail.load(decoded.inner[date], video)
+        return decoded
+
+    def _to_element(self) -> str:
+        """Converts thumbnail instance to value used for element identification"""
+        return self.id
+
+
+class Note:
+    """Allows Yark users to add notes to videos"""
+
+    video: Video
+    id: str
+    timestamp: int
+    title: str
+    body: Optional[str]
+
+    @staticmethod
+    def new(video: Video, timestamp: int, title: str, body: Optional[str] = None):
+        """Creates a new note"""
+        note = Note()
+        note.video = video
+        note.id = str(uuid4())
+        note.timestamp = timestamp
+        note.title = title
+        note.body = body
+        return note
+
+    @staticmethod
+    def _from_dict(video: Video, element: dict) -> Note:
+        """Loads existing note attached to a video dict"""
+        note = Note()
+        note.video = video
+        note.id = element["id"]
+        note.timestamp = element["timestamp"]
+        note.title = element["title"]
+        note.body = element["body"]
+        return note
+
+    def _to_dict(self) -> dict:
+        """Converts note to dictionary representation"""
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp,
+            "title": self.title,
+            "body": self.body,
+        }
+
+
+#
+# REPORTER LOGIC
+#
+
+import datetime
+from typing import TYPE_CHECKING, Optional
+
+
+class Reporter:
+    channel: "Channel"
+    added: list[Video]
+    deleted: list[Video]
+    updated: list[tuple[str, Element]]
+
+    def __init__(self, channel) -> None:
+        self.channel = channel
+        self.added = []
+        self.deleted = []
+        self.updated = []
+
+    def print(self):
+        """Prints coloured report to STDOUT"""
+        # Initial message
+        print(f"Report for {self.channel}:")
+
+        # Updated
+        for kind, element in self.updated:
+            # LASTGEN: not using colorama
+            # colour = (
+            #     Fore.CYAN
+            #     if kind in ["title", "description", "undeleted"]
+            #     else Fore.BLUE
+            # )
+            video = f"  • {element.video}".ljust(82)
+            kind = f" │ 🔥{kind.capitalize()}"
+
+            # LASTGEN: not using colorama
+            # print(colour + video + kind)
+
+            # LASTGEN: new
+            print(video + kind)
+
+        # Added
+        for video in self.added:
+            # LASTGEN: not using colorama
+            # print(Fore.GREEN + f"  • {video}")
+
+            # LASTGEN: new
+            print(f"  • New: {video}")
+
+        # Deleted
+        for video in self.deleted:
+            # LASTGEN: not using colorama
+            # print(Fore.RED + f"  • {video}")
+
+            # LASTGEN: new
+            print(f"  • Deleted: {video}")
+
+        # Nothing
+        if not self.added and not self.deleted and not self.updated:
+            # LASTGEN: not using colorama
+            # print(Style.DIM + f"  • Nothing was added or deleted")
+
+            # LASTGEN: new
+            print(f"  • Nothing was added or deleted")
+
+        # Watermark
+        print(_watermark())
+
+    def add_updated(self, kind: str, element: Element):
+        """Tells reporter that an element has been updated"""
+        self.updated.append((kind, element))
+
+    def reset(self):
+        """Resets reporting values for new run"""
+        self.added = []
+        self.deleted = []
+        self.updated = []
+
+    def interesting_changes(self):
+        """Reports on the most interesting changes for the channel linked to this reporter"""
+
+        def fmt_video(kind: str, video: Video) -> str:
+            """Formats a video if it's interesting, otherwise returns an empty string"""
+            # Skip formatting because it's got nothing of note
+            if (
+                not video.title.changed()
+                and not video.description.changed()
+                and not video.deleted.changed()
+            ):
+                return ""
+
+            # Lambdas for easy buffer addition for next block
+            buf: list[str] = []
+            maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
+            # LASTGEN: not using colorama
+            # add_buf = lambda name, change, colour: buf.append(
+            #     colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
+            # )
+
+            # LASTGEN: new
+            add_buf = lambda name, change: buf.append(
+                maybe_capitalize(name) + f" x{change}"
+            )
+
+            # Figure out how many changes have happened in each category and format them together
+            change_deleted = sum(
+                1 for value in video.deleted.inner.values() if value == True
+            )
+            if change_deleted != 0:
+                # LASTGEN: not using colorama
+                # add_buf("deleted", change_deleted, Fore.RED)
+
+                # LASTGEN: new
+                add_buf("deleted", change_deleted)
+
+            change_description = len(video.description.inner) - 1
+            if change_description != 0:
+                # LASTGEN: not using colorama
+                # add_buf("description", change_description, Fore.CYAN)
+
+                # LASTGEN: new
+                add_buf("description", change_description)
+
+            change_title = len(video.title.inner) - 1
+            if change_title != 0:
+                # LASTGEN: not using colorama
+                # add_buf("title", change_title, Fore.CYAN)
+
+                # LASTGEN: new
+                add_buf("title", change_title)
+
+            # Combine the detected changes together and capitalize
+            # LASTGEN: not using colorama
+            # changes = ", ".join(buf) + Fore.RESET
+
+            # LASTGEN: new
+            changes = ", ".join(buf)
+
+            # Truncate title, get viewer link, and format all together with viewer link
+            title = _truncate_text(video.title.current(), 51).strip()
+            url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
+            # LASTGEN: not using colorama
+            # return (
+            #     f"  • {title}\n    {changes}\n    "
+            #     + Style.DIM
+            #     + url
+            #     + Style.RESET_ALL
+            #     + "\n"
+            # )
+
+            # LASTGEN: new
+            return f"  • {title}\n    {changes}\n    {url}\n"
+
+        def fmt_category(kind: str, videos: list) -> Optional[str]:
+            """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
+            # Add interesting videos to buffer
+            HEADING = f"Interesting {kind}:\n"
+            buf = HEADING
+            for video in videos:
+                buf += fmt_video(kind, video)
+
+            # Return depending on if the buf is just the heading
+            return None if buf == HEADING else buf[:-1]
+
+        # Tell users whats happening
+        print(f"Finding interesting changes in {self.channel}..")
+
+        # Get reports on the three categories
+        categories = [
+            ("videos", fmt_category("videos", self.channel.videos)),
+            ("livestreams", fmt_category("livestreams", self.channel.livestreams)),
+            ("shorts", fmt_category("shorts", self.channel.shorts)),
+        ]
+
+        # Combine those with nothing of note and print out interesting
+        not_of_note = []
+        for name, buf in categories:
+            if buf is None:
+                not_of_note.append(name)
+            else:
+                print(buf)
+
+        # Print out those with nothing of note at the end
+        if len(not_of_note) != 0:
+            not_of_note = "/".join(not_of_note)
+            print(f"No interesting {not_of_note} found")
+
+        # Watermark
+        print(_watermark())
+
+
+def _watermark() -> str:
+    """Returns a new watermark with a Yark timestamp"""
+    date = datetime.datetime.utcnow().isoformat()
+    # LASTGEN: not using colorama
+    # return Style.RESET_ALL + f"Yark – {date}"
+
+    # LASTGEN: new
+    return f"Yark – {date}"

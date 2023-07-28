@@ -1,0 +1,11 @@
+[package]
+name = "lastgen"
+description = "Stripped and portable previous generation core/downloader/migrator logic for Yark"
+version = "0.1.0"
+authors = ["Owen Griffiths <root@ogriffiths.com>"]
+readme = "README.md"
+repository = "https://github.com/owez/yark"
+edition = "2021"
+
+[dependencies]
+pyo3 = { version = "0.19", features = ["auto-initialize"] }

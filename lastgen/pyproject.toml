@@ -1,15 +1,12 @@
 [tool.poetry]
 name = "lastgen"
-version = "1.2.8"
-description = "YouTube archiving made simple."
+description = "Stripped and portable previous generation core/downloader/migrator logic for Yark"
+version = "0.1.0"
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 readme = "README.md"
 repository = "https://github.com/owez/yark"
 classifiers = [
     "Private :: Do not Upload",
-    "Topic :: System :: Archiving",
-    "Topic :: System :: Archiving :: Backup",
-    "Topic :: Multimedia :: Video",
 ]
 
 [tool.poetry.dependencies]

@@ -1,6 +1,6 @@
 # Yark Archive
 
-Archiving core & utilities for the Yark archive format
+Archiving core for the Yark archive format
 
 ## What is it?
 
