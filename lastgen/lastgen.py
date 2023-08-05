@@ -65,7 +65,7 @@ def _err_msg(msg: str, report_msg: bool = False):
 # ARCHIVE LOGIC
 #
 
-from datetime import datetime
+import datetime
 import json
 from pathlib import Path
 import time
@@ -608,7 +608,7 @@ class Channel:
         # Open original archive to copy
         with open(self.path / "yark.json", "r") as file_archive:
             # Add comment information to backup file
-            save = f"// Backup of a Yark archive, dated {datetime.utcnow().isoformat()}\n// Remove these comments and rename to 'yark.json' to restore\n{file_archive.read()}"
+            save = f"// Backup of a Yark archive, dated {datetime.datetime.utcnow().isoformat()}\n// Remove these comments and rename to 'yark.json' to restore\n{file_archive.read()}"
 
             # Save new information into a new backup
             with open(self.path / "yark.bak", "w+") as file_backup:
@@ -830,7 +830,7 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
 # VIDEO LOGIC
 #
 
-from datetime import datetime
+import datetime
 from pathlib import Path
 from uuid import uuid4
 import requests
@@ -841,7 +841,7 @@ from typing import TYPE_CHECKING, Any, Optional
 class Video:
     channel: "Channel"
     id: str
-    uploaded: datetime
+    uploaded: datetime.datetime
     width: int
     height: int
     title: "Element"
@@ -937,7 +937,7 @@ class Video:
         video = Video()
         video.channel = channel
         video.id = encoded["id"]
-        video.uploaded = datetime.fromisoformat(encoded["uploaded"])
+        video.uploaded = datetime.datetime.fromisoformat(encoded["uploaded"])
         video.width = encoded["width"]
         video.height = encoded["height"]
         video.title = Element._from_dict(encoded["title"], video)
@@ -992,12 +992,12 @@ class Video:
         return self.uploaded < other.uploaded
 
 
-def _decode_date_yt(input: str) -> datetime:
+def _decode_date_yt(input: str) -> datetime.datetime:
     """Decodes date from YouTube like `20180915` for example"""
-    return datetime.strptime(input, "%Y%m%d")
+    return datetime.datetime.strptime(input, "%Y%m%d")
 
 
-def _encode_date_human(input: datetime) -> str:
+def _encode_date_human(input: datetime.datetime) -> str:
     """Encodes an `input` date into a standardized human-readable format"""
     return input.strftime("%d %b %Y")
 
@@ -1021,14 +1021,14 @@ def _magnitude(count: Optional[int] = None) -> str:
 
 class Element:
     video: Video
-    inner: dict[datetime, Any]
+    inner: dict[datetime.datetime, Any]
 
     @staticmethod
     def new(video: Video, data):
         """Creates new element attached to a video with some initial data"""
         element = Element()
         element.video = video
-        element.inner = {datetime.utcnow(): data}
+        element.inner = {datetime.datetime.utcnow(): data}
         return element
 
     def update(self, kind: Optional[str], data):
@@ -1038,7 +1038,7 @@ class Element:
         current = self.current()
         if (not has_id and current != data) or (has_id and data.id != current.id):
             # Update
-            self.inner[datetime.utcnow()] = data
+            self.inner[datetime.datetime.utcnow()] = data
 
             # Report if wanted
             if kind is not None:
@@ -1065,7 +1065,7 @@ class Element:
 
         # Inner elements
         for key in encoded:
-            date = datetime.fromisoformat(key)
+            date = datetime.datetime.fromisoformat(key)
             element.inner[date] = encoded[key]
 
         # Return
