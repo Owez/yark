@@ -10,8 +10,29 @@ from .channel import Channel, DownloadConfig
 from .viewer import viewer
 import datetime
 
-HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
-"""User-facing help message provided from the cli"""
+HELP = """
+yark [options]
+
+  YouTube archiving made simple.
+
+Options:
+  new [name] [url]         Creates new archive with name and channel url
+  refresh [name] [args?]   Refreshes/downloads archive with optional args
+                           --videos=N # download the N latest videos
+                           --livestreams=N # download the N latest livestreams
+                           --shorts=N # download the N latest shorts
+                           --skip-metadata
+                           --skip-download
+                           --format # Custom yt-dlp format
+  view [name?]             Launches offline archive viewer website
+  report [name]            Provides a report on the most interesting changes
+
+
+Example:
+  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
+  $ yark refresh owez
+  $ yark view owez
+"""
 
 
 def _cli():
@@ -183,7 +204,7 @@ def _cli():
 
 def _err_archive_not_found():
     """Errors out the user if the archive doesn't exist"""
-    _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
+    _err_msg("Archive doesn't exist, please make sure you typed its name correctly!")
     sys.exit(1)
 
 
