@@ -153,7 +153,7 @@ class Archive:
         entries: list[dict[str, Any]],
         videos: Videos,
     ) -> None:
-        """Parses metadata for a category of video into it's `videos` bucket"""
+        """Parses metadata for a category of video into its `videos` bucket"""
         logging.debug(f"Parsing through {kind} for {self}")
 
         # Parse each video
@@ -294,7 +294,7 @@ class Archive:
         """Curate videos which aren't downloaded and return their urls"""
 
         def curate_list(videos: Videos, maximum: Optional[int]) -> list[Video]:
-            """Curates the videos inside of the provided `videos` list to it's local maximum"""
+            """Curates the videos inside of the provided `videos` list to its local maximum"""
             # Make a list for the videos
             found_videos = []
 
@@ -508,7 +508,7 @@ def _download_error(
 
         # Target not found, might need to retry with alternative route
         elif ERRORS[4] in exception.msg:
-            msg = "Couldn't find target by it's id"
+            msg = "Couldn't find target by its id"
 
         # Random timeout; not sure if its user-end or youtube-end
         elif ERRORS[5] in exception.msg:

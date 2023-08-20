@@ -176,13 +176,13 @@ def video(name, kind, id):
 
 @routes.route("/archive/<name>/video/<file>")
 def archive_video(name, file):
-    """Serves video file using it's filename (id + ext)"""
+    """Serves video file using its filename (id + ext)"""
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
 @routes.route("/archive/<name>/thumbnail/<id>")
 def archive_thumbnail(name, id):
-    """Serves thumbnail file using it's id"""
+    """Serves thumbnail file using its id"""
     return send_from_directory(os.getcwd(), f"{name}/thumbnails/{id}.webp")
 
 

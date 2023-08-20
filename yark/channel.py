@@ -219,7 +219,7 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
-            "concurrent_fragment_downloads": 8
+            "concurrent_fragment_downloads": 8,
         }
 
         # Get response and snip it
@@ -381,7 +381,7 @@ class Channel:
         """Curate videos which aren't downloaded and return their urls"""
 
         def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
-            """Curates the videos inside of the provided `videos` list to it's local maximum"""
+            """Curates the videos inside of the provided `videos` list to its local maximum"""
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
                 # Fix the maximum to the length so we don't try to get more than there is
@@ -428,7 +428,7 @@ class Channel:
             json.dump(self._to_dict(), file)
 
     def _parse_metadata_videos(self, kind: str, i: list, bucket: list):
-        """Parses metadata for a category of video into it's bucket and tells user what's happening"""
+        """Parses metadata for a category of video into its bucket and tells user what's happening"""
 
         # Print at the start without loading indicator so theres always a print
         msg = f"Parsing {kind} metadata.."
@@ -681,7 +681,7 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
 
         # Channel not found, might need to retry with alternative route
         elif ERRORS[4] in exception.msg:
-            msg = "Couldn't find channel by it's id"
+            msg = "Couldn't find channel by its id"
 
         # Random timeout; not sure if its user-end or youtube-end
         elif ERRORS[5] in exception.msg:

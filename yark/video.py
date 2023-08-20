@@ -1,4 +1,4 @@
-"""Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
+"""Single video inside of a channel, allowing reporting and addition/updates to its status using timestamps"""
 
 from __future__ import annotations
 from datetime import datetime
@@ -229,7 +229,7 @@ class Element:
         return self.inner[list(self.inner.keys())[-1]]
 
     def changed(self) -> bool:
-        """Checks if the value has ever been modified from it's original state"""
+        """Checks if the value has ever been modified from its original state"""
         return len(self.inner) > 1
 
     @staticmethod
@@ -276,7 +276,7 @@ class Thumbnail:
         thumbnail = Thumbnail()
         thumbnail.video = video
 
-        # Get image and calculate it's hash
+        # Get image and calculate its hash
         image = requests.get(url).content
         thumbnail.id = hashlib.blake2b(
             image, digest_size=20, usedforsecurity=False
