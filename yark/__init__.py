@@ -22,7 +22,7 @@ Commonly-used
 Beware that using Yark as a library is currently experimental and breaking changes here are not tracked!
 """
 
-from .channel import Channel, DownloadConfig
+from .channel import Channel, DownloadConfig, MetadataConfig, SubtitleConfig
 from .video import Video, Element, Note, Thumbnail
 from .viewer import viewer
 from .errors import (
