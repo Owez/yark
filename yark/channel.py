@@ -16,6 +16,8 @@ import time
 from progress.spinner import PieSpinner
 from concurrent.futures import ThreadPoolExecutor
 import time
+import locale
+from enum import Enum
 
 ARCHIVE_COMPAT = 3
 """
@@ -34,6 +36,70 @@ having way more complexity in the archiver decoding system itself.
 """
 
 from typing import Optional
+
+
+class SubtitleConfig(Enum):
+    NoSubtitles = 1
+    LocaleSubtitles = 2
+    AllSubtitles = 4
+
+    @staticmethod
+    def new_none() -> SubtitleConfig:
+        return SubtitleConfig.NoSubtitles
+
+    @staticmethod
+    def default() -> SubtitleConfig:
+        subtitles = SubtitleConfig.LocaleSubtitles
+        try:
+            country_code, _ = locale.getlocale()
+            subtitles.locales = [country_code]
+        except:
+            # TODO: warn about no country code, default to eng
+            subtitles.locales = ["en"]
+        return subtitles
+
+    @staticmethod
+    def new_custom(locales: list[str]) -> SubtitleConfig:
+        subtitles = SubtitleConfig.LocaleSubtitles
+        subtitles.locales = locales
+        return subtitles
+
+    @staticmethod
+    def new_all() -> SubtitleConfig:
+        return SubtitleConfig.AllSubtitles
+
+
+class MetadataConfig:
+    subtitles: SubtitleConfig
+
+    def __init__(self, subtitles: SubtitleConfig) -> None:
+        self.subtitles = subtitles
+
+    @staticmethod
+    def default() -> MetadataConfig:
+        return MetadataConfig(SubtitleConfig.default())
+
+    def generate(self) -> dict:
+        # Generate global base settings
+        settings = {
+            # Centralized logging system; makes output fully quiet
+            "logger": VideoLogger(),
+            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
+            "ignore_no_formats_error": True,
+            # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
+            "concurrent_fragment_downloads": 8,
+        }
+
+        # Figure out subtitle config
+        if self.subtitles != SubtitleConfig.NoSubtitles:
+            settings["writesubtitles"] = True
+        if self.subtitles == SubtitleConfig.AllSubtitles:
+            settings["allsubtitles"] = True
+        elif self.subtitles == SubtitleConfig.LocaleSubtitles:
+            settings["subtitlelangs"] = self.subtitles.locales
+
+        # Return generated settings
+        return settings
 
 
 class DownloadConfig:
@@ -97,7 +163,7 @@ class VideoLogger:
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}        " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}                " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -172,7 +238,7 @@ class Channel:
         # Decode and return
         return Channel._from_dict(encoded, path)
 
-    def metadata(self):
+    def metadata(self, config: MetadataConfig):
         """Queries YouTube for all channel metadata to refresh known videos"""
         # Print loading progress at the start without loading indicator so theres always a print
         msg = "Downloading metadata.."
@@ -181,7 +247,7 @@ class Channel:
         # Download metadata and give the user a spinner bar
         with ThreadPoolExecutor() as ex:
             # Make future for downloading metadata
-            future = ex.submit(self._download_metadata)
+            future = ex.submit(self._download_metadata, config)
 
             # Start spinning
             with PieSpinner(f"{msg} ") as bar:
@@ -201,8 +267,9 @@ class Channel:
             res = future.result()
 
         # Uncomment for saving big dumps for testing
-        # with open(self.path / "dump.json", "w+") as file:
-        #     json.dump(res, file)
+        # GAY
+        with open(self.path / "dump.json", "w+") as file:
+            json.dump(res, file)
 
         # Uncomment for loading big dumps for testing
         # res = json.load(open(self.path / "dump.json", "r"))
@@ -210,20 +277,11 @@ class Channel:
         # Parse downloaded metadata
         self._parse_metadata(res)
 
-    def _download_metadata(self) -> dict[str, Any]:
+    def _download_metadata(self, config: MetadataConfig) -> dict[str, Any]:
         """Downloads metadata dict and returns for further parsing"""
-        # Construct downloader
-        settings = {
-            # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(),
-            # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
-            "ignore_no_formats_error": True,
-            # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
-            "concurrent_fragment_downloads": 8
-        }
 
         # Get response and snip it
-        with YoutubeDL(settings) as ydl:
+        with YoutubeDL(config.generate()) as ydl:
             for i in range(3):
                 try:
                     res: dict[str, Any] = ydl.extract_info(self.url, download=False)

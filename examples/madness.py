@@ -1,4 +1,4 @@
-from yark import Channel, DownloadConfig
+from yark import Channel, DownloadConfig, MetadataConfig
 from pathlib import Path
 
 # Create a new channel
@@ -7,7 +7,7 @@ channel = Channel.new(
 )
 
 # Refresh only metadata and commit to file
-channel.metadata()
+channel.metadata(MetadataConfig.default())
 channel.commit()
 
 # Load the channel back up from file for the fun of it

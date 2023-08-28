@@ -122,6 +122,7 @@ def _cli():
             if config.skip_metadata:
                 print("Skipping metadata download..")
             else:
+                # TODO: metadata config
                 channel.metadata()
             if config.skip_download:
                 print("Skipping videos/livestreams/shorts download..")
