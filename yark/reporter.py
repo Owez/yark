@@ -69,7 +69,7 @@ class Reporter:
 
         def fmt_video(kind: str, video: Video) -> str:
             """Formats a video if it's interesting, otherwise returns an empty string"""
-            # Skip formatting because it's got nothing of note
+            # Skip formatting because its got nothing of note
             if (
                 not video.title.changed()
                 and not video.description.changed()

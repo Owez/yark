@@ -16,7 +16,7 @@ channel = Channel.load(Path("demo"))
 # Print all the video id's of the channel
 print(", ".join([video.id for video in channel.videos]))
 
-# Get a cool video I made and print it's description
+# Get a cool video I made and print it description
 video = channel.search("annp92OPZgQ")
 print(video.description.current())
 

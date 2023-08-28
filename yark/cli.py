@@ -184,7 +184,7 @@ def _cli():
 
 def _err_archive_not_found():
     """Errors out the user if the archive doesn't exist"""
-    _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
+    _err_msg("Archive doesn't exist, please make sure you typed its name correctly!")
     sys.exit(1)
 
 
@@ -210,7 +210,7 @@ def _upgrade_messaging() -> None:
         + Style.NORMAL
     )
 
-    # Give a warning if it's been over a year since release
+    # Give a warning if its been over a year since release
     if datetime.datetime.utcnow().year >= 2024:
         print(
             Fore.YELLOW
