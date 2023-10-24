@@ -8,7 +8,6 @@ import webbrowser
 from .errors import _err_msg, ArchiveNotFoundException
 from .channel import Channel, DownloadConfig
 from .viewer import viewer
-import datetime
 
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 """User-facing help message provided from the cli"""
@@ -29,7 +28,11 @@ def _cli():
     # Help
     if args[0] in ["help", "--help", "-h"]:
         print(HELP)
-        sys.exit(0)
+
+    # Version
+    # TODO: automatically track this
+    elif args[0] in ["-v", "-ver", "--version", "--v"]:
+        print("1.2.9")
 
     # Create new
     elif args[0] == "new":
@@ -194,26 +197,27 @@ def _err_no_help():
     sys.exit(0)
 
 
-def _upgrade_messaging() -> None:
-    """
-    Give users some info on the new Yark 1.3 version because because PyPI releases aren't supported
+# NOTE: not used, not sure why this is included. might be useful for the future
+# def _upgrade_messaging() -> None:
+#     """
+#     Give users some info on the new Yark 1.3 version because because PyPI releases aren't supported
 
-    This wouldn't happen normally but users might be confused seeing as we're switching distribution methods.
-    """
-    # Major update message for 1.3
-    print(
-        Style.BRIGHT
-        + "Yark 1.3 is out now! Go to https://github.com/Owez/yark to download"
-        + Style.DIM
-        + " (pip is no longer supported)"
-        + Style.NORMAL
-    )
+#     This wouldn't happen normally but users might be confused seeing as we're switching distribution methods.
+#     """
+#     # Major update message for 1.3
+#     print(
+#         Style.BRIGHT
+#         + "Yark 1.3 is out now! Go to https://github.com/Owez/yark to download"
+#         + Style.DIM
+#         + " (pip is no longer supported)"
+#         + Style.NORMAL
+#     )
 
-    # Give a warning if it's been over a year since release
-    if datetime.datetime.utcnow().year >= 2024:
-        print(
-            Fore.YELLOW
-            + "You're currently on an outdated version of Yark"
-            + Fore.RESET,
-            file=sys.stderr,
-        )
+#     # Give a warning if it's been over a year since release
+#     if datetime.datetime.utcnow().year >= 2024:
+#         print(
+#             Fore.YELLOW
+#             + "You're currently on an outdated version of Yark"
+#             + Fore.RESET,
+#             file=sys.stderr,
+#         )
