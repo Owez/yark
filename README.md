@@ -2,12 +2,11 @@
 
 YouTube archiving made simple.
 
-<!-- TODO: comment out when rewrite happens -->
-<a href="https://github.com/Owez/yark/tree/v1.3-rewrite"><img src="./examples/images/rewrite.png" alt="Yark is being rewritten on the v1.3-rewrite branch!" width=400 /></a>
+<!-- NOTE: rewrite delayed for now, ah well -->
+<!-- <a href="https://github.com/Owez/yark/tree/v1.3-rewrite"><img src="./examples/images/rewrite.png" alt="Yark is being rewritten on the v1.3-rewrite branch!" width=400 /></a> -->
 
-<!-- TODO: uncomment when new gui is out -->
+<!-- NOTE: uncomment when new gui is out -->
 <!-- If you're reading this, you're probably trying to download/use Yark via PyPI which has been removed in newer versions. You can download a modern version of Yark [here](https://github.com/Owez/yark).
-
 <p><img src="https://raw.githubusercontent.com/Owez/yark/1.2-support/examples/images/transition.png" alt="Version release transition" title="Version release transition" width="450" /></p> -->
 
 ## Installation
@@ -72,6 +71,6 @@ The archive format itself is simple and consists of a directory-based structure 
   - `videos/` – Directory containing all known videos
     - `[id].*` – Files containing video data for YouTube videos
   - `thumbnails/` – Directory containing all known thumbnails
-    - `[hash].png` – Files containing thumbnails with its BLAKE2 hash
+    - `[hash].png` – Files containing thumbnails with its hash
 
 It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.

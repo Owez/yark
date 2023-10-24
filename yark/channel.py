@@ -90,14 +90,16 @@ class VideoLogger:
             percent = d["_percent_str"].strip()
             print(
                 Style.DIM
-                + f"  • Downloading {id}, at {percent}..                "
+                + f"  • Downloading {id}, at {percent}"
+                + Style.DIM
+                + "..                "
                 + Style.NORMAL,
                 end="\r",
             )
 
         # Finished a video's download
         elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}        " + Style.NORMAL)
+            print(Style.DIM + f"  • Downloaded {id}                " + Style.NORMAL)
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -219,7 +221,7 @@ class Channel:
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
-            "concurrent_fragment_downloads": 8
+            "concurrent_fragment_downloads": 8,
         }
 
         # Get response and snip it
