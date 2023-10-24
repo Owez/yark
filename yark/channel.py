@@ -698,5 +698,5 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     if retrying:
         time.sleep(5)
     else:
-        _err_msg("  • Sorry, failed to download {name}", True)
+        _err_msg(f"  • Sorry, failed to download {name}", True)
         sys.exit(1)
