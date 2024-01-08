@@ -60,6 +60,7 @@ Here are some things to keep in mind when using Yark; the good and the bad:
 - Don't create a new archive again if you just want to update it, Yark accumulates all new metadata for you via timestamps
 - Feel free to suggest new features via the issues tab on this repository
 - Scheduling isn't a feature just yet, please use [`cron`](https://en.wikipedia.org/wiki/Cron) or something similar!
+- Archives are always additive. If a video is deleted or marked as private on the YouTube side, Yark will **retain** the video and mark it with the `deleted` tag. Therefore, the videos will remain in your local archive.
 
 ## Archive Format
 
