@@ -137,15 +137,44 @@ def _cli():
 
     # View
     elif args[0] == "view":
+        # More help
+        if len(args) == 2 and args[1] == "--help":
+            print(
+                f"yark view [name] [args?]\n\n  Launches offline archive viewer website.\n\nArguments:\n  --host [str] Custom uri to act as host from\n  --port [int] Custom port number instead of 7667\n\n Example:\n  $ yark view foobar\n  $ yark view foobar --port=80\n  $ yark view foobar --port=1234 --host=0.0.0.0"
+            )
+            sys.exit(0)
+
+        # Basis for custom host/port configs
+        host = None
+        port = 7667
+
+        # Go through each configuration argument
+        for config_arg in args[2:]:
+            # Host configuration
+            if config_arg.startswith("--host="):
+                host = config_arg[7:]
+
+            # Port configuration
+            elif config_arg.startswith("--port="):
+                if config_arg[7:].strip() == "":
+                    print(
+                        f"No port number provided for port argument",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+                try:
+                    port = int(config_arg[7:])
+                except:
+                    print(
+                        f"Invalid port number '{config_arg[7:]}' provided",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
 
         def launch():
             """Launches viewer"""
             app = viewer()
-            threading.Thread(target=lambda: app.run(port=7667)).run()
-
-        # More help
-        if len(args) == 2 and args[1] == "--help":
-            _err_no_help()
+            threading.Thread(target=lambda: app.run(host=host, port=port)).run()
 
         # Start on channel name
         if len(args) > 1:
