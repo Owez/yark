@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from .channel import Channel
 
+PORT = 7667
+
 
 class Reporter:
     channel: "Channel"
@@ -102,7 +104,7 @@ class Reporter:
 
             # Truncate title, get viewer link, and format all together with viewer link
             title = _truncate_text(video.title.current(), 51).strip()
-            url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
+            url = f"http://127.0.0.1:{PORT}/channel/{video.channel}/{kind}/{video.id}"
             return (
                 f"  • {title}\n    {changes}\n    "
                 + Style.DIM

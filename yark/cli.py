@@ -9,6 +9,8 @@ from .errors import _err_msg, ArchiveNotFoundException
 from .channel import Channel, DownloadConfig
 from .viewer import viewer
 
+PORT = 7667
+
 HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
 """User-facing help message provided from the cli"""
 
@@ -141,7 +143,7 @@ def _cli():
         def launch():
             """Launches viewer"""
             app = viewer()
-            threading.Thread(target=lambda: app.run(port=7667)).run()
+            threading.Thread(target=lambda: app.run(port=PORT)).run()
 
         # More help
         if len(args) == 2 and args[1] == "--help":
@@ -157,14 +159,14 @@ def _cli():
                 _err_archive_not_found()
 
             # Launch and start browser
-            print(f"Starting viewer for {channel}..")
-            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}/videos")
+            print(f"Starting viewer for {channel} on port {PORT}")
+            webbrowser.open(f"http://127.0.0.1:{PORT}/channel/{channel}/videos")
             launch()
 
         # Start on channel finder
         else:
-            print("Starting viewer..")
-            webbrowser.open(f"http://127.0.0.1:7667/")
+            print(f"Starting viewer on port {PORT}")
+            webbrowser.open(f"http://127.0.0.1:{PORT}/")
             launch()
 
     # Report
