@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yark"
-version = "1.2.11"
+version = "1.2.12"
 description = "YouTube archiving made simple."
 authors = ["Owen Griffiths <root@ogriffiths.com>"]
 license = "MIT"
