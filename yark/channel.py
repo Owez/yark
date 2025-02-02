@@ -222,14 +222,17 @@ class Channel:
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
             "concurrent_fragment_downloads": 15,
+            # First download "flat", then extract_info for each video, to support large channels/playlists (#71 <https://github.com/Owez/yark/issues/71>)
+            "extract_flat":True
         }
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
+            # first extract the "flat" metadata, which does not download the metadata for all the videos
             for i in range(3):
                 try:
                     res: dict[str, Any] = ydl.extract_info(self.url, download=False)
-                    return res
+                    break
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
@@ -242,6 +245,62 @@ class Channel:
                             + f"  • Retrying metadata download.."
                             + Style.RESET_ALL
                         )  # TODO: compat with loading bar
+
+            # go through the "flat" metadata and download the metadata for each video
+            for index in range(len(res["entries"])):
+                if res["entries"][index]["_type"] == "playlist":
+                    playlist = res["entries"][index]
+                    for list_index in range(len(playlist["entries"])):
+                        url = playlist["entries"][list_index]["url"]
+                        for i in range(3):
+                            try:
+                                entry = ydl.extract_info(url, download=False)
+                                if len(entry["formats"]) == 0:
+                                    ydl = YoutubeDL(settings)
+                                    entry = ydl.extract_info(url, download=False)
+
+                                playlist["entries"][list_index] = entry
+                                break
+                            except Exception as exception:
+                                # Report error
+                                retrying = i != 2
+                                _err_dl("metadata", exception, retrying)
+
+                                # Print retrying message
+                                if retrying:
+                                    print(
+                                        Style.DIM
+                                        + f"  • Retrying metadata download.."
+                                        + Style.RESET_ALL
+                                    )  # TODO: compat with loading bar
+
+
+                elif res["entries"][index]["_type"] == "url":
+                    url = res["entries"][index]["url"] 
+                    for i in range(3):
+                        try:
+                            entry = ydl.extract_info(url, download=False)
+                            # if video didn't download formats, open a new downloader and try again
+                            if len(entry["formats"]) == 0:
+                                ydl = YoutubeDL(settings)
+                                entry = ydl.extract_info(url, download=False)
+
+                            res["entries"][index] = entry
+                            break
+                        except Exception as exception:
+                            # Report error
+                            retrying = i != 2
+                            _err_dl("metadata", exception, retrying)
+
+                            # Print retrying message
+                            if retrying:
+                                print(
+                                    Style.DIM
+                                    + f"  • Retrying metadata download.."
+                                    + Style.RESET_ALL
+                                )  # TODO: compat with loading bar
+
+            return res
 
     def _parse_metadata(self, res: dict[str, Any]):
         """Parses entirety of downloaded metadata"""
