@@ -58,9 +58,7 @@ def _validate_and_normalize_url(url: str) -> str:
     """
     # Normalize URL by adding https:// if missing
     normalized_url = url.strip()
-    if not normalized_url.startswith("http://") and not normalized_url.startswith(
-        "https://"
-    ):
+    if not normalized_url.startswith(("http://", "https://")):
         normalized_url = "https://" + normalized_url
 
     # Check if it's a YouTube URL
