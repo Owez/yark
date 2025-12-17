@@ -5,7 +5,7 @@ from colorama import Style, Fore
 import sys
 import threading
 import webbrowser
-from .errors import _err_msg, ArchiveNotFoundException
+from .errors import _err_msg, ArchiveNotFoundException, InvalidURLException
 from .channel import Channel, DownloadConfig
 from .viewer import viewer
 
@@ -46,7 +46,11 @@ def _cli():
             sys.exit(1)
 
         # Create channel
-        Channel.new(Path(args[1]), args[2])
+        try:
+            Channel.new(Path(args[1]), args[2])
+        except InvalidURLException as e:
+            _err_msg(str(e))
+            sys.exit(1)
 
     # Refresh
     elif args[0] == "refresh":

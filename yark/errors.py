@@ -32,6 +32,13 @@ class TimestampException(Exception):
         super().__init__(*args)
 
 
+class InvalidURLException(Exception):
+    """Invalid URL provided for channel"""
+
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 def _err_msg(msg: str, report_msg: bool = False):
     """Provides a red-coloured error message to the user in the STDERR pipe"""
     msg = (

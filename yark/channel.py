@@ -9,7 +9,7 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
+from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException, InvalidURLException
 from .video import Video, Element
 from typing import Any
 import time
@@ -34,6 +34,58 @@ having way more complexity in the archiver decoding system itself.
 """
 
 from typing import Optional
+
+
+def _validate_and_normalize_url(url: str) -> str:
+    """
+    Validates and normalizes a YouTube URL.
+    
+    Accepts:
+    - Channel URLs: youtube.com/channel/..., youtube.com/@..., youtube.com/c/...
+    - With or without http:// or https://
+    
+    Rejects:
+    - Video URLs: youtube.com/watch?v=...
+    - Non-YouTube URLs
+    
+    Returns normalized URL with https:// prefix.
+    Raises InvalidURLException if URL is invalid.
+    """
+    # Normalize URL by adding https:// if missing
+    normalized_url = url.strip()
+    if not normalized_url.startswith("http://") and not normalized_url.startswith("https://"):
+        normalized_url = "https://" + normalized_url
+    
+    # Check if it's a YouTube URL
+    if "youtube.com" not in normalized_url and "youtu.be" not in normalized_url:
+        raise InvalidURLException(
+            "The provided URL doesn't appear to be a YouTube URL. "
+            "Please provide a valid YouTube channel URL."
+        )
+    
+    # Check if it's a video URL (watch?v=)
+    if "/watch?" in normalized_url or "youtu.be/" in normalized_url:
+        raise InvalidURLException(
+            "The provided URL appears to be a YouTube video URL. "
+            "Yark only supports YouTube channel URLs, not individual video URLs.\n"
+            "Please provide a channel URL like:\n"
+            "  • https://www.youtube.com/channel/CHANNEL_ID\n"
+            "  • https://www.youtube.com/@USERNAME\n"
+            "  • https://www.youtube.com/c/CHANNELNAME"
+        )
+    
+    # Check if it's a valid channel URL format
+    valid_channel_patterns = ["/channel/", "/@", "/c/", "/user/"]
+    if not any(pattern in normalized_url for pattern in valid_channel_patterns):
+        raise InvalidURLException(
+            "The provided URL doesn't appear to be a valid YouTube channel URL.\n"
+            "Please provide a channel URL like:\n"
+            "  • https://www.youtube.com/channel/CHANNEL_ID\n"
+            "  • https://www.youtube.com/@USERNAME\n"
+            "  • https://www.youtube.com/c/CHANNELNAME"
+        )
+    
+    return normalized_url
 
 
 class DownloadConfig:
@@ -130,6 +182,9 @@ class Channel:
     @staticmethod
     def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
+        # Validate and normalize URL
+        url = _validate_and_normalize_url(url)
+        
         # Details
         print("Creating new channel..")
         channel = Channel()
