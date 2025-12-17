@@ -43,6 +43,7 @@ class DownloadConfig:
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
+    query: Optional[str]
 
     def __init__(self) -> None:
         self.max_videos = None
@@ -51,6 +52,7 @@ class DownloadConfig:
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
+        self.query = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
@@ -362,6 +364,8 @@ class Channel:
 
                     # Stop if there's nothing to download
                     if len(not_downloaded) == 0:
+                        if i == 0 and config.query is not None:
+                            print(f"No videos matching query '{config.query}' found to download")
                         break
 
                     # Print curated if this is the first time
@@ -371,7 +375,8 @@ class Channel:
                             if len(not_downloaded) == 1
                             else f"{len(not_downloaded)} new videos"
                         )
-                        print(f"Downloading {fmt_num}..")
+                        query_msg = f" matching query '{config.query}'" if config.query is not None else ""
+                        print(f"Downloading {fmt_num}{query_msg}..")
 
                     # Continuously try to download after private/deleted videos are found
                     # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -443,6 +448,18 @@ class Channel:
 
         def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
             """Curates the videos inside of the provided `videos` list to it's local maximum"""
+            # Filter by query if present
+            if config.query is not None:
+                query_lower = config.query.lower()
+                filtered_videos = []
+                for video in videos:
+                    # Check if query matches title or description
+                    title = video.title.current().lower() if video.title.current() else ""
+                    description = video.description.current().lower() if video.description.current() else ""
+                    if query_lower in title or query_lower in description:
+                        filtered_videos.append(video)
+                videos = filtered_videos
+
             # Cut available videos to maximum if present for deterministic getting
             if maximum is not None:
                 # Fix the maximum to the length so we don't try to get more than there is

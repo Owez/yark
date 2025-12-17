@@ -54,7 +54,7 @@ def _cli():
         if len(args) == 2 and args[1] == "--help":
             # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
             print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
+                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n  --query=[str]         Filters downloads to only videos matching the search query\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download\n  $ yark refresh demo --query=transformers"
             )
             sys.exit(0)
 
@@ -107,6 +107,10 @@ def _cli():
                 # Custom yt-dlp format
                 elif config_arg.startswith("--format="):
                     config.format = parse_value(config_arg)
+
+                # Query filter
+                elif config_arg.startswith("--query="):
+                    config.query = parse_value(config_arg)
 
                 # Unknown argument
                 else:
