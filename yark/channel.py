@@ -9,7 +9,12 @@ from yt_dlp import YoutubeDL, DownloadError  # type: ignore
 from colorama import Style, Fore
 import sys
 from .reporter import Reporter
-from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException, InvalidURLException
+from .errors import (
+    ArchiveNotFoundException,
+    _err_msg,
+    VideoNotFoundException,
+    InvalidURLException,
+)
 from .video import Video, Element
 from typing import Any
 import time
@@ -39,30 +44,32 @@ from typing import Optional
 def _validate_and_normalize_url(url: str) -> str:
     """
     Validates and normalizes a YouTube URL.
-    
+
     Accepts:
     - Channel URLs: youtube.com/channel/..., youtube.com/@..., youtube.com/c/...
     - With or without http:// or https://
-    
+
     Rejects:
     - Video URLs: youtube.com/watch?v=...
     - Non-YouTube URLs
-    
+
     Returns normalized URL with https:// prefix.
     Raises InvalidURLException if URL is invalid.
     """
     # Normalize URL by adding https:// if missing
     normalized_url = url.strip()
-    if not normalized_url.startswith("http://") and not normalized_url.startswith("https://"):
+    if not normalized_url.startswith("http://") and not normalized_url.startswith(
+        "https://"
+    ):
         normalized_url = "https://" + normalized_url
-    
+
     # Check if it's a YouTube URL
     if "youtube.com" not in normalized_url and "youtu.be" not in normalized_url:
         raise InvalidURLException(
             "The provided URL doesn't appear to be a YouTube URL. "
             "Please provide a valid YouTube channel URL."
         )
-    
+
     # Check if it's a video URL (watch?v=)
     if "/watch?" in normalized_url or "youtu.be/" in normalized_url:
         raise InvalidURLException(
@@ -73,7 +80,7 @@ def _validate_and_normalize_url(url: str) -> str:
             "  • https://www.youtube.com/@USERNAME\n"
             "  • https://www.youtube.com/c/CHANNELNAME"
         )
-    
+
     # Check if it's a valid channel URL format
     valid_channel_patterns = ["/channel/", "/@", "/c/", "/user/"]
     if not any(pattern in normalized_url for pattern in valid_channel_patterns):
@@ -84,7 +91,7 @@ def _validate_and_normalize_url(url: str) -> str:
             "  • https://www.youtube.com/@USERNAME\n"
             "  • https://www.youtube.com/c/CHANNELNAME"
         )
-    
+
     return normalized_url
 
 
@@ -184,7 +191,7 @@ class Channel:
         """Creates a new channel"""
         # Validate and normalize URL
         url = _validate_and_normalize_url(url)
-        
+
         # Details
         print("Creating new channel..")
         channel = Channel()
@@ -278,7 +285,7 @@ class Channel:
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
             "concurrent_fragment_downloads": 8,
             # First download "flat", then extract_info for each video, to support large channels/playlists (#71 <https://github.com/Owez/yark/issues/71>)
-            "extract_flat":True
+            "extract_flat": True,
         }
 
         # Get response and snip it
@@ -329,9 +336,8 @@ class Channel:
                                         + Style.RESET_ALL
                                     )  # TODO: compat with loading bar
 
-
                 elif res["entries"][index]["_type"] == "url":
-                    url = res["entries"][index]["url"] 
+                    url = res["entries"][index]["url"]
                     for i in range(3):
                         try:
                             entry = ydl.extract_info(url, download=False)
