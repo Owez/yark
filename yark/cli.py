@@ -80,6 +80,9 @@ def _command_refresh(args: list[str]) -> None:
 
     try:
         channel = Channel.load(args[0])
+        channel.verbose = config.verbose
+        if config.verbose:
+            ui.info(f"Verbose mode enabled for archive '{args[0]}'")
         if config.skip_metadata:
             ui.warning("Skipping metadata download")
         else:
@@ -155,6 +158,8 @@ def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
                 config.skip_metadata = True
             elif config_arg == "--skip-download":
                 config.skip_download = True
+            elif config_arg == "--verbose":
+                config.verbose = True
             elif config_arg.startswith("--format="):
                 config.format = parse_value(config_arg)
             elif config_arg.startswith("--date-min="):
@@ -265,6 +270,7 @@ def _help_for_command(command: str) -> str:
             "  --livestreams=[max|filter:max]   Download livestream selection\n"
             "  --date-min=[YYYY-MM-DD]          Only download uploads on/after date\n"
             "  --date-max=[YYYY-MM-DD]          Only download uploads on/before date\n"
+                "  --verbose                         Print detailed refresh diagnostics\n"
             "  --skip-metadata       Skip metadata download\n"
             "  --skip-download       Skip media download\n"
             "  --format=[str]        Custom yt-dlp format\n\n"
@@ -275,7 +281,8 @@ def _help_for_command(command: str) -> str:
             "  --videos=5\n"
             "  --videos=recent:5\n"
             "  --videos=popular:10\n"
-            "  --date-min=2025-01-01 --date-max=2025-12-31"
+            "  --date-min=2025-01-01 --date-max=2025-12-31\n"
+                "  --verbose"
         ),
         "view": (
             "yark view [name] [args?]\n\n"

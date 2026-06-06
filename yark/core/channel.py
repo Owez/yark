@@ -41,6 +41,7 @@ class DownloadConfig:
     shorts: "DownloadSelection"
     uploaded_after: Optional[datetime]
     uploaded_before: Optional[datetime]
+    verbose: bool
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
@@ -51,6 +52,7 @@ class DownloadConfig:
         self.shorts = DownloadSelection()
         self.uploaded_after = None
         self.uploaded_before = None
+        self.verbose = False
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
@@ -106,6 +108,9 @@ class DownloadSelection:
 
 
 class VideoLogger:
+    def __init__(self, verbose: bool = False) -> None:
+        self.verbose = verbose
+
     @staticmethod
     def downloading(d):
         """Progress hook for video downloading"""
@@ -117,20 +122,24 @@ class VideoLogger:
             ui.success(f"Downloaded {id}")
 
     def debug(self, msg):
-        """Debug log messages, ignored"""
-        pass
+        """Debug log messages"""
+        if self.verbose:
+            ui.plain(f"[yt-dlp:debug] {msg}")
 
     def info(self, msg):
-        """Info log messages ignored"""
-        pass
+        """Info log messages"""
+        if self.verbose:
+            ui.plain(f"[yt-dlp:info] {msg}")
 
     def warning(self, msg):
-        """Warning log messages ignored"""
-        pass
+        """Warning log messages"""
+        if self.verbose:
+            ui.warning(f"[yt-dlp:warn] {msg}")
 
     def error(self, msg):
         """Error log messages"""
-        pass
+        if self.verbose:
+            ui.error(f"[yt-dlp:error] {msg}")
 
 
 class Channel:
@@ -141,6 +150,7 @@ class Channel:
     livestreams: list[Video]
     shorts: list[Video]
     reporter: Reporter
+    verbose: bool
 
     @staticmethod
     def new(path: Path, url: str) -> Channel:
@@ -154,6 +164,7 @@ class Channel:
         channel.videos = []
         channel.livestreams = []
         channel.shorts = []
+        channel.verbose = False
         channel.reporter = Reporter(channel)
 
         # Commit and return
@@ -191,8 +202,12 @@ class Channel:
 
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
+        self._verbose(f"Starting metadata fetch for {self.url}")
         with ui.status("Downloading metadata.."):
             res = self._download_metadata()
+        self._verbose(
+            f"Metadata root keys: {', '.join(sorted(res.keys()))}; top-level entries: {len(res.get('entries', []))}"
+        )
 
         # Uncomment for saving big dumps for testing
         # with open(self.path / "dump.json", "w+") as file:
@@ -209,11 +224,13 @@ class Channel:
         # Construct downloader
         settings = {
             # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(),
+            "logger": VideoLogger(self.verbose),
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
             "concurrent_fragment_downloads": 8,
+            # Let yt-dlp emit more details when requested by user.
+            "verbose": self.verbose,
         }
 
         # Get response and snip it
@@ -240,6 +257,9 @@ class Channel:
         if len(res["entries"]) > 0 and "entries" not in res["entries"][0]:
             # Videos only
             videos = res["entries"]
+            self._verbose(
+                f"Detected single bucket metadata; treating all {len(videos)} entries as videos"
+            )
         else:
             # Videos and at least one other (livestream/shorts)
             for entry in res["entries"]:
@@ -252,6 +272,10 @@ class Channel:
                     shorts = entry["entries"]
                 else:
                     ui.error(f"Unknown video kind '{kind}' found", True)
+            self._verbose(
+                "Detected bucketed metadata; "
+                f"videos={len(videos)}, livestreams={len(livestreams)}, shorts={len(shorts)}"
+            )
 
         # Parse metadata
         self._parse_metadata_videos("video", videos, self.videos)
@@ -265,6 +289,7 @@ class Channel:
 
     def download(self, config: DownloadConfig):
         """Downloads all videos which haven't already been downloaded"""
+        self._verbose("Starting download phase")
         # Clean out old part files
         self._clean_parts()
 
@@ -273,9 +298,11 @@ class Channel:
             # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             # Centralized logger hook for ignoring all stdout
-            "logger": VideoLogger(),
+            "logger": VideoLogger(self.verbose),
             # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
+            # Let yt-dlp emit more details when requested by user.
+            "verbose": self.verbose,
         }
         if config.format is not None:
             settings["format"] = config.format
@@ -288,6 +315,7 @@ class Channel:
                 try:
                     # Curate list of non-downloaded videos
                     not_downloaded = self._curate(config)
+                    self._verbose(f"Curated {len(not_downloaded)} videos for download")
 
                     # Stop if there's nothing to download
                     if len(not_downloaded) == 0:
@@ -308,6 +336,12 @@ class Channel:
                         # Download from curated list then exit the optimistic loop
                         try:
                             urls = [video.url() for video in not_downloaded]
+                            if self.verbose and len(urls) > 0:
+                                preview = ", ".join(video.id for video in not_downloaded[:5])
+                                suffix = "..." if len(not_downloaded) > 5 else ""
+                                self._verbose(
+                                    f"Downloading IDs: {preview}{suffix}"
+                                )
                             ydl.download(urls)
                             break
 
@@ -430,9 +464,14 @@ class Channel:
 
     def _parse_metadata_videos_comp(self, i: list, bucket: list):
         """Computes the actual parsing for `_parse_metadata_videos` without outputting what's happening"""
+        added = 0
+        updated_count = 0
+        skipped_no_formats = 0
+
         for entry in i:
             # Skip video if there's no formats available; happens with upcoming videos/livestreams
             if "formats" not in entry or len(entry["formats"]) == 0:
+                skipped_no_formats += 1
                 continue
 
             # Updated intra-loop marker
@@ -443,6 +482,7 @@ class Channel:
                 if video.id == entry["id"]:
                     video.update(entry)
                     updated = True
+                    updated_count += 1
                     break
 
             # Add new video if not
@@ -450,9 +490,15 @@ class Channel:
                 video = Video.new(entry, self)
                 bucket.append(video)
                 self.reporter.added.append(video)
+                added += 1
 
         # Sort videos by newest
         bucket.sort(reverse=True)
+
+        self._verbose(
+            f"Parsed bucket: incoming={len(i)}, added={added}, updated={updated_count}, "
+            f"skipped_no_formats={skipped_no_formats}, total_known={len(bucket)}"
+        )
 
     def _report_deleted(self, videos: list):
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
@@ -496,6 +542,10 @@ class Channel:
             with open(self.path / "yark.bak", "w+") as file_backup:
                 file_backup.write(save)
 
+    def _verbose(self, message: str) -> None:
+        if self.verbose:
+            ui.info(f"[verbose] {message}")
+
     @staticmethod
     def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
@@ -503,6 +553,7 @@ class Channel:
         channel.path = path
         channel.version = encoded["version"]
         channel.url = encoded["url"]
+        channel.verbose = False
         channel.reporter = Reporter(channel)
         channel.videos = [
             Video._from_dict(video, channel) for video in encoded["videos"]
