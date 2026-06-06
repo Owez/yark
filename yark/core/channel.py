@@ -39,6 +39,8 @@ class DownloadConfig:
     videos: "DownloadSelection"
     livestreams: "DownloadSelection"
     shorts: "DownloadSelection"
+    uploaded_after: Optional[datetime]
+    uploaded_before: Optional[datetime]
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
@@ -47,12 +49,21 @@ class DownloadConfig:
         self.videos = DownloadSelection()
         self.livestreams = DownloadSelection()
         self.shorts = DownloadSelection()
+        self.uploaded_after = None
+        self.uploaded_before = None
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
+        if (
+            self.uploaded_after is not None
+            and self.uploaded_before is not None
+            and self.uploaded_after > self.uploaded_before
+        ):
+            raise ValueError("The minimum upload date cannot be after the maximum")
+
         # Adjust remaining maximums if one is given
         no_maximums = (
             self.videos.maximum is None
@@ -360,6 +371,14 @@ class Channel:
         ) -> list[Video]:
             """Curates the videos inside of the provided bucket using the provided selection rule."""
             available = [video for video in videos if not video.downloaded()]
+            if config.uploaded_after is not None:
+                available = [
+                    video for video in available if video.uploaded >= config.uploaded_after
+                ]
+            if config.uploaded_before is not None:
+                available = [
+                    video for video in available if video.uploaded <= config.uploaded_before
+                ]
 
             if selection.filter == DownloadFilter.POPULAR:
                 available.sort(

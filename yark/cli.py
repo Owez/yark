@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 import threading
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
@@ -71,7 +72,11 @@ def _command_refresh(args: list[str]) -> None:
         sys.exit(1)
 
     config = _parse_refresh_config(args[1:])
-    config.submit()
+    try:
+        config.submit()
+    except ValueError as error:
+        ui.error(str(error))
+        sys.exit(1)
 
     try:
         channel = Channel.load(args[0])
@@ -103,6 +108,17 @@ def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
             return int(value)
         except ValueError:
             raise ValueError(f"The value '{value}' isn't a valid maximum number")
+
+    def parse_date(flag: str) -> datetime:
+        value = parse_value(flag).strip()
+        for fmt in ["%Y-%m-%d", "%Y%m%d"]:
+            try:
+                return datetime.strptime(value, fmt)
+            except ValueError:
+                continue
+        raise ValueError(
+            f"The value '{value}' isn't a valid date, use YYYY-MM-DD or YYYYMMDD"
+        )
 
     def parse_selection(flag: str) -> DownloadSelection:
         value = parse_value(flag)
@@ -141,6 +157,10 @@ def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
                 config.skip_download = True
             elif config_arg.startswith("--format="):
                 config.format = parse_value(config_arg)
+            elif config_arg.startswith("--date-min="):
+                config.uploaded_after = parse_date(config_arg)
+            elif config_arg.startswith("--date-max="):
+                config.uploaded_before = parse_date(config_arg)
             else:
                 ui.error(f"Unknown refresh option '{config_arg}'")
                 sys.exit(1)
@@ -243,6 +263,8 @@ def _help_for_command(command: str) -> str:
             "  --videos=[max|filter:max]        Download video selection\n"
             "  --shorts=[max|filter:max]        Download shorts selection\n"
             "  --livestreams=[max|filter:max]   Download livestream selection\n"
+            "  --date-min=[YYYY-MM-DD]          Only download uploads on/after date\n"
+            "  --date-max=[YYYY-MM-DD]          Only download uploads on/before date\n"
             "  --skip-metadata       Skip metadata download\n"
             "  --skip-download       Skip media download\n"
             "  --format=[str]        Custom yt-dlp format\n\n"
@@ -252,7 +274,8 @@ def _help_for_command(command: str) -> str:
             "Examples:\n"
             "  --videos=5\n"
             "  --videos=recent:5\n"
-            "  --videos=popular:10"
+            "  --videos=popular:10\n"
+            "  --date-min=2025-01-01 --date-max=2025-12-31"
         ),
         "view": (
             "yark view [name] [args?]\n\n"
