@@ -122,6 +122,29 @@ class VideoLogger:
         self.progress_label = progress_label
         self._last_progress: tuple[int, int] | None = None
 
+    def _emit_progress(self, msg: str) -> None:
+        if not self.show_progress:
+            return
+
+        match = re.search(r"Downloading item (\d+) of (\d+)", msg)
+        if match is None:
+            return
+
+        current = int(match.group(1))
+        total = int(match.group(2))
+        step = max(total // 20, 1)
+
+        should_emit = (
+            self._last_progress is None
+            or self._last_progress[1] != total
+            or current == 1
+            or current == total
+            or current - self._last_progress[0] >= step
+        )
+        if should_emit:
+            ui.info(f"{self.progress_label}: {current}/{total}")
+            self._last_progress = (current, total)
+
     @staticmethod
     def downloading(d):
         """Progress hook for video downloading"""
@@ -134,28 +157,13 @@ class VideoLogger:
 
     def debug(self, msg):
         """Debug log messages"""
+        self._emit_progress(msg)
         if self.verbose:
             ui.plain(f"[yt-dlp:debug] {msg}")
 
     def info(self, msg):
         """Info log messages"""
-        if self.show_progress:
-            match = re.search(r"Downloading item (\\d+) of (\\d+)", msg)
-            if match is not None:
-                current = int(match.group(1))
-                total = int(match.group(2))
-                step = max(total // 20, 1)
-
-                should_emit = (
-                    self._last_progress is None
-                    or self._last_progress[1] != total
-                    or current == 1
-                    or current == total
-                    or current - self._last_progress[0] >= step
-                )
-                if should_emit:
-                    ui.info(f"{self.progress_label}: {current}/{total}")
-                    self._last_progress = (current, total)
+        self._emit_progress(msg)
 
         if self.verbose:
             ui.plain(f"[yt-dlp:info] {msg}")
@@ -264,8 +272,9 @@ class Channel:
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
             "concurrent_fragment_downloads": 8,
-            # Let yt-dlp emit more details when requested by user.
-            "verbose": self.verbose,
+            # Keep yt-dlp progress lines available for parsing in normal mode,
+            # while full details are still only printed when self.verbose is enabled.
+            "verbose": True,
         }
         if config is not None and config.respect_rate_limits:
             settings.update(
