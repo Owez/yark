@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 import sys
 import time
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
@@ -34,17 +36,17 @@ having way more complexity in the archiver decoding system itself.
 
 
 class DownloadConfig:
-    max_videos: Optional[int]
-    max_livestreams: Optional[int]
-    max_shorts: Optional[int]
+    videos: "DownloadSelection"
+    livestreams: "DownloadSelection"
+    shorts: "DownloadSelection"
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
 
     def __init__(self) -> None:
-        self.max_videos = None
-        self.max_livestreams = None
-        self.max_shorts = None
+        self.videos = DownloadSelection()
+        self.livestreams = DownloadSelection()
+        self.shorts = DownloadSelection()
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
@@ -53,24 +55,43 @@ class DownloadConfig:
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
         # Adjust remaining maximums if one is given
         no_maximums = (
-            self.max_videos is None
-            and self.max_livestreams is None
-            and self.max_shorts is None
+            self.videos.maximum is None
+            and self.livestreams.maximum is None
+            and self.shorts.maximum is None
         )
         if not no_maximums:
-            if self.max_videos is None:
-                self.max_videos = 0
-            if self.max_livestreams is None:
-                self.max_livestreams = 0
-            if self.max_shorts is None:
-                self.max_shorts = 0
+            if self.videos.maximum is None:
+                self.videos.maximum = 0
+            if self.livestreams.maximum is None:
+                self.livestreams.maximum = 0
+            if self.shorts.maximum is None:
+                self.shorts.maximum = 0
 
         # If all are 0 as its equivalent to skipping download
-        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
+        if (
+            self.videos.maximum == 0
+            and self.livestreams.maximum == 0
+            and self.shorts.maximum == 0
+        ):
             ui.warning(
                 "Using the skip downloads option is recommended over setting maximums to 0"
             )
             self.skip_download = True
+
+
+class DownloadFilter(str, Enum):
+    """Supported download selection strategies."""
+
+    RECENT = "recent"
+    POPULAR = "popular"
+
+
+@dataclass
+class DownloadSelection:
+    """Selection rule for one media category."""
+
+    maximum: Optional[int] = None
+    filter: DownloadFilter = DownloadFilter.RECENT
 
 
 class VideoLogger:
@@ -334,33 +355,34 @@ class Channel:
     def _curate(self, config: DownloadConfig) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
-            """Curates the videos inside of the provided `videos` list to it's local maximum"""
-            # Cut available videos to maximum if present for deterministic getting
-            if maximum is not None:
-                # Fix the maximum to the length so we don't try to get more than there is
-                fixed_maximum = min(max(len(videos) - 1, 0), maximum)
+        def curate_list(
+            videos: list[Video], selection: DownloadSelection
+        ) -> list[Video]:
+            """Curates the videos inside of the provided bucket using the provided selection rule."""
+            available = [video for video in videos if not video.downloaded()]
 
-                # Set the available videos to this fixed maximum
-                new_videos = []
-                for ind in range(fixed_maximum):
-                    new_videos.append(videos[ind])
-                videos = new_videos
+            if selection.filter == DownloadFilter.POPULAR:
+                available.sort(
+                    key=lambda video: (
+                        video.views.current() if video.views.current() is not None else -1,
+                        video.uploaded,
+                    ),
+                    reverse=True,
+                )
+            else:
+                available.sort(key=lambda video: video.uploaded, reverse=True)
 
-            # Find undownloaded videos in available list
-            not_downloaded = []
-            for video in videos:
-                if not video.downloaded():
-                    not_downloaded.append(video)
+            if selection.maximum is None:
+                return available
 
-            # Return
-            return not_downloaded
+            fixed_maximum = min(len(available), max(selection.maximum, 0))
+            return available[:fixed_maximum]
 
         # Curate
         not_downloaded = []
-        not_downloaded.extend(curate_list(self.videos, config.max_videos))
-        not_downloaded.extend(curate_list(self.livestreams, config.max_livestreams))
-        not_downloaded.extend(curate_list(self.shorts, config.max_shorts))
+        not_downloaded.extend(curate_list(self.videos, config.videos))
+        not_downloaded.extend(curate_list(self.livestreams, config.livestreams))
+        not_downloaded.extend(curate_list(self.shorts, config.shorts))
 
         # Return
         return not_downloaded

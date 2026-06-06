@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from .core import Channel, DownloadConfig
+from .core.channel import DownloadFilter, DownloadSelection
 from .errors import ArchiveNotFoundException
 from .terminal import ui
 from .web.app import create_app
@@ -103,21 +104,48 @@ def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
         except ValueError:
             raise ValueError(f"The value '{value}' isn't a valid maximum number")
 
+    def parse_selection(flag: str) -> DownloadSelection:
+        value = parse_value(flag)
+        if ":" not in value:
+            return DownloadSelection(maximum=parse_maximum(flag))
+
+        raw_filter, raw_maximum = value.split(":", 1)
+        normalized_filter = raw_filter.strip().lower().replace("most-", "")
+        filter_map = {
+            "recent": DownloadFilter.RECENT,
+            "popular": DownloadFilter.POPULAR,
+        }
+        selected_filter = filter_map.get(normalized_filter)
+        if selected_filter is None:
+            raise ValueError(
+                f"Unknown download filter '{raw_filter}'. Use recent or popular"
+            )
+
+        try:
+            maximum = int(raw_maximum)
+        except ValueError:
+            raise ValueError(f"The value '{raw_maximum}' isn't a valid maximum number")
+        return DownloadSelection(maximum=maximum, filter=selected_filter)
+
     for config_arg in config_args:
-        if config_arg.startswith("--videos="):
-            config.max_videos = parse_maximum(config_arg)
-        elif config_arg.startswith("--livestreams="):
-            config.max_livestreams = parse_maximum(config_arg)
-        elif config_arg.startswith("--shorts="):
-            config.max_shorts = parse_maximum(config_arg)
-        elif config_arg == "--skip-metadata":
-            config.skip_metadata = True
-        elif config_arg == "--skip-download":
-            config.skip_download = True
-        elif config_arg.startswith("--format="):
-            config.format = parse_value(config_arg)
-        else:
-            ui.error(f"Unknown refresh option '{config_arg}'")
+        try:
+            if config_arg.startswith("--videos="):
+                config.videos = parse_selection(config_arg)
+            elif config_arg.startswith("--livestreams="):
+                config.livestreams = parse_selection(config_arg)
+            elif config_arg.startswith("--shorts="):
+                config.shorts = parse_selection(config_arg)
+            elif config_arg == "--skip-metadata":
+                config.skip_metadata = True
+            elif config_arg == "--skip-download":
+                config.skip_download = True
+            elif config_arg.startswith("--format="):
+                config.format = parse_value(config_arg)
+            else:
+                ui.error(f"Unknown refresh option '{config_arg}'")
+                sys.exit(1)
+        except ValueError as error:
+            ui.error(str(error))
             sys.exit(1)
 
     return config
@@ -212,12 +240,19 @@ def _help_for_command(command: str) -> str:
             "yark refresh [name] [args?]\n\n"
             "Refreshes/downloads archive with optional configuration.\n\n"
             "Arguments:\n"
-            "  --videos=[max]        Maximum recent videos to download\n"
-            "  --shorts=[max]        Maximum recent shorts to download\n"
-            "  --livestreams=[max]   Maximum recent livestreams to download\n"
+            "  --videos=[max|filter:max]        Download video selection\n"
+            "  --shorts=[max|filter:max]        Download shorts selection\n"
+            "  --livestreams=[max|filter:max]   Download livestream selection\n"
             "  --skip-metadata       Skip metadata download\n"
             "  --skip-download       Skip media download\n"
-            "  --format=[str]        Custom yt-dlp format"
+            "  --format=[str]        Custom yt-dlp format\n\n"
+            "Filters:\n"
+            "  recent   Most recent entries (default)\n"
+            "  popular  Highest view count entries\n\n"
+            "Examples:\n"
+            "  --videos=5\n"
+            "  --videos=recent:5\n"
+            "  --videos=popular:10"
         ),
         "view": (
             "yark view [name] [args?]\n\n"
