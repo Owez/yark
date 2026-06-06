@@ -11,23 +11,21 @@ classifiers = [
     "Topic :: System :: Archiving :: Backup",
     "Topic :: Multimedia :: Video",
 ]
-include = [{ path = "templates/*" }]
+include = [{ path = "yark/templates/*.html" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 Flask = "^2.3.1"
 requests = "^2.28.2"
-colorama = "^0.4.6"
 yt-dlp = "2026.03.17"
-progress = "^1.6"
+rich = "^13.9.4"
 
 [tool.poetry.scripts]
-yark = "yark.cli:_cli"
+yark = "yark.cli:main"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"
 poethepoet = "^0.18.1"
-types-colorama = "^0.4.15.11"
 types-requests = "^2.28.11.17"
 black = "^22.12.0"
 

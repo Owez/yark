@@ -53,6 +53,16 @@ Under each video is a rich history report filled with timelines and graphs, as w
 
 Light and dark modes are both available and automatically apply based on the system's theme.
 
+## Project Layout
+
+The package is structured around clear application boundaries:
+
+- `yark.core` contains the archive models, download workflow, and reporting logic.
+- `yark.web` contains the Flask app factory, routes, and viewer-only timestamp helpers.
+- `yark.cli` remains the CLI entrypoint and orchestrates the core and web packages.
+
+This structure is now the concrete layout and does not include compatibility shim modules.
+
 ## Details
 
 Here are some things to keep in mind when using Yark; the good and the bad:

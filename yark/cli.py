@@ -1,252 +1,236 @@
-"""Homegrown cli for managing archives"""
+"""Command-line interface for Yark."""
 
-from pathlib import Path
-from colorama import Style, Fore
+from __future__ import annotations
+
 import sys
 import threading
 import webbrowser
-from .errors import _err_msg, ArchiveNotFoundException
-from .channel import Channel, DownloadConfig
-from .viewer import viewer
+from pathlib import Path
+from typing import Callable
 
-HELP = f"yark [options]\n\n  YouTube archiving made simple.\n\nOptions:\n  new [name] [url]         Creates new archive with name and channel url\n  refresh [name] [args?]   Refreshes/downloads archive with optional config\n  view [name?]             Launches offline archive viewer website\n  report [name]            Provides a report on the most interesting changes\n\nExample:\n  $ yark new owez https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA\n  $ yark refresh owez\n  $ yark view owez"
-"""User-facing help message provided from the cli"""
+from .core import Channel, DownloadConfig
+from .errors import ArchiveNotFoundException
+from .terminal import ui
+from .web.app import create_app
+
+VERSION = "1.2.13"
 
 
-def _cli():
-    """Command-line-interface launcher"""
-
-    # Get arguments
+def _cli() -> None:
+    """Command-line launcher."""
     args = sys.argv[1:]
-
-    # No arguments
     if len(args) == 0:
-        print(HELP, file=sys.stderr)
-        _err_msg(f"\nError: No arguments provided")
+        ui.help("Yark", _help_text())
+        ui.error("No arguments provided")
         sys.exit(1)
 
-    # Help
-    if args[0] in ["help", "--help", "-h"]:
-        print(HELP)
+    command = args[0]
+    handlers: dict[str, Callable[[list[str]], None]] = {
+        "new": _command_new,
+        "refresh": _command_refresh,
+        "view": _command_view,
+        "report": _command_report,
+    }
 
-    # Version
-    # TODO: automatically track this
-    elif args[0] in ["-v", "-ver", "--version", "--v"]:
-        print("1.2.9")
-
-    # Create new
-    elif args[0] == "new":
-        # More help
-        if len(args) == 2 and args[1] == "--help":
-            _err_no_help()
-
-        # Bad arguments
-        if len(args) < 3:
-            _err_msg("Please provide an archive name and the channel url")
-            sys.exit(1)
-
-        # Create channel
-        Channel.new(Path(args[1]), args[2])
-
-    # Refresh
-    elif args[0] == "refresh":
-        # More help
-        if len(args) == 2 and args[1] == "--help":
-            # NOTE: if these get more complex, separate into something like "basic config" and "advanced config"
-            print(
-                f"yark refresh [name] [args?]\n\n  Refreshes/downloads archive with optional configuration.\n  If a maximum is set, unset categories won't be downloaded\n\nArguments:\n  --videos=[max]        Maximum recent videos to download\n  --shorts=[max]        Maximum recent shorts to download\n  --livestreams=[max]   Maximum recent livestreams to download\n  --skip-metadata       Skips downloading metadata\n  --skip-download       Skips downloading content\n  --format=[str]        Downloads using custom yt-dlp format for advanced users\n\n Example:\n  $ yark refresh demo\n  $ yark refresh demo --videos=5\n  $ yark refresh demo --shorts=2 --livestreams=25\n  $ yark refresh demo --skip-download"
-            )
-            sys.exit(0)
-
-        # Bad arguments
-        if len(args) < 2:
-            _err_msg("Please provide the archive name")
-            sys.exit(1)
-
-        # Figure out configuration
-        config = DownloadConfig()
-        if len(args) > 2:
-
-            def parse_value(config_arg: str) -> str:
-                return config_arg.split("=")[1]
-
-            def parse_maximum_int(config_arg: str) -> int:
-                """Tries to parse a maximum integer input"""
-                maximum = parse_value(config_arg)
-                try:
-                    return int(maximum)
-                except:
-                    print(HELP, file=sys.stderr)
-                    _err_msg(
-                        f"\nError: The value '{maximum}' isn't a valid maximum number"
-                    )
-                    sys.exit(1)
-
-            # Go through each configuration argument
-            for config_arg in args[2:]:
-                # Video maximum
-                if config_arg.startswith("--videos="):
-                    config.max_videos = parse_maximum_int(config_arg)
-
-                # Livestream maximum
-                elif config_arg.startswith("--livestreams="):
-                    config.max_livestreams = parse_maximum_int(config_arg)
-
-                # Shorts maximum
-                elif config_arg.startswith("--shorts="):
-                    config.max_shorts = parse_maximum_int(config_arg)
-
-                # No metadata
-                elif config_arg == "--skip-metadata":
-                    config.skip_metadata = True
-
-                # No downloading; functionally equivalent to all maximums being 0 but it skips entirely
-                elif config_arg == "--skip-download":
-                    config.skip_download = True
-
-                # Custom yt-dlp format
-                elif config_arg.startswith("--format="):
-                    config.format = parse_value(config_arg)
-
-                # Unknown argument
-                else:
-                    print(HELP, file=sys.stderr)
-                    _err_msg(
-                        f"\nError: Unknown configuration '{config_arg}' provided for archive refresh"
-                    )
-                    sys.exit(1)
-
-        # Submit config settings
-        config.submit()
-
-        # Refresh channel using config context
-        try:
-            channel = Channel.load(args[1])
-            if config.skip_metadata:
-                print("Skipping metadata download..")
-            else:
-                channel.metadata()
-                channel.commit()  # NOTE: Do it here no matter, because it's metadata. Downloads do not modify the archive
-            if config.skip_download:
-                print("Skipping videos/livestreams/shorts download..")
-            else:
-                channel.download(config)
-            channel.reporter.print()
-        except ArchiveNotFoundException:
-            _err_archive_not_found()
-
-    # View
-    elif args[0] == "view":
-        # More help
-        if len(args) == 2 and args[1] == "--help":
-            print(
-                f"yark view [name] [args?]\n\n  Launches offline archive viewer website.\n\nArguments:\n  --host [str] Custom uri to act as host from\n  --port [int] Custom port number instead of 7667\n\n Example:\n  $ yark view foobar\n  $ yark view foobar --port=80\n  $ yark view foobar --port=1234 --host=0.0.0.0"
-            )
-            sys.exit(0)
-
-        # Basis for custom host/port configs
-        host = None
-        port = 7667
-
-        # Go through each configuration argument
-        for config_arg in args[2:]:
-            # Host configuration
-            if config_arg.startswith("--host="):
-                host = config_arg[7:]
-
-            # Port configuration
-            elif config_arg.startswith("--port="):
-                if config_arg[7:].strip() == "":
-                    print(
-                        f"No port number provided for port argument",
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
-                try:
-                    port = int(config_arg[7:])
-                except:
-                    print(
-                        f"Invalid port number '{config_arg[7:]}' provided",
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
-
-        def launch():
-            """Launches viewer"""
-            app = viewer()
-            threading.Thread(target=lambda: app.run(host=host, port=port)).run()
-
-        # Start on channel name
+    if command in ["help", "--help", "-h"]:
         if len(args) > 1:
-            # Get name
-            channel = args[1]
-
-            # Jank archive check
-            if not Path(channel).exists():
-                _err_archive_not_found()
-
-            # Launch and start browser
-            print(f"Starting viewer for {channel}..")
-            webbrowser.open(f"http://127.0.0.1:7667/channel/{channel}/videos")
-            launch()
-
-        # Start on channel finder
+            ui.help(f"yark {args[1]}", _help_for_command(args[1]))
         else:
-            print("Starting viewer..")
-            webbrowser.open(f"http://127.0.0.1:7667/")
-            launch()
+            ui.help("Yark", _help_text())
+        return
+    if command in ["-v", "-ver", "--version", "--v"]:
+        ui.info(f"Yark {VERSION}")
+        return
 
-    # Report
-    elif args[0] == "report":
-        # Bad arguments
-        if len(args) < 2:
-            _err_msg("Please provide the archive name")
+    handler = handlers.get(command)
+    if handler is None:
+        ui.help("Yark", _help_text())
+        ui.error(f"Unknown command '{command}' provided", True)
+        sys.exit(1)
+
+    handler(args[1:])
+
+
+def _command_new(args: list[str]) -> None:
+    if len(args) == 1 and args[0] == "--help":
+        ui.help("yark new", _help_for_command("new"))
+        return
+    if len(args) < 2:
+        ui.error("Please provide an archive name and the channel URL")
+        sys.exit(1)
+    Channel.new(Path(args[0]), args[1])
+
+
+def _command_refresh(args: list[str]) -> None:
+    if len(args) == 1 and args[0] == "--help":
+        ui.help("yark refresh", _help_for_command("refresh"))
+        return
+    if len(args) < 1:
+        ui.error("Please provide the archive name")
+        sys.exit(1)
+
+    config = _parse_refresh_config(args[1:])
+    config.submit()
+
+    try:
+        channel = Channel.load(args[0])
+        if config.skip_metadata:
+            ui.warning("Skipping metadata download")
+        else:
+            channel.metadata()
+        if config.skip_download:
+            ui.warning("Skipping videos/livestreams/shorts download")
+        else:
+            channel.download(config)
+        channel.commit()
+        channel.reporter.print()
+    except ArchiveNotFoundException:
+        _err_archive_not_found()
+
+
+def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
+    config = DownloadConfig()
+
+    def parse_value(flag: str) -> str:
+        if "=" in flag:
+            return flag.split("=", 1)[1]
+        raise ValueError(f"No value provided for {flag}")
+
+    def parse_maximum(flag: str) -> int:
+        value = parse_value(flag)
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError(f"The value '{value}' isn't a valid maximum number")
+
+    for config_arg in config_args:
+        if config_arg.startswith("--videos="):
+            config.max_videos = parse_maximum(config_arg)
+        elif config_arg.startswith("--livestreams="):
+            config.max_livestreams = parse_maximum(config_arg)
+        elif config_arg.startswith("--shorts="):
+            config.max_shorts = parse_maximum(config_arg)
+        elif config_arg == "--skip-metadata":
+            config.skip_metadata = True
+        elif config_arg == "--skip-download":
+            config.skip_download = True
+        elif config_arg.startswith("--format="):
+            config.format = parse_value(config_arg)
+        else:
+            ui.error(f"Unknown refresh option '{config_arg}'")
             sys.exit(1)
 
-        channel = Channel.load(Path(args[1]))
-        channel.reporter.interesting_changes()
+    return config
 
-    # Unknown
+
+def _command_view(args: list[str]) -> None:
+    if len(args) == 1 and args[0] == "--help":
+        ui.help("yark view", _help_for_command("view"))
+        return
+
+    archive_name = args[0] if len(args) > 0 and not args[0].startswith("--") else None
+    config_args = args[1:] if archive_name is not None else args
+    host, port = _parse_view_config(config_args)
+
+    if archive_name is not None and not Path(archive_name).exists():
+        _err_archive_not_found()
+
+    def launch() -> None:
+        app = create_app()
+        threading.Thread(target=lambda: app.run(host=host, port=port)).run()
+
+    if archive_name is not None:
+        url = f"http://127.0.0.1:{port}/channel/{archive_name}/videos"
+        ui.info(f"Starting viewer for {archive_name}")
     else:
-        print(HELP, file=sys.stderr)
-        _err_msg(f"\nError: Unknown command '{args[0]}' provided!", True)
+        url = f"http://127.0.0.1:{port}/"
+        ui.info("Starting viewer")
+
+    webbrowser.open(url)
+    launch()
+
+
+def _parse_view_config(config_args: list[str]) -> tuple[str | None, int]:
+    host = None
+    port = 7667
+    for config_arg in config_args:
+        if config_arg.startswith("--host="):
+            host = config_arg.split("=", 1)[1]
+        elif config_arg.startswith("--port="):
+            raw = config_arg.split("=", 1)[1].strip()
+            if raw == "":
+                ui.error("No port number provided for --port")
+                sys.exit(1)
+            try:
+                port = int(raw)
+            except ValueError:
+                ui.error(f"Invalid port number '{raw}' provided")
+                sys.exit(1)
+        else:
+            ui.error(f"Unknown view option '{config_arg}'")
+            sys.exit(1)
+    return host, port
+
+
+def _command_report(args: list[str]) -> None:
+    if len(args) == 1 and args[0] == "--help":
+        ui.help("yark report", _help_for_command("report"))
+        return
+    if len(args) < 1:
+        ui.error("Please provide the archive name")
         sys.exit(1)
+    channel = Channel.load(Path(args[0]))
+    channel.reporter.interesting_changes()
 
 
 def _err_archive_not_found():
     """Errors out the user if the archive doesn't exist"""
-    _err_msg("Archive doesn't exist, please make sure you typed it's name correctly!")
+    ui.error("Archive doesn't exist, please make sure you typed its name correctly!")
     sys.exit(1)
 
 
-def _err_no_help():
-    """Prints out help message and exits, displaying a 'no additional help' message"""
-    print(HELP)
-    print("\nThere's no additional help for this command")
-    sys.exit(0)
+def _help_text() -> str:
+    return (
+        "yark [options]\n\n"
+        "YouTube archiving made simple.\n\n"
+        "Commands:\n"
+        "  new [name] [url]         Create a new archive\n"
+        "  refresh [name] [args?]   Refresh/download archive\n"
+        "  view [name?] [args?]     Launch offline archive viewer\n"
+        "  report [name]            Show interesting changes\n\n"
+        "Examples:\n"
+        "  yark new demo https://www.youtube.com/channel/...\n"
+        "  yark refresh demo --videos=5\n"
+        "  yark view demo --port=8080"
+    )
 
 
-# NOTE: not used, not sure why this is included. might be useful for the future
-# def _upgrade_messaging() -> None:
-#     """
-#     Give users some info on the new Yark 1.3 version because because PyPI releases aren't supported
+def _help_for_command(command: str) -> str:
+    docs = {
+        "new": "yark new [name] [url]\n\nCreates a new archive from a YouTube URL.",
+        "refresh": (
+            "yark refresh [name] [args?]\n\n"
+            "Refreshes/downloads archive with optional configuration.\n\n"
+            "Arguments:\n"
+            "  --videos=[max]        Maximum recent videos to download\n"
+            "  --shorts=[max]        Maximum recent shorts to download\n"
+            "  --livestreams=[max]   Maximum recent livestreams to download\n"
+            "  --skip-metadata       Skip metadata download\n"
+            "  --skip-download       Skip media download\n"
+            "  --format=[str]        Custom yt-dlp format"
+        ),
+        "view": (
+            "yark view [name] [args?]\n\n"
+            "Launches the offline archive viewer website.\n\n"
+            "Arguments:\n"
+            "  --host=[str]   Custom host\n"
+            "  --port=[int]   Custom port (default 7667)"
+        ),
+        "report": "yark report [name]\n\nPrints interesting archive changes.",
+    }
+    return docs.get(command, "No additional help for this command.")
 
-#     This wouldn't happen normally but users might be confused seeing as we're switching distribution methods.
-#     """
-#     # Major update message for 1.3
-#     print(
-#         Style.BRIGHT
-#         + "Yark 1.3 is out now! Go to https://github.com/Owez/yark to download"
-#         + Style.DIM
-#         + " (pip is no longer supported)"
-#         + Style.NORMAL
-#     )
 
-#     # Give a warning if it's been over a year since release
-#     if datetime.datetime.utcnow().year >= 2024:
-#         print(
-#             Fore.YELLOW
-#             + "You're currently on an outdated version of Yark"
-#             + Fore.RESET,
-#             file=sys.stderr,
-#         )
+def main():
+    """Primary console entrypoint."""
+    _cli()

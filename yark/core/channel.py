@@ -5,16 +5,14 @@ from __future__ import annotations
 import json
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from colorama import Fore, Style
-from progress.spinner import PieSpinner
 from yt_dlp import DownloadError, YoutubeDL  # type: ignore
 
-from ..errors import ArchiveNotFoundException, VideoNotFoundException, _err_msg
+from ..errors import ArchiveNotFoundException, VideoNotFoundException
+from ..terminal import ui
 from .reporter import Reporter
 from .video import Element, Video
 
@@ -69,10 +67,8 @@ class DownloadConfig:
 
         # If all are 0 as its equivalent to skipping download
         if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
-            print(
-                Fore.YELLOW
-                + "Using the skip downloads option is recommended over setting maximums to 0"
-                + Fore.RESET
+            ui.warning(
+                "Using the skip downloads option is recommended over setting maximums to 0"
             )
             self.skip_download = True
 
@@ -84,21 +80,9 @@ class VideoLogger:
         # Get video's id
         id = d["info_dict"]["id"]
 
-        # Downloading percent
-        if d["status"] == "downloading":
-            percent = d["_percent_str"].strip()
-            print(
-                Style.DIM
-                + f"  • Downloading {id}, at {percent}"
-                + Style.DIM
-                + "..                "
-                + Style.NORMAL,
-                end="\r",
-            )
-
         # Finished a video's download
-        elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}                " + Style.NORMAL)
+        if d["status"] == "finished":
+            ui.success(f"Downloaded {id}")
 
     def debug(self, msg):
         """Debug log messages, ignored"""
@@ -130,7 +114,7 @@ class Channel:
     def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
         # Details
-        print("Creating new channel..")
+        ui.info("Creating new channel..")
         channel = Channel()
         channel.path = Path(path)
         channel.version = ARCHIVE_COMPAT
@@ -156,7 +140,7 @@ class Channel:
         # Check existence
         path = Path(path)
         channel_name = path.name
-        print(f"Loading {channel_name} channel..")
+        ui.info(f"Loading {channel_name} channel..")
         if not path.exists():
             raise ArchiveNotFoundException("Archive doesn't exist")
 
@@ -175,31 +159,8 @@ class Channel:
 
     def metadata(self):
         """Queries YouTube for all channel metadata to refresh known videos"""
-        # Print loading progress at the start without loading indicator so theres always a print
-        msg = "Downloading metadata.."
-        print(msg, end="\r")
-
-        # Download metadata and give the user a spinner bar
-        with ThreadPoolExecutor() as ex:
-            # Make future for downloading metadata
-            future = ex.submit(self._download_metadata)
-
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        break
-                    time.sleep(0.25)
-
-                # Show loading spinner
-                while not future.done():
-                    bar.next()
-                    time.sleep(0.075)
-
-            # Get result from thread now that it's finished
-            res = future.result()
+        with ui.status("Downloading metadata.."):
+            res = self._download_metadata()
 
         # Uncomment for saving big dumps for testing
         # with open(self.path / "dump.json", "w+") as file:
@@ -236,11 +197,7 @@ class Channel:
 
                     # Print retrying message
                     if retrying:
-                        print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )
+                        ui.warning("Retrying metadata download..")
 
     def _parse_metadata(self, res: dict[str, Any]):
         """Parses entirety of downloaded metadata"""
@@ -262,7 +219,7 @@ class Channel:
                 elif kind == "shorts":
                     shorts = entry["entries"]
                 else:
-                    _err_msg(f"Unknown video kind '{kind}' found", True)
+                    ui.error(f"Unknown video kind '{kind}' found", True)
 
         # Parse metadata
         self._parse_metadata_videos("video", videos, self.videos)
@@ -311,7 +268,7 @@ class Channel:
                             if len(not_downloaded) == 1
                             else f"{len(not_downloaded)} new videos"
                         )
-                        print(f"Downloading {fmt_num}..")
+                        ui.info(f"Downloading {fmt_num}..")
 
                     # Continuously try to download after private/deleted videos are found
                     # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -361,10 +318,6 @@ class Channel:
 
                 # Report error and retry/stop
                 except Exception as exception:
-                    # Get around carriage return
-                    if i == 0:
-                        print()
-
                     # Report error
                     _err_dl("videos", exception, i != 4)
 
@@ -418,7 +371,7 @@ class Channel:
         self._backup()
 
         # Directories
-        print(f"Committing {self} to file..")
+        ui.info(f"Committing {self} to file..")
         paths = [self.path, self.path / "thumbnails", self.path / "videos"]
         for path in paths:
             if not path.exists():
@@ -431,28 +384,8 @@ class Channel:
     def _parse_metadata_videos(self, kind: str, i: list, bucket: list):
         """Parses metadata for a category of video into it's bucket and tells user what's happening"""
 
-        # Print at the start without loading indicator so theres always a print
-        msg = f"Parsing {kind} metadata.."
-        print(msg, end="\r")
-
-        # Start computing and show loading spinner
-        with ThreadPoolExecutor() as ex:
-            # Make future for computation of the video list
-            future = ex.submit(self._parse_metadata_videos_comp, i, bucket)
-
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        return
-                    time.sleep(0.25)
-
-                # Spin until future is done
-                while not future.done():
-                    time.sleep(0.075)
-                    bar.next()
+        with ui.status(f"Parsing {kind} metadata.."):
+            self._parse_metadata_videos_comp(i, bucket)
 
     def _parse_metadata_videos_comp(self, i: list, bucket: list):
         """Computes the actual parsing for `_parse_metadata_videos` without outputting what's happening"""
@@ -500,7 +433,7 @@ class Channel:
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
-            print("Cleaning out previous temporary files..")
+            ui.info("Cleaning out previous temporary files..")
             for file in deletion_bucket:
                 file.unlink()
 
@@ -566,14 +499,9 @@ def _skip_video(
         if not video.downloaded():
             # Tell the user we're skipping over it
             if warning:
-                print(
-                    Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
-                    file=sys.stderr,
-                )
+                ui.warning(f"Skipping {video.id} ({reason})")
             else:
-                print(
-                    Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
-                )
+                ui.info(f"Skipping {video.id} ({reason})")
 
             # Set videos to skip over this one
             videos = videos[ind + 1 :]
@@ -603,13 +531,7 @@ def _migrate_archive(
             # Channel id to url
             encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
             del encoded["id"]
-            print(
-                Fore.YELLOW
-                + "Please make sure "
-                + encoded["url"]
-                + " is the correct url"
-                + Fore.RESET
-            )
+            ui.warning(f"Please make sure {encoded['url']} is the correct url")
 
             # Empty livestreams/shorts lists
             encoded["livestreams"] = []
@@ -628,7 +550,7 @@ def _migrate_archive(
 
         # Unknown version
         else:
-            _err_msg(f"Unknown archive version v{cur} found during migration", True)
+            ui.error(f"Unknown archive version v{cur} found during migration", True)
             sys.exit(1)
 
         # Increment version and run again until version has been reached
@@ -637,10 +559,8 @@ def _migrate_archive(
         return migrate_step(cur, encoded)
 
     # Inform user of the backup process
-    print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
-        + Fore.RESET
+    ui.warning(
+        f"Automatically migrating archive from v{current_version} to v{expected_version}; backup saved at {channel_name}/yark.bak"
     )
 
     # Start recursion step
@@ -690,14 +610,11 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
-    print(
-        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
-        file=sys.stderr,
-    )
+    ui.warning("  • " + msg + suffix.ljust(40))
 
     # Wait if retrying, exit if failed
     if retrying:
         time.sleep(5)
     else:
-        _err_msg(f"  • Sorry, failed to download {name}", True)
+        ui.error(f"  • Sorry, failed to download {name}", True)
         sys.exit(1)

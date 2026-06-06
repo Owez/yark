@@ -1,10 +1,9 @@
 """Channel reporting system allowing detailed logging of useful information."""
 
 import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
-from colorama import Fore, Style
-
+from ..terminal import ui
 from .utils import _truncate_text
 from .video import Element, Video
 
@@ -25,36 +24,11 @@ class Reporter:
         self.updated = []
 
     def print(self):
-        """Prints coloured report to STDOUT"""
-        # Initial message
-        print(f"Report for {self.channel}:")
-
-        # Updated
-        for kind, element in self.updated:
-            colour = (
-                Fore.CYAN
-                if kind in ["title", "description", "undeleted"]
-                else Fore.BLUE
-            )
-            video = f"  • {element.video}".ljust(82)
-            kind = f" │ 🔥{kind.capitalize()}"
-
-            print(colour + video + kind)
-
-        # Added
-        for video in self.added:
-            print(Fore.GREEN + f"  • {video}")
-
-        # Deleted
-        for video in self.deleted:
-            print(Fore.RED + f"  • {video}")
-
-        # Nothing
-        if not self.added and not self.deleted and not self.updated:
-            print(Style.DIM + f"  • Nothing was added or deleted")
-
-        # Watermark
-        print(_watermark())
+        """Prints formatted report to STDOUT."""
+        updated = [(kind, str(element.video)) for kind, element in self.updated]
+        added = [str(video) for video in self.added]
+        deleted = [str(video) for video in self.deleted]
+        ui.render_change_report(str(self.channel), updated, added, deleted, _watermark())
 
     def add_updated(self, kind: str, element: Element):
         """Tells reporter that an element has been updated"""
@@ -67,91 +41,53 @@ class Reporter:
         self.updated = []
 
     def interesting_changes(self):
-        """Reports on the most interesting changes for the channel linked to this reporter"""
+        """Reports on the most interesting changes for the channel linked to this reporter."""
 
-        def fmt_video(kind: str, video: Video) -> str:
-            """Formats a video if it's interesting, otherwise returns an empty string"""
-            # Skip formatting because it's got nothing of note
+        def fmt_video(kind: str, video: Video) -> tuple[str, str, str] | None:
             if (
                 not video.title.changed()
                 and not video.description.changed()
                 and not video.deleted.changed()
             ):
-                return ""
+                return None
 
-            # Lambdas for easy buffer addition for next block
-            buf: list[str] = []
-            maybe_capitalize = lambda word: word.capitalize() if len(buf) == 0 else word
-            add_buf = lambda name, change, colour: buf.append(
-                colour + maybe_capitalize(name) + f" x{change}" + Fore.RESET
-            )
-
-            # Figure out how many changes have happened in each category and format them together
-            change_deleted = sum(
-                1 for value in video.deleted.inner.values() if value == True
-            )
+            changes: list[str] = []
+            change_deleted = sum(1 for value in video.deleted.inner.values() if value is True)
             if change_deleted != 0:
-                add_buf("deleted", change_deleted, Fore.RED)
+                changes.append(f"deleted x{change_deleted}")
             change_description = len(video.description.inner) - 1
             if change_description != 0:
-                add_buf("description", change_description, Fore.CYAN)
+                changes.append(f"description x{change_description}")
             change_title = len(video.title.inner) - 1
             if change_title != 0:
-                add_buf("title", change_title, Fore.CYAN)
+                changes.append(f"title x{change_title}")
 
-            # Combine the detected changes together and capitalize
-            changes = ", ".join(buf) + Fore.RESET
-
-            # Truncate title, get viewer link, and format all together with viewer link
             title = _truncate_text(video.title.current(), 51).strip()
             url = f"http://127.0.0.1:7667/channel/{video.channel}/{kind}/{video.id}"
-            return (
-                f"  • {title}\n    {changes}\n    "
-                + Style.DIM
-                + url
-                + Style.RESET_ALL
-                + "\n"
-            )
+            return (title, ", ".join(changes), url)
 
-        def fmt_category(kind: str, videos: list) -> Optional[str]:
-            """Returns formatted string for an entire category of `videos` inputted or returns nothing"""
-            # Add interesting videos to buffer
-            heading = f"Interesting {kind}:\n"
-            buf = heading
-            for video in videos:
-                buf += fmt_video(kind, video)
-
-            # Return depending on if the buf is just the heading
-            return None if buf == heading else buf[:-1]
-
-        # Tell users whats happening
-        print(f"Finding interesting changes in {self.channel}..")
-
-        # Get reports on the three categories
+        ui.info(f"Finding interesting changes in {self.channel}..")
         categories = [
-            ("videos", fmt_category("videos", self.channel.videos)),
-            ("livestreams", fmt_category("livestreams", self.channel.livestreams)),
-            ("shorts", fmt_category("shorts", self.channel.shorts)),
+            ("videos", self.channel.videos),
+            ("livestreams", self.channel.livestreams),
+            ("shorts", self.channel.shorts),
         ]
 
-        # Combine those with nothing of note and print out interesting
-        not_of_note = []
-        for name, buf in categories:
-            if buf is None:
-                not_of_note.append(name)
+        empty: list[str] = []
+        for kind, videos in categories:
+            rows = [row for row in (fmt_video(kind, video) for video in videos) if row]
+            if len(rows) == 0:
+                empty.append(kind)
             else:
-                print(buf)
+                ui.render_interesting_section(kind, rows)
 
-        # Print out those with nothing of note at the end
-        if len(not_of_note) != 0:
-            not_of_note = "/".join(not_of_note)
-            print(f"No interesting {not_of_note} found")
+        if len(empty) != 0:
+            ui.render_empty_interesting(empty)
 
-        # Watermark
-        print(_watermark())
+        ui.plain(f"[dim]{_watermark()}[/dim]")
 
 
 def _watermark() -> str:
     """Returns a new watermark with a Yark timestamp"""
     date = datetime.datetime.utcnow().isoformat()
-    return Style.RESET_ALL + f"Yark – {date}"
+    return f"Yark - {date}"
