@@ -90,7 +90,7 @@ def _command_refresh(args: list[str]) -> None:
         if config.skip_metadata:
             ui.warning("Skipping metadata download")
         else:
-            channel.metadata()
+            channel.metadata(config)
         if config.skip_download:
             ui.warning("Skipping videos/livestreams/shorts download")
         else:
@@ -164,6 +164,8 @@ def _parse_refresh_config(config_args: list[str]) -> DownloadConfig:
                 config.skip_download = True
             elif config_arg == "--verbose":
                 config.verbose = True
+            elif config_arg == "--respect-rate-limits":
+                config.respect_rate_limits = True
             elif config_arg.startswith("--format="):
                 config.format = parse_value(config_arg)
             elif config_arg.startswith("--date-min="):
@@ -279,6 +281,7 @@ def _help_for_command(command: str) -> str:
             "  --livestreams=[max|filter:max]   Download livestream selection\n"
             "  --date-min=[YYYY-MM-DD]          Only download uploads on/after date\n"
             "  --date-max=[YYYY-MM-DD]          Only download uploads on/before date\n"
+            "  --respect-rate-limits            Increase sleeps/retries for yt-dlp requests\n"
             "  --verbose                        Print detailed refresh diagnostics\n"
             "  --skip-metadata       Skip metadata download\n"
             "  --skip-download       Skip media download\n"
@@ -291,6 +294,7 @@ def _help_for_command(command: str) -> str:
             "  --videos=recent:5\n"
             "  --videos=popular:10\n"
             "  --date-min=2025-01-01 --date-max=2025-12-31\n"
+            "  --respect-rate-limits\n"
             "  --verbose"
         ),
         "view": (

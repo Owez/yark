@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -42,6 +43,7 @@ class DownloadConfig:
     uploaded_after: Optional[datetime]
     uploaded_before: Optional[datetime]
     verbose: bool
+    respect_rate_limits: bool
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
@@ -53,6 +55,7 @@ class DownloadConfig:
         self.uploaded_after = None
         self.uploaded_before = None
         self.verbose = False
+        self.respect_rate_limits = False
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
@@ -108,8 +111,16 @@ class DownloadSelection:
 
 
 class VideoLogger:
-    def __init__(self, verbose: bool = False) -> None:
+    def __init__(
+        self,
+        verbose: bool = False,
+        show_progress: bool = False,
+        progress_label: str = "Progress",
+    ) -> None:
         self.verbose = verbose
+        self.show_progress = show_progress
+        self.progress_label = progress_label
+        self._last_progress: tuple[int, int] | None = None
 
     @staticmethod
     def downloading(d):
@@ -128,6 +139,24 @@ class VideoLogger:
 
     def info(self, msg):
         """Info log messages"""
+        if self.show_progress:
+            match = re.search(r"Downloading item (\\d+) of (\\d+)", msg)
+            if match is not None:
+                current = int(match.group(1))
+                total = int(match.group(2))
+                step = max(total // 20, 1)
+
+                should_emit = (
+                    self._last_progress is None
+                    or self._last_progress[1] != total
+                    or current == 1
+                    or current == total
+                    or current - self._last_progress[0] >= step
+                )
+                if should_emit:
+                    ui.info(f"{self.progress_label}: {current}/{total}")
+                    self._last_progress = (current, total)
+
         if self.verbose:
             ui.plain(f"[yt-dlp:info] {msg}")
 
@@ -202,11 +231,11 @@ class Channel:
         # Decode and return
         return Channel._from_dict(encoded, path)
 
-    def metadata(self):
+    def metadata(self, config: Optional[DownloadConfig] = None):
         """Queries YouTube for all channel metadata to refresh known videos"""
         self._verbose(f"Starting metadata fetch for {self.url}")
         with ui.status("Downloading metadata.."):
-            res = self._download_metadata()
+            res = self._download_metadata(config)
         self._verbose(
             f"Metadata root keys: {', '.join(sorted(res.keys()))}; top-level entries: {len(res.get('entries', []))}"
         )
@@ -221,12 +250,16 @@ class Channel:
         # Parse downloaded metadata
         self._parse_metadata(res)
 
-    def _download_metadata(self) -> dict[str, Any]:
+    def _download_metadata(self, config: Optional[DownloadConfig]) -> dict[str, Any]:
         """Downloads metadata dict and returns for further parsing"""
         # Construct downloader
         settings = {
             # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(self.verbose),
+            "logger": VideoLogger(
+                verbose=self.verbose,
+                show_progress=not self.verbose,
+                progress_label="Metadata progress",
+            ),
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
@@ -234,6 +267,18 @@ class Channel:
             # Let yt-dlp emit more details when requested by user.
             "verbose": self.verbose,
         }
+        if config is not None and config.respect_rate_limits:
+            settings.update(
+                {
+                    "sleep_interval_requests": 1,
+                    "sleep_interval": 1,
+                    "max_sleep_interval": 5,
+                    "retries": 10,
+                    "extractor_retries": 10,
+                    "socket_timeout": 30,
+                }
+            )
+            self._verbose("Rate-limit compliance mode enabled for metadata")
         self._apply_cookie_settings(settings)
 
         # Get response and snip it
@@ -307,6 +352,18 @@ class Channel:
             # Let yt-dlp emit more details when requested by user.
             "verbose": self.verbose,
         }
+        if config.respect_rate_limits:
+            settings.update(
+                {
+                    "sleep_interval_requests": 1,
+                    "sleep_interval": 1,
+                    "max_sleep_interval": 5,
+                    "retries": 10,
+                    "extractor_retries": 10,
+                    "socket_timeout": 30,
+                }
+            )
+            self._verbose("Rate-limit compliance mode enabled for download")
         self._apply_cookie_settings(settings)
         if config.format is not None:
             settings["format"] = config.format
