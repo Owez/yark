@@ -150,6 +150,7 @@ class Channel:
     livestreams: list[Video]
     shorts: list[Video]
     reporter: Reporter
+    cookies_file: Optional[Path]
     verbose: bool
 
     @staticmethod
@@ -164,6 +165,7 @@ class Channel:
         channel.videos = []
         channel.livestreams = []
         channel.shorts = []
+        channel.cookies_file = None
         channel.verbose = False
         channel.reporter = Reporter(channel)
 
@@ -232,6 +234,7 @@ class Channel:
             # Let yt-dlp emit more details when requested by user.
             "verbose": self.verbose,
         }
+        self._apply_cookie_settings(settings)
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
@@ -304,6 +307,7 @@ class Channel:
             # Let yt-dlp emit more details when requested by user.
             "verbose": self.verbose,
         }
+        self._apply_cookie_settings(settings)
         if config.format is not None:
             settings["format"] = config.format
 
@@ -542,6 +546,17 @@ class Channel:
             with open(self.path / "yark.bak", "w+") as file_backup:
                 file_backup.write(save)
 
+    def configure_cookies_file(self) -> None:
+        """Loads archive cookies path if a cookies.txt file exists."""
+        cookies_path = self.path / "cookies.txt"
+        self.cookies_file = cookies_path if cookies_path.exists() else None
+        if self.cookies_file is not None:
+            self._verbose(f"Using cookies file {self.cookies_file}")
+
+    def _apply_cookie_settings(self, settings: dict[str, Any]) -> None:
+        if self.cookies_file is not None:
+            settings["cookiefile"] = str(self.cookies_file)
+
     def _verbose(self, message: str) -> None:
         if self.verbose:
             ui.info(f"[verbose] {message}")
@@ -553,6 +568,7 @@ class Channel:
         channel.path = path
         channel.version = encoded["version"]
         channel.url = encoded["url"]
+        channel.cookies_file = None
         channel.verbose = False
         channel.reporter = Reporter(channel)
         channel.videos = [
@@ -564,6 +580,7 @@ class Channel:
         channel.shorts = [
             Video._from_dict(video, channel) for video in encoded["shorts"]
         ]
+        channel.configure_cookies_file()
         return channel
 
     def _to_dict(self) -> dict:

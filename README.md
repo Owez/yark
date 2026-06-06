@@ -31,6 +31,18 @@ Now that you've created the archive, you can tell Yark to download all videos an
 $ yark refresh foobar
 ```
 
+You can also refresh with filters and cookies:
+
+```shell
+$ yark refresh foobar --videos=popular:10 --date-min=2025-01-01 --date-max=2025-12-31
+```
+
+If YouTube asks you to sign in or rate-limits requests, add a `cookies.txt` file to your archive root (next to `yark.json`) and Yark will use it automatically on refresh.
+
+```shell
+$ cp ~/Downloads/cookies.txt ./foobar/cookies.txt
+```
+
 Once everything has been downloaded, Yark will automatically give you a status report of what's changed since the last refresh:
 
 <p><img src="https://raw.githubusercontent.com/Owez/yark/1.2-support/examples/images/cli_dark.png" alt="Report Demo" title="Report Demo" width="600" /></p>

@@ -60,6 +60,9 @@ def _command_new(args: list[str]) -> None:
     if len(args) < 2:
         ui.error("Please provide an archive name and the channel URL")
         sys.exit(1)
+    if len(args) > 2:
+        ui.error(f"Unknown new option '{args[2]}'")
+        sys.exit(1)
     Channel.new(Path(args[0]), args[1])
 
 
@@ -81,6 +84,7 @@ def _command_refresh(args: list[str]) -> None:
     try:
         channel = Channel.load(args[0])
         channel.verbose = config.verbose
+        channel.configure_cookies_file()
         if config.verbose:
             ui.info(f"Verbose mode enabled for archive '{args[0]}'")
         if config.skip_metadata:
@@ -260,7 +264,12 @@ def _help_text() -> str:
 
 def _help_for_command(command: str) -> str:
     docs = {
-        "new": "yark new [name] [url]\n\nCreates a new archive from a YouTube URL.",
+        "new": (
+            "yark new [name] [url]\n\n"
+            "Creates a new archive from a YouTube URL.\n\n"
+            "Arguments:\n"
+            "  (no optional arguments)"
+        ),
         "refresh": (
             "yark refresh [name] [args?]\n\n"
             "Refreshes/downloads archive with optional configuration.\n\n"
@@ -270,7 +279,7 @@ def _help_for_command(command: str) -> str:
             "  --livestreams=[max|filter:max]   Download livestream selection\n"
             "  --date-min=[YYYY-MM-DD]          Only download uploads on/after date\n"
             "  --date-max=[YYYY-MM-DD]          Only download uploads on/before date\n"
-                "  --verbose                         Print detailed refresh diagnostics\n"
+            "  --verbose                        Print detailed refresh diagnostics\n"
             "  --skip-metadata       Skip metadata download\n"
             "  --skip-download       Skip media download\n"
             "  --format=[str]        Custom yt-dlp format\n\n"
@@ -282,7 +291,7 @@ def _help_for_command(command: str) -> str:
             "  --videos=recent:5\n"
             "  --videos=popular:10\n"
             "  --date-min=2025-01-01 --date-max=2025-12-31\n"
-                "  --verbose"
+            "  --verbose"
         ),
         "view": (
             "yark view [name] [args?]\n\n"
