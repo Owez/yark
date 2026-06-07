@@ -31,7 +31,7 @@ Now that you've created the archive, you can tell Yark to download all videos an
 $ yark refresh foobar
 ```
 
-You can also refresh with filters and cookies:
+You can also refresh with advanced filters for things like date ranges or popular videos:
 
 ```shell
 $ yark refresh foobar --videos=popular:10 --date-min=2025-01-01 --date-max=2025-12-31
@@ -95,5 +95,6 @@ The archive format itself is simple and consists of a directory-based structure 
     - `[id].*` – Files containing video data for YouTube videos
   - `thumbnails/` – Directory containing all known thumbnails
     - `[hash].png` – Files containing thumbnails with its hash
+  - `cookies.txt` – Optional cookies file which you can paste in
 
 It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.

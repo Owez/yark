@@ -91,11 +91,12 @@ def _command_refresh(args: list[str]) -> None:
             ui.warning("Skipping metadata download")
         else:
             channel.metadata(config)
+        channel.commit()
         if config.skip_download:
             ui.warning("Skipping videos/livestreams/shorts download")
         else:
             channel.download(config)
-        channel.commit()
+            channel.commit()
         channel.reporter.print()
     except ArchiveNotFoundException:
         _err_archive_not_found()
