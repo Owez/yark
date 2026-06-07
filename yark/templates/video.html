@@ -20,7 +20,7 @@
 
     .notes-sidebar {
         position: sticky;
-        top: 5.5rem;
+        top: 2rem;
         max-height: calc(100vh - 6.5rem);
         overflow: auto;
         padding-right: 0.25rem;
@@ -56,13 +56,13 @@
     }
 
     video {
-        margin-top: 8vh;
+        margin-top: 2rem;
         border-radius: 0.9rem;
         background: rgba(10, 22, 33, 0.9);
     }
 
     .player-empty {
-        margin-top: 8vh;
+        margin-top: 2rem;
         border-radius: 0.9rem;
         width: 100%;
         border: 1px solid rgba(47, 130, 205, 0.32);
@@ -658,6 +658,15 @@
         return element.innerText.replace(/\u00a0/g, " ").trim();
     }
 
+    function readNoteBody(element) {
+        return Array.from(element.childNodes)
+            .filter(node => !(node.nodeType === Node.ELEMENT_NODE && node.tagName === "BUTTON"))
+            .map(node => node.textContent || "")
+            .join("")
+            .replace(/\u00a0/g, " ")
+            .trim();
+    }
+
     function noteUrl() {
         return window.location.pathname + window.location.search;
     }
@@ -726,8 +735,7 @@
         const title = readEditableText(noteEl.querySelector(".title"));
         const bodyEl = noteEl.querySelector(".body");
         const timestampEl = noteEl.querySelector(".timestamp");
-        const bodyText = bodyEl ? (bodyEl.querySelector("span")?.innerText || bodyEl.innerText) : "";
-        const body = bodyText.trim() === "Delete" ? "" : bodyText.trim();
+        const body = bodyEl ? readNoteBody(bodyEl) : "";
         const timestamp = timestampEl ? parseTimestamp(readEditableText(timestampEl)) : null;
         return { title, body: body || null, timestamp };
     }
@@ -802,7 +810,7 @@
     }
 
     function bindNoteEditors() {
-        document.querySelectorAll(".notes-list .note").forEach(noteEl => {
+        document.querySelectorAll(".notes-panel .note").forEach(noteEl => {
             const titleEl = noteEl.querySelector(".title");
             const bodyEl = noteEl.querySelector(".body");
             if (titleEl) {
@@ -811,6 +819,25 @@
             if (bodyEl) {
                 bodyEl.addEventListener("blur", () => saveNote(noteEl).catch(console.error));
             }
+        });
+
+        document.querySelectorAll(".notes-panel [contenteditable='true']").forEach(editable => {
+            editable.addEventListener("keydown", event => {
+                if (!(event.metaKey || event.ctrlKey) || event.key !== "Enter") {
+                    return;
+                }
+                event.preventDefault();
+                const noteEl = editable.closest(".note");
+                if (!noteEl) {
+                    return;
+                }
+                const createNoteEl = document.querySelector(".notes-panel > .note");
+                if (noteEl === createNoteEl) {
+                    createNote(noteEl).catch(console.error);
+                    return;
+                }
+                saveNote(noteEl).catch(console.error);
+            });
         });
     }
 

@@ -6,6 +6,10 @@ from ..errors import TimestampException
 def _decode_timestamp(input: str) -> int:
     """Parses timestamp into seconds or raises `TimestampException`"""
     # Check existence
+    if isinstance(input, int):
+        return input
+    if isinstance(input, float):
+        return int(input)
     input = input.strip()
     if input == "":
         raise TimestampException("No input provided")
