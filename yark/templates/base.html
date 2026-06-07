@@ -17,17 +17,40 @@
 <body>
     <!-- Styling -->
     <style>
+        :root {
+            --bg: #f3f8fc;
+            --bg-hero: radial-gradient(circle at 15% 10%, rgba(104, 181, 231, 0.24) 0%, rgba(104, 181, 231, 0) 40%), radial-gradient(circle at 90% 0%, rgba(47, 130, 205, 0.2) 0%, rgba(47, 130, 205, 0) 45%);
+            --text: #12212d;
+            --muted: #445460;
+            --surface: rgba(255, 255, 255, 0.86);
+            --surface-border: rgba(12, 85, 138, 0.14);
+            --surface-strong: rgba(255, 255, 255, 0.95);
+            --accent: #2f82cd;
+            --accent-soft: rgba(47, 130, 205, 0.13);
+            --shadow: 0 16px 40px -22px rgba(9, 57, 89, 0.6);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
+            color: var(--text);
+            background-color: var(--bg);
+            background-image: var(--bg-hero);
+            min-height: 100vh;
         }
 
         nav {
-            height: 50px;
+            min-height: 50px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            border-bottom: 1px solid var(--surface-border);
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 28px -22px rgba(10, 61, 95, 0.78);
         }
 
         a {
@@ -38,6 +61,8 @@
         #nav-title {
             margin-left: 3rem;
             font-size: 110%;
+            font-weight: 700;
+            letter-spacing: 0.015em;
         }
 
         #nav-content {
@@ -47,35 +72,61 @@
 
         #nav-content>a,
         .channel-link {
-            color: #424242;
+            color: var(--muted);
             margin-right: 1.5rem;
+            transition: color 0.15s ease;
+        }
+
+        #nav-content>a:hover,
+        .channel-link:hover {
+            color: var(--accent);
         }
 
         input[type=text],
         input[type=submit],
         button {
-            background-color: white;
+            background-color: var(--surface-strong);
             padding: 0.5rem;
             border-radius: 0.5rem;
-            border: 1px solid rgba(0, 0, 0, 0.20);
+            border: 1px solid var(--surface-border);
+            color: var(--text);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+            box-shadow: 0 10px 26px -20px rgba(10, 57, 87, 0.72);
+        }
+
+        input[type=text]:focus,
+        button:focus {
+            outline: none;
+            border-color: rgba(47, 130, 205, 0.45);
+            box-shadow: 0 0 0 3px rgba(47, 130, 205, 0.15);
+        }
+
+        button:hover,
+        input[type=submit]:hover {
+            border-color: rgba(47, 130, 205, 0.32);
+            background-color: rgba(255, 255, 255, 0.98);
         }
 
         #error {
-            max-width: 12.5rem;
-            background-color: rgb(193, 55, 55);
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            font-size: 0.8rem;
+            max-width: 15rem;
+            background: linear-gradient(135deg, rgba(168, 42, 42, 0.97) 0%, rgba(189, 63, 63, 0.97) 100%);
+            color: #fff;
+            border-radius: 0.7rem;
+            padding: 0.55rem 0.7rem;
+            font-size: 0.78rem;
             position: fixed;
             bottom: 0.5rem;
             right: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 16px 40px -20px rgba(119, 34, 34, 0.9);
+            white-space: pre-wrap;
         }
 
         .hero {
             margin-top: 10vh;
             font-size: 2.75rem;
             text-align: center;
+            letter-spacing: -0.02em;
         }
 
         #content {
@@ -89,28 +140,33 @@
         }
 
         @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0d151d;
+                --bg-hero: radial-gradient(circle at 15% 10%, rgba(37, 97, 145, 0.35) 0%, rgba(37, 97, 145, 0) 40%), radial-gradient(circle at 90% 0%, rgba(26, 72, 112, 0.28) 0%, rgba(26, 72, 112, 0) 45%);
+                --text: rgb(238, 244, 248);
+                --muted: rgb(186, 202, 213);
+                --surface: rgba(16, 25, 34, 0.72);
+                --surface-strong: rgba(16, 25, 34, 0.9);
+                --surface-border: rgba(147, 185, 214, 0.18);
+                --accent: #68b5e7;
+                --accent-soft: rgba(104, 181, 231, 0.16);
+                --shadow: 0 16px 40px -22px rgba(3, 17, 28, 0.88);
+            }
+
             body {
-                background-color: rgb(21, 20, 22);
-                color: rgb(238, 238, 238);
+                color: var(--text);
             }
 
             nav {
-                border-bottom: none;
+                border-bottom-color: var(--surface-border);
             }
 
             input[type=text],
             input[type=submit],
             button {
-                background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-            }
-
-            input[type=text],
-            input[type=submit],
-            button,
-            #nav-content>a,
-            .channel-link {
-                color: rgb(200, 200, 200);
+                background-color: var(--surface-strong);
+                border: 1px solid var(--surface-border);
+                color: var(--text);
             }
         }
     </style>

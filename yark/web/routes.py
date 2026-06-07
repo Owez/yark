@@ -2,6 +2,7 @@
 
 import json
 import os
+from pathlib import Path
 
 from flask import (
     Blueprint,
@@ -24,6 +25,34 @@ from .timestamps import _decode_timestamp
 routes = Blueprint("routes", __name__)
 
 
+def _discover_archives(
+    root: Path, max_depth: int = 3, max_results: int = 50
+) -> list[str]:
+    """Discover archive directories containing yark.json from the current launch root."""
+    discovered: list[str] = []
+    skip_dirs = {".git", "__pycache__", ".venv", "venv", "node_modules", "target"}
+
+    for current_root, dirs, files in os.walk(root):
+        rel = Path(current_root).relative_to(root)
+        depth = len(rel.parts)
+        if depth > max_depth:
+            dirs[:] = []
+            continue
+
+        dirs[:] = [
+            d for d in dirs if d not in skip_dirs and not d.startswith(".")
+        ]
+
+        if "yark.json" in files:
+            rel_path = "." if rel == Path(".") else rel.as_posix()
+            discovered.append(rel_path)
+            if len(discovered) >= max_results:
+                break
+
+    discovered.sort()
+    return discovered
+
+
 @routes.route("/", methods=["POST", "GET"])
 def index():
     """Open channel for non-selected channel"""
@@ -37,17 +66,20 @@ def index():
         visited = request.cookies.get("visited")
         if visited is not None:
             visited = json.loads(visited)
+        discovered = _discover_archives(Path.cwd())
         error = request.args["error"] if "error" in request.args else None
-        return render_template("index.html", error=error, visited=visited)
+        return render_template(
+            "index.html", error=error, visited=visited, discovered=discovered
+        )
 
 
-@routes.route("/channel/<name>")
+@routes.route("/channel/<path:name>")
 def channel_empty(name):
     """Empty channel url, just redirect to videos by default"""
     return redirect(url_for("routes.channel", name=name, kind="videos"))
 
 
-@routes.route("/channel/<name>/<kind>")
+@routes.route("/channel/<path:name>/<kind>")
 def channel(name, kind):
     """Channel information"""
     if kind not in ["videos", "livestreams", "shorts"]:
@@ -67,7 +99,9 @@ def channel(name, kind):
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
+@routes.route(
+    "/channel/<path:name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"]
+)
 def video(name, kind, id):
     """Detailed video information and viewer"""
     if kind not in ["videos", "livestreams", "shorts"]:
@@ -85,6 +119,8 @@ def video(name, kind, id):
             title = f"{video.title.current()} · {name}"
             views_data = json.dumps(video.views._to_dict())
             likes_data = json.dumps(video.likes._to_dict())
+            downloaded = video.downloaded()
+            video_file = video.filename()
             return render_template(
                 "video.html",
                 title=title,
@@ -92,6 +128,8 @@ def video(name, kind, id):
                 video=video,
                 views_data=views_data,
                 likes_data=likes_data,
+                downloaded=downloaded,
+                video_file=video_file,
             )
 
         # Add new note
@@ -174,13 +212,13 @@ def video(name, kind, id):
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/archive/<name>/video/<file>")
+@routes.route("/archive/<path:name>/video/<file>")
 def archive_video(name, file):
     """Serves video file using it's filename (id + ext)"""
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
-@routes.route("/archive/<name>/thumbnail/<id>")
+@routes.route("/archive/<path:name>/thumbnail/<id>")
 def archive_thumbnail(name, id):
     """Serves thumbnail file using it's id"""
     return send_from_directory(os.getcwd(), f"{name}/thumbnails/{id}.webp")

@@ -19,16 +19,20 @@
     }
 
     .thumbnail {
+        position: relative;
         overflow: hidden;
-        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
-        border-radius: 7.5px;
+        box-shadow: 0px 10px 35px -15px rgba(16, 83, 126, 0.55);
+        border-radius: 10px;
         width: 300px;
         height: 168.75px;
+        border: 1px solid rgba(35, 109, 161, 0.22);
+        background: linear-gradient(180deg, rgba(7, 42, 66, 0.16) 0%, rgba(7, 42, 66, 0.06) 100%);
     }
 
     .thumbnail>img {
         width: 100%;
         height: 100%;
+        object-fit: cover;
     }
 
     .info {
@@ -55,10 +59,18 @@
         text-align: right;
     }
 
-    .frost {
-        filter: blur(5px);
-        opacity: 0.4;
-        margin-top: -5px;
+    .video-flag {
+        position: absolute;
+        left: 0.55rem;
+        bottom: 0.55rem;
+        font-size: 0.68rem;
+        padding: 0.18rem 0.48rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(8, 39, 61, 0.84);
+        color: rgba(235, 247, 255, 0.96);
+        backdrop-filter: blur(3px);
+        letter-spacing: 0.015em;
     }
 
 
@@ -75,17 +87,14 @@
 {% if channel.videos %}
 <div id="content">
     {% for video in channel.videos %}
-    <!-- FIXME: ugly way to disable undownloaded video -->
     {% set downloaded = video.downloaded() %}
-    {% if downloaded %}
     <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
-    {% else %}
-    <div class="video">
-    {% endif %}
         <!-- Thumbnail -->
         <div class="thumbnail">
-            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}" {% if not
-                video.downloaded() %}class="frost" {% endif %} />
+            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}" />
+            {% if not downloaded %}
+            <span class="video-flag">Not downloaded</span>
+            {% endif %}
         </div>
         <!-- Information -->
         <div class="info">
@@ -98,11 +107,7 @@
                 {{ video.uploaded.strftime("%d/%m/%Y") }}
             </p>
         </div>
-    {% if downloaded %}
     </a>
-    {% else %}
-    </div>
-    {% endif %}
     {% endfor %}
 </div>
 {% else %}

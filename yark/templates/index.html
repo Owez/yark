@@ -10,21 +10,41 @@
     }
 
     input[type=text] {
-        width: calc(15rem + 20vw);
+        width: min(42rem, calc(15rem + 26vw));
+        padding: 0.72rem 0.78rem;
+        font-size: 0.96rem;
     }
 
-    .visited {
+    .archives {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
         margin-left: 20vw;
         margin-right: 20vw;
-        gap: 7px;
+        gap: 0.45rem;
+        margin-top: 1.5rem;
     }
 
-    .visited > a {
-        color: rgb(106, 191, 219);
+    .archives > p {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.3rem;
+        color: var(--muted);
+    }
+
+    .archives > a {
+        color: var(--accent);
+        border: 1px solid rgba(47, 130, 205, 0.24);
+        border-radius: 999px;
+        padding: 0.2rem 0.62rem;
+        background: rgba(47, 130, 205, 0.09);
+        transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .archives > a:hover {
+        transform: translateY(-1px);
+        background: rgba(47, 130, 205, 0.18);
     }
 </style>
 {% endblock %}
@@ -32,12 +52,32 @@
 {% block content %}
 <h1 class="hero">Yark</h1>
 <form action="/" method="post">
-    <input type="text" name="channel" placeholder="e.g. pewdiepie">
+    <input type="text" name="channel" placeholder="e.g. pewdiepie or myfolder/pewdiepie" list="known-archives" autofocus>
+    <datalist id="known-archives">
+        {% if discovered %}
+            {% for id in discovered %}
+            <option value="{{ id }}"></option>
+            {% endfor %}
+        {% endif %}
+        {% if visited %}
+            {% for id in visited %}
+            <option value="{{ id }}"></option>
+            {% endfor %}
+        {% endif %}
+    </datalist>
 </form>
 {% if visited %}
-<div class="visited">
+<div class="archives">
     <p>Recent Archives: </p>
     {% for id in visited %}
+    <a href="/channel/{{ id }}/videos">{{ id }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+{% if discovered %}
+<div class="archives">
+    <p>Discovered Archives Near Here:</p>
+    {% for id in discovered %}
     <a href="/channel/{{ id }}/videos">{{ id }}</a>
     {% endfor %}
 </div>
