@@ -31,6 +31,18 @@ Now that you've created the archive, you can tell Yark to download all videos an
 $ yark refresh foobar
 ```
 
+You can also refresh with advanced filters for things like date ranges or popular videos:
+
+```shell
+$ yark refresh foobar --videos=popular:10 --date-min=2025-01-01 --date-max=2025-12-31
+```
+
+If YouTube asks you to sign in or rate-limits requests, add a `cookies.txt` file to your archive root (next to `yark.json`) and Yark will use it automatically on refresh.
+
+```shell
+$ cp ~/Downloads/cookies.txt ./foobar/cookies.txt
+```
+
 Once everything has been downloaded, Yark will automatically give you a status report of what's changed since the last refresh:
 
 <p><img src="https://raw.githubusercontent.com/Owez/yark/1.2-support/examples/images/cli_dark.png" alt="Report Demo" title="Report Demo" width="600" /></p>
@@ -53,6 +65,16 @@ Under each video is a rich history report filled with timelines and graphs, as w
 
 Light and dark modes are both available and automatically apply based on the system's theme.
 
+## Project Layout
+
+The package is structured around clear application boundaries:
+
+- `yark.core` contains the archive models, download workflow, and reporting logic.
+- `yark.web` contains the Flask app factory, routes, and viewer-only timestamp helpers.
+- `yark.cli` remains the CLI entrypoint and orchestrates the core and web packages.
+
+This structure is now the concrete layout and does not include compatibility shim modules.
+
 ## Details
 
 Here are some things to keep in mind when using Yark; the good and the bad:
@@ -73,5 +95,6 @@ The archive format itself is simple and consists of a directory-based structure 
     - `[id].*` – Files containing video data for YouTube videos
   - `thumbnails/` – Directory containing all known thumbnails
     - `[hash].png` – Files containing thumbnails with its hash
+  - `cookies.txt` – Optional cookies file which you can paste in
 
 It's best to take a few minutes to familiarize yourself with your archive by looking at files which look interesting to you in it, everything is quite readable.

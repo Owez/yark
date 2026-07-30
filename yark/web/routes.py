@@ -1,27 +1,56 @@
-"""Flask-based web viewer for rich history reporting"""
+"""Flask routes for the offline archive viewer."""
 
 import json
 import os
+from pathlib import Path
+
 from flask import (
-    Flask,
+    Blueprint,
+    redirect,
     render_template,
     request,
-    redirect,
-    url_for,
     send_from_directory,
-    Blueprint,
+    url_for,
 )
-import logging
-from .errors import (
+
+from ..core import Channel, Note
+from ..errors import (
     ArchiveNotFoundException,
     NoteNotFoundException,
-    VideoNotFoundException,
     TimestampException,
+    VideoNotFoundException,
 )
-from .channel import Channel
-from .video import Note
+from .timestamps import _decode_timestamp
 
-routes = Blueprint("routes", __name__, template_folder="templates")
+routes = Blueprint("routes", __name__)
+
+
+def _discover_archives(
+    root: Path, max_depth: int = 3, max_results: int = 50
+) -> list[str]:
+    """Discover archive directories containing yark.json from the current launch root."""
+    discovered: list[str] = []
+    skip_dirs = {".git", "__pycache__", ".venv", "venv", "node_modules", "target"}
+
+    for current_root, dirs, files in os.walk(root):
+        rel = Path(current_root).relative_to(root)
+        depth = len(rel.parts)
+        if depth > max_depth:
+            dirs[:] = []
+            continue
+
+        dirs[:] = [
+            d for d in dirs if d not in skip_dirs and not d.startswith(".")
+        ]
+
+        if "yark.json" in files:
+            rel_path = "." if rel == Path(".") else rel.as_posix()
+            discovered.append(rel_path)
+            if len(discovered) >= max_results:
+                break
+
+    discovered.sort()
+    return discovered
 
 
 @routes.route("/", methods=["POST", "GET"])
@@ -37,17 +66,20 @@ def index():
         visited = request.cookies.get("visited")
         if visited is not None:
             visited = json.loads(visited)
+        discovered = _discover_archives(Path.cwd())
         error = request.args["error"] if "error" in request.args else None
-        return render_template("index.html", error=error, visited=visited)
+        return render_template(
+            "index.html", error=error, visited=visited, discovered=discovered
+        )
 
 
-@routes.route("/channel/<name>")
+@routes.route("/channel/<path:name>")
 def channel_empty(name):
     """Empty channel url, just redirect to videos by default"""
     return redirect(url_for("routes.channel", name=name, kind="videos"))
 
 
-@routes.route("/channel/<name>/<kind>")
+@routes.route("/channel/<path:name>/<kind>")
 def channel(name, kind):
     """Channel information"""
     if kind not in ["videos", "livestreams", "shorts"]:
@@ -55,9 +87,8 @@ def channel(name, kind):
 
     try:
         channel = Channel.load(name)
-        ldir = os.listdir(channel.path / "videos")
         return render_template(
-            "channel.html", title=name, channel=channel, name=name, ldir=ldir
+            "channel.html", title=name, channel=channel, name=name
         )
     except ArchiveNotFoundException:
         return redirect(
@@ -67,7 +98,9 @@ def channel(name, kind):
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/channel/<name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"])
+@routes.route(
+    "/channel/<path:name>/<kind>/<id>", methods=["GET", "POST", "PATCH", "DELETE"]
+)
 def video(name, kind, id):
     """Detailed video information and viewer"""
     if kind not in ["videos", "livestreams", "shorts"]:
@@ -85,6 +118,8 @@ def video(name, kind, id):
             title = f"{video.title.current()} · {name}"
             views_data = json.dumps(video.views._to_dict())
             likes_data = json.dumps(video.likes._to_dict())
+            downloaded = video.downloaded()
+            video_file = video.filename()
             return render_template(
                 "video.html",
                 title=title,
@@ -92,6 +127,8 @@ def video(name, kind, id):
                 video=video,
                 views_data=views_data,
                 likes_data=likes_data,
+                downloaded=downloaded,
+                video_file=video_file,
             )
 
         # Add new note
@@ -174,100 +211,13 @@ def video(name, kind, id):
         return redirect(url_for("routes.index", error=f"Internal server error:\n{e}"))
 
 
-@routes.route("/archive/<name>/video/<file>")
+@routes.route("/archive/<path:name>/video/<file>")
 def archive_video(name, file):
     """Serves video file using it's filename (id + ext)"""
     return send_from_directory(os.getcwd(), f"{name}/videos/{file}")
 
 
-@routes.route("/archive/<name>/thumbnail/<id>")
+@routes.route("/archive/<path:name>/thumbnail/<id>")
 def archive_thumbnail(name, id):
     """Serves thumbnail file using it's id"""
     return send_from_directory(os.getcwd(), f"{name}/thumbnails/{id}.webp")
-
-
-def viewer() -> Flask:
-    """Generates viewer flask app, launch by just using the typical `app.run()`"""
-    # Make flask app
-    app = Flask(__name__)
-
-    # Only log errors
-    log = logging.getLogger("werkzeug")
-    log.setLevel(logging.ERROR)
-
-    # Routing blueprint
-    app.register_blueprint(routes)
-
-    # TODO: redo nicer
-    @app.template_filter("timestamp")
-    def _jinja2_filter_timestamp(timestamp, fmt=None):
-        """Special hook for timestamps"""
-        return _encode_timestamp(timestamp)
-
-    # Return
-    return app
-
-
-def _decode_timestamp(input: str) -> int:
-    """Parses timestamp into seconds or raises `TimestampException`"""
-    # Check existence
-    input = input.strip()
-    if input == "":
-        raise TimestampException("No input provided")
-
-    # Split colons
-    splitted = input.split(":")
-    splitted.reverse()
-    if len(splitted) > 3:
-        raise TimestampException("Days and onwards aren't supported")
-
-    # Parse
-    secs = 0
-    try:
-        # Seconds
-        secs += int(splitted[0])
-
-        # Minutes
-        if len(splitted) > 1:
-            secs += int(splitted[1]) * 60
-
-        # Hours
-        if len(splitted) > 2:
-            secs += int(splitted[2]) * 60 * 60
-    except:
-        raise TimestampException("Only numbers are allowed in timestamps")
-
-    # Return
-    return secs
-
-
-def _encode_timestamp(timestamp: int) -> str:
-    """Formats previously parsed human timestamp for notes, e.g. `02:25`"""
-    # Collector
-    parts = []
-
-    # Hours
-    if timestamp >= 60 * 60:
-        # Get hours float then append truncated
-        hours = timestamp / (60 * 60)
-        parts.append(str(int(hours)).rjust(2, "0"))
-
-        # Remove truncated hours from timestamp
-        timestamp = int((hours - int(hours)) * 60 * 60)
-
-    # Minutes
-    if timestamp >= 60:
-        # Get minutes float then append truncated
-        minutes = timestamp / 60
-        parts.append(str(int(minutes)).rjust(2, "0"))
-
-        # Remove truncated minutes from timestamp
-        timestamp = int((minutes - int(minutes)) * 60)
-
-    # Seconds
-    if len(parts) == 0:
-        parts.append("00")
-    parts.append(str(timestamp).rjust(2, "0"))
-
-    # Return
-    return ":".join(parts)

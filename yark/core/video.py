@@ -1,15 +1,17 @@
 """Single video inside of a channel, allowing reporting and addition/updates to it's status using timestamps"""
 
 from __future__ import annotations
-from datetime import datetime
-from fnmatch import fnmatch
-from pathlib import Path
-from uuid import uuid4
-import requests
+
 import hashlib
-from .errors import NoteNotFoundException
-from .utils import _truncate_text
+from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
+from uuid import uuid4
+
+import requests
+
+from ..errors import NoteNotFoundException
+from .utils import _truncate_text
 
 if TYPE_CHECKING:
     from .channel import Channel
@@ -37,11 +39,11 @@ class Video:
         video.channel = channel
         video.id = entry["id"]
         video.uploaded = _decode_date_yt(entry["upload_date"])
-        video.width = entry["width"]
-        video.height = entry["height"]
-        video.title = Element.new(video, entry["title"])
-        video.description = Element.new(video, entry["description"])
-        video.views = Element.new(video, entry["view_count"])
+        video.width = entry.get("width") or 0
+        video.height = entry.get("height") or 0
+        video.title = Element.new(video, entry.get("title") or "")
+        video.description = Element.new(video, entry.get("description") or "")
+        video.views = Element.new(video, entry.get("view_count") or 0)
         video.likes = Element.new(
             video, entry["like_count"] if "like_count" in entry else None
         )
@@ -57,15 +59,28 @@ class Video:
 
     @staticmethod
     def _new_empty() -> Video:
-        fake_entry = {"hi": True}  # TODO: finish
-        return Video.new(fake_entry, Channel._new_empty())
+        """Minimal dummy video for serializing placeholder elements during migration."""
+        video = Video()
+        video.channel = None
+        video.id = "00000000"
+        video.uploaded = datetime(2000, 1, 1)
+        video.width = 0
+        video.height = 0
+        video.title = Element.new(video, "")
+        video.description = Element.new(video, "")
+        video.views = Element.new(video, 0)
+        video.likes = Element.new(video, None)
+        video.thumbnail = Element.new(video, "")
+        video.deleted = Element.new(video, False)
+        video.notes = []
+        video.known_not_deleted = False
+        return video
 
     def update(self, entry: dict):
         """Updates video using new schema, adding a new timestamp to any changes"""
-        # Normal
-        self.title.update("title", entry["title"])
-        self.description.update("description", entry["description"])
-        self.views.update("view count", entry["view_count"])
+        self.title.update("title", entry.get("title") or "")
+        self.description.update("description", entry.get("description") or "")
+        self.views.update("view count", entry.get("view_count") or 0)
         self.likes.update(
             "like count", entry["like_count"] if "like_count" in entry else None
         )

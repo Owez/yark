@@ -1,21 +1,23 @@
-"""Channel and overall archive management with downloader"""
+"""Channel and overall archive management with downloader."""
 
 from __future__ import annotations
-from datetime import datetime
+
 import json
-from pathlib import Path
-import time
-from yt_dlp import YoutubeDL, DownloadError  # type: ignore
-from colorama import Style, Fore
+import re
 import sys
+import time
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
+
+from yt_dlp import DownloadError, YoutubeDL  # type: ignore
+
+from ..errors import ArchiveNotFoundException, VideoNotFoundException
+from ..terminal import ui
 from .reporter import Reporter
-from .errors import ArchiveNotFoundException, _err_msg, VideoNotFoundException
-from .video import Video, Element
-from typing import Any
-import time
-from progress.spinner import PieSpinner
-from concurrent.futures import ThreadPoolExecutor
-import time
+from .video import Element, Video
 
 ARCHIVE_COMPAT = 3
 """
@@ -33,89 +35,148 @@ gets a line or two of extra code every breaking change. This is much better than
 having way more complexity in the archiver decoding system itself.
 """
 
-from typing import Optional
-
 
 class DownloadConfig:
-    max_videos: Optional[int]
-    max_livestreams: Optional[int]
-    max_shorts: Optional[int]
+    videos: "DownloadSelection"
+    livestreams: "DownloadSelection"
+    shorts: "DownloadSelection"
+    uploaded_after: Optional[datetime]
+    uploaded_before: Optional[datetime]
+    verbose: bool
+    respect_rate_limits: bool
     skip_download: bool
     skip_metadata: bool
     format: Optional[str]
 
     def __init__(self) -> None:
-        self.max_videos = None
-        self.max_livestreams = None
-        self.max_shorts = None
+        self.videos = DownloadSelection()
+        self.livestreams = DownloadSelection()
+        self.shorts = DownloadSelection()
+        self.uploaded_after = None
+        self.uploaded_before = None
+        self.verbose = False
+        self.respect_rate_limits = False
         self.skip_download = False
         self.skip_metadata = False
         self.format = None
 
     def submit(self):
         """Submits configuration, this has the effect of normalising maximums to 0 properly"""
+        if (
+            self.uploaded_after is not None
+            and self.uploaded_before is not None
+            and self.uploaded_after > self.uploaded_before
+        ):
+            raise ValueError("The minimum upload date cannot be after the maximum")
+
         # Adjust remaining maximums if one is given
         no_maximums = (
-            self.max_videos is None
-            and self.max_livestreams is None
-            and self.max_shorts is None
+            self.videos.maximum is None
+            and self.livestreams.maximum is None
+            and self.shorts.maximum is None
         )
         if not no_maximums:
-            if self.max_videos is None:
-                self.max_videos = 0
-            if self.max_livestreams is None:
-                self.max_livestreams = 0
-            if self.max_shorts is None:
-                self.max_shorts = 0
+            if self.videos.maximum is None:
+                self.videos.maximum = 0
+            if self.livestreams.maximum is None:
+                self.livestreams.maximum = 0
+            if self.shorts.maximum is None:
+                self.shorts.maximum = 0
 
         # If all are 0 as its equivalent to skipping download
-        if self.max_videos == 0 and self.max_livestreams == 0 and self.max_shorts == 0:
-            print(
-                Fore.YELLOW
-                + "Using the skip downloads option is recommended over setting maximums to 0"
-                + Fore.RESET
+        if (
+            self.videos.maximum == 0
+            and self.livestreams.maximum == 0
+            and self.shorts.maximum == 0
+        ):
+            ui.warning(
+                "Using the skip downloads option is recommended over setting maximums to 0"
             )
             self.skip_download = True
 
 
+class DownloadFilter(str, Enum):
+    """Supported download selection strategies."""
+
+    RECENT = "recent"
+    POPULAR = "popular"
+
+
+@dataclass
+class DownloadSelection:
+    """Selection rule for one media category."""
+
+    maximum: Optional[int] = None
+    filter: DownloadFilter = DownloadFilter.RECENT
+
+
 class VideoLogger:
+    def __init__(
+        self,
+        verbose: bool = False,
+        show_progress: bool = False,
+        progress_label: str = "Progress",
+    ) -> None:
+        self.verbose = verbose
+        self.show_progress = show_progress
+        self.progress_label = progress_label
+        self._last_progress: tuple[int, int] | None = None
+
+    def _emit_progress(self, msg: str) -> None:
+        if not self.show_progress:
+            return
+
+        match = re.search(r"Downloading item (\d+) of (\d+)", msg)
+        if match is None:
+            return
+
+        current = int(match.group(1))
+        total = int(match.group(2))
+        step = max(total // 20, 1)
+
+        should_emit = (
+            self._last_progress is None
+            or self._last_progress[1] != total
+            or current == 1
+            or current == total
+            or current - self._last_progress[0] >= step
+        )
+        if should_emit:
+            ui.info(f"{self.progress_label}: {current}/{total}")
+            self._last_progress = (current, total)
+
     @staticmethod
     def downloading(d):
         """Progress hook for video downloading"""
         # Get video's id
         id = d["info_dict"]["id"]
 
-        # Downloading percent
-        if d["status"] == "downloading":
-            percent = d["_percent_str"].strip()
-            print(
-                Style.DIM
-                + f"  • Downloading {id}, at {percent}"
-                + Style.DIM
-                + "..                "
-                + Style.NORMAL,
-                end="\r",
-            )
-
         # Finished a video's download
-        elif d["status"] == "finished":
-            print(Style.DIM + f"  • Downloaded {id}                " + Style.NORMAL)
+        if d["status"] == "finished":
+            ui.success(f"Downloaded {id}")
 
     def debug(self, msg):
-        """Debug log messages, ignored"""
-        pass
+        """Debug log messages"""
+        self._emit_progress(msg)
+        if self.verbose:
+            ui.plain(f"[yt-dlp:debug] {msg}")
 
     def info(self, msg):
-        """Info log messages ignored"""
-        pass
+        """Info log messages"""
+        self._emit_progress(msg)
+
+        if self.verbose:
+            ui.plain(f"[yt-dlp:info] {msg}")
 
     def warning(self, msg):
-        """Warning log messages ignored"""
-        pass
+        """Warning log messages"""
+        if self.verbose:
+            ui.warning(f"[yt-dlp:warn] {msg}")
 
     def error(self, msg):
         """Error log messages"""
-        pass
+        if self.verbose:
+            ui.error(f"[yt-dlp:error] {msg}")
 
 
 class Channel:
@@ -126,12 +187,14 @@ class Channel:
     livestreams: list[Video]
     shorts: list[Video]
     reporter: Reporter
+    cookies_file: Optional[Path]
+    verbose: bool
 
     @staticmethod
     def new(path: Path, url: str) -> Channel:
         """Creates a new channel"""
         # Details
-        print("Creating new channel..")
+        ui.info("Creating new channel..")
         channel = Channel()
         channel.path = Path(path)
         channel.version = ARCHIVE_COMPAT
@@ -139,6 +202,8 @@ class Channel:
         channel.videos = []
         channel.livestreams = []
         channel.shorts = []
+        channel.cookies_file = None
+        channel.verbose = False
         channel.reporter = Reporter(channel)
 
         # Commit and return
@@ -147,9 +212,18 @@ class Channel:
 
     @staticmethod
     def _new_empty() -> Channel:
-        return Channel.new(
-            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-        )
+        """Lightweight dummy for migration, never touches the filesystem."""
+        channel = Channel()
+        channel.path = Path(".")
+        channel.version = ARCHIVE_COMPAT
+        channel.url = ""
+        channel.videos = []
+        channel.livestreams = []
+        channel.shorts = []
+        channel.cookies_file = None
+        channel.verbose = False
+        channel.reporter = Reporter(channel)
+        return channel
 
     @staticmethod
     def load(path: Path) -> Channel:
@@ -157,7 +231,7 @@ class Channel:
         # Check existence
         path = Path(path)
         channel_name = path.name
-        print(f"Loading {channel_name} channel..")
+        ui.info(f"Loading {channel_name} channel..")
         if not path.exists():
             raise ArchiveNotFoundException("Archive doesn't exist")
 
@@ -174,33 +248,14 @@ class Channel:
         # Decode and return
         return Channel._from_dict(encoded, path)
 
-    def metadata(self):
+    def metadata(self, config: Optional[DownloadConfig] = None):
         """Queries YouTube for all channel metadata to refresh known videos"""
-        # Print loading progress at the start without loading indicator so theres always a print
-        msg = "Downloading metadata.."
-        print(msg, end="\r")
-
-        # Download metadata and give the user a spinner bar
-        with ThreadPoolExecutor() as ex:
-            # Make future for downloading metadata
-            future = ex.submit(self._download_metadata)
-
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        break
-                    time.sleep(0.25)
-
-                # Show loading spinner
-                while not future.done():
-                    bar.next()
-                    time.sleep(0.075)
-
-            # Get result from thread now that it's finished
-            res = future.result()
+        self._verbose(f"Starting metadata fetch for {self.url}")
+        with ui.status("Downloading metadata.."):
+            res = self._download_metadata(config)
+        self._verbose(
+            f"Metadata root keys: {', '.join(sorted(res.keys()))}; top-level entries: {len(res.get('entries', []))}"
+        )
 
         # Uncomment for saving big dumps for testing
         # with open(self.path / "dump.json", "w+") as file:
@@ -212,27 +267,44 @@ class Channel:
         # Parse downloaded metadata
         self._parse_metadata(res)
 
-    def _download_metadata(self) -> dict[str, Any]:
+    def _download_metadata(self, config: Optional[DownloadConfig]) -> dict[str, Any]:
         """Downloads metadata dict and returns for further parsing"""
         # Construct downloader
         settings = {
             # Centralized logging system; makes output fully quiet
-            "logger": VideoLogger(),
+            "logger": VideoLogger(
+                verbose=self.verbose,
+                show_progress=not self.verbose,
+                progress_label="Metadata progress",
+            ),
             # Skip downloading pending livestreams (#60 <https://github.com/Owez/yark/issues/60>)
             "ignore_no_formats_error": True,
             # Concurrent fragment downloading for increased resilience (#109 <https://github.com/Owez/yark/issues/109>)
             "concurrent_fragment_downloads": 8,
-            # First download "flat", then extract_info for each video, to support large channels/playlists (#71 <https://github.com/Owez/yark/issues/71>)
-            "extract_flat":True
+            # Keep yt-dlp progress lines available for parsing in normal mode,
+            # while full details are still only printed when self.verbose is enabled.
+            "verbose": True,
         }
+        if config is not None and config.respect_rate_limits:
+            settings.update(
+                {
+                    "sleep_interval_requests": 1,
+                    "sleep_interval": 1,
+                    "max_sleep_interval": 5,
+                    "retries": 10,
+                    "extractor_retries": 10,
+                    "socket_timeout": 30,
+                }
+            )
+            self._verbose("Rate-limit compliance mode enabled for metadata")
+        self._apply_cookie_settings(settings)
 
         # Get response and snip it
         with YoutubeDL(settings) as ydl:
-            # first extract the "flat" metadata, which does not download the metadata for all the videos
             for i in range(3):
                 try:
                     res: dict[str, Any] = ydl.extract_info(self.url, download=False)
-                    break
+                    return res
                 except Exception as exception:
                     # Report error
                     retrying = i != 2
@@ -240,67 +312,7 @@ class Channel:
 
                     # Print retrying message
                     if retrying:
-                        print(
-                            Style.DIM
-                            + f"  • Retrying metadata download.."
-                            + Style.RESET_ALL
-                        )  # TODO: compat with loading bar
-
-            # go through the "flat" metadata and download the metadata for each video
-            for index in range(len(res["entries"])):
-                if res["entries"][index]["_type"] == "playlist":
-                    playlist = res["entries"][index]
-                    for list_index in range(len(playlist["entries"])):
-                        url = playlist["entries"][list_index]["url"]
-                        for i in range(3):
-                            try:
-                                entry = ydl.extract_info(url, download=False)
-                                if len(entry["formats"]) == 0:
-                                    ydl = YoutubeDL(settings)
-                                    entry = ydl.extract_info(url, download=False)
-
-                                playlist["entries"][list_index] = entry
-                                break
-                            except Exception as exception:
-                                # Report error
-                                retrying = i != 2
-                                _err_dl("metadata", exception, retrying)
-
-                                # Print retrying message
-                                if retrying:
-                                    print(
-                                        Style.DIM
-                                        + f"  • Retrying metadata download.."
-                                        + Style.RESET_ALL
-                                    )  # TODO: compat with loading bar
-
-
-                elif res["entries"][index]["_type"] == "url":
-                    url = res["entries"][index]["url"] 
-                    for i in range(3):
-                        try:
-                            entry = ydl.extract_info(url, download=False)
-                            # if video didn't download formats, open a new downloader and try again
-                            if len(entry["formats"]) == 0:
-                                ydl = YoutubeDL(settings)
-                                entry = ydl.extract_info(url, download=False)
-
-                            res["entries"][index] = entry
-                            break
-                        except Exception as exception:
-                            # Report error
-                            retrying = i != 2
-                            _err_dl("metadata", exception, retrying)
-
-                            # Print retrying message
-                            if retrying:
-                                print(
-                                    Style.DIM
-                                    + f"  • Retrying metadata download.."
-                                    + Style.RESET_ALL
-                                )  # TODO: compat with loading bar
-
-            return res
+                        ui.warning("Retrying metadata download..")
 
     def _parse_metadata(self, res: dict[str, Any]):
         """Parses entirety of downloaded metadata"""
@@ -311,6 +323,9 @@ class Channel:
         if len(res["entries"]) > 0 and "entries" not in res["entries"][0]:
             # Videos only
             videos = res["entries"]
+            self._verbose(
+                f"Detected single bucket metadata; treating all {len(videos)} entries as videos"
+            )
         else:
             # Videos and at least one other (livestream/shorts)
             for entry in res["entries"]:
@@ -322,7 +337,11 @@ class Channel:
                 elif kind == "shorts":
                     shorts = entry["entries"]
                 else:
-                    _err_msg(f"Unknown video kind '{kind}' found", True)
+                    ui.error(f"Unknown video kind '{kind}' found", True)
+            self._verbose(
+                "Detected bucketed metadata; "
+                f"videos={len(videos)}, livestreams={len(livestreams)}, shorts={len(shorts)}"
+            )
 
         # Parse metadata
         self._parse_metadata_videos("video", videos, self.videos)
@@ -336,6 +355,7 @@ class Channel:
 
     def download(self, config: DownloadConfig):
         """Downloads all videos which haven't already been downloaded"""
+        self._verbose("Starting download phase")
         # Clean out old part files
         self._clean_parts()
 
@@ -344,10 +364,25 @@ class Channel:
             # Set the output path
             "outtmpl": f"{self.path}/videos/%(id)s.%(ext)s",
             # Centralized logger hook for ignoring all stdout
-            "logger": VideoLogger(),
+            "logger": VideoLogger(self.verbose),
             # Logger hook for download progress
             "progress_hooks": [VideoLogger.downloading],
+            # Let yt-dlp emit more details when requested by user.
+            "verbose": self.verbose,
         }
+        if config.respect_rate_limits:
+            settings.update(
+                {
+                    "sleep_interval_requests": 1,
+                    "sleep_interval": 1,
+                    "max_sleep_interval": 5,
+                    "retries": 10,
+                    "extractor_retries": 10,
+                    "socket_timeout": 30,
+                }
+            )
+            self._verbose("Rate-limit compliance mode enabled for download")
+        self._apply_cookie_settings(settings)
         if config.format is not None:
             settings["format"] = config.format
 
@@ -359,6 +394,7 @@ class Channel:
                 try:
                     # Curate list of non-downloaded videos
                     not_downloaded = self._curate(config)
+                    self._verbose(f"Curated {len(not_downloaded)} videos for download")
 
                     # Stop if there's nothing to download
                     if len(not_downloaded) == 0:
@@ -371,7 +407,7 @@ class Channel:
                             if len(not_downloaded) == 1
                             else f"{len(not_downloaded)} new videos"
                         )
-                        print(f"Downloading {fmt_num}..")
+                        ui.info(f"Downloading {fmt_num}..")
 
                     # Continuously try to download after private/deleted videos are found
                     # This block gives the downloader all the curated videos and skips/reports deleted videos by filtering their exceptions
@@ -379,6 +415,12 @@ class Channel:
                         # Download from curated list then exit the optimistic loop
                         try:
                             urls = [video.url() for video in not_downloaded]
+                            if self.verbose and len(urls) > 0:
+                                preview = ", ".join(video.id for video in not_downloaded[:5])
+                                suffix = "..." if len(not_downloaded) > 5 else ""
+                                self._verbose(
+                                    f"Downloading IDs: {preview}{suffix}"
+                                )
                             ydl.download(urls)
                             break
 
@@ -421,10 +463,6 @@ class Channel:
 
                 # Report error and retry/stop
                 except Exception as exception:
-                    # Get around carriage return
-                    if i == 0:
-                        print()
-
                     # Report error
                     _err_dl("videos", exception, i != 4)
 
@@ -441,33 +479,42 @@ class Channel:
     def _curate(self, config: DownloadConfig) -> list[Video]:
         """Curate videos which aren't downloaded and return their urls"""
 
-        def curate_list(videos: list[Video], maximum: Optional[int]) -> list[Video]:
-            """Curates the videos inside of the provided `videos` list to it's local maximum"""
-            # Cut available videos to maximum if present for deterministic getting
-            if maximum is not None:
-                # Fix the maximum to the length so we don't try to get more than there is
-                fixed_maximum = min(max(len(videos) - 1, 0), maximum)
+        def curate_list(
+            videos: list[Video], selection: DownloadSelection
+        ) -> list[Video]:
+            """Curates the videos inside of the provided bucket using the provided selection rule."""
+            available = [video for video in videos if not video.downloaded()]
+            if config.uploaded_after is not None:
+                available = [
+                    video for video in available if video.uploaded >= config.uploaded_after
+                ]
+            if config.uploaded_before is not None:
+                available = [
+                    video for video in available if video.uploaded <= config.uploaded_before
+                ]
 
-                # Set the available videos to this fixed maximum
-                new_videos = []
-                for ind in range(fixed_maximum):
-                    new_videos.append(videos[ind])
-                videos = new_videos
+            if selection.filter == DownloadFilter.POPULAR:
+                available.sort(
+                    key=lambda video: (
+                        video.views.current() if video.views.current() is not None else -1,
+                        video.uploaded,
+                    ),
+                    reverse=True,
+                )
+            else:
+                available.sort(key=lambda video: video.uploaded, reverse=True)
 
-            # Find undownloaded videos in available list
-            not_downloaded = []
-            for video in videos:
-                if not video.downloaded():
-                    not_downloaded.append(video)
+            if selection.maximum is None:
+                return available
 
-            # Return
-            return not_downloaded
+            fixed_maximum = min(len(available), max(selection.maximum, 0))
+            return available[:fixed_maximum]
 
         # Curate
         not_downloaded = []
-        not_downloaded.extend(curate_list(self.videos, config.max_videos))
-        not_downloaded.extend(curate_list(self.livestreams, config.max_livestreams))
-        not_downloaded.extend(curate_list(self.shorts, config.max_shorts))
+        not_downloaded.extend(curate_list(self.videos, config.videos))
+        not_downloaded.extend(curate_list(self.livestreams, config.livestreams))
+        not_downloaded.extend(curate_list(self.shorts, config.shorts))
 
         # Return
         return not_downloaded
@@ -478,7 +525,7 @@ class Channel:
         self._backup()
 
         # Directories
-        print(f"Committing {self} to file..")
+        ui.info(f"Committing {self} to file..")
         paths = [self.path, self.path / "thumbnails", self.path / "videos"]
         for path in paths:
             if not path.exists():
@@ -491,34 +538,19 @@ class Channel:
     def _parse_metadata_videos(self, kind: str, i: list, bucket: list):
         """Parses metadata for a category of video into it's bucket and tells user what's happening"""
 
-        # Print at the start without loading indicator so theres always a print
-        msg = f"Parsing {kind} metadata.."
-        print(msg, end="\r")
-
-        # Start computing and show loading spinner
-        with ThreadPoolExecutor() as ex:
-            # Make future for computation of the video list
-            future = ex.submit(self._parse_metadata_videos_comp, i, bucket)
-
-            # Start spinning
-            with PieSpinner(f"{msg} ") as bar:
-                # Don't show bar for 2 seconds but check if future is done
-                no_bar_time = time.time() + 2
-                while time.time() < no_bar_time:
-                    if future.done():
-                        return
-                    time.sleep(0.25)
-
-                # Spin until future is done
-                while not future.done():
-                    time.sleep(0.075)
-                    bar.next()
+        with ui.status(f"Parsing {kind} metadata.."):
+            self._parse_metadata_videos_comp(i, bucket)
 
     def _parse_metadata_videos_comp(self, i: list, bucket: list):
         """Computes the actual parsing for `_parse_metadata_videos` without outputting what's happening"""
+        added = 0
+        updated_count = 0
+        skipped_no_formats = 0
+
         for entry in i:
             # Skip video if there's no formats available; happens with upcoming videos/livestreams
             if "formats" not in entry or len(entry["formats"]) == 0:
+                skipped_no_formats += 1
                 continue
 
             # Updated intra-loop marker
@@ -529,6 +561,7 @@ class Channel:
                 if video.id == entry["id"]:
                     video.update(entry)
                     updated = True
+                    updated_count += 1
                     break
 
             # Add new video if not
@@ -536,9 +569,15 @@ class Channel:
                 video = Video.new(entry, self)
                 bucket.append(video)
                 self.reporter.added.append(video)
+                added += 1
 
         # Sort videos by newest
         bucket.sort(reverse=True)
+
+        self._verbose(
+            f"Parsed bucket: incoming={len(i)}, added={added}, updated={updated_count}, "
+            f"skipped_no_formats={skipped_no_formats}, total_known={len(bucket)}"
+        )
 
     def _report_deleted(self, videos: list):
         """Goes through a video category to report & save those which where not marked in the metadata as deleted if they're not already known to be deleted"""
@@ -560,17 +599,17 @@ class Channel:
 
         # Print and delete if there are part files present
         if len(deletion_bucket) != 0:
-            print("Cleaning out previous temporary files..")
+            ui.info("Cleaning out previous temporary files..")
             for file in deletion_bucket:
                 file.unlink()
 
     def _backup(self):
         """Creates a backup of the existing `yark.json` file in path as `yark.bak` with added comments"""
         # Get current archive path
-        ARCHIVE_PATH = self.path / "yark.json"
+        archive_path = self.path / "yark.json"
 
         # Skip backing up if the archive doesn't exist
-        if not ARCHIVE_PATH.exists():
+        if not archive_path.exists():
             return
 
         # Open original archive to copy
@@ -582,6 +621,21 @@ class Channel:
             with open(self.path / "yark.bak", "w+") as file_backup:
                 file_backup.write(save)
 
+    def configure_cookies_file(self) -> None:
+        """Loads archive cookies path if a cookies.txt file exists."""
+        cookies_path = self.path / "cookies.txt"
+        self.cookies_file = cookies_path if cookies_path.exists() else None
+        if self.cookies_file is not None:
+            self._verbose(f"Using cookies file {self.cookies_file}")
+
+    def _apply_cookie_settings(self, settings: dict[str, Any]) -> None:
+        if self.cookies_file is not None:
+            settings["cookiefile"] = str(self.cookies_file)
+
+    def _verbose(self, message: str) -> None:
+        if self.verbose:
+            ui.info(f"[verbose] {message}")
+
     @staticmethod
     def _from_dict(encoded: dict, path: Path) -> Channel:
         """Decodes archive which is being loaded back up"""
@@ -589,6 +643,8 @@ class Channel:
         channel.path = path
         channel.version = encoded["version"]
         channel.url = encoded["url"]
+        channel.cookies_file = None
+        channel.verbose = False
         channel.reporter = Reporter(channel)
         channel.videos = [
             Video._from_dict(video, channel) for video in encoded["videos"]
@@ -599,6 +655,7 @@ class Channel:
         channel.shorts = [
             Video._from_dict(video, channel) for video in encoded["shorts"]
         ]
+        channel.configure_cookies_file()
         return channel
 
     def _to_dict(self) -> dict:
@@ -626,14 +683,9 @@ def _skip_video(
         if not video.downloaded():
             # Tell the user we're skipping over it
             if warning:
-                print(
-                    Fore.YELLOW + f"  • Skipping {video.id} ({reason})" + Fore.RESET,
-                    file=sys.stderr,
-                )
+                ui.warning(f"Skipping {video.id} ({reason})")
             else:
-                print(
-                    Style.DIM + f"  • Skipping {video.id} ({reason})" + Style.NORMAL,
-                )
+                ui.info(f"Skipping {video.id} ({reason})")
 
             # Set videos to skip over this one
             videos = videos[ind + 1 :]
@@ -650,7 +702,7 @@ def _skip_video(
 def _migrate_archive(
     current_version: int, expected_version: int, encoded: dict, channel_name: str
 ) -> dict:
-    """Automatically migrates an archive from one version to another by bootstrapping"""
+    """Automatically migrates an archive from one to another by bootstrapping"""
 
     def migrate_step(cur: int, encoded: dict) -> dict:
         """Step in recursion to migrate from one to another, contains migration logic"""
@@ -663,13 +715,7 @@ def _migrate_archive(
             # Channel id to url
             encoded["url"] = "https://www.youtube.com/channel/" + encoded["id"]
             del encoded["id"]
-            print(
-                Fore.YELLOW
-                + "Please make sure "
-                + encoded["url"]
-                + " is the correct url"
-                + Fore.RESET
-            )
+            ui.warning(f"Please make sure {encoded['url']} is the correct url")
 
             # Empty livestreams/shorts lists
             encoded["livestreams"] = []
@@ -688,7 +734,7 @@ def _migrate_archive(
 
         # Unknown version
         else:
-            _err_msg(f"Unknown archive version v{cur} found during migration", True)
+            ui.error(f"Unknown archive version v{cur} found during migration", True)
             sys.exit(1)
 
         # Increment version and run again until version has been reached
@@ -697,10 +743,8 @@ def _migrate_archive(
         return migrate_step(cur, encoded)
 
     # Inform user of the backup process
-    print(
-        Fore.YELLOW
-        + f"Automatically migrating archive from v{current_version} to v{expected_version}, a backup has been made at {channel_name}/yark.bak"
-        + Fore.RESET
+    ui.warning(
+        f"Automatically migrating archive from v{current_version} to v{expected_version}; backup saved at {channel_name}/yark.bak"
     )
 
     # Start recursion step
@@ -713,7 +757,7 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     msg = f"Unknown error whilst downloading {name}, details below:\n{exception}"
 
     # Types of errors
-    ERRORS = [
+    errors = [
         "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
         "500",
         "Got error: The read operation timed out",
@@ -725,39 +769,36 @@ def _err_dl(name: str, exception: DownloadError, retrying: bool):
     # Download errors
     if type(exception) == DownloadError:
         # Server connection
-        if ERRORS[0] in exception.msg:
+        if errors[0] in exception.msg:
             msg = "Issue connecting with YouTube's servers"
 
         # Server fault
-        elif ERRORS[1] in exception.msg:
+        elif errors[1] in exception.msg:
             msg = "Fault with YouTube's servers"
 
         # Timeout
-        elif ERRORS[2] in exception.msg:
+        elif errors[2] in exception.msg:
             msg = "Timed out trying to download video"
 
         # Video deleted whilst downloading
-        elif ERRORS[3] in exception.msg:
+        elif errors[3] in exception.msg:
             msg = "Video deleted whilst downloading"
 
         # Channel not found, might need to retry with alternative route
-        elif ERRORS[4] in exception.msg:
+        elif errors[4] in exception.msg:
             msg = "Couldn't find channel by it's id"
 
         # Random timeout; not sure if its user-end or youtube-end
-        elif ERRORS[5] in exception.msg:
+        elif errors[5] in exception.msg:
             msg = "Timed out trying to reach YouTube"
 
     # Print error
     suffix = ", retrying in a few seconds.." if retrying else ""
-    print(
-        Fore.YELLOW + "  • " + msg + suffix.ljust(40) + Fore.RESET,
-        file=sys.stderr,
-    )
+    ui.warning("  • " + msg + suffix.ljust(40))
 
     # Wait if retrying, exit if failed
     if retrying:
         time.sleep(5)
     else:
-        _err_msg(f"  • Sorry, failed to download {name}", True)
+        ui.error(f"  • Sorry, failed to download {name}", True)
         sys.exit(1)

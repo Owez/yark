@@ -6,66 +6,143 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+        gap: 1rem;
     }
 
-    .video {
+    .video-card {
         display: flex;
         flex-direction: column;
-        margin: 0.75rem;
+        width: 300px;
+        border-radius: var(--radius);
+        transition: transform 0.15s ease;
     }
 
-    .video-locked {
-        cursor: default;
-    }
+    .video-card:hover { transform: translateY(-2px); }
+    .video-card:hover .thumbnail { box-shadow: 0 14px 38px -16px rgba(16, 83, 126, 0.65); }
+    .video-card:hover .thumbnail > img { transform: scale(1.04); }
 
     .thumbnail {
+        position: relative;
         overflow: hidden;
-        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.25);
-        border-radius: 7.5px;
+        box-shadow: 0 8px 28px -14px rgba(16, 83, 126, 0.5);
+        border-radius: 10px;
         width: 300px;
         height: 168.75px;
+        border: 1px solid rgba(35, 109, 161, 0.2);
+        background: linear-gradient(180deg, rgba(7, 42, 66, 0.14), rgba(7, 42, 66, 0.04));
+        transition: box-shadow 0.2s ease;
     }
 
-    .thumbnail>img {
+    .thumbnail > img {
         width: 100%;
         height: 100%;
+        object-fit: cover;
+        transition: transform 0.25s ease;
+    }
+
+    .video-flag {
+        position: absolute;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        font-size: 0.66rem;
+        font-weight: 500;
+        padding: 0.18rem 0.48rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(8, 39, 61, 0.82);
+        color: rgba(235, 247, 255, 0.94);
+        backdrop-filter: blur(3px);
+        letter-spacing: 0.012em;
     }
 
     .info {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         width: 300px;
+        padding: 0 2px;
     }
 
-    .info>p {
-        margin-top: 0.5rem;
-    }
+    .info p { margin: 0.5rem 0 0; }
 
     .title {
-        max-width: 225px;
+        max-width: 215px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-weight: 500;
+        font-size: 0.9rem;
     }
 
     .uploaded {
-        padding-top: 0.12rem;
         font-size: 0.7rem;
-        width: 8rem;
+        width: 5.5rem;
         text-align: right;
+        color: var(--muted);
+        flex-shrink: 0;
     }
 
-    .frost {
-        filter: blur(5px);
-        opacity: 0.4;
-        margin-top: -5px;
+    .empty-state { text-align: center; color: var(--muted); margin-top: 3rem; }
+
+    .search-bar {
+        display: flex;
+        justify-content: center;
+        margin: 1.2rem 0 1rem;
     }
 
+    .search-bar input {
+        width: min(24rem, 72vw);
+    }
+
+    .filters {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.6rem;
+    }
+
+    .filters button {
+        font-family: inherit;
+        font-size: 0.82rem;
+        padding: 0.22rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(47, 130, 205, 0.22);
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .filters button:hover {
+        background: rgba(47, 130, 205, 0.08);
+        border-color: rgba(47, 130, 205, 0.35);
+    }
+
+    .filters button.active {
+        background: rgba(47, 130, 205, 0.14);
+        border-color: rgba(47, 130, 205, 0.4);
+        color: var(--accent);
+        font-weight: 550;
+    }
+
+    .no-results {
+        width: 100%;
+        text-align: center;
+        color: var(--muted);
+        margin-top: 2rem;
+        font-size: 0.88rem;
+        display: none;
+    }
 
     @media (prefers-color-scheme: dark) {
-        .thumbnail {
-            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.225);
-        }
+        .thumbnail { box-shadow: 0 4px 18px -6px rgba(0, 0, 0, 0.4); border-color: rgba(100, 160, 200, 0.15); }
+        .video-card:hover .thumbnail { box-shadow: 0 12px 34px -14px rgba(0, 0, 0, 0.55); }
+    }
+
+    @media screen and (max-width: 700px) {
+        .video-card, .thumbnail, .info { width: 100%; }
+        .thumbnail { height: auto; aspect-ratio: 16 / 9; }
     }
 </style>
 {% endblock %}
@@ -73,45 +150,101 @@
 {% block content %}
 <h1 class="hero">{{ name }}'s videos</h1>
 {% if channel.videos %}
+<div class="search-bar">
+    <input type="text" id="video-search" placeholder="Filter videos…" autocomplete="off">
+</div>
+<div class="filters">
+    <button class="active" data-filter="all">All</button>
+    <button data-filter="newest">Newest</button>
+    <button data-filter="oldest">Oldest</button>
+    <button data-filter="popular">Popular</button>
+    <button data-filter="undownloaded">Not downloaded</button>
+</div>
 <div id="content">
     {% for video in channel.videos %}
-    <!-- FIXME: ugly way to disable undownloaded video -->
     {% set downloaded = video.downloaded() %}
-    {% if downloaded %}
-    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
-    {% else %}
-    <div class="video">
-    {% endif %}
-        <!-- Thumbnail -->
+    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video-card"
+       data-views="{{ video.views.current() }}" data-uploaded="{{ video.uploaded.timestamp() }}">
         <div class="thumbnail">
-            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}" {% if not
-                video.downloaded() %}class="frost" {% endif %} />
+            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}"
+                 alt="Thumbnail for {{ video.title.current() }}" loading="lazy" />
+            {% if not downloaded %}
+            <span class="video-flag">Not downloaded</span>
+            {% endif %}
         </div>
-        <!-- Information -->
         <div class="info">
-            <!-- Title -->
             <p class="title">{{ video.title.current() }}</p>
             <p class="uploaded">
-                <!-- Updated -->
                 {% if video.updated() %}🌀 {% endif %}
-                <!-- Uploaded -->
                 {{ video.uploaded.strftime("%d/%m/%Y") }}
             </p>
         </div>
-    {% if downloaded %}
     </a>
-    {% else %}
-    </div>
-    {% endif %}
     {% endfor %}
 </div>
+<p class="no-results" id="no-results">No videos match your search.</p>
 {% else %}
-<p style="text-align: center;">No videos found!</p>
+<p class="empty-state">No videos found in this archive yet.</p>
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script>
+    const searchInput = document.getElementById("video-search");
+    const filterBtns = document.querySelectorAll(".filters button");
+    const grid = document.getElementById("content");
+    const noResults = document.getElementById("no-results");
+    let activeFilter = "all";
+
+    function getCards() { return Array.from(grid.querySelectorAll(".video-card")); }
+
+    function applyFilters() {
+        const query = (searchInput ? searchInput.value.toLowerCase().trim() : "");
+        const cards = getCards();
+
+        // -- apply sort / filter --
+        if (activeFilter === "popular") {
+            cards.sort(function (a, b) {
+                return (parseInt(b.getAttribute("data-views")) || 0) - (parseInt(a.getAttribute("data-views")) || 0);
+            });
+        } else if (activeFilter === "newest") {
+            cards.sort(function (a, b) {
+                return (parseInt(b.getAttribute("data-uploaded")) || 0) - (parseInt(a.getAttribute("data-uploaded")) || 0);
+            });
+        } else if (activeFilter === "oldest") {
+            cards.sort(function (a, b) {
+                return (parseInt(a.getAttribute("data-uploaded")) || 0) - (parseInt(b.getAttribute("data-uploaded")) || 0);
+            });
+        }
+
+        // -- reorder in DOM --
+        cards.forEach(function (c) { grid.appendChild(c); });
+
+        // -- show / hide --
+        let visible = 0;
+        cards.forEach(function (card) {
+            var title = (card.querySelector(".title").textContent || "").toLowerCase();
+            var matchSearch = !query || title.indexOf(query) !== -1;
+            var matchDownload = activeFilter !== "undownloaded" || card.querySelector(".video-flag");
+            var show = matchSearch && matchDownload;
+            card.style.display = show ? "" : "none";
+            if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = visible === 0 ? "" : "none";
+    }
+
+    if (searchInput) searchInput.addEventListener("input", applyFilters);
+
+    filterBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            filterBtns.forEach(function (b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+            activeFilter = btn.getAttribute("data-filter");
+            applyFilters();
+        });
+    });
+
     function setCookie(name, value, days) {
         var expires = "";
         if (days) {
@@ -133,20 +266,17 @@
         return null;
     }
 
-    const visitedCookie = getCookie("visited")
-    const id = document.getElementsByClassName("hero")[0].innerHTML.split("'s")[0]
+    const visitedCookie = getCookie("visited");
+    const id = document.querySelector(".hero").textContent.split("'s")[0];
+
     if (visitedCookie == null) {
-        setCookie("visited", JSON.stringify([id]))
+        setCookie("visited", JSON.stringify([id]));
     } else {
-        const existingVisited = JSON.parse(visitedCookie)
-        let cleaned = []
-        existingVisited.forEach(channelId => {
-            if (channelId != id) {
-                cleaned.push(channelId)
-            }
-        });
-        cleaned.push(id)
-        setCookie("visited", JSON.stringify(cleaned))
+        const existingVisited = JSON.parse(visitedCookie);
+        const cleaned = existingVisited.filter(c => c !== id);
+        cleaned.push(id);
+        if (cleaned.length > 10) cleaned.shift();
+        setCookie("visited", JSON.stringify(cleaned));
     }
 </script>
 {% endblock %}

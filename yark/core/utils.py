@@ -1,4 +1,4 @@
-"""Useful shared utility functions"""
+"""Useful shared utility functions for the core archive domain."""
 
 
 def _truncate_text(text: str, to: int = 31) -> str:

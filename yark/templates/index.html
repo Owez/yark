@@ -9,22 +9,48 @@
         flex-direction: column;
     }
 
-    input[type=text] {
-        width: calc(15rem + 20vw);
+    input[type="text"] {
+        width: min(42rem, calc(15rem + 28vw));
+        padding: 0.75rem 0.85rem;
+        font-size: 0.96rem;
+        border-radius: 0.55rem;
     }
 
-    .visited {
+    .archives-section {
         display: flex;
         justify-content: center;
-        align-items: center;
         flex-wrap: wrap;
-        margin-left: 20vw;
-        margin-right: 20vw;
-        gap: 7px;
+        margin: 1.5rem 20vw 0;
+        gap: 0.45rem;
     }
 
-    .visited > a {
-        color: rgb(106, 191, 219);
+    .archives-section > p {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.3rem;
+        color: var(--muted);
+        font-size: 0.84rem;
+    }
+
+    .archives-section > a {
+        color: var(--accent);
+        border: 1px solid rgba(47, 130, 205, 0.22);
+        border-radius: 999px;
+        padding: 0.22rem 0.7rem;
+        font-size: 0.84rem;
+        background: rgba(47, 130, 205, 0.08);
+        transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .archives-section > a:hover {
+        transform: translateY(-1px);
+        background: rgba(47, 130, 205, 0.16);
+        border-color: rgba(47, 130, 205, 0.35);
+    }
+
+    @media screen and (max-width: 700px) {
+        .archives-section { margin-left: 5vw; margin-right: 5vw; }
+        input[type="text"] { width: 85vw; }
     }
 </style>
 {% endblock %}
@@ -32,14 +58,27 @@
 {% block content %}
 <h1 class="hero">Yark</h1>
 <form action="/" method="post">
-    <input type="text" name="channel" placeholder="e.g. pewdiepie">
+    <input type="text" name="channel" placeholder="e.g. pewdiepie or myfolder/pewdiepie"
+           list="known-archives" autofocus autocomplete="off">
+    <datalist id="known-archives">
+        {% if discovered %}
+            {% for id in discovered %}<option value="{{ id }}"></option>{% endfor %}
+        {% endif %}
+        {% if visited %}
+            {% for id in visited %}<option value="{{ id }}"></option>{% endfor %}
+        {% endif %}
+    </datalist>
 </form>
 {% if visited %}
-<div class="visited">
-    <p>Recent Archives: </p>
-    {% for id in visited %}
-    <a href="/channel/{{ id }}/videos">{{ id }}</a>
-    {% endfor %}
+<div class="archives-section">
+    <p>Recent Archives</p>
+    {% for id in visited %}<a href="/channel/{{ id }}/videos">{{ id }}</a>{% endfor %}
+</div>
+{% endif %}
+{% if discovered %}
+<div class="archives-section">
+    <p>Discovered Archives Near Here</p>
+    {% for id in discovered %}<a href="/channel/{{ id }}/videos">{{ id }}</a>{% endfor %}
 </div>
 {% endif %}
 {% endblock %}
