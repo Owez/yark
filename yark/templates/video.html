@@ -102,86 +102,95 @@
     /* ── Notes panel ──────────────────────────── */
 
     .notes-panel {
-        padding: 1rem 0.85rem;
+        padding: 1.1rem 0.9rem;
         border: 1px solid var(--surface-border);
-        border-radius: 0.65rem;
+        border-radius: var(--radius);
         background: var(--surface);
     }
 
     .notes-panel h3 {
-        margin: 0 0 0.9rem;
-        font-size: 0.78rem;
+        margin: 0 0 0.85rem;
+        font-size: 0.73rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.07em;
         color: var(--muted);
     }
 
     .notes-empty {
-        font-size: 0.76rem;
+        font-size: 0.84rem;
         color: var(--muted);
-        font-style: italic;
+        padding: 0.1rem 0;
     }
 
-    .notes-list { display: flex; flex-direction: column; }
+    .notes-list {
+        display: flex;
+        flex-direction: column;
+    }
 
     .note {
-        padding: 0.55rem 0;
-        border-bottom: 1px solid rgba(128, 160, 180, 0.18);
+        padding: 0.6rem 0;
+        border-bottom: 1px solid var(--surface-border);
     }
 
-    .note:last-child { border-bottom: none; }
+    .note:last-child { border-bottom: none; padding-bottom: 0; }
 
     .note .note-head {
         display: flex;
         justify-content: space-between;
-        align-items: baseline;
+        align-items: flex-start;
         gap: 0.5rem;
     }
 
     .note .note-title {
         font-weight: 600;
-        font-size: 0.86rem;
-        line-height: 1.2;
+        font-size: 0.9rem;
+        line-height: 1.35;
         margin: 0;
         min-width: 0;
         outline: none;
-        border-radius: 2px;
-        padding: 1px 2px;
-        margin-left: -2px;
+        border-radius: 3px;
+        padding: 1px 3px;
+        margin-left: -3px;
         flex: 1;
     }
 
     .note .note-title:focus { background: rgba(47, 130, 205, 0.07); }
 
+    .note .note-title.is-empty br,
+    .note .note-body.is-empty br,
+    .note-new .note-title.is-empty br,
+    .note-new .note-body.is-empty br { display: none; }
+
     .note .note-time {
         font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         color: #b0882c;
         white-space: nowrap;
         text-decoration: none;
         flex-shrink: 0;
+        margin-top: 1px;
     }
 
     .note .note-time:hover { text-decoration: underline; }
 
     .note .note-body {
-        font-size: 0.78rem;
-        line-height: 1.35;
-        margin: 0.25rem 0 0;
+        font-size: 0.82rem;
+        line-height: 1.4;
+        margin: 0.2rem 0 0;
         color: var(--muted);
         outline: none;
-        border-radius: 2px;
-        padding: 1px 2px;
-        margin-left: -2px;
+        border-radius: 3px;
+        padding: 1px 3px;
+        margin-left: -3px;
     }
 
     .note .note-body:focus { background: rgba(47, 130, 205, 0.05); color: var(--text); }
 
     .note .note-actions {
-        margin-top: 0.2rem;
+        margin-top: 0.4rem;
         display: flex;
-        gap: 0.4rem;
+        gap: 0.35rem;
         opacity: 0;
         transition: opacity 0.15s ease;
     }
@@ -190,28 +199,33 @@
     .note:focus-within .note-actions { opacity: 1; }
 
     .note .note-actions button {
-        font-size: 0.64rem;
-        padding: 0.1rem 0.35rem;
-        border-radius: 3px;
+        font-family: inherit;
+        font-size: 0.8rem;
+        padding: 0.28rem 0.6rem;
+        border-radius: 0.4rem;
         border: 1px solid var(--surface-border);
-        background: transparent;
-        color: var(--muted);
+        background: var(--surface-strong);
+        color: var(--text);
         cursor: pointer;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .note .note-actions button:hover { color: var(--accent); border-color: rgba(47, 130, 205, 0.3); }
-    .note .note-actions button.del:hover { color: #c44; border-color: rgba(200, 60, 60, 0.25); }
+    .note .note-actions button:hover {
+        border-color: rgba(200, 60, 60, 0.25);
+        color: #c44;
+    }
+
+    .note .note-actions button:active { transform: scale(0.985); }
 
     /* ── New note form ────────────────────────── */
 
     .note-new {
-        margin-bottom: 0.6rem;
-        padding: 0 0 0.55rem 0.55rem;
-        border-bottom: 1px solid rgba(128, 160, 180, 0.18);
-        border-left: 3px solid var(--accent);
+        margin-bottom: 0.7rem;
+        padding: 0 0 0.55rem;
+        border-bottom: 1px solid var(--surface-border);
     }
 
-    .note-new .note-title { opacity: 0.7; }
+    .note-new .note-title { opacity: 0.85; }
     .note-new .note-title:focus { opacity: 1; }
 
     .note-new .time-row {
@@ -223,56 +237,68 @@
 
     .note-new .time-input {
         font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
-        font-size: 0.68rem;
-        width: 3.4rem;
-        padding: 0.1rem 0.25rem;
+        font-size: 0.84rem;
+        width: 5.5rem;
+        padding: 0.32rem 0.45rem;
         border: 1px solid var(--surface-border);
-        border-radius: 3px;
+        border-radius: 0.3rem;
         background: var(--surface-strong);
         color: var(--text);
         outline: none;
-        text-align: right;
     }
 
-    .note-new .time-input:focus { border-color: rgba(47, 130, 205, 0.4); }
+    .note-new .time-input:focus {
+        border-color: rgba(47, 130, 205, 0.45);
+        box-shadow: 0 0 0 3px rgba(47, 130, 205, 0.12);
+    }
 
     .note-new .time-actions {
         display: flex;
-        gap: 0.25rem;
+        gap: 0.3rem;
     }
 
     .note-new .time-actions button {
-        font-size: 0.6rem;
-        padding: 0.1rem 0.35rem;
-        border-radius: 3px;
+        font-family: inherit;
+        font-size: 0.72rem;
+        padding: 0.32rem 0.5rem;
+        border-radius: 0.3rem;
         border: 1px solid var(--surface-border);
-        background: transparent;
-        color: var(--muted);
+        background: var(--surface-strong);
+        color: var(--accent);
         cursor: pointer;
+        transition: all 0.15s ease;
     }
 
-    .note-new .time-actions button:hover { color: var(--accent); border-color: rgba(47, 130, 205, 0.3); }
+    .note-new .time-actions button:hover {
+        background: var(--accent-soft);
+        border-color: rgba(47, 130, 205, 0.3);
+    }
 
-    .note-new .note-body { opacity: 0.7; }
+    .note-new .time-actions button:active { transform: scale(0.985); }
+
+    .note-new .note-body { opacity: 0.85; }
     .note-new .note-body:focus { opacity: 1; }
 
     .note-new .add-btn {
-        margin-top: 0.35rem;
-        padding: 0.25rem 0.7rem;
-        font-size: 0.72rem;
-        font-weight: 550;
-        border-radius: 4px;
-        border: none;
+        font-family: inherit;
+        margin-top: 0.4rem;
+        padding: 0.5rem 0.7rem;
+        font-size: 0.88rem;
+        font-weight: 500;
+        border-radius: 0.4rem;
+        border: 1px solid var(--accent);
         background: var(--accent);
         color: #fff;
         cursor: pointer;
+        transition: opacity 0.12s ease;
     }
 
     .note-new .add-btn:hover { opacity: 0.88; }
+    .note-new .add-btn:active { transform: scale(0.985); }
 
     .note-new .add-hint {
-        margin: 0.2rem 0 0;
-        font-size: 0.62rem;
+        margin: 0.45rem 0 0;
+        font-size: 0.68rem;
         color: var(--muted);
     }
 
@@ -490,7 +516,7 @@
 
             <div class="note-new" id="create-note">
                 <div class="note-head">
-                    <p class="note-title" contenteditable="true" data-placeholder="New note" id="new-title"></p>
+                    <p class="note-title" contenteditable="true" data-placeholder="Note title" id="new-title"></p>
                 </div>
                 <div class="time-row">
                     <input class="time-input" id="new-timestamp" value="00:00" maxlength="8" spellcheck="false">
@@ -515,8 +541,7 @@
                     </div>
                     {% if note.body %}<p class="note-body" contenteditable="true" spellcheck="false">{{ note.body }}</p>{% endif %}
                     <div class="note-actions">
-                        <button onclick="saveNote(this.closest('.note'))">Save</button>
-                        <button class="del" onclick="deleteNote(this.closest('.note'))">Delete</button>
+                        <button onclick="deleteNote(this.closest('.note'))">Delete</button>
                     </div>
                 </div>
                 {% endfor %}
@@ -685,8 +710,8 @@
     });
 
     const s = document.createElement("style");
-    s.textContent = "[contenteditable][data-placeholder].is-empty:after { content: attr(data-placeholder); color: rgba(70,104,125,0.36); pointer-events:none; }" +
-        "@media (prefers-color-scheme:dark) { [contenteditable][data-placeholder].is-empty:after { color: rgba(200,220,240,0.48); } }";
+    s.textContent = "[contenteditable][data-placeholder].is-empty:after { content: attr(data-placeholder); color: #8496a4; pointer-events:none; }" +
+        "@media (prefers-color-scheme:dark) { [contenteditable][data-placeholder].is-empty:after { color: rgba(200,220,240,0.44); } }";
     document.head.appendChild(s);
 
     initTimestampSync();

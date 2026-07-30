@@ -84,6 +84,57 @@
 
     .empty-state { text-align: center; color: var(--muted); margin-top: 3rem; }
 
+    .search-bar {
+        display: flex;
+        justify-content: center;
+        margin: 1.2rem 0 1rem;
+    }
+
+    .search-bar input {
+        width: min(24rem, 72vw);
+    }
+
+    .filters {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 1.6rem;
+    }
+
+    .filters button {
+        font-family: inherit;
+        font-size: 0.82rem;
+        padding: 0.22rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(47, 130, 205, 0.22);
+        background: transparent;
+        color: var(--accent);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .filters button:hover {
+        background: rgba(47, 130, 205, 0.08);
+        border-color: rgba(47, 130, 205, 0.35);
+    }
+
+    .filters button.active {
+        background: rgba(47, 130, 205, 0.14);
+        border-color: rgba(47, 130, 205, 0.4);
+        color: var(--accent);
+        font-weight: 550;
+    }
+
+    .no-results {
+        width: 100%;
+        text-align: center;
+        color: var(--muted);
+        margin-top: 2rem;
+        font-size: 0.88rem;
+        display: none;
+    }
+
     @media (prefers-color-scheme: dark) {
         .thumbnail { box-shadow: 0 4px 18px -6px rgba(0, 0, 0, 0.4); border-color: rgba(100, 160, 200, 0.15); }
         .video-card:hover .thumbnail { box-shadow: 0 12px 34px -14px rgba(0, 0, 0, 0.55); }
@@ -99,10 +150,21 @@
 {% block content %}
 <h1 class="hero">{{ name }}'s videos</h1>
 {% if channel.videos %}
+<div class="search-bar">
+    <input type="text" id="video-search" placeholder="Filter videos…" autocomplete="off">
+</div>
+<div class="filters">
+    <button class="active" data-filter="all">All</button>
+    <button data-filter="newest">Newest</button>
+    <button data-filter="oldest">Oldest</button>
+    <button data-filter="popular">Popular</button>
+    <button data-filter="undownloaded">Not downloaded</button>
+</div>
 <div id="content">
     {% for video in channel.videos %}
     {% set downloaded = video.downloaded() %}
-    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video-card">
+    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video-card"
+       data-views="{{ video.views.current() }}" data-uploaded="{{ video.uploaded.timestamp() }}">
         <div class="thumbnail">
             <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}"
                  alt="Thumbnail for {{ video.title.current() }}" loading="lazy" />
@@ -120,6 +182,7 @@
     </a>
     {% endfor %}
 </div>
+<p class="no-results" id="no-results">No videos match your search.</p>
 {% else %}
 <p class="empty-state">No videos found in this archive yet.</p>
 {% endif %}
@@ -127,6 +190,61 @@
 
 {% block scripts %}
 <script>
+    const searchInput = document.getElementById("video-search");
+    const filterBtns = document.querySelectorAll(".filters button");
+    const grid = document.getElementById("content");
+    const noResults = document.getElementById("no-results");
+    let activeFilter = "all";
+
+    function getCards() { return Array.from(grid.querySelectorAll(".video-card")); }
+
+    function applyFilters() {
+        const query = (searchInput ? searchInput.value.toLowerCase().trim() : "");
+        const cards = getCards();
+
+        // -- apply sort / filter --
+        if (activeFilter === "popular") {
+            cards.sort(function (a, b) {
+                return (parseInt(b.getAttribute("data-views")) || 0) - (parseInt(a.getAttribute("data-views")) || 0);
+            });
+        } else if (activeFilter === "newest") {
+            cards.sort(function (a, b) {
+                return (parseInt(b.getAttribute("data-uploaded")) || 0) - (parseInt(a.getAttribute("data-uploaded")) || 0);
+            });
+        } else if (activeFilter === "oldest") {
+            cards.sort(function (a, b) {
+                return (parseInt(a.getAttribute("data-uploaded")) || 0) - (parseInt(b.getAttribute("data-uploaded")) || 0);
+            });
+        }
+
+        // -- reorder in DOM --
+        cards.forEach(function (c) { grid.appendChild(c); });
+
+        // -- show / hide --
+        let visible = 0;
+        cards.forEach(function (card) {
+            var title = (card.querySelector(".title").textContent || "").toLowerCase();
+            var matchSearch = !query || title.indexOf(query) !== -1;
+            var matchDownload = activeFilter !== "undownloaded" || card.querySelector(".video-flag");
+            var show = matchSearch && matchDownload;
+            card.style.display = show ? "" : "none";
+            if (show) visible++;
+        });
+
+        if (noResults) noResults.style.display = visible === 0 ? "" : "none";
+    }
+
+    if (searchInput) searchInput.addEventListener("input", applyFilters);
+
+    filterBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            filterBtns.forEach(function (b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+            activeFilter = btn.getAttribute("data-filter");
+            applyFilters();
+        });
+    });
+
     function setCookie(name, value, days) {
         var expires = "";
         if (days) {
