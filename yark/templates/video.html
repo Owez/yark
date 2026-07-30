@@ -2,63 +2,32 @@
 
 {% block styling %}
 <style>
-    body {
-        margin-bottom: 3rem;
-    }
+    body { margin-bottom: 3rem; }
 
     #content {
         display: grid;
         grid-template-columns: minmax(0, 1.85fr) minmax(16rem, 19rem);
-        gap: 1rem;
+        gap: 1.5rem;
         align-items: start;
         margin-right: 2vw;
     }
 
-    .video-main {
-        min-width: 0;
-    }
+    .video-main { min-width: 0; }
 
     .notes-sidebar {
         position: sticky;
         top: 5.5rem;
         max-height: calc(100vh - 6.5rem);
-        overflow: auto;
-        padding-right: 0.25rem;
-        min-width: 0;
-    }
-
-    .notes-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 0.45rem;
-        padding: 0.65rem;
-        border-radius: 0.8rem;
-        border: 1px solid rgba(47, 130, 205, 0.1);
-        background: rgba(255, 255, 255, 0.64);
-        box-shadow: 0 8px 20px -24px rgba(10, 57, 87, 0.34);
-    }
-
-    .notes-panel h2 {
-        margin: 0;
-    }
-
-    .notes-summary {
-        margin: -0.2rem 0 0;
-        font-size: 0.72rem;
-        color: #647784;
-        line-height: 1.3;
-    }
-
-    .notes-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.38rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(128, 160, 180, 0.35) transparent;
     }
 
     video {
         margin-top: 2rem;
         border-radius: 0.9rem;
         background: rgba(10, 22, 33, 0.9);
+        width: 100%;
     }
 
     .player-empty {
@@ -66,288 +35,303 @@
         border-radius: 0.9rem;
         width: 100%;
         border: 1px solid rgba(47, 130, 205, 0.32);
-        background: linear-gradient(135deg, rgba(47, 130, 205, 0.15) 0%, rgba(47, 130, 205, 0.05) 100%);
-        padding: 1rem 1.1rem;
-        box-sizing: border-box;
+        background: linear-gradient(135deg, rgba(47, 130, 205, 0.12), rgba(47, 130, 205, 0.04));
+        padding: 1.2rem 1.4rem;
     }
 
-    .player-empty p {
-        margin: 0;
-        line-height: 1.45rem;
-        color: #335468;
-    }
-
-    .player-empty p a {
-        color: #1a76b9;
-        text-decoration: underline;
-    }
+    .player-empty p { margin: 0; line-height: 1.5rem; color: #335468; }
+    .player-empty p a { color: #1a76b9; text-decoration: underline; }
 
     .info {
-        color: #7f7f7f;
+        color: var(--muted);
         display: flex;
         justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.3rem;
     }
 
-    .info>p {
-        margin-top: 0;
-    }
+    .info p { margin-top: 0.15rem; margin-bottom: 0; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { font-size: 1.1rem; font-weight: 650; margin: 1.6rem 0 0.4rem; }
 
-    h1 {
-        margin-bottom: 0.65rem;
+    #description {
+        display: none;
+        font-size: 0.88rem;
+        line-height: 1.35rem;
+        color: #5a6570;
+        margin-left: 0.5rem;
+        padding: 0.55rem 0.75rem;
+        border-left: 2px solid rgba(47, 130, 205, 0.2);
+        white-space: pre-line;
     }
-
-    canvas {
-        width: 50vw;
-    }
-
-    #description,
-    .metadata {
-        font-size: 0.9rem;
-        line-height: 1.25rem;
-        color: #595959;
-        margin-left: 1rem;
-    }
-
 
     .metadata {
         display: none;
-        margin-top: -0.65rem;
-        margin-bottom: 0.65rem;
+        font-size: 0.86rem;
+        line-height: 1.3rem;
+        color: #5a6570;
+        margin: -0.3rem 0 0.5rem 0.5rem;
+        padding-left: 0.5rem;
+        border-left: 2px solid rgba(47, 130, 205, 0.15);
     }
 
-    .video-main video,
-    .video-main h1,
-    .video-main #description,
-    .video-main .info {
-        width: 100%;
+    ul { line-height: 2.1rem; padding-left: 1.2rem; }
+    ul li { margin-bottom: 0.15rem; color: #4a5560; }
+
+    .toggle-btn {
+        font-size: 0.7rem;
+        padding: 0.14rem 0.4rem;
+        border-radius: 0.3rem;
+        border: 1px solid var(--surface-border);
+        background: var(--surface-strong);
+        color: var(--accent);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        margin: 0 0.15rem;
     }
 
-    .video-main button,
-    .video-main .metadata,
-    .notes-panel button,
-    .notes-panel .createnote-input,
-    .notes-panel a {
-        -webkit-tap-highlight-color: transparent;
+    .toggle-btn:hover { background: var(--accent-soft); border-color: rgba(47, 130, 205, 0.3); }
+
+    canvas { width: 100% !important; max-width: 100%; }
+
+    .video-main a { color: var(--accent); }
+    .video-main a:hover { text-decoration: underline; }
+
+    .spacer { margin: 0 0.4rem; color: var(--surface-border); }
+
+    /* ── Notes panel ──────────────────────────── */
+
+    .notes-panel {
+        padding: 1rem 0.85rem;
+        border: 1px solid var(--surface-border);
+        border-radius: 0.65rem;
+        background: var(--surface);
     }
 
-    .notes-panel ::selection,
-    .notes-panel .createnote-input::selection,
-    .video-main ::selection {
-        background: rgba(47, 130, 205, 0.18);
-        color: inherit;
+    .notes-panel h3 {
+        margin: 0 0 0.9rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
     }
 
-    .notes-panel .createnote-input,
-    .notes-panel .title,
-    .notes-panel .body,
-    .notes-panel .timestamp {
-        caret-color: #2f82cd;
+    .notes-empty {
+        font-size: 0.76rem;
+        color: var(--muted);
+        font-style: italic;
     }
 
-    @media screen and (max-width: 850px) {
-
-        #content {
-            grid-template-columns: 1fr;
-            margin-right: 0;
-        }
-
-        .notes-sidebar {
-            position: static;
-            max-height: none;
-        }
-
-        video,
-        h1,
-        canvas,
-        #description,
-        .info {
-            width: 100%;
-        }
-
-        .note {
-            width: auto;
-        }
-    }
-
-    .spacer {
-        margin-left: 0.5rem;
-        margin-right: 0.5rem;
-    }
-
-    ul {
-        line-height: 2.25rem;
-    }
+    .notes-list { display: flex; flex-direction: column; }
 
     .note {
-        box-sizing: border-box;
-        width: 100%;
-        margin-bottom: 0;
-        padding: 0.5rem 0.6rem;
-        border-radius: 0.65rem;
-        border: 1px solid rgba(0, 0, 0, 0.07);
-        background: rgba(255, 255, 255, 0.78);
-        box-shadow: 0 5px 12px -24px rgba(10, 57, 87, 0.32);
+        padding: 0.55rem 0;
+        border-bottom: 1px solid rgba(128, 160, 180, 0.18);
     }
 
-    .note>.id {
-        display: inline-block;
-        margin-top: 0.24rem;
-        max-width: 100%;
-        font-size: 0.62rem;
-        line-height: 1.1;
-        color: #768896;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    .note:last-child { border-bottom: none; }
 
-    .note>.body {
-        font-size: 0.74rem;
-        line-height: 1.24rem;
-        margin-bottom: 0;
-        overflow-wrap: anywhere;
-    }
-
-    .note>.body>span {
-        margin-right: 5px;
-    }
-
-    .note>.body>button {
-        padding-top: 1px;
-        padding-bottom: 1px;
-        font-size: 0.66rem;
-    }
-
-    .top {
+    .note .note-head {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.4rem;
+        align-items: baseline;
+        gap: 0.5rem;
     }
 
-    .top>.title {
-        font-weight: bold;
-        font-size: 0.84rem;
-        line-height: 1.14rem;
-        margin-top: 0;
-        margin-bottom: 0;
+    .note .note-title {
+        font-weight: 600;
+        font-size: 0.86rem;
+        line-height: 1.2;
+        margin: 0;
         min-width: 0;
-        overflow-wrap: anywhere;
-    }
-
-    .top>.timestamp,
-    .note>.id,
-    .notes-summary {
-        user-select: text;
-    }
-
-    .createnote-input:empty:not(:focus)::before {
-        content: attr(data-placeholder);
-        color: rgba(70, 104, 125, 0.48);
-    }
-
-    .createnote-input {
         outline: none;
-        font-size: 0.78rem;
+        border-radius: 2px;
+        padding: 1px 2px;
+        margin-left: -2px;
+        flex: 1;
     }
 
-    .createnote-input:focus {
-        box-shadow: 0 0 0 1px rgba(47, 130, 205, 0.18), 0 0 0 2px rgba(47, 130, 205, 0.06);
-        border-radius: 0.35rem;
-    }
+    .note .note-title:focus { background: rgba(47, 130, 205, 0.07); }
 
-    .createnote-button {
-        margin-top: 0.45rem;
-    }
-
-    .create-actions {
-        margin-top: 0.35rem;
-        display: flex;
-        gap: 0.25rem;
-        flex-wrap: wrap;
-    }
-
-    .create-actions>button {
-        font-size: 0.64rem;
-        padding: 0.22rem 0.38rem;
-    }
-
-    .top>.timestamp {
-        color: #098fb4;
-        margin-top: 0;
-        margin-bottom: 0;
-        font-size: 0.64rem;
+    .note .note-time {
+        font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 0.68rem;
+        color: #b0882c;
         white-space: nowrap;
+        text-decoration: none;
+        flex-shrink: 0;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .notes-panel {
-            background: rgba(12, 18, 24, 0.6);
-            border-color: rgba(158, 196, 224, 0.12);
-        }
+    .note .note-time:hover { text-decoration: underline; }
 
-        .note {
-            background-color: rgba(255, 255, 255, 0.012);
-            border-color: rgba(158, 196, 224, 0.12);
-        }
-
-        #description,
-        .metadata {
-            color: rgb(181, 181, 181);
-        }
-
-        .note>.id {
-            color: rgb(181, 181, 181);
-        }
-
-        .top>.timestamp {
-            color: #397fab;
-        }
-
-        .player-empty p {
-            color: #c5dbea;
-        }
-
-        .player-empty p a {
-            color: #8ec8ee;
-        }
-
-        .createnote-input:empty:not(:focus)::before {
-            color: rgba(220, 239, 249, 0.62);
-        }
-
-        .notes-summary {
-            color: rgba(194, 220, 235, 0.5);
-        }
-
-        .notes-panel ::selection,
-        .notes-panel .createnote-input::selection,
-        .video-main ::selection {
-            background: rgba(104, 181, 231, 0.16);
-            color: inherit;
-        }
-
-        .notes-panel .createnote-input,
-        .notes-panel .title,
-        .notes-panel .body,
-        .notes-panel .timestamp {
-            caret-color: #68b5e7;
-        }
+    .note .note-body {
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin: 0.25rem 0 0;
+        color: var(--muted);
+        outline: none;
+        border-radius: 2px;
+        padding: 1px 2px;
+        margin-left: -2px;
     }
 
-    .timestamp-field-note {
+    .note .note-body:focus { background: rgba(47, 130, 205, 0.05); color: var(--text); }
+
+    .note .note-actions {
+        margin-top: 0.2rem;
+        display: flex;
+        gap: 0.4rem;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .note:hover .note-actions,
+    .note:focus-within .note-actions { opacity: 1; }
+
+    .note .note-actions button {
+        font-size: 0.64rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 3px;
+        border: 1px solid var(--surface-border);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+    }
+
+    .note .note-actions button:hover { color: var(--accent); border-color: rgba(47, 130, 205, 0.3); }
+    .note .note-actions button.del:hover { color: #c44; border-color: rgba(200, 60, 60, 0.25); }
+
+    /* ── New note form ────────────────────────── */
+
+    .note-new {
+        margin-bottom: 0.6rem;
+        padding: 0 0 0.55rem 0.55rem;
+        border-bottom: 1px solid rgba(128, 160, 180, 0.18);
+        border-left: 3px solid var(--accent);
+    }
+
+    .note-new .note-title { opacity: 0.7; }
+    .note-new .note-title:focus { opacity: 1; }
+
+    .note-new .time-row {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.35rem;
-        font-size: 0.64rem;
-        color: #5a7385;
-        margin-top: -0.2rem;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
     }
 
-    .timestamp-field-note button {
-        padding: 0.14rem 0.34rem;
+    .note-new .time-input {
+        font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 0.68rem;
+        width: 3.4rem;
+        padding: 0.1rem 0.25rem;
+        border: 1px solid var(--surface-border);
+        border-radius: 3px;
+        background: var(--surface-strong);
+        color: var(--text);
+        outline: none;
+        text-align: right;
+    }
+
+    .note-new .time-input:focus { border-color: rgba(47, 130, 205, 0.4); }
+
+    .note-new .time-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .note-new .time-actions button {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 3px;
+        border: 1px solid var(--surface-border);
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+    }
+
+    .note-new .time-actions button:hover { color: var(--accent); border-color: rgba(47, 130, 205, 0.3); }
+
+    .note-new .note-body { opacity: 0.7; }
+    .note-new .note-body:focus { opacity: 1; }
+
+    .note-new .add-btn {
+        margin-top: 0.35rem;
+        padding: 0.25rem 0.7rem;
+        font-size: 0.72rem;
+        font-weight: 550;
+        border-radius: 4px;
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .note-new .add-btn:hover { opacity: 0.88; }
+
+    .note-new .add-hint {
+        margin: 0.2rem 0 0;
         font-size: 0.62rem;
+        color: var(--muted);
+    }
+
+    /* ── Toasts ───────────────────────────────── */
+
+    .toast-container {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.4rem;
+        pointer-events: none;
+    }
+
+    .toast {
+        padding: 0.5rem 0.85rem;
+        border-radius: 0.5rem;
+        font-size: 0.76rem;
+        font-weight: 500;
+        color: #fff;
+        animation: toastIn 0.2s ease, toastOut 0.25s ease 2.5s forwards;
+        pointer-events: auto;
+        box-shadow: 0 8px 24px -10px rgba(0,0,0,0.3);
+        max-width: 20rem;
+    }
+
+    .toast--error { background: #b33a3a; }
+    .toast--info  { background: #2f82cd; }
+
+    @keyframes toastIn  { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* ── Responsive ───────────────────────────── */
+
+    @media screen and (max-width: 850px) {
+        #content { grid-template-columns: 1fr; margin-right: 0; }
+        .notes-sidebar { position: static; max-height: none; }
+        .info { flex-direction: column; gap: 0; }
+    }
+
+    /* ── Dark mode ────────────────────────────── */
+
+    @media (prefers-color-scheme: dark) {
+        .note { border-bottom-color: rgba(158, 196, 224, 0.1); }
+        .note .note-title:focus { background: rgba(104, 181, 231, 0.08); }
+        .note .note-time { color: #d4a843; }
+        .note .note-body { color: #99aabb; }
+        .note .note-body:focus { background: rgba(104, 181, 231, 0.06); color: #c8d6e0; }
+        .note-new { border-bottom-color: rgba(158, 196, 224, 0.1); }
+
+        #description, .metadata { color: #b0bec5; }
+        ul li { color: #b0bec5; }
+        .player-empty p { color: #c5dbea; }
+        .player-empty p a { color: #8ec8ee; }
+        .notes-panel ::selection,
+        .video-main ::selection { background: rgba(104, 181, 231, 0.16); color: inherit; }
+        .notes-panel [contenteditable] { caret-color: #68b5e7; }
     }
 </style>
 {% endblock %}
@@ -355,70 +339,59 @@
 {% block content %}
 <div id="content">
     <div class="video-main">
-        <!-- Video -->
         {% if downloaded and video_file %}
         <video src="{{ url_for('routes.archive_video', name=name, file=video_file) }}" id="player" autoplay controls></video>
         {% else %}
         <div id="player" class="player-empty">
             <p>
                 This video has not been downloaded in your archive yet. You can still inspect metadata and notes here,
-                or open it on <a href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank">YouTube</a>.
+                or open it on <a href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank" rel="noopener">YouTube</a>.
             </p>
         </div>
         {% endif %}
-        <!-- Information -->
-        <h1 title="Title of the video">{{ video.title.current() }}</h1>
+
+        <h1>{{ video.title.current() }}</h1>
+
         <div class="info">
             {% set views = video.views.current() %}
             <p>
-                <!-- View count -->
-                <span title="View count of the video">{{ views }} view{% if views != 1 %}s{% endif %}</span>
-                <!-- Uploaded -->
+                <span>{{ views }} view{% if views != 1 %}s{% endif %}</span>
                 <span class="spacer">•</span>
-                <span title="Upload time of the video">{{ video.uploaded.strftime("%d/%m/%Y") }}</span>
-                <!-- Updated -->
+                <span>{{ video.uploaded.strftime("%d/%m/%Y") }}</span>
                 {% if video.updated() %}
                 <span class="spacer">•</span>
-                <span title="There's been a major change to this video">🌀</span>
+                <span>🌀 Updated</span>
                 {% endif %}
             </p>
             <p>
-                <!-- Youtube link -->
-                <a title="Open the video on YouTube" href="https://www.youtube.com/watch?v={{ video.id }}">🔗</a>
-                <!-- Download link -->
+                <a href="https://www.youtube.com/watch?v={{ video.id }}" target="_blank" rel="noopener">🔗 YouTube</a>
                 {% if downloaded and video_file %}
                 <span class="spacer">•</span>
-                <a title="Save the video to downloads"
-                    href="{{ url_for('routes.archive_video', name=name, file=video_file) }}" download>💾</a>
+                <a href="{{ url_for('routes.archive_video', name=name, file=video_file) }}" download>💾 Download</a>
                 {% endif %}
-                <!-- Like count -->
                 {% set likes = video.likes.current() %}
-                {% if likes or likes == 0 %}
+                {% if likes is not none %}
                 <span class="spacer">•</span>
-                <span title="Like count of the video">👍 {{ likes }}</span>
+                <span>👍 {{ likes }}</span>
                 {% endif %}
             </p>
         </div>
-        <!-- Description -->
+
         {% set description = video.description.current().split("\n") %}
         {% set no_description = description|count == 1 and description[0] == "" %}
         {% if not no_description %}
-        <button title="Show the current description of this video"
-            onclick="toggleButton('description', 'description', this)">Show description</button>
-        <p id="description" style="display: none;">
-            {% for line in description %}
-            {{ line }}<br />
-            {% endfor %}
-        </p>
+        <button class="toggle-btn" style="margin-top:0.5rem;" onclick="toggleSection('description', this)">Show description</button>
+        <div id="description">{%- for line in description %}
+{{ line }}{%- endfor %}
+        </div>
         {% endif %}
-        <!-- History -->
+
         <h2>History</h2>
         {% set mto_title = video.title.inner|count != 1 %}
         {% set mto_description = video.description.inner|count != 1 %}
         {% set mto_views = video.views.inner|count != 1 %}
         {% set mto_likes = video.likes.inner|count != 1 %}
         <ul>
-            <!-- Titles -->
             {% if not mto_title and not mto_description %}
             <li>No title or description changes on record</li>
             {% else %}
@@ -426,48 +399,32 @@
             {% for timestamp in video.title.inner %}
             <li>
                 {% if loop.index == video.title.inner|count %}
-                Current title has been in place since {{ timestamp.strftime("%d/%m/%Y") }}
+                Current title since {{ timestamp.strftime("%d/%m/%Y") }}
                 {% else %}
-                {% if loop.index == 1 %}
-                Title was originally
-                {% else %}
-                Title changed to
-                {% endif %}
-                <button onclick="toggleButton('history_title' + {{ loop.index }}, 'title', this)">
-                    Show title
-                </button>
+                {% if loop.index == 1 %}Originally{% else %}Changed to{% endif %}
+                <button class="toggle-btn" onclick="toggleSection('history_title{{ loop.index }}', this)">Show title</button>
                 on {{ timestamp.strftime("%d/%m/%Y") }}
-                <span id="history_title{{ loop.index }}" class="metadata">
-                    <br />{{ video.title.inner[timestamp] }}
-                </span>
+                <div id="history_title{{ loop.index }}" class="metadata">{{ video.title.inner[timestamp] }}</div>
                 {% endif %}
             </li>
             {% endfor %}
             {% else %}
             <li>No title changes on record</li>
             {% endif %}
-            <!-- Descriptions -->
             {% if mto_description %}
             {% for timestamp in video.description.inner %}
             <li>
                 {% if loop.index == video.description.inner|count %}
-                Current description has been in place since {{ timestamp.strftime("%d/%m/%Y") }}
+                Current description since {{ timestamp.strftime("%d/%m/%Y") }}
                 {% else %}
-                {% if loop.index == 1 %}
-                Description was originally
-                {% else %}
-                Description changed to
-                {% endif %}
-                <button onclick="toggleButton('history_description' + {{ loop.index }}, 'description', this)">
-                    Show description
-                </button>
+                {% if loop.index == 1 %}Originally{% else %}Changed to{% endif %}
+                <button class="toggle-btn" onclick="toggleSection('history_description{{ loop.index }}', this)">Show description</button>
                 on {{ timestamp.strftime("%d/%m/%Y") }}
-                <span id="history_description{{ loop.index }}" class="metadata">
-                    <br />
+                <div id="history_description{{ loop.index }}" class="metadata">
                     {% for line in video.description.inner[timestamp].split("\n") %}
-                    {{ line }}<br />
+                    {{ line }}<br>
                     {% endfor %}
-                </span>
+                </div>
                 {% endif %}
             </li>
             {% endfor %}
@@ -475,7 +432,6 @@
             <li>No description changes on record</li>
             {% endif %}
             {% endif %}
-            <!-- Likes/view summary -->
             {% if not mto_views and not mto_likes %}
             <li>No view or like changes on record</li>
             {% elif not mto_views %}
@@ -484,7 +440,7 @@
             <li>No like changes on record</li>
             {% endif %}
         </ul>
-        <!-- Graphs -->
+
         {% if mto_views or mto_likes %}
         {% if mto_views %}
         <h2>Views over time</h2>
@@ -495,366 +451,244 @@
         <canvas id="chart_likes"></canvas>
         {% endif %}
         <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-        <script
-            src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@next/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@next/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
         <script>
             function chart(type, id, data) {
-                // Generate config
-                const points = {
-                    labels: Object.keys(data).map(date => new Date(date)),
-                    datasets: [{
-                        label: "# of " + type,
-                        data: Object.values(data),
-                        fill: false,
-                        borderColor: "rgb(75, 192, 192)",
-                        tension: 0.1
-                    }]
-                };
-
-                // Get context
                 const ctx = document.getElementById(id).getContext("2d");
-
-                // Create chart
                 return new Chart(ctx, {
                     type: "line",
-                    data: points,
+                    data: {
+                        labels: Object.keys(data).map(d => new Date(d)),
+                        datasets: [{
+                            label: type,
+                            data: Object.values(data),
+                            fill: false,
+                            borderColor: "rgb(75, 192, 192)",
+                            tension: 0.1
+                        }]
+                    },
                     options: {
-                        responsive: false, // TODO: responsive but still the right width
+                        responsive: true,
+                        maintainAspectRatio: true,
                         scales: {
-                            x: {
-                                type: "time",
-                                time: {
-                                    displayFormats: {
-                                        quarter: "MMM D (hA)"
-                                    }
-                                },
-                            },
-                            y: {
-                                ticks: {
-                                    stepSize: 10
-                                },
-                            }
+                            x: { type: "time", time: { displayFormats: { quarter: "MMM D (hA)" } } },
+                            y: { ticks: { stepSize: 10 } }
                         }
                     }
-                })
+                });
             }
-
-            // Get data
-            let views_data = {{ views_data| safe }};
-            let likes_data = {{ likes_data| safe }};
-
-            // Create charts
-            if (Object.keys(views_data).length != 1) {
-                chart("Views", "chart_views", views_data);
-            }
-            if (Object.keys(likes_data).length != 1) {
-                chart("Likes", "chart_likes", likes_data);
-            }
+            const v = {{ views_data| safe }}, l = {{ likes_data| safe }};
+            if (Object.keys(v).length > 1) chart("Views", "chart_views", v);
+            if (Object.keys(l).length > 1) chart("Likes", "chart_likes", l);
         </script>
         {% endif %}
     </div>
+
     <aside class="notes-sidebar">
         <div class="notes-panel">
-            <h2 id="notes-title" style="font-size:1rem;">Notes</h2>
-            <!-- Create Note -->
-            <div class="note">
-                <div class="top">
-                    <p title="Title of the note" class="title createnote-input" contenteditable="true"
-                        data-placeholder="Title here.."></p>
-                    <p title="Timestamp to set the note to" id="timestamp-new" class="timestamp" contenteditable="true">00:00</p>
+            <h3>Notes</h3>
+
+            <div class="note-new" id="create-note">
+                <div class="note-head">
+                    <p class="note-title" contenteditable="true" data-placeholder="New note" id="new-title"></p>
                 </div>
-                <div class="timestamp-field-note">
-                    <span>Current playback time</span>
-                    <button type="button" onclick="syncTimestampFromPlayer()">Sync</button>
-                </div>
-                <p title="Optional further information for the note" class="body createnote-input" contenteditable="true"
-                    data-placeholder="Optional message here.."></p>
-                <div class="create-actions">
-                    <button type="button" onclick="setTimestampFromPlayer()">Use player time</button>
-                    <button type="button" onclick="togglePlayback()">Play/Pause</button>
-                    <button type="button" onclick="jumpToNewTimestamp()">Preview timestamp</button>
-                </div>
-                <button type="button" class="createnote-button" onclick="createNote(this.parentElement)">Add new note</button>
-                <p style="font-size: 0.7rem; color: #5a7385; margin-bottom: 0;">Tip: press Ctrl/Cmd + Enter in the body to save instantly.</p>
-            </div>
-            {% if video.notes %}
-            <div class="notes-list">
-                {% for note in video.notes %}
-                <div class="note">
-                    <!-- Top information -->
-                    <div class="top">
-                        <!-- Title -->
-                        <p class="title" contenteditable="true" spellcheck="false">{{ note.title }}</p>
-                        <!-- Timestamp -->
-                        <a href="#player" onclick="return toTimestamp({{ note.timestamp|safe }})" class="timestamp">{{
-                            note.timestamp|timestamp }}</a>
+                <div class="time-row">
+                    <input class="time-input" id="new-timestamp" value="00:00" maxlength="8" spellcheck="false">
+                    <div class="time-actions">
+                        <button onclick="syncCreateTimestamp()">↺ Player</button>
+                        <button onclick="jumpToNewTimestamp()">↳ Seek</button>
                     </div>
-                    <!-- Identifier -->
-                    <a href="#{{ note.id }}" id="{{ note.id }}" class="id">{{ note.id }}</a>
-                    <!-- Body content -->
-                    <p class="body" contenteditable="true" spellcheck="false">
-                        <!-- Optional user-defined body -->
-                        {% if note.body %}<span>{{ note.body }}</span>{% endif %}
-                        <!-- Delete button -->
-                        <button onclick="deleteNote(this.parentElement.parentElement)">Delete</button>
-                    </p>
+                </div>
+                <p class="note-body" contenteditable="true" data-placeholder="Optional detail…" id="new-body"></p>
+                <button class="add-btn" onclick="createNote()">Add note</button>
+                <p class="add-hint">Ctrl+Enter to add</p>
+            </div>
+
+            {% if video.notes %}
+            <div class="notes-list" id="notes-list">
+                {% for note in video.notes %}
+                <div class="note" data-note-id="{{ note.id }}">
+                    <div class="note-head">
+                        <p class="note-title" contenteditable="true" spellcheck="false">{{ note.title }}</p>
+                        <a class="note-time" href="#player" onclick="seekTo({{ note.timestamp|safe }}); return false;"
+                           title="Jump to {{ note.timestamp|timestamp }}">{{ note.timestamp|timestamp }}</a>
+                    </div>
+                    {% if note.body %}<p class="note-body" contenteditable="true" spellcheck="false">{{ note.body }}</p>{% endif %}
+                    <div class="note-actions">
+                        <button onclick="saveNote(this.closest('.note'))">Save</button>
+                        <button class="del" onclick="deleteNote(this.closest('.note'))">Delete</button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <!-- <p class="notes-summary">No notes yet. Add one above while the video is open.</p> -->
+            <p class="notes-empty">No notes yet.</p>
             {% endif %}
         </div>
     </aside>
 </div>
+
+<div class="toast-container" id="toasts"></div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function toggleButton(id, name, caller) {
-        let el = document.getElementById(id);
-        if (el.style.display === "none" || el.style.display === "") {
-            caller.innerText = "Hide " + name;
-            el.style.display = "block";
-        } else {
-            caller.innerText = "Show " + name;
-            el.style.display = "none";
-        }
+    function getPlayer() { return document.getElementById("player"); }
+
+    function formatTime(v) {
+        const t = Math.max(0, Math.floor(Number(v) || 0));
+        const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+        return h ? [h, String(m).padStart(2,"0"), String(s).padStart(2,"0")].join(":")
+                : [m, String(s).padStart(2,"0")].join(":");
     }
 
-    function getPlayer() {
-        return document.getElementById("player");
-    }
-
-    function formatTime(value) {
-        const totalSeconds = Math.max(0, Math.floor(Number(value) || 0));
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        if (hours > 0) {
-            return [hours, String(minutes).padStart(2, "0"), String(seconds).padStart(2, "0")].join(":");
-        }
-        return [minutes, String(seconds).padStart(2, "0")].join(":");
-    }
-
-    function parseTimestamp(value) {
-        const parts = String(value || "").trim().split(":").map(part => Number(part));
-        if (parts.some(part => Number.isNaN(part))) {
-            return null;
-        }
-        if (parts.length === 1) {
-            return parts[0];
-        }
-        if (parts.length === 2) {
-            return parts[0] * 60 + parts[1];
-        }
-        if (parts.length === 3) {
-            return parts[0] * 3600 + parts[1] * 60 + parts[2];
-        }
+    function parseTimestamp(raw) {
+        const p = String(raw||"").trim().split(":").map(Number);
+        if (p.some(isNaN)) return null;
+        if (p.length === 1) return p[0];
+        if (p.length === 2) return p[0]*60 + p[1];
+        if (p.length === 3) return p[0]*3600 + p[1]*60 + p[2];
         return null;
     }
 
-    function readEditableText(element) {
-        return element.innerText.replace(/\u00a0/g, " ").trim();
+    function readEditable(el) { return (el.innerText||"").replace(/ /g," ").trim(); }
+    function noteUrl() { return location.pathname + location.search; }
+
+    function toast(msg, kind) {
+        const el = document.createElement("div");
+        el.className = "toast toast--" + (kind||"info");
+        el.textContent = msg;
+        document.getElementById("toasts").appendChild(el);
+        el.addEventListener("animationend", e => { if (e.animationName === "toastOut") el.remove(); });
     }
 
-    function readNoteBody(element) {
-        return Array.from(element.childNodes)
-            .filter(node => !(node.nodeType === Node.ELEMENT_NODE && node.tagName === "BUTTON"))
-            .map(node => node.textContent || "")
-            .join("")
-            .replace(/\u00a0/g, " ")
-            .trim();
+    function toggleSection(id, btn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const on = el.style.display === "block";
+        el.style.display = on ? "none" : "block";
+        if (btn) btn.textContent = on ? btn.textContent.replace("Hide","Show") : btn.textContent.replace("Show","Hide");
     }
 
-    function noteUrl() {
-        return window.location.pathname + window.location.search;
+    function getPlayerTime() {
+        const p = getPlayer();
+        return p && typeof p.currentTime === "number" ? p.currentTime : null;
     }
 
-    function syncTimestampFromPlayer() {
-        const player = getPlayer();
-        const timestamp = document.getElementById("timestamp-new");
-        if (!player || !timestamp) {
-            return;
-        }
-        timestamp.innerText = formatTime(player.currentTime);
-    }
-
-    function setTimestampFromPlayer() {
-        syncTimestampFromPlayer();
-        const timestamp = document.getElementById("timestamp-new");
-        if (timestamp) {
-            timestamp.focus();
-        }
-    }
-
-    function togglePlayback() {
-        const player = getPlayer();
-        if (!player || typeof player.play !== "function") {
-            return;
-        }
-        if (player.paused) {
-            player.play();
-        } else {
-            player.pause();
-        }
+    function syncCreateTimestamp() {
+        const t = getPlayerTime();
+        if (t !== null) document.getElementById("new-timestamp").value = formatTime(t);
     }
 
     function jumpToNewTimestamp() {
-        const player = getPlayer();
-        if (!player || typeof player.currentTime !== "number") {
-            return;
-        }
-        const timestamp = document.getElementById("timestamp-new");
-        const seconds = parseTimestamp(readEditableText(timestamp));
-        if (seconds === null) {
-            return;
-        }
-        player.currentTime = seconds;
-        if (typeof player.play === "function") {
-            player.play();
-        }
+        const p = getPlayer();
+        if (!p || typeof p.currentTime !== "number") return;
+        const s = parseTimestamp(document.getElementById("new-timestamp").value);
+        if (s === null) return;
+        p.currentTime = s;
+        if (typeof p.play === "function") p.play();
     }
 
-    async function postNote(method, payload) {
-        const response = await fetch(noteUrl(), {
-            method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(text || "Unable to save note");
-        }
-        return response;
-    }
-
-    function notePayload(noteEl) {
-        const title = readEditableText(noteEl.querySelector(".title"));
-        const bodyEl = noteEl.querySelector(".body");
-        const timestampEl = noteEl.querySelector(".timestamp");
-        const body = bodyEl ? readNoteBody(bodyEl) : "";
-        const timestamp = timestampEl ? parseTimestamp(readEditableText(timestampEl)) : null;
-        return { title, body: body || null, timestamp };
-    }
-
-    async function createNote(noteEl) {
-        const payload = notePayload(noteEl);
-        if (!payload.title) {
-            alert("Please add a note title first.");
-            return;
-        }
-        if (payload.timestamp === null) {
-            alert("Please set a valid timestamp.");
-            return;
-        }
-        await postNote("POST", payload);
-        window.location.reload();
-    }
-
-    async function saveNote(noteEl) {
-        const noteIdEl = noteEl.querySelector(".id");
-        if (!noteIdEl) {
-            return;
-        }
-        const payload = notePayload(noteEl);
-        if (!payload.title) {
-            return;
-        }
-        const response = await fetch(noteUrl(), {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                id: noteIdEl.id,
-                title: payload.title,
-                body: payload.body,
-            }),
-        });
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
-    }
-
-    async function deleteNote(noteEl) {
-        const noteIdEl = noteEl.querySelector(".id");
-        if (!noteIdEl) {
-            return;
-        }
-        const response = await fetch(noteUrl(), {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ id: noteIdEl.id }),
-        });
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
-        window.location.reload();
-    }
-
-    function toTimestamp(seconds) {
-        const player = getPlayer();
-        if (player && typeof player.currentTime === "number") {
-            player.currentTime = Number(seconds) || 0;
-        }
-        const timestamp = document.getElementById("timestamp-new");
-        if (timestamp) {
-            timestamp.innerText = formatTime(seconds);
-        }
-        return false;
-    }
-
-    function bindNoteEditors() {
-        document.querySelectorAll(".notes-panel .note").forEach(noteEl => {
-            const titleEl = noteEl.querySelector(".title");
-            const bodyEl = noteEl.querySelector(".body");
-            if (titleEl) {
-                titleEl.addEventListener("blur", () => saveNote(noteEl).catch(console.error));
-            }
-            if (bodyEl) {
-                bodyEl.addEventListener("blur", () => saveNote(noteEl).catch(console.error));
-            }
-        });
-
-        document.querySelectorAll(".notes-panel [contenteditable='true']").forEach(editable => {
-            editable.addEventListener("keydown", event => {
-                if (!(event.metaKey || event.ctrlKey) || event.key !== "Enter") {
-                    return;
-                }
-                event.preventDefault();
-                const noteEl = editable.closest(".note");
-                if (!noteEl) {
-                    return;
-                }
-                const createNoteEl = document.querySelector(".notes-panel > .note");
-                if (noteEl === createNoteEl) {
-                    createNote(noteEl).catch(console.error);
-                    return;
-                }
-                saveNote(noteEl).catch(console.error);
-            });
-        });
+    function seekTo(seconds) {
+        const p = getPlayer();
+        if (p && typeof p.currentTime === "number") p.currentTime = Number(seconds)||0;
+        const ts = document.getElementById("new-timestamp");
+        if (ts) ts.value = formatTime(seconds);
     }
 
     function initTimestampSync() {
-        const player = getPlayer();
-        if (!player || typeof player.addEventListener !== "function") {
-            return;
-        }
-        const sync = () => syncTimestampFromPlayer();
-        player.addEventListener("loadedmetadata", sync);
-        player.addEventListener("seeked", sync);
-        player.addEventListener("play", sync);
-        player.addEventListener("timeupdate", sync);
+        const p = getPlayer();
+        if (!p || typeof p.addEventListener !== "function") return;
+        const sync = () => {
+            const ts = document.getElementById("new-timestamp");
+            const t = getPlayerTime();
+            if (ts && document.activeElement !== ts && t !== null) ts.value = formatTime(t);
+        };
+        p.addEventListener("loadedmetadata", sync);
+        p.addEventListener("seeked", sync);
         sync();
     }
 
-    bindNoteEditors();
+    async function api(method, payload) {
+        const r = await fetch(noteUrl(), { method, headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload) });
+        if (!r.ok) { const t = await r.text(); throw new Error(t||"Request failed"); }
+        return r;
+    }
+
+    function noteData(el) {
+        const b = el.querySelector(".note-body");
+        return { title: readEditable(el.querySelector(".note-title")), body: b ? readEditable(b)||null : null };
+    }
+
+    async function createNote() {
+        const titleEl = document.getElementById("new-title"), bodyEl = document.getElementById("new-body"),
+              tsEl = document.getElementById("new-timestamp");
+        const title = readEditable(titleEl), body = readEditable(bodyEl)||null,
+              timestamp = parseTimestamp(tsEl.value);
+
+        if (!title) { toast("Enter a note title.","error"); return titleEl.focus(); }
+        if (timestamp === null) { toast("Enter a valid timestamp.","error"); return tsEl.focus(); }
+        try { await api("POST",{title,body,timestamp}); location.reload(); }
+        catch(e) { toast("Could not create note: "+e.message,"error"); }
+    }
+
+    async function saveNote(el) {
+        const id = el.getAttribute("data-note-id");
+        if (!id) return;
+        const d = noteData(el);
+        if (!d.title) { toast("Title cannot be empty.","error"); return; }
+        try { await api("PATCH",{id,title:d.title,body:d.body}); }
+        catch(e) { toast("Could not save: "+e.message,"error"); }
+    }
+
+    async function deleteNote(el) {
+        const id = el.getAttribute("data-note-id");
+        if (!id || !confirm("Delete this note?")) return;
+        try { await api("DELETE",{id}); location.reload(); }
+        catch(e) { toast("Could not delete: "+e.message,"error"); }
+    }
+
+    // ── Editing hooks ──────────────────────────
+
+    document.querySelectorAll("#notes-list .note").forEach(el => {
+        const titleEl = el.querySelector(".note-title"), bodyEl = el.querySelector(".note-body");
+        const onFocus = () => el.querySelector(".note-actions").style.opacity = "1";
+
+        const onBlur = () => {
+            setTimeout(() => {
+                if (!el.contains(document.activeElement)) saveNote(el);
+            }, 150);
+        };
+
+        if (titleEl) { titleEl.addEventListener("focus", onFocus); titleEl.addEventListener("blur", onBlur); }
+        if (bodyEl)  { bodyEl.addEventListener("focus", onFocus);  bodyEl.addEventListener("blur", onBlur); }
+    });
+
+    document.querySelectorAll(".notes-panel [contenteditable]").forEach(el => {
+        el.addEventListener("keydown", function(e) {
+            if ((e.metaKey||e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                const note = el.closest(".note, .note-new");
+                if (!note) return;
+                note.id === "create-note" ? createNote() : saveNote(note);
+            }
+        });
+    });
+
+    // ── Contenteditable placeholders ───────────
+
+    document.querySelectorAll("[contenteditable][data-placeholder]").forEach(el => {
+        function check() { el.classList.toggle("is-empty", !el.textContent.trim() && document.activeElement !== el); }
+        el.addEventListener("focus", () => el.classList.remove("is-empty"));
+        el.addEventListener("blur", check);
+        check();
+    });
+
+    const s = document.createElement("style");
+    s.textContent = "[contenteditable][data-placeholder].is-empty:after { content: attr(data-placeholder); color: rgba(70,104,125,0.36); pointer-events:none; }" +
+        "@media (prefers-color-scheme:dark) { [contenteditable][data-placeholder].is-empty:after { color: rgba(200,220,240,0.48); } }";
+    document.head.appendChild(s);
+
     initTimestampSync();
 </script>
 {% endblock %}

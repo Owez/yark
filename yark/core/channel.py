@@ -212,9 +212,18 @@ class Channel:
 
     @staticmethod
     def _new_empty() -> Channel:
-        return Channel.new(
-            Path("pretend"), "https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA"
-        )
+        """Lightweight dummy for migration, never touches the filesystem."""
+        channel = Channel()
+        channel.path = Path(".")
+        channel.version = ARCHIVE_COMPAT
+        channel.url = ""
+        channel.videos = []
+        channel.livestreams = []
+        channel.shorts = []
+        channel.cookies_file = None
+        channel.verbose = False
+        channel.reporter = Reporter(channel)
+        return channel
 
     @staticmethod
     def load(path: Path) -> Channel:

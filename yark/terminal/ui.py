@@ -64,10 +64,11 @@ class TerminalUI:
             )
         )
 
-        table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+        table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan",
+                      width=100)
         table.add_column("Type", width=10)
-        table.add_column("Video", overflow="fold")
-        table.add_column("Change", overflow="fold")
+        table.add_column("Video", overflow="fold", max_width=54)
+        table.add_column("Change", overflow="fold", max_width=24)
 
         for kind, video in updated:
             style = "cyan" if kind in ["title", "description", "undeleted"] else "blue"

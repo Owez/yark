@@ -87,9 +87,8 @@ def channel(name, kind):
 
     try:
         channel = Channel.load(name)
-        ldir = os.listdir(channel.path / "videos")
         return render_template(
-            "channel.html", title=name, channel=channel, name=name, ldir=ldir
+            "channel.html", title=name, channel=channel, name=name
         )
     except ArchiveNotFoundException:
         return redirect(

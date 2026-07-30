@@ -17,7 +17,7 @@ include = [{ path = "yark/templates/*.html" }]
 python = ">=3.10,<4.0"
 Flask = "^2.3.1"
 requests = "^2.28.2"
-yt-dlp = "2026.03.17"
+yt-dlp = "^2026.7.4"
 rich = "^13.9.4"
 
 [tool.poetry.scripts]
@@ -28,6 +28,7 @@ mypy = "^0.991"
 poethepoet = "^0.18.1"
 types-requests = "^2.28.11.17"
 black = "^22.12.0"
+pytest = "^9.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

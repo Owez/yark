@@ -6,78 +6,92 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
+        gap: 1rem;
     }
 
-    .video {
+    .video-card {
         display: flex;
         flex-direction: column;
-        margin: 0.75rem;
+        width: 300px;
+        border-radius: var(--radius);
+        transition: transform 0.15s ease;
     }
 
-    .video-locked {
-        cursor: default;
-    }
+    .video-card:hover { transform: translateY(-2px); }
+    .video-card:hover .thumbnail { box-shadow: 0 14px 38px -16px rgba(16, 83, 126, 0.65); }
+    .video-card:hover .thumbnail > img { transform: scale(1.04); }
 
     .thumbnail {
         position: relative;
         overflow: hidden;
-        box-shadow: 0px 10px 35px -15px rgba(16, 83, 126, 0.55);
+        box-shadow: 0 8px 28px -14px rgba(16, 83, 126, 0.5);
         border-radius: 10px;
         width: 300px;
         height: 168.75px;
-        border: 1px solid rgba(35, 109, 161, 0.22);
-        background: linear-gradient(180deg, rgba(7, 42, 66, 0.16) 0%, rgba(7, 42, 66, 0.06) 100%);
+        border: 1px solid rgba(35, 109, 161, 0.2);
+        background: linear-gradient(180deg, rgba(7, 42, 66, 0.14), rgba(7, 42, 66, 0.04));
+        transition: box-shadow 0.2s ease;
     }
 
-    .thumbnail>img {
+    .thumbnail > img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.25s ease;
+    }
+
+    .video-flag {
+        position: absolute;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        font-size: 0.66rem;
+        font-weight: 500;
+        padding: 0.18rem 0.48rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(8, 39, 61, 0.82);
+        color: rgba(235, 247, 255, 0.94);
+        backdrop-filter: blur(3px);
+        letter-spacing: 0.012em;
     }
 
     .info {
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
         width: 300px;
+        padding: 0 2px;
     }
 
-    .info>p {
-        margin-top: 0.5rem;
-    }
+    .info p { margin: 0.5rem 0 0; }
 
     .title {
-        max-width: 225px;
+        max-width: 215px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-weight: 500;
+        font-size: 0.9rem;
     }
 
     .uploaded {
-        padding-top: 0.12rem;
         font-size: 0.7rem;
-        width: 8rem;
+        width: 5.5rem;
         text-align: right;
+        color: var(--muted);
+        flex-shrink: 0;
     }
 
-    .video-flag {
-        position: absolute;
-        left: 0.55rem;
-        bottom: 0.55rem;
-        font-size: 0.68rem;
-        padding: 0.18rem 0.48rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(8, 39, 61, 0.84);
-        color: rgba(235, 247, 255, 0.96);
-        backdrop-filter: blur(3px);
-        letter-spacing: 0.015em;
-    }
-
+    .empty-state { text-align: center; color: var(--muted); margin-top: 3rem; }
 
     @media (prefers-color-scheme: dark) {
-        .thumbnail {
-            box-shadow: 0px 0px 10px 5px rgba(0, 0, 0, 0.225);
-        }
+        .thumbnail { box-shadow: 0 4px 18px -6px rgba(0, 0, 0, 0.4); border-color: rgba(100, 160, 200, 0.15); }
+        .video-card:hover .thumbnail { box-shadow: 0 12px 34px -14px rgba(0, 0, 0, 0.55); }
+    }
+
+    @media screen and (max-width: 700px) {
+        .video-card, .thumbnail, .info { width: 100%; }
+        .thumbnail { height: auto; aspect-ratio: 16 / 9; }
     }
 </style>
 {% endblock %}
@@ -88,22 +102,18 @@
 <div id="content">
     {% for video in channel.videos %}
     {% set downloaded = video.downloaded() %}
-    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video">
-        <!-- Thumbnail -->
+    <a href="{{ url_for('routes.video', name=name, kind='videos', id=video.id) }}" class="video-card">
         <div class="thumbnail">
-            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}" />
+            <img src="{{ url_for('routes.archive_thumbnail', name=name, id=video.thumbnail.current().id) }}"
+                 alt="Thumbnail for {{ video.title.current() }}" loading="lazy" />
             {% if not downloaded %}
             <span class="video-flag">Not downloaded</span>
             {% endif %}
         </div>
-        <!-- Information -->
         <div class="info">
-            <!-- Title -->
             <p class="title">{{ video.title.current() }}</p>
             <p class="uploaded">
-                <!-- Updated -->
                 {% if video.updated() %}🌀 {% endif %}
-                <!-- Uploaded -->
                 {{ video.uploaded.strftime("%d/%m/%Y") }}
             </p>
         </div>
@@ -111,7 +121,7 @@
     {% endfor %}
 </div>
 {% else %}
-<p style="text-align: center;">No videos found!</p>
+<p class="empty-state">No videos found in this archive yet.</p>
 {% endif %}
 {% endblock %}
 
@@ -138,20 +148,17 @@
         return null;
     }
 
-    const visitedCookie = getCookie("visited")
-    const id = document.getElementsByClassName("hero")[0].innerHTML.split("'s")[0]
+    const visitedCookie = getCookie("visited");
+    const id = document.querySelector(".hero").textContent.split("'s")[0];
+
     if (visitedCookie == null) {
-        setCookie("visited", JSON.stringify([id]))
+        setCookie("visited", JSON.stringify([id]));
     } else {
-        const existingVisited = JSON.parse(visitedCookie)
-        let cleaned = []
-        existingVisited.forEach(channelId => {
-            if (channelId != id) {
-                cleaned.push(channelId)
-            }
-        });
-        cleaned.push(id)
-        setCookie("visited", JSON.stringify(cleaned))
+        const existingVisited = JSON.parse(visitedCookie);
+        const cleaned = existingVisited.filter(c => c !== id);
+        cleaned.push(id);
+        if (cleaned.length > 10) cleaned.shift();
+        setCookie("visited", JSON.stringify(cleaned));
     }
 </script>
 {% endblock %}

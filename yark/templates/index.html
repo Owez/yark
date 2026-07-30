@@ -9,42 +9,48 @@
         flex-direction: column;
     }
 
-    input[type=text] {
-        width: min(42rem, calc(15rem + 26vw));
-        padding: 0.72rem 0.78rem;
+    input[type="text"] {
+        width: min(42rem, calc(15rem + 28vw));
+        padding: 0.75rem 0.85rem;
         font-size: 0.96rem;
+        border-radius: 0.55rem;
     }
 
-    .archives {
+    .archives-section {
         display: flex;
         justify-content: center;
-        align-items: center;
         flex-wrap: wrap;
-        margin-left: 20vw;
-        margin-right: 20vw;
+        margin: 1.5rem 20vw 0;
         gap: 0.45rem;
-        margin-top: 1.5rem;
     }
 
-    .archives > p {
+    .archives-section > p {
         width: 100%;
         text-align: center;
         margin-bottom: 0.3rem;
         color: var(--muted);
+        font-size: 0.84rem;
     }
 
-    .archives > a {
+    .archives-section > a {
         color: var(--accent);
-        border: 1px solid rgba(47, 130, 205, 0.24);
+        border: 1px solid rgba(47, 130, 205, 0.22);
         border-radius: 999px;
-        padding: 0.2rem 0.62rem;
-        background: rgba(47, 130, 205, 0.09);
-        transition: transform 0.15s ease, background-color 0.15s ease;
+        padding: 0.22rem 0.7rem;
+        font-size: 0.84rem;
+        background: rgba(47, 130, 205, 0.08);
+        transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
     }
 
-    .archives > a:hover {
+    .archives-section > a:hover {
         transform: translateY(-1px);
-        background: rgba(47, 130, 205, 0.18);
+        background: rgba(47, 130, 205, 0.16);
+        border-color: rgba(47, 130, 205, 0.35);
+    }
+
+    @media screen and (max-width: 700px) {
+        .archives-section { margin-left: 5vw; margin-right: 5vw; }
+        input[type="text"] { width: 85vw; }
     }
 </style>
 {% endblock %}
@@ -52,34 +58,27 @@
 {% block content %}
 <h1 class="hero">Yark</h1>
 <form action="/" method="post">
-    <input type="text" name="channel" placeholder="e.g. pewdiepie or myfolder/pewdiepie" list="known-archives" autofocus>
+    <input type="text" name="channel" placeholder="e.g. pewdiepie or myfolder/pewdiepie"
+           list="known-archives" autofocus autocomplete="off">
     <datalist id="known-archives">
         {% if discovered %}
-            {% for id in discovered %}
-            <option value="{{ id }}"></option>
-            {% endfor %}
+            {% for id in discovered %}<option value="{{ id }}"></option>{% endfor %}
         {% endif %}
         {% if visited %}
-            {% for id in visited %}
-            <option value="{{ id }}"></option>
-            {% endfor %}
+            {% for id in visited %}<option value="{{ id }}"></option>{% endfor %}
         {% endif %}
     </datalist>
 </form>
 {% if visited %}
-<div class="archives">
-    <p>Recent Archives: </p>
-    {% for id in visited %}
-    <a href="/channel/{{ id }}/videos">{{ id }}</a>
-    {% endfor %}
+<div class="archives-section">
+    <p>Recent Archives</p>
+    {% for id in visited %}<a href="/channel/{{ id }}/videos">{{ id }}</a>{% endfor %}
 </div>
 {% endif %}
 {% if discovered %}
-<div class="archives">
-    <p>Discovered Archives Near Here:</p>
-    {% for id in discovered %}
-    <a href="/channel/{{ id }}/videos">{{ id }}</a>
-    {% endfor %}
+<div class="archives-section">
+    <p>Discovered Archives Near Here</p>
+    {% for id in discovered %}<a href="/channel/{{ id }}/videos">{{ id }}</a>{% endfor %}
 </div>
 {% endif %}
 {% endblock %}
