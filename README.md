@@ -17,6 +17,15 @@ To install Yark, simply download [Python 3.9+](https://www.python.org/downloads/
 $ pip3 install yark
 ```
 
+On Linux you can also install Yark with [OTinstaller](https://github.com/OSINTVerseHQ/OTinstaller), a third-party tool manager that keeps it in its own virtualenv. It isn't maintained by the Yark authors, so please report problems with it [on the OTinstaller tracker](https://github.com/OSINTVerseHQ/OTinstaller/issues).
+
+```shell
+$ pipx install otinstaller
+$ otinstaller init
+$ otinstaller install yark
+$ otinstaller run yark -- new foobar https://www.youtube.com/channel/UCSMdm6bUYIBN0KfS2CVuEPA
+```
+
 ## Managing your Archive
 
 Once you've installed Yark, think of a name for your archive (e.g., "foobar") and copy the target's url:
